@@ -3,7 +3,6 @@
 import os
 import logging
 from   flask_migrate import Migrate
-#from   flask_minify  import Minify
 from   sys import exit
 
 from apps.config import app_config
@@ -14,9 +13,6 @@ DEBUG = (os.getenv('DEBUG', 'False') == 'True')
 
 app = create_app(app_config)
 Migrate(app, db)
-
-#if not DEBUG:
-#    Minify(app=app, html=True, js=False, cssless=False)
 
 #handler = logging.FileHandler('dashboard-hackinsdn.log')
 #handler.setLevel(logging.DEBUG)
