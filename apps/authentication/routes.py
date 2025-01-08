@@ -55,18 +55,18 @@ def login():
     return redirect(url_for('home_blueprint.index'))
 
 
-@blueprint.route("/login/orcid")
-def login_orcid():
-    """Redirects the user to the ORCID login page."""
-    return oauth.orcid.authorize_redirect(
+@blueprint.route("/login/oauth")
+def login_oauth():
+    """Redirects the user to the OAUTH login page."""
+    return oauth.provider.authorize_redirect(
         redirect_uri=app_config.BASE_URL + url_for("authentication_blueprint.callback", _external=False)
     )
 
 
 @blueprint.route("/login/callback", methods=["GET", "POST"])
 def callback():
-    """Callback redirect from ORCID"""
-    token = oauth.orcid.authorize_access_token().get("userinfo", {})
+    """Callback redirect from OAuth Provider"""
+    token = oauth.provider.authorize_access_token().get("userinfo", {})
     print("Callback auth, token=", token)
     subject = token.get("sub", None)
     issuer = token.get("iss", None)
@@ -75,7 +75,7 @@ def callback():
     email = token.get("email", None)
 
     if not subject:
-        log.warn("Invalid auth token from ORCID/OAUTH callback:", token)
+        log.warn("Invalid auth token from OAUTH callback:", token)
         return render_template('pages/page-403.html'), 403
 
     user = Users.query.filter_by(subject=subject).first()

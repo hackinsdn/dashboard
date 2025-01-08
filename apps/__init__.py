@@ -39,7 +39,7 @@ def configure_database(app):
 
 def configure_oauth(app):
     oauth.register(
-        "orcid",
+        "provider",
         client_id=app.config["CLIENT_ID"],
         client_secret=app.config["CLIENT_SECRET"],
         client_kwargs={
