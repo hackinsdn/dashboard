@@ -1,0 +1,206 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} View Lab Instance {% endblock %} 
+
+<!-- Element injected in the BODY element -->
+{% block body_class %} sidebar-mini layout-navbar-fixed {% endblock body_class %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}
+
+  <!-- Google Font: Source Sans Pro -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
+  <!-- DataTables -->
+  <link rel="stylesheet" href="/static/assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
+  <link rel="stylesheet" href="/static/assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css">
+  <!-- icheck bootstrap -->
+  <link rel="stylesheet" href="/static/assets/plugins/icheck-bootstrap/icheck-bootstrap.min.css">
+  <!-- Theme style -->
+  <link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
+  <link rel="stylesheet" href="/static/assets/css/alert.css">
+  <style type="text/css">
+pre { background-color: #ced4da; 
+  position: relative;
+  margin: 5px 0 ;
+  padding-right: 4em;
+}
+pre button{
+  position: absolute;
+  top: 5px;
+  right: 5px;
+}
+pre code {
+white-space: pre-wrap;
+word-break: break-all;
+}
+.btn-sml { font-size: 0.8em; padding-top: 0; padding-bottom: 0; }
+  </style>
+{% endblock stylesheets %}
+
+{% block content %}  
+
+  <!-- Content Wrapper. Contains page content -->
+  <div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+      <div class="container-fluid">
+        <div class="row mb-2">
+          <div class="col-sm-6">
+            <h1>View Lab Instance</h1>
+          </div>
+          <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+              <li class="breadcrumb-item"><a href="/index">Home</a></li>
+              <li class="breadcrumb-item"><a href="{{url_for('home_blueprint.running_labs')}}">Running Labs</a></li>
+              <li class="breadcrumb-item active">View Lab</li>
+            </ol>
+          </div>
+        </div>
+      </div><!-- /.container-fluid -->
+    </section>
+
+    <!-- Main content -->
+    <section class="content">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="card card-dark">
+            <div class="card-header">
+              <h3 class="card-title">Lab resources</h3>
+            </div>
+            <!-- /.card-header -->
+            <div class="card-body">
+              <ul>
+                <li>Lab title: {{lab['title']}}</li>
+                <li>Lab owner: {{lab['user']}}</li>
+              </ul>
+              <table id="tableLabsResource" class="table table-hover">
+                <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Info</th>
+                  <th>Node</th>
+                  <th>IP</th>
+                  <th>Age</th>
+                  <th>Links</th>
+                  <th>Services</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for resource in lab['resources'] %}
+                <tr>
+                  <td>{{resource['kind']}}/{{resource['name']}}</td>
+                  <td>{{resource['ready']}}</td>
+                  <td>{{resource['node_name']}}</td>
+                  <td>{{resource['pod_ip']}}</td>
+                  <td>{{resource['age']}}</td>
+                  <td>
+                    {% for link in resource['links'] %}
+                    {%   if resource['kind'] == 'service' %}
+                    {%     set link_icon = 'globe' %}
+                    {%     set link_name = link[0] %}
+                    {%     set link_href = link[1] %}
+                    {%   else %}
+                    {%     set link_icon = 'desktop' %}
+                    {%     set link_name = link %}
+                    {%     set link_href = url_for('home_blueprint.xterm', lab_id=lab['lab_id'], kind=resource['kind'], pod=resource['name'], container=link)  %}
+                    {%   endif %}
+                    <a class="btn btn-outline-dark mx-2" href="{{link_href}}" target="_blank" role="button"><i class="fas fa-{{link_icon}}"></i> {{link_name}}</a>
+                    {% endfor %}
+                  </td>
+                  <td>
+                    {% for service in resource['services'] %}
+                    <a class="btn btn-outline-dark mx-2" href="{{service[1]}}" target="_blank" role="button"><i class="fas fa-globe"></i> {{service[0]}}</a>
+                    {% endfor %}
+                  </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+              </table>
+              <!-- /.table -->
+            </div>
+            <!-- /.card-body -->
+          </div>
+          <!-- /.card -->
+        </div>
+        <!-- /.col -->
+      </div>
+      <!-- /.row -->
+      <div class="row">
+        <div class="col-md-12">
+          <div class="card-dark">
+            <div class="card-header">
+              <h3 class="card-title">Lab Guide</h3>
+            </div>
+            <!-- /.card-header -->
+            <div class="card-body">
+                {{lab_guide|safe}}
+            </div>
+            <!-- /.card-body -->
+          </div>
+          <!-- /.card -->
+        </div>
+        <!-- /.col -->
+      </div>
+
+    </section>
+    <!-- /.content -->
+  </div>
+  <!-- /.content-wrapper -->
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+  <!-- jQuery -->
+  <script src="/static/assets/plugins/jquery/jquery.min.js"></script>
+  <!-- Bootstrap 4 -->
+  <script src="/static/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <!-- DataTables -->
+  <script src="/static/assets/plugins/datatables/jquery.dataTables.min.js"></script>
+  <script src="/static/assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
+  <script src="/static/assets/plugins/datatables-responsive/js/dataTables.responsive.min.js"></script>
+  <script src="/static/assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js"></script>
+  <script src="/static/assets/plugins/clipboard.js/clipboard.min.js"></script>
+  <!-- AdminLTE App -->
+  <script src="/static/assets/js/adminlte.min.js"></script>
+  <!-- Page Script -->
+  <script>
+    $(function () {
+      function setTooltip(btn, message) {
+        $(btn).tooltip('hide').attr('data-original-title', message).tooltip('show');
+      }
+      
+      function hideTooltip(btn) {
+        setTimeout(function() {
+          $(btn).attr('data-original-title', "Copy to clipboard");
+        }, 1000);
+      }
+
+      var a = document.querySelectorAll("pre");
+      [].forEach.call(a, function(a) {
+          a.firstChild.insertAdjacentHTML("beforebegin", '<button class="btn btn-outline-dark btn-sm btn-sml float-right copy" title="Copy to clipboard" data-clipboard-snippet>Copy</button>')
+      });
+      var clipboard = new ClipboardJS("[data-clipboard-snippet]", {
+          target: function(a) {
+              return a.nextElementSibling
+          }
+      });
+      clipboard.on("success", function(e) {
+          e.clearSelection();
+          setTooltip(e.trigger, 'Copied!');
+          hideTooltip(e.trigger);
+          //showTooltip(a.trigger, "Copied!")
+      });
+      $('button.copy').tooltip({
+        trigger: 'hover focus click',
+        placement: 'auto',
+      });
+    })
+  </script>
+  <!-- AdminLTE for demo purposes -->
+  <script src="/static/assets/js/demo.js"></script>
+
+{% endblock javascripts %}

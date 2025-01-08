@@ -1,0 +1,473 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Create/Update Lab {% endblock %} 
+
+<!-- Element injected in the BODY element -->
+{% block body_class %} sidebar-mini {% endblock body_class %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}
+
+  <!-- Google Font: Source Sans Pro -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
+  <!-- Theme style -->
+  <link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
+  <!-- summernote -->
+  <link rel="stylesheet" href="/static/assets/plugins/summernote/summernote-bs4.min.css">
+  <!-- Select2 -->
+  <link rel="stylesheet" href="/static/assets/plugins/select2/css/select2.min.css">
+  <link rel="stylesheet" href="/static/assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
+  <!-- Bootstrap4 Duallistbox -->
+  <link rel="stylesheet" href="/static/assets/plugins/bootstrap4-duallistbox/bootstrap-duallistbox.min.css">
+  <!-- CodeMirror -->
+  <link rel="stylesheet" href="/static/assets/plugins/codemirror/lib/codemirror.css">
+  <link rel="stylesheet" href="/static/assets/plugins/codemirror/theme/abcdef.css">
+  <style>
+.input-group > .select2-container--default {
+    width: auto;
+    flex: 1 1 auto;
+}
+.input-group > .select2-container--default .select2-selection--single {
+    height: 100%;
+    line-height: inherit;
+    padding: 0.5rem 1rem;
+}
+  </style>
+
+{% endblock stylesheets %}
+
+{% block content %}    
+
+  <div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+      <div class="container-fluid">
+        <div class="row mb-2">
+          <div class="col-sm-6">
+            <h1>Create/Update Lab</h1>
+            {% if msg_ok %}
+            <div class="alert alert-success alert-dismissible">
+              <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+              <h5><i class="icon fas fa-check"></i> Lab created/updated successfully!</h5>
+              {{msg_ok}}
+            </div>
+            {% endif %}
+            {% if msg_fail %}
+            <div class="alert alert-danger alert-dismissible">
+              <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+              <h5><i class="icon fas fa-ban"></i> Fail to create/update lab!</h5>
+              {{msg_fail}}
+            </div>
+            {% endif %}
+          </div>
+          <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+              <li class="breadcrumb-item"><a href="{{url_for('home_blueprint.index')}}">Home</a></li>
+              <li class="breadcrumb-item"><a href="{{url_for('home_blueprint.view_labs')}}">Labs</a></li>
+              <li class="breadcrumb-item active">Create/Update Lab</li>
+            </ol>
+          </div>
+        </div>
+      </div><!-- /.container-fluid -->
+    </section>
+
+    <!-- Main content -->
+    <section class="content">
+      <form method="POST" enctype="multipart/form-data" action="{{url_for('home_blueprint.edit_lab', lab_id=lab.id|default('new', true))}}">
+      <div class="container-fluid">
+        <div class="row">
+          <!-- left column -->
+          <div class="col-md-6">
+            <!-- general form elements -->
+            <div class="card card-dark">
+              <div class="card-header">
+                <h3 class="card-title">General information</h3>
+              </div>
+              <!-- /.card-header -->
+              <!-- form start -->
+                <div class="card-body">
+                  <div class="form-group">
+                    <label>Lab title</label>
+                    <input name="lab_title" type="text" class="form-control" placeholder="Enter lab title..." value="{{lab.title|default('', true)}}">
+                  </div>
+                  <div class="form-group">
+                    <label>Short Description</label>
+                    <input name="lab_description" type="text" class="form-control" placeholder="Max 255 characters" value="{{lab.description|default('', true)}}">
+                  </div>
+                  <div class="form-group">
+                    <label>Lab category</label>
+                    <select name="lab_category" class="form-control">
+                      <option value="">--</option>
+                      {% for cat_id in lab_categories %}
+                      <option {{'selected' if lab.category_id == cat_id else ""}} value="{{cat_id}}">{{lab_categories[cat_id].category}}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                </div>
+                <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
+
+          </div>
+          <!--/.col (left) -->
+
+          <!-- right column -->
+          <div class="col-md-6">
+            <div class="card card-dark">
+              <div class="card-header">
+                <h3 class="card-title">Lab additional information</h3>
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-12">
+                    <div class="form-group">
+                      <label>Access Control: Availabe groups (left) &gt;&gt; Allowed groups (right)</label>
+                      <select name="lab_allowed_groups" class="duallistbox" multiple="multiple">
+                        <option>Group One</option>
+                        <option>MATA56</option>
+                        <option>UFBA - AAA</option>
+                        <option>Test Group</option>
+                        <option>Xpto</option>
+                        <option>Group N</option>
+                        <option>AnotherGroup</option>
+                      </select>
+                    </div>
+                    <!-- /.form-group -->
+                    <div class="form-group">
+                      <label>Lab goals (one per line)</label>
+                      <textarea name="lab_goals" class="form-control" rows="5" placeholder="One goal per line" value="{{lab.goals|default('', true)}}"></textarea>
+                    </div>
+                    <!-- /.form-group -->
+                  </div>
+                </div>
+              </div>
+              <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
+          </div>
+          <!--/.col (right) -->
+        </div>
+        <!--/.row -->
+        <div class="row">
+          <div class="col-md-12">
+            <div class="card card-dark">
+              <div class="card-header">
+                <h3 class="card-title">
+                  Lab extended description
+                </h3>
+                <!-- tools box -->
+                <div class="card-tools">
+                  <button type="button" class="btn btn-tool btn-sm" data-card-widget="collapse" title="Collapse">
+                    <i class="fas fa-minus"></i>
+                  </button>
+                  <button type="button" class="btn btn-tool btn-sm" data-card-widget="remove" title="Remove">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+                <!-- /. tools -->
+              </div>
+              <!-- /.card-header -->
+              <div class="card-body pad">
+                <div class="mb-3">
+                  <textarea name="lab_extended_desc" id="lab-editor" class="textarea" placeholder="Place some text here"
+                            style="width: 100%; height: 400px; font-size: 14px; line-height: 18px; border: 1px solid #dddddd; padding: 10px;">{{lab.extended_desc_str|default('', true)}}</textarea>
+                </div>
+                <p class="text-sm mb-0">
+                  Editor <a href="https://github.com/summernote/summernote">Documentation and license
+                  information.</a>
+                </p>
+              </div>
+            </div>
+          </div>
+          <!-- /.col-->
+        </div>
+        <!-- ./row -->
+        <div class="row">
+          <div class="col-md-12">
+            <div class="card card-dark">
+              <div class="card-header">
+                <h3 class="card-title">
+                  Kubernetes Lab Manifest
+                </h3>
+              </div>
+              <!-- /.card-header -->
+              <div class="card-body">
+                <p>Add here your Kubernetes Manifest file containing Pods, Deployments and Services. You should customize the item names with variables that will be replaced during resource creation, example: <code>${pod_hash}</code></p>
+                <div class="row">
+                  <div class="col-md-6">
+	            <div class="form-group">
+                      <label>Kubernetes Manifest Template:</label>
+		      <div class="input-group">
+                        <select class="form-control select2">
+                          <option>--</option>
+		          <option>Mininet-Sec</option>
+		          <option>Mininet-Sec and Kytos with Services</option>
+		          <option>Mininet-Sec with custom topology</option>
+		          <option>One Pod</option>
+                          <option>Two Pods</option>
+                          <option>Deployment with Service</option>
+                        </select>
+                        <div class="input-group-append">
+                          <button class="btn btn-outline-secondary" type="button">Load Template</button>
+                        </div>
+		      </div>
+                    </div>
+		  </div> <!-- end of col-md-6 -->
+                </div>
+                <div class="mb-3">
+                  <textarea name="lab_manifest" id="lab-edit-manifest" class="textarea" placeholder="Place some text here" rows="16">{{lab.manifest|default('', true)}}</textarea>
+                </div>
+                <p class="text-sm mb-0">
+                  Read <a href="#">more information</a> about the Kubernetes manifest.
+                </p>
+              </div>
+            </div>
+          </div>
+          <!-- /.col-->
+        </div>
+        <!-- /.row -->
+        <div class="row">
+          <div class="col-md-12">
+            <div class="card card-dark">
+              <div class="card-header">
+                <h3 class="card-title">
+                  Lab Guide
+                </h3>
+              </div>
+              <!-- /.card-header -->
+              <div class="card-body">
+                <p>Add here the Lab instructions for students/experimenters to run this Lab (step-by-step) using Markdown format (<a href="https://www.markdownguide.org/basic-syntax/" target="_blank">read more about Markdown syntax</a>):</p>
+                <div class="mb-3">
+                  <textarea name="lab_guide" id="lab-edit-guide" class="textarea" placeholder="Place some text here" rows="16">{{lab.lab_guide_md_str|default('', true)}}</textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- /.col-->
+        </div>
+        <!-- /.row -->
+        <div class="row">
+          <div class="col-md-12">
+            <div class="card card-dark">
+              <div class="card-header">
+                <h3 class="card-title">Questionary for student evaluation</h3>
+              </div>
+              <!-- /.card-header -->
+              <div class="card-body">
+                <form>
+                  <div class="row">
+                    <div class="col-sm-6">
+                      <!-- text input -->
+                      <div class="form-group">
+                        <label>Text</label>
+                        <input type="text" class="form-control" placeholder="Enter ...">
+                      </div>
+                    </div>
+                    <div class="col-sm-6">
+                      <div class="form-group">
+                        <label>Text Disabled</label>
+                        <input type="text" class="form-control" placeholder="Enter ..." disabled>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-sm-6">
+                      <!-- textarea -->
+                      <div class="form-group">
+                        <label>Textarea</label>
+                        <textarea class="form-control" rows="3" placeholder="Enter ..."></textarea>
+                      </div>
+                    </div>
+                    <div class="col-sm-6">
+                      <div class="form-group">
+                        <label>Textarea Disabled</label>
+                        <textarea class="form-control" rows="3" placeholder="Enter ..." disabled></textarea>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- input states -->
+                  <div class="form-group">
+                    <label class="col-form-label" for="inputSuccess"><i class="fas fa-check"></i> Input with
+                      success</label>
+                    <input type="text" class="form-control is-valid" id="inputSuccess" placeholder="Enter ...">
+                  </div>
+                  <div class="form-group">
+                    <label class="col-form-label" for="inputWarning"><i class="far fa-bell"></i> Input with
+                      warning</label>
+                    <input type="text" class="form-control is-warning" id="inputWarning" placeholder="Enter ...">
+                  </div>
+                  <div class="form-group">
+                    <label class="col-form-label" for="inputError"><i class="far fa-times-circle"></i> Input with
+                      error</label>
+                    <input type="text" class="form-control is-invalid" id="inputError" placeholder="Enter ...">
+                  </div>
+
+                  <div class="row">
+                    <div class="col-sm-6">
+                      <!-- checkbox -->
+                      <div class="form-group">
+                        <div class="form-check">
+                          <input class="form-check-input" type="checkbox">
+                          <label class="form-check-label">Checkbox</label>
+                        </div>
+                        <div class="form-check">
+                          <input class="form-check-input" type="checkbox" checked>
+                          <label class="form-check-label">Checkbox checked</label>
+                        </div>
+                        <div class="form-check">
+                          <input class="form-check-input" type="checkbox" disabled>
+                          <label class="form-check-label">Checkbox disabled</label>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-sm-6">
+                      <!-- radio -->
+                      <div class="form-group">
+                        <div class="form-check">
+                          <input class="form-check-input" type="radio" name="radio1">
+                          <label class="form-check-label">Radio</label>
+                        </div>
+                        <div class="form-check">
+                          <input class="form-check-input" type="radio" name="radio1" checked>
+                          <label class="form-check-label">Radio checked</label>
+                        </div>
+                        <div class="form-check">
+                          <input class="form-check-input" type="radio" disabled>
+                          <label class="form-check-label">Radio disabled</label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="row">
+                    <div class="col-sm-6">
+                      <!-- select -->
+                      <div class="form-group">
+                        <label>Select</label>
+                        <select class="form-control">
+                          <option>option 1</option>
+                          <option>option 2</option>
+                          <option>option 3</option>
+                          <option>option 4</option>
+                          <option>option 5</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="col-sm-6">
+                      <div class="form-group">
+                        <label>Select Disabled</label>
+                        <select class="form-control" disabled>
+                          <option>option 1</option>
+                          <option>option 2</option>
+                          <option>option 3</option>
+                          <option>option 4</option>
+                          <option>option 5</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="row">
+                    <div class="col-sm-6">
+                      <!-- Select multiple-->
+                      <div class="form-group">
+                        <label>Select Multiple</label>
+                        <select multiple class="form-control">
+                          <option>option 1</option>
+                          <option>option 2</option>
+                          <option>option 3</option>
+                          <option>option 4</option>
+                          <option>option 5</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="col-sm-6">
+                      <div class="form-group">
+                        <label>Select Multiple Disabled</label>
+                        <select multiple class="form-control" disabled>
+                          <option>option 1</option>
+                          <option>option 2</option>
+                          <option>option 3</option>
+                          <option>option 4</option>
+                          <option>option 5</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </form>
+              </div>
+              <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
+          </div>
+          <!-- /.col-->
+        </div>
+        <!-- ./row -->
+        <div class="row">
+          <div class="col-md-12 mb-2">
+            <button type="submit" class="btn btn-primary">Submit</button>
+          </div>
+        </div>
+      </div><!-- /.container-fluid -->
+      </form>
+    </section>
+    <!-- /.content -->
+  </div>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+  <!-- jQuery -->
+  <script src="/static/assets/plugins/jquery/jquery.min.js"></script>
+  <!-- Bootstrap 4 -->
+  <script src="/static/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <!-- bs-custom-file-input -->
+  <script src="/static/assets/plugins/bs-custom-file-input/bs-custom-file-input.min.js"></script>
+  <!-- Bootstrap4 Duallistbox -->
+  <script src="/static/assets/plugins/bootstrap4-duallistbox/jquery.bootstrap-duallistbox.min.js"></script>
+  <!-- AdminLTE App -->
+  <script src="/static/assets/js/adminlte.min.js"></script>
+  <!-- AdminLTE for demo purposes -->
+  <script src="/static/assets/js/demo.js"></script>
+  <!-- Summernote -->
+  <script src="/static/assets/plugins/summernote/summernote-bs4.min.js"></script>
+  <!-- CodeMirror -->
+  <script src="/static/assets/plugins/codemirror/lib/codemirror.js"></script>
+  <script src="/static/assets/plugins/codemirror/mode/yaml/yaml.js"></script>
+  <script src="/static/assets/plugins/codemirror/mode/markdown/markdown.js"></script>
+  <!-- Select2 -->
+  <script src="/static/assets/plugins/select2/js/select2.full.min.js"></script>
+  <script>
+    $(function () {
+      $('#lab-editor').summernote({
+        height: 500,
+      });
+      bsCustomFileInput.init();
+      //Bootstrap Duallistbox
+      $('.duallistbox').bootstrapDualListbox()
+      var editorLabManifest = CodeMirror.fromTextArea(document.getElementById("lab-edit-manifest"), {
+        lineNumbers: true,
+        styleActiveLine: true,
+        tabSize: 2,
+        theme: 'abcdef',
+        mode: 'yaml',
+      });
+      editorLabManifest.setSize("100%", 600);
+      var editorLabGuide = CodeMirror.fromTextArea(document.getElementById("lab-edit-guide"), {
+        lineNumbers: true,
+        styleActiveLine: true,
+        theme: 'abcdef',
+        mode: 'markdown',
+      });
+      editorLabGuide.setSize("100%", 600);
+      //Initialize Select2 Elements
+      $('.select2').select2()
+    });
+  </script>
+
+{% endblock javascripts %}

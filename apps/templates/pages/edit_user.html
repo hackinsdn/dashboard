@@ -1,0 +1,214 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Profile - {{user.name}} {% endblock %} 
+
+<!-- Element injected in the BODY element -->
+{% block body_class %} sidebar-mini {% endblock body_class %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}
+
+  <!-- Google Font: Source Sans Pro -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
+  <!-- daterange picker -->
+  <link rel="stylesheet" href="/static/assets/plugins/daterangepicker/daterangepicker.css">
+  <!-- Select2 -->
+  <link rel="stylesheet" href="/static/assets/plugins/select2/css/select2.min.css">
+  <link rel="stylesheet" href="/static/assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
+  <!-- Theme style -->
+  <link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
+
+{% endblock stylesheets %}
+
+{% block content %}    
+
+  <!-- Content Wrapper. Contains page content -->
+  <div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+      <div class="container-fluid">
+        <div class="row mb-2">
+          <div class="col-sm-6">
+            <h1>View/Update User</h1>
+            {% if msg_ok %}
+            <div class="alert alert-success alert-dismissible">
+              <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+              <h5><i class="icon fas fa-check"></i> User updated successfully!</h5>
+              {{msg_ok}}
+            </div>
+            {% endif %}
+            {% if msg_fail %}
+            <div class="alert alert-danger alert-dismissible">
+              <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+              <h5><i class="icon fas fa-ban"></i> Fail to update user!</h5>
+              {{msg_fail}}
+            </div>
+            {% endif %}
+          </div>
+          <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+              <li class="breadcrumb-item"><a href="/">Home</a></li>
+              <li class="breadcrumb-item"><a href="/users">Users</a></li>
+              <li class="breadcrumb-item active">{{user.name}}</li>
+            </ol>
+          </div>
+        </div>
+      </div><!-- /.container-fluid -->
+    </section>
+
+    <!-- Main content -->
+    <section class="content">
+      <div class="container-fluid">
+        <div class="card card-default">
+          <div class="card-header">
+            <h3 class="card-title">User - {{user.uid}}</h3>
+          </div>
+          <!-- /.card-header -->
+          <div class="card-body">
+          <form method="POST">
+            <h5>User information</h5>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label>Username</label>
+                  <input name="username" type="text" class="form-control is-valid" value="{{user.username}}" {{'disabled' if user.id != current_user.id and current_user.category != 'admin' else ''}}/>
+                </div>
+                <!-- /.form-group -->
+                <div class="form-group">
+                  <label>E-mail</label>
+                  <input name="email" type="text" class="form-control" value="{{user.email}}" {{'disabled' if user.id != current_user.id and current_user.category != 'admin' else ''}}/>
+                </div>
+                <!-- /.form-group -->
+                <div class="form-group">
+                  <label>First Name</label>
+                  <input name="given_name" type="text" class="form-control" value="{{user.given_name|default('', true)}}" {{'disabled' if user.id != current_user.id and current_user.category != 'admin' else ''}}/>
+                </div>
+                <!-- /.form-group -->
+                <div class="form-group">
+                  <label>Last Name</label>
+                  <input name="family_name" type="text" class="form-control" value="{{user.family_name|default('', true)}}" {{'disabled' if user.id != current_user.id and current_user.category != 'admin' else ''}}/>
+                </div>
+                <!-- /.form-group -->
+                {% if current_user.id == user.id %}
+                <div class="form-group">
+                  <label>Password</label>
+                  <input name="password" type="password" class="form-control" placeholder="Password">
+                </div>
+                {% endif %}
+                <!-- /.form-group -->
+                {% if current_user.category == "admin" or current_user.category == "teacher" %}
+                <div class="form-group">
+                  <label>User category</label>
+                  <select name="user_category" class="form-control">
+                    <option {{'selected' if user.category == 'user' else ''}}>user</option>
+                    <option {{'selected' if user.category == 'student' else ''}}>student</option>
+                    {% if current_user.category == "admin" %}
+                    <option {{'selected' if user.category == 'teacher' else ''}}>teacher</option>
+                    <option {{'selected' if user.category == 'admin' else ''}}>admin</option>
+                    {% endif %}
+                  </select>
+                </div>
+                {% endif %}
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label>User groups</label>
+                  <select name="groups" multiple class="form-control">
+                    <option>group 1</option>
+                    <option>group 2</option>
+                    <option>group 3</option>
+                    <option>group 4</option>
+                    <option>group 5</option>
+                  </select>
+                </div>
+              </div>
+            </div> <!-- /.row -->
+
+            <div class="row">
+              <button class="btn btn-primary" type="submit">Save</button>
+              <a href="{{url_for(return_path|default('home_blueprint.index', true))}}" class="btn btn-secondary mx-2" role="button" aria-pressed="true">Cancel</a>
+            </div>
+            <!-- /.row -->
+          </form>
+          </div>
+        </div>
+        <!-- /.card -->
+      </div><!-- /.container-fluid -->
+    </section>
+    <!-- /.content -->
+  </div>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+  <!-- jQuery -->
+  <script src="/static/assets/plugins/jquery/jquery.min.js"></script>
+  <!-- Bootstrap 4 -->
+  <script src="/static/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <!-- Select2 -->
+  <script src="/static/assets/plugins/select2/js/select2.full.min.js"></script>
+  <!-- InputMask -->
+  <script src="/static/assets/plugins/moment/moment.min.js"></script>
+  <script src="/static/assets/plugins/inputmask/jquery.inputmask.min.js"></script>
+  <!-- date-range-picker -->
+  <script src="/static/assets/plugins/daterangepicker/daterangepicker.js"></script>
+  <!-- Tempusdominus Bootstrap 4 -->
+  <script src="/static/assets/plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js"></script>
+  <!-- AdminLTE App -->
+  <script src="/static/assets/js/adminlte.min.js"></script>
+  <!-- Page script -->
+  <script>
+    $(function () {
+      //Initialize Select2 Elements
+      $('.select2').select2()
+
+      //Initialize Select2 Elements
+      $('.select2bs4').select2({
+        theme: 'bootstrap4'
+      })
+
+      //Date range picker
+      $('#reservationdate').datetimepicker({
+          format: 'L'
+      });
+      //Date range picker
+      $('#reservation').daterangepicker()
+      //Date range picker with time picker
+      $('#reservationtime').daterangepicker({
+        timePicker: true,
+        timePickerIncrement: 30,
+        locale: {
+          format: 'DD/MM/YYYY HH:mm'
+        }
+      })
+      //Date range as a button
+      $('#daterange-btn').daterangepicker(
+        {
+          ranges   : {
+            'Today'       : [moment(), moment()],
+            'Yesterday'   : [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+            'Last 7 Days' : [moment().subtract(6, 'days'), moment()],
+            'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+            'This Month'  : [moment().startOf('month'), moment().endOf('month')],
+            'Last Month'  : [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+          },
+          startDate: moment().subtract(29, 'days'),
+          endDate  : moment()
+        },
+        function (start, end) {
+          $('#reportrange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'))
+        }
+      )
+
+      //Timepicker
+      $('#timepicker').datetimepicker({
+        format: 'LT'
+      })
+    })
+  </script>
+
+{% endblock javascripts %}

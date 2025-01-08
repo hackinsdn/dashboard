@@ -1,0 +1,150 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Run Lab - Status {% endblock %} 
+
+<!-- Element injected in the BODY element -->
+{% block body_class %} sidebar-mini pace-primary {% endblock body_class %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}
+
+  <!-- Google Font: Source Sans Pro -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
+  <!-- pace-progress -->
+  <link rel="stylesheet" href="/static/assets/plugins/pace-progress/themes/black/pace-theme-flat-top.css">
+  <!-- adminlte-->
+  <link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
+
+{% endblock stylesheets %}
+
+{% block content %}  
+
+  <div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+      <div class="container-fluid">
+        <div class="row mb-2">
+          <div class="col-sm-6">
+            <h1>Running Lab - Status</h1>
+          </div>
+          <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+              <li class="breadcrumb-item"><a href="#">Home</a></li>
+              <li class="breadcrumb-item active">Lab Status</li>
+            </ol>
+          </div>
+        </div>
+      </div><!-- /.container-fluid -->
+    </section>
+
+    <!-- Main content -->
+    <section class="content">
+
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-12">
+            <h4>Wait while checking for resource statuses...</h4>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-12">
+            <div class="card card-primary card-tabs">
+              <div class="card-header p-0 pt-1">
+                <ul class="nav nav-tabs" id="custom-tabs-five-tab" role="tablist">
+                  <li class="nav-item">
+                    <a class="nav-link active" id="custom-tabs-five-overlay-tab" data-toggle="pill" href="#custom-tabs-five-overlay" role="tab" aria-controls="custom-tabs-five-overlay" aria-selected="true">Resource statuses</a>
+                  </li>
+                </ul>
+              </div>
+              <div class="card-body">
+                <div class="tab-content" id="custom-tabs-five-tabContent">
+                  <div class="tab-pane fade show active" id="custom-tabs-five-overlay" role="tabpanel" aria-labelledby="custom-tabs-five-overlay-tab">
+                    <div class="overlay-wrapper">
+                      <div id="loading" class="overlay"><i class="fas fa-3x fa-sync-alt fa-spin"></i><div class="text-bold pt-2">Loading...</div></div>
+                      <ul>
+                        {% for resource in resources %}
+                        <li><span id="{{resource['name']}}" class="badge badge-secondary status-badge">Unknown</span> {{resource['kind']}}/{{resource['name']}}</li>
+                        {% endfor %}
+                      </ul>
+                      <p id="statusText"></p>
+                      <a style="display: none;" id="labLink" class="btn btn-outline-success" href="{{url_for('home_blueprint.view_lab_instance', lab_id=lab_instance_id)}}">Start using the Lab resources and Lab guide!</a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- /.card -->
+            </div>
+          </div>
+        </div>
+        <!-- /.row -->
+      </div>
+      <!-- /.container-fluid -->
+
+    </section>
+    <!-- /.content -->
+  </div>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+  <!-- jQuery -->
+  <script src="/static/assets/plugins/jquery/jquery.min.js"></script>
+  <!-- Bootstrap 4 -->
+  <script src="/static/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <!-- pace-progress -->
+  <script src="/static/assets/plugins/pace-progress/pace.min.js"></script>
+  <!-- AdminLTE App -->
+  <script src="/static/assets/js/adminlte.min.js"></script>
+  <!-- AdminLTE for demo purposes -->
+  <script src="/static/assets/js/demo.js"></script>
+  <!-- Page script -->
+  <script>
+    $(function () {
+      var checkStatus = function() {
+        var request = $.ajax({
+          url: "/api/lab/status/{{lab_instance_id}}",
+          type: "GET",
+          dataType: "json",
+          contentType: "application/json",
+        });
+        request.done(function(data) {
+          if (data.status != "ok") {
+            $("#statusText").text("Failed to get data");
+            document.getElementById("loading").style.display = "none";
+            return;
+          }
+          var allOk = true;
+          $.each(data.result, function(name, status) {
+            if (status != "ok") {
+              allOk = false;
+            } else {
+              $(`#${name}`).text("Ready");
+              $(`#${name}`).removeClass("badge-secondary");
+              $(`#${name}`).addClass("badge-success");
+            }
+          });
+          if (allOk) {
+            $("#statusText").text("All resources are ready!");
+            $("#labLink").show();
+            $(".status-badge").text("Ready");
+            $(".status-badge").removeClass("badge-secondary");
+            $(".status-badge").addClass("badge-success");
+            document.getElementById("loading").style.display = "none"
+          } else {
+            setTimeout(checkStatus, 2000);
+          }
+        });
+        request.fail(function(xhr) {
+          $("#statusText").text("Failed to process request: " + xhr.responseText);
+          document.getElementById("loading").style.display = "none"
+        });
+      };
+      setTimeout(checkStatus, 3000);
+    })
+  </script>
+
+{% endblock javascripts %}

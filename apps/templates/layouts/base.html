@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="/static/assets/favicon.ico">
+  
+  <title>
+    Dashboard HackInSDN - {% block title %}{% endblock %}
+  </title> 
+
+  {% block stylesheets %}{% endblock stylesheets %}
+
+</head>
+<body class="hold-transition {% block body_class %}{% endblock body_class %}">
+<div class="wrapper">
+
+    {% include 'includes/navigation.html' %}
+
+    {% include 'includes/sidebar.html' %}
+
+    {% block content %}{% endblock content %}
+
+    {% include 'includes/footer.html' %}
+
+</div>
+<!-- ./wrapper -->
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}{% endblock javascripts %}
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-TM8NVXT7SK"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-TM8NVXT7SK');
+</script>
+
+</body>
+</html>

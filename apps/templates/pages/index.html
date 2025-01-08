@@ -1,0 +1,503 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Home {% endblock %} 
+
+<!-- Element injected in the BODY element -->
+{% block body_class %} sidebar-mini layout-navbar-fixed {% endblock body_class %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}
+
+  <!-- Google Font: Source Sans Pro -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
+  <!-- overlayScrollbars -->
+  <link rel="stylesheet" href="/static/assets/plugins/overlayScrollbars/css/OverlayScrollbars.min.css">
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="/static/assets/plugins/leaflet/leaflet.css">
+  <!-- Theme style -->
+  <link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
+
+{% endblock stylesheets %}
+
+{% block content %}  
+
+  <!-- Content Wrapper. Contains page content -->
+  <div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+      <div class="container-fluid">
+        <div class="row mb-2">
+          <div class="col-sm-6">
+            <h1 class="m-0 text-dark">HackInSDN Dashboard</h1>
+          </div><!-- /.col -->
+          <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+              <li class="breadcrumb-item"><a href="/">Home</a></li>
+              <li class="breadcrumb-item active">Dashboard</li>
+            </ol>
+          </div><!-- /.col -->
+        </div><!-- /.row -->
+      </div><!-- /.container-fluid -->
+    </div>
+    <!-- /.content-header -->
+
+    <!-- Main content -->
+    <section class="content">
+      <div class="container-fluid">
+        <!-- Info boxes -->
+        <div class="row">
+          <div class="col-12 col-sm-6 col-md-3">
+            <div class="info-box">
+              <span class="info-box-icon bg-info elevation-1"><i class="fas fa-cog"></i></span>
+
+              <div class="info-box-content">
+                <span class="info-box-text">Lab instances</span>
+                <span class="info-box-number">
+                  {{stats['lab_instances']}}
+                </span>
+              </div>
+              <!-- /.info-box-content -->
+            </div>
+            <!-- /.info-box -->
+          </div>
+          <!-- /.col -->
+          <div class="col-12 col-sm-6 col-md-3">
+            <div class="info-box mb-3">
+              <span class="info-box-icon bg-danger elevation-1"><i class="fas fa-book"></i></span>
+
+              <div class="info-box-content">
+                <span class="info-box-text">Registered Labs</span>
+                <span class="info-box-number">{{stats['registered_labs']}}</span>
+              </div>
+              <!-- /.info-box-content -->
+            </div>
+            <!-- /.info-box -->
+          </div>
+          <!-- /.col -->
+
+          <!-- fix for small devices only -->
+          <div class="clearfix hidden-md-up"></div>
+
+          <!-- /.col -->
+          <div class="col-12 col-sm-6 col-md-3">
+            <div class="info-box mb-3">
+              <span class="info-box-icon bg-warning elevation-1"><i class="fas fa-users"></i></span>
+
+              <div class="info-box-content">
+                <span class="info-box-text">Users</span>
+                <span class="info-box-number">{{stats['users']}}</span>
+              </div>
+              <!-- /.info-box-content -->
+            </div>
+            <!-- /.info-box -->
+          </div>
+          <!-- /.col -->
+          <div class="col-12 col-sm-6 col-md-3">
+            <div class="info-box mb-3">
+              <span class="info-box-icon bg-success elevation-1"><i class="fas fa-thumbs-up"></i></span>
+
+              <div class="info-box-content">
+                <span class="info-box-text">Likes</span>
+                <span class="info-box-number">{{stats['likes']}}</span>
+              </div>
+              <!-- /.info-box-content -->
+            </div>
+            <!-- /.info-box -->
+          </div>
+          <!-- /.col -->
+        </div>
+        <!-- /.row -->
+
+        <!-- Main row -->
+        <div class="row">
+          <!-- Left col -->
+          <div class="col-md-12">
+            <!-- MAP & BOX PANE -->
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">RNP Testbed</h3>
+              </div>
+              <!-- /.card-header -->
+              <div class="card-body p-0">
+                <div class="row">
+                  <!-- right col -->
+                  <div class="col-md-6">
+                    <div class="d-md-flex">
+                      <div class="p-1 flex-fill" style="overflow: hidden">
+                        <!-- Map will be created here -->
+                        <div id="map" style="height: 500px">
+                        </div>
+                      </div>
+                    </div><!-- /.d-md-flex -->
+                  </div> <!-- / right col -->
+                  <!-- left col -->
+                  <div class="col-md-6">
+                    <!-- Info Boxes Style 2 -->
+                    <div class="info-box mb-3 mt-3 bg-warning">
+                      <span class="info-box-icon"><i class="fas fa-microchip"></i></span>
+
+                      <div class="info-box-content">
+                        <span class="info-box-text">Available CPU</span>
+                        <span class="info-box-number">380</span>
+                      </div>
+                      <!-- /.info-box-content -->
+                    </div>
+                    <!-- /.info-box -->
+                    <div class="info-box mb-3 bg-success">
+                      <span class="info-box-icon"><i class="far fa-memory"></i></span>
+
+                      <div class="info-box-content">
+                        <span class="info-box-text">Available Memory</span>
+                        <span class="info-box-number">92,050 GB</span>
+                      </div>
+                      <!-- /.info-box-content -->
+                    </div>
+                    <!-- /.info-box -->
+                    <div class="info-box mb-3 bg-danger">
+                      <span class="info-box-icon"><i class="fas fa-database"></i></span>
+
+                      <div class="info-box-content">
+                        <span class="info-box-text">Storage</span>
+                        <span class="info-box-number">114,381 GB</span>
+                      </div>
+                      <!-- /.info-box-content -->
+                    </div>
+                    <!-- /.info-box -->
+                    <div class="info-box mb-3 bg-info">
+                      <span class="info-box-icon"><i class="fas fa-regular fa-cube"></i></span>
+
+                      <div class="info-box-content">
+                        <span class="info-box-text">Pods</span>
+                        <span class="info-box-number">23 / 12,000</span>
+                      </div>
+                      <!-- /.info-box-content -->
+                    </div>
+                    <!-- /.info-box -->
+                    <div class="info-box mb-3 bg-secondary">
+                      <span class="info-box-icon"><i class="fas fa-solid fa-desktop"></i></span>
+
+                      <div class="info-box-content">
+                        <span class="info-box-text">Nodes</span>
+                        <span class="info-box-number">9 / 11</span>
+                      </div>
+                      <!-- /.info-box-content -->
+                    </div>
+                    <!-- /.info-box -->
+                  </div> <!-- right col -->
+                </div> <!-- row -->
+              </div>
+              <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
+          </div> <!-- col -->
+        </div> <!-- row -->
+
+        <!-- Main row -->
+        <div class="row">
+          <div class="col-md-12">
+            <div class="card">
+              <div class="card-header">
+                <h5 class="card-title">Lab Usage Report</h5>
+              </div>
+              <!-- /.card-header -->
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-8">
+                    <p class="text-center">
+                      <strong>Lab instances created: {{stats['lab_inst_period_report']}}</strong>
+                    </p>
+
+                    <div class="chart">
+                      <!-- Sales Chart Canvas -->
+                      <canvas id="salesChart" height="180" style="height: 180px;"></canvas>
+                    </div>
+                    <!-- /.chart-responsive -->
+                  </div>
+                  <!-- /.col -->
+                  <div class="col-md-4">
+                    <p class="text-center">
+                      <strong>User evaluation</strong>
+                    </p>
+
+                    <div class="progress-group">
+                      Completed Labs
+                      <span class="float-right"><b>{{stats['cpu_usage']}}</b>/{{stats['cpu_capacity']}}</span>
+                      <div class="progress progress-sm">
+                        <div class="progress-bar bg-primary" style="width: 80%"></div>
+                      </div>
+                    </div>
+                    <!-- /.progress-group -->
+
+                    <div class="progress-group">
+                      Answred questions
+                      <span class="float-right"><b>310</b>/400</span>
+                      <div class="progress progress-sm">
+                        <div class="progress-bar bg-danger" style="width: 75%"></div>
+                      </div>
+                    </div>
+
+                    <!-- /.progress-group -->
+                    <div class="progress-group">
+                      <span class="progress-text">Solved Challenges</span>
+                      <span class="float-right"><b>480</b>/800</span>
+                      <div class="progress progress-sm">
+                        <div class="progress-bar bg-success" style="width: 60%"></div>
+                      </div>
+                    </div>
+
+                    <!-- /.progress-group -->
+                    <div class="progress-group">
+                      Send Inquiries
+                      <span class="float-right"><b>250</b>/500</span>
+                      <div class="progress progress-sm">
+                        <div class="progress-bar bg-warning" style="width: 50%"></div>
+                      </div>
+                    </div>
+                    <!-- /.progress-group -->
+                  </div>
+                  <!-- /.col -->
+                </div>
+                <!-- /.row -->
+              </div>
+              <!-- ./card-body -->
+              <div class="card-footer">
+                <div class="row">
+                  <div class="col-sm-4 col-8">
+                    <div class="description-block border-right">
+                      <span class="description-percentage text-success"><i class="fas fa-caret-up"></i> 17%</span>
+                      <h5 class="description-header">35</h5>
+                      <span class="description-text">LAST MONTH LAB COMPLETION</span>
+                    </div>
+                    <!-- /.description-block -->
+                  </div>
+                  <!-- /.col -->
+                  <div class="col-sm-4 col-8">
+                    <div class="description-block border-right">
+                      <span class="description-percentage text-warning"><i class="fas fa-caret-left"></i> 0%</span>
+                      <h5 class="description-header">10</h5>
+                      <span class="description-text">LAST MONTH ANSWRED QUESTIONS</span>
+                    </div>
+                    <!-- /.description-block -->
+                  </div>
+                  <!-- /.col -->
+                  <div class="col-sm-4 col-8">
+                    <div class="description-block border-right">
+                      <span class="description-percentage text-success"><i class="fas fa-caret-up"></i> 20%</span>
+                      <h5 class="description-header">5</h5>
+                      <span class="description-text">LAST MONTH SOLVED CHALLENGES</span>
+                    </div>
+                    <!-- /.description-block -->
+                  </div>
+                </div>
+                <!-- /.row -->
+              </div>
+              <!-- /.card-footer -->
+            </div>
+            <!-- /.card -->
+          </div>
+          <!-- /.col -->
+        </div>
+        <!-- /.row -->
+
+        <!-- Main row -->
+        <div class="row">
+          <!-- Left col -->
+          <div class="col-md-8">
+            <!-- RECENT LAB LIST -->
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Recently Added Labs</h3>
+              </div>
+              <!-- /.card-header -->
+              <div class="card-body p-0">
+                <ul class="products-list product-list-in-card pl-2 pr-2">
+                  <li class="item">
+                    <div class="product-img">
+                      <img src="/static/assets/img/default-150x150.png" alt="Product Image" class="img-size-50">
+                    </div>
+                    <div class="product-info">
+                      <a href="javascript:void(0)" class="product-title">Simple Attacks - Scan, Brute-force, DoS
+                        <span class="badge badge-warning float-right">$1800</span></a>
+                      <span class="product-description">
+                        Lab demonstrating simple network attacks such as network scanning, application brute-force and Denial of Service.
+                      </span>
+                    </div>
+                  </li>
+                  <!-- /.item -->
+                  <li class="item">
+                    <div class="product-img">
+                      <img src="/static/assets/img/default-150x150.png" alt="Product Image" class="img-size-50">
+                    </div>
+                    <div class="product-info">
+                      <a href="javascript:void(0)" class="product-title">Distributed DoS - Orchestration, Execution, Detection and Mitigation
+                        <span class="badge badge-info float-right">$700</span></a>
+                      <span class="product-description">
+                        Advanced Lab on Distributed Denial of Service covering all the phases of an typical attack: orchestration, execution, detection and mitigation.
+                      </span>
+                    </div>
+                  </li>
+                  <!-- /.item -->
+                  <li class="item">
+                    <div class="product-img">
+                      <img src="/static/assets/img/default-150x150.png" alt="Product Image" class="img-size-50">
+                    </div>
+                    <div class="product-info">
+                      <a href="javascript:void(0)" class="product-title">DNS Tunneling
+                      <span class="badge badge-danger float-right">
+                        $350
+                      </span>
+                      </a>
+                      <span class="product-description">
+                        DNS tunneling is an exploit method that abuses the DNS protocol to tunnel malware and other data via a client-server model. This lab will demonstrate how this attack works, how to monitor and how to mitigate.
+                      </span>
+                    </div>
+                  </li>
+                  <!-- /.item -->
+                  <li class="item">
+                    <div class="product-img">
+                      <img src="/static/assets/img/default-150x150.png" alt="Product Image" class="img-size-50">
+                    </div>
+                    <div class="product-info">
+                      <a href="javascript:void(0)" class="product-title">MISP Threat Intelligence
+                        <span class="badge badge-success float-right">$399</span></a>
+                      <span class="product-description">
+                        On this lab you will learn how to use MISP Threat Intelligence Platform to share indicators of compromise and integrate it with Zeek IDS to detect downloaded malwares on the network.
+                      </span>
+                    </div>
+                  </li>
+                  <!-- /.item -->
+                  <li class="item">
+                    <div class="product-img">
+                      <img src="/static/assets/img/default-150x150.png" alt="Product Image" class="img-size-50">
+                    </div>
+                    <div class="product-info">
+                      <a href="javascript:void(0)" class="product-title">IA-powered Anomaly Detection
+                        <span class="badge badge-success float-right">$4791</span></a>
+                      <span class="product-description">
+                        Lab demonstrating how to leverage network telemetry to feed IA/ML algorithms/models for Anomaly Detection.
+                      </span>
+                    </div>
+                  </li>
+                  <!-- /.item -->
+                </ul>
+              </div>
+              <!-- /.card-body -->
+              <div class="card-footer text-center">
+                <a href="javascript:void(0)" class="uppercase">View All Labs</a>
+              </div>
+              <!-- /.card-footer -->
+            </div>
+            <!-- /.card RECENT LAB LIST -->
+          </div>
+          <!-- /Left col -->
+
+          <!-- Right col -->
+          <div class="col-md-4">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">Lab categories and usage</h3>
+
+                <div class="card-tools">
+                  <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                    <i class="fas fa-minus"></i>
+                  </button>
+                  <button type="button" class="btn btn-tool" data-card-widget="remove">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              </div>
+              <!-- /.card-header -->
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-8">
+                    <div class="chart-responsive">
+                      <canvas id="pieChart" height="150"></canvas>
+                    </div>
+                    <!-- ./chart-responsive -->
+                  </div>
+                  <!-- /.col -->
+                  <div class="col-md-4">
+                    <ul class="chart-legend clearfix">
+                      <li><i class="far fa-circle text-danger"></i> Offensive Security</li>
+                      <li><i class="far fa-circle text-success"></i> Intermediate Labs</li>
+                      <li><i class="far fa-circle text-warning"></i> Advanced Labs</li>
+                      <li><i class="far fa-circle text-info"></i> Introductory Labs</li>
+                      <li><i class="far fa-circle text-primary"></i> Defensive Security</li>
+                      <li><i class="far fa-circle text-secondary"></i> Networking</li>
+                    </ul>
+                  </div>
+                  <!-- /.col -->
+                </div>
+                <!-- /.row -->
+              </div>
+              <!-- /.card-body -->
+              <div class="card-footer bg-white p-0">
+                <ul class="nav nav-pills flex-column">
+                  <li class="nav-item">
+                    <a href="#" class="nav-link">
+                      UFBA students
+                      <span class="float-right text-danger">231 
+                        (<i class="fas fa-arrow-down text-sm"></i> 12%)
+                      </span>
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a href="#" class="nav-link">
+                      IFBA students
+                      <span class="float-right text-success">56 
+                        (<i class="fas fa-arrow-up text-sm"></i> 4%)
+                      </span>
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a href="#" class="nav-link">
+                      No-affiliation students
+                      <span class="float-right text-warning"> 100
+                        (<i class="fas fa-arrow-left text-sm"></i> 0%)
+                      </span>
+                    </a>
+                  </li>
+                </ul>
+              </div>
+              <!-- /.footer -->
+            </div>
+            <!-- /.card -->
+
+          </div>
+          <!-- /.col -->
+        </div>
+        <!-- /.row -->
+      </div><!--/. container-fluid -->
+    </section>
+    <!-- /.content -->
+  </div>
+  <!-- /.content-wrapper -->
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+  <!-- REQUIRED SCRIPTS -->
+  <!-- jQuery -->
+  <script src="/static/assets/plugins/jquery/jquery.min.js"></script>
+  <!-- Bootstrap -->
+  <script src="/static/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <!-- overlayScrollbars -->
+  <script src="/static/assets/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js"></script>
+  <!-- AdminLTE App -->
+  <script src="/static/assets/js/adminlte.js"></script>
+
+  <!-- PAGE PLUGINS -->
+  <!-- Leaflet -->
+  <script src="/static/assets/plugins/leaflet/leaflet.js"></script>
+  <script src="/static/assets/plugins/leaflet/Brasil.min.js"></script>
+  <!-- ChartJS -->
+  <script src="/static/assets/plugins/chart.js/Chart.min.js"></script>
+
+  <!-- PAGE SCRIPTS -->
+  <script src="/static/assets/js/pages/dashboard2.js"></script>
+
+{% endblock javascripts %}

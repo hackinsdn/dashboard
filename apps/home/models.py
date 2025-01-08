@@ -1,0 +1,85 @@
+# -*- encoding: utf-8 -*-
+
+from apps import db
+from apps.authentication.models import Users
+import uuid
+import secrets
+import json
+import markdown2
+
+def generate_uuid():
+    return str(uuid.uuid4())
+
+def generate_uuid_14():
+    return uuid.uuid4().hex[:14]
+
+def generate_token():
+    return secrets.token_urlsafe(64)
+
+class LabCategories(db.Model):
+    __tablename__ = 'lab_categories'
+    id = db.Column(db.Integer, primary_key=True)
+    category = db.Column(db.String(64))
+    color_cls = db.Column(db.String(16))
+
+class Labs(db.Model):
+    __tablename__ = 'labs'
+    id = db.Column(db.String(40), primary_key=True, default=generate_uuid)
+    title = db.Column(db.String(255))
+    description = db.Column(db.String)
+    category_id = db.Column(db.Integer, db.ForeignKey("lab_categories.id"))
+    extended_desc = db.Column(db.LargeBinary)
+    lab_guide_md = db.Column(db.LargeBinary)
+    lab_guide_html = db.Column(db.LargeBinary)
+    goals = db.Column(db.Text)
+    manifest = db.Column(db.Text)
+
+    def set_extended_desc(self, desc_str):
+        self.extended_desc = desc_str.encode()
+
+    @property
+    def extended_desc_str(self):
+        return self.extended_desc.decode()
+
+    def set_lab_guide_md(self, lab_guide_md):
+        self.lab_guide_md = lab_guide_md.encode()
+        self.lab_guide_html = markdown2.markdown(lab_guide_md, extras=['cuddled-lists', 'fenced-code-blocks', 'alerts']).encode()
+
+    @property
+    def lab_guide_html_str(self):
+        return self.lab_guide_html.decode()
+
+    @property
+    def lab_guide_md_str(self):
+        return self.lab_guide_md.decode()
+
+class LabInstances(db.Model):
+    __tablename__ = 'lab_instances'
+    id = db.Column(db.String(15), primary_key=True, default=generate_uuid_14)
+    token = db.Column(db.String, default=generate_token)
+    _k8s_resources = db.Column(db.String)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
+    lab_id = db.Column(db.String(36), db.ForeignKey("labs.id"))
+    active = db.Column(db.Boolean, default=True)
+
+    def __init__(self, id, user, lab, k8s_resources):
+        self.id = id
+        self.user_id = user.id
+        self.lab_id = lab.id
+        self.k8s_resources = k8s_resources
+
+    @property
+    def k8s_resources(self):
+        return json.loads(self._k8s_resources)
+
+    @k8s_resources.setter
+    def k8s_resources(self, k8s_resources):
+        self._k8s_resources = json.dumps(k8s_resources)
+
+    def get_user(self):
+        user = Users.query.get(self.user_id)
+        return user.realname
+
+    def get_lab(self):
+        lab = Labs.query.get(self.lab_id)
+        return lab.title

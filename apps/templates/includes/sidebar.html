@@ -1,0 +1,118 @@
+  <!-- Main Sidebar Container sidebar-dark-primary / sidebar-light-navy -->
+  <aside class="main-sidebar sidebar-dark-primary elevation-4">
+    <!-- Brand Logo -->
+    <a href="/" class="brand-link">
+      <img src="/static/assets/img/hackinsdn.png" alt="HackInSDN" class="brand-image img-circle elevation-3" style="opacity: .8">
+      <span class="brand-text font-weight-light">HackInSDN</span>
+    </a>
+    <img src="/static/assets/img/hackersdobem.png" alt="HackInSDN" class="img-fluid">
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <!-- Sidebar user panel (optional) -->
+      <div class="user-panel mt-3 pb-3 mb-3 d-flex">
+        <div class="image">
+          <img src="/static/assets/img/user-avatar-1.png" class="img-circle elevation-2" alt="User Image">
+        </div>
+        <div class="info">
+          <a href="/profile" class="d-block">
+            {{ current_user.username }}
+          </a>
+        </div>
+      </div>
+
+      <!-- SidebarSearch Form -->
+      <div class="form-inline">
+        <div class="input-group" data-widget="sidebar-search">
+          <input class="form-control form-control-sidebar" type="search" placeholder="Search" aria-label="Search">
+          <div class="input-group-append">
+            <button class="btn btn-sidebar">
+              <i class="fas fa-search fa-fw"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar Menu -->
+      <nav class="mt-2">
+        <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+          <!-- Add icons to the links using the .nav-icon class
+               with font-awesome or any other icon font library -->
+          <li class="nav-item">
+            <a href="{{url_for('home_blueprint.index')}}" class="nav-link {% if 'index' in segment %} active {% endif %}">
+              <i class="nav-icon fas fa-tachometer-alt"></i>
+              <p>
+                Dashboard
+              </p>
+            </a>
+          </li>
+          <li class="nav-item has-treeview {% if 'labs' in segment %} menu-open {% endif %}">
+            <a href="#" class="nav-link {% if 'labs' in segment %} active {% endif %}">
+              <i class="nav-icon fas fa-th"></i>
+              <p>
+                Labs
+                <i class="fas fa-angle-left right"></i>
+                <span class="right badge badge-danger">New</span>
+              </p>
+            </a>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="{{url_for('home_blueprint.view_labs')}}" class="nav-link {% if request.url_rule.endpoint == 'home_blueprint.view_labs' %} active {% endif %}">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>View Labs</p>
+                </a>
+              </li>
+              {% if current_user.category == "admin" or current_user.category == "teacher" %}
+              <li class="nav-item">
+                <a href="{{url_for('home_blueprint.edit_lab', lab_id='new')}}" class="nav-link {% if request.url_rule.endpoint == 'home_blueprint.edit_lab' %} active {% endif %}">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Create Lab</p>
+                </a>
+              </li>
+              {% endif %}
+            </ul>
+          </li>
+          <li class="nav-item">
+            <a href="{{url_for('home_blueprint.running_labs')}}" class="nav-link {% if request.url_rule.endpoint == 'home_blueprint.running_labs' %} active {% endif %}">
+              <i class="nav-icon far fa-calendar-alt"></i>
+              <p>
+                Running Labs
+                <span class="badge badge-info right">2</span>
+              </p>
+            </a>
+          </li>
+          {% if current_user.category == "admin" or current_user.category == "teacher" %}
+          <li class="nav-header">MANAGEMENT</li>
+          <li class="nav-item">
+            <a href="{{url_for('home_blueprint.view_users')}}" class="nav-link {% if request.url_rule.endpoint == 'home_blueprint.view_users' %} active {% endif %}">
+              <i class="nav-icon fas fa-users"></i>
+              <p>
+                Users
+              </p>
+            </a>
+          </li>
+          {% endif %}
+          <li class="nav-header">MORE INFO</li>
+          <li class="nav-item">
+            <a href="{{url_for('home_blueprint.view_documentation')}}" class="nav-link {% if request.url_rule.endpoint == 'home_blueprint.view_documentation' %} active {% endif %}">
+              <i class="nav-icon fas fa-file"></i>
+              <p>
+                Documentation
+              </p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{{url_for('home_blueprint.view_gallery')}}" class="nav-link {% if request.url_rule.endpoint == 'home_blueprint.view_gallery' %} active {% endif %}">
+              <i class="nav-icon far fa-plus-square"></i>
+              <p>
+                Extra tools
+              </p>
+            </a>
+          </li>
+        </ul>
+      </nav>
+      <!-- /.sidebar-menu -->
+    </div>
+    <!-- /.sidebar -->
+  </aside>
+  

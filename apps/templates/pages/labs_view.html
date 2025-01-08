@@ -1,0 +1,126 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Intermediate Labs {% endblock %} 
+
+<!-- Element injected in the BODY element -->
+{% block body_class %} sidebar-mini layout-navbar-fixed {% endblock body_class %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}
+
+  <!-- Google Font: Source Sans Pro -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
+  <!-- overlayScrollbars -->
+  <link rel="stylesheet" href="/static/assets/plugins/overlayScrollbars/css/OverlayScrollbars.min.css">
+  <!-- Theme style -->
+  <link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
+
+{% endblock stylesheets %}
+
+{% block content %}  
+
+  <div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+      <div class="container-fluid">
+        <div class="row mb-2">
+          <div class="col-sm-6">
+            <h1>View Labs</h1>
+          </div>
+          <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+              <li class="breadcrumb-item"><a href="{{url_for('home_blueprint.index')}}">Home</a></li>
+              <li class="breadcrumb-item"><a href="{{url_for('home_blueprint.view_labs')}}">Labs</a></li>
+              <li class="breadcrumb-item active">View Labs</li>
+            </ol>
+          </div>
+        </div>
+        <div class="row">
+          {% for cat_id in lab_categories %}
+          <button class="btn btn-{{lab_categories[cat_id].color_cls}} mx-2 filter-button" data-filter="category-{{cat_id}}">
+            {{lab_categories[cat_id].category}}
+          </button>
+          {% endfor %}
+        </div>
+      </div><!-- /.container-fluid -->
+    </section>
+
+    <!-- Main content -->
+    <section class="content">
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-12">
+            {% for lab in labs %}
+            <!-- card begin -->
+            <div class="card card-{{lab_categories[lab.category_id].color_cls}} filter category-{{lab.category_id}}">
+              <div class="card-header">
+                <h2 class="card-title">{{lab.title}}</h2>
+                <div class="card-tools">
+                  <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
+                    <i class="fas fa-minus"></i>
+                  </button>
+                  <button type="button" class="btn btn-tool" data-card-widget="remove" title="Remove">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="card-body">
+                {{lab.extended_desc_str|safe}}
+              </div>
+              <!-- /.card-body -->
+              <div class="card-footer">
+                <a class="btn btn-primary mx-2" href="/run_lab/{{lab.id}}" role="button">Start Lab</a>
+                {% if current_user.category == "admin" or current_user.category == "teacher" %}
+                <a class="btn btn-warning mx-2" href="{{url_for('home_blueprint.edit_lab', lab_id=lab.id)}}" role="button">Update Lab</a>
+                {% endif %}
+              </div>
+              <!-- /.card-footer-->
+            </div>
+            <!-- /.card end -->
+            {% endfor %}
+            </div>
+            <!-- /.card end -->
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- /.content -->
+  </div>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+  <!-- REQUIRED SCRIPTS -->
+  <!-- jQuery -->
+  <script src="/static/assets/plugins/jquery/jquery.min.js"></script>
+  <!-- Bootstrap -->
+  <script src="/static/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <!-- overlayScrollbars -->
+  <script src="/static/assets/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js"></script>
+  <!-- AdminLTE App -->
+  <script src="/static/assets/js/adminlte.js"></script>
+  <script>
+    $(function () {
+      $(".filter-button").click(function(){
+        $('.filter-button,.active-underline').removeClass('active-underline');
+        $(this).addClass("active-underline");
+        var value = $(this).attr('data-filter');
+        // category-1 == all
+        if (value == "category-1")
+        {
+          $('.filter').show('1000');
+        }
+        else
+        {
+          $(".filter").not('.'+value).hide('3000');
+          $('.filter').filter('.'+value).show('3000');
+        }
+      });
+    });
+  </script>
+
+{% endblock javascripts %}
