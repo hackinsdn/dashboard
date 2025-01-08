@@ -14,7 +14,7 @@ from apps import db, login_manager, oauth, log
 from apps.config import app_config
 from apps.authentication import blueprint
 from apps.authentication.forms import LoginForm, CreateAccountForm
-from apps.authentication.models import Users
+from apps.authentication.models import Users, LoginLogging
 
 from apps.authentication.util import verify_pass
 
@@ -42,7 +42,14 @@ def login():
         if user and verify_pass(password, user.password):
 
             login_user(user)
+            login_log = LoginLogging(ipaddr=request.remote_addr, login=username, auth_provider="local", success=True)
+            db.session.add(login_log)
+            db.session.commit()
             return redirect(url_for('authentication_blueprint.route_default'))
+
+        login_log = LoginLogging(ipaddr=request.remote_addr, login=username, auth_provider="local", success=False)
+        db.session.add(login_log)
+        db.session.commit()
 
         # Something (user or pass) is not ok
         return render_template('pages/login.html',
@@ -82,8 +89,10 @@ def callback():
     if not user:
         user = Users(subject=subject, issuer=issuer, given_name=given_name, family_name=family_name, email=email)
         db.session.add(user)
-        db.session.commit()
 
+    login_log = LoginLogging(ipaddr=request.remote_addr, login=subject, auth_provider=issuer, success=True)
+    db.session.add(login_log)
+    db.session.commit()
 
     login_user(user)
     return redirect(url_for('authentication_blueprint.route_default'))

@@ -1,15 +1,14 @@
 # -*- encoding: utf-8 -*-
-"""
-Copyright (c) 2019 - present AppSeed.us
-"""
 
 import uuid
+from datetime import datetime
 from flask_login import UserMixin
 from sqlalchemy.orm import validates
 
 from apps import db, login_manager
 
 from apps.authentication.util import hash_pass
+from apps.audit_mixin import AuditMixin
 
 def user_category():
     return "user"
@@ -17,14 +16,12 @@ def user_category():
 def generate_uid():
     return uuid.uuid4().hex[:14]
 
-class Users(db.Model, UserMixin):
-
+class Users(db.Model, UserMixin, AuditMixin):
     __tablename__ = 'users'
-
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), unique=True)
     uid = db.Column(db.String(15), unique=True)
-    email = db.Column(db.String(64))
+    email = db.Column(db.String(64), unique=True)
     password = db.Column(db.LargeBinary)
     category = db.Column(db.String(10), default=user_category)
     given_name = db.Column(db.String(64))
@@ -93,3 +90,16 @@ class UserGroups(db.Model):
     __tablename__ = 'user_groups'
     user_id  = db.Column(db.Integer, db.ForeignKey("users.id"), primary_key=True)
     group_id = db.Column(db.Integer, db.ForeignKey("groups.id"), primary_key=True)
+
+
+class LoginLogging(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    ipaddr = db.Column(db.String)
+    login = db.Column(db.String)
+    auth_provider = db.Column(db.String(10))
+    success = db.Column(db.Boolean)
+    datetime = db.Column(db.DateTime, default=datetime.now, nullable=False)
+
+    def __repr__(self):
+        return '<LoginLogging %s %s %s>' % (self.ip_address,
+                                            self.login, self.datetime)

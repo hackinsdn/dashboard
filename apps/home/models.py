@@ -2,10 +2,14 @@
 
 from apps import db
 from apps.authentication.models import Users
+from apps.audit_mixin import AuditMixin
 import uuid
 import secrets
 import json
 import markdown2
+from sqlalchemy import event
+from flask import current_app
+
 
 def generate_uuid():
     return str(uuid.uuid4())
@@ -22,7 +26,7 @@ class LabCategories(db.Model):
     category = db.Column(db.String(64))
     color_cls = db.Column(db.String(16))
 
-class Labs(db.Model):
+class Labs(db.Model, AuditMixin):
     __tablename__ = 'labs'
     id = db.Column(db.String(40), primary_key=True, default=generate_uuid)
     title = db.Column(db.String(255))
@@ -53,7 +57,7 @@ class Labs(db.Model):
     def lab_guide_md_str(self):
         return self.lab_guide_md.decode()
 
-class LabInstances(db.Model):
+class LabInstances(db.Model, AuditMixin):
     __tablename__ = 'lab_instances'
     id = db.Column(db.String(15), primary_key=True, default=generate_uuid_14)
     token = db.Column(db.String, default=generate_token)
@@ -83,3 +87,21 @@ class LabInstances(db.Model):
     def get_lab(self):
         lab = Labs.query.get(self.lab_id)
         return lab.title
+
+class LabAnswers(db.Model, AuditMixin):
+    __tablename__ = 'lab_answers'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
+    lab_id = db.Column(db.String(36), db.ForeignKey("labs.id"))
+    question_label = db.Column(db.String)
+    answer = db.Column(db.String)
+
+
+@event.listens_for(Labs, 'after_insert')
+@event.listens_for(Labs, 'after_update')
+@event.listens_for(Labs, 'after_delete')
+@event.listens_for(LabInstances, 'after_insert')
+@event.listens_for(LabInstances, 'after_update')
+@event.listens_for(LabInstances, 'after_delete')
+def logging_changes(mapper, connection, target):
+    current_app.logger.info(f"update event mapper={mapper} target={target}")
