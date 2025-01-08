@@ -50,17 +50,17 @@ def running_labs():
         return render_template("pages/error.html", title="Error getting running labs", msg="Failed to obtain running labs. Check logs for more information.")
 
     registered_labs = {lab.id: lab.title for lab in Labs.query.all()}
-    registered_user = {user.username: user for user in Users.query.all()}
+    registered_user = {user.uid: user for user in Users.query.all()}
 
     labs = []
-    for lab_id, user_id in running_labs:
-        user = registered_user.get(user_id)
+    for lab_id, user_uid in running_labs:
+        user = registered_user.get(user_uid)
         if not user:
-            current_app.logger.warning(f"Inconsistency found on running lab: owner user not found on database {user_id=} ({lab_id=})")
+            current_app.logger.warning(f"Inconsistency found on running lab: owner user not found on database {user_uid=} ({lab_id=})")
             continue
         lab_inst = LabInstances.query.filter_by(lab_id=lab_id, user_id=user.id, active=True).first()
         if not lab_inst:
-            current_app.logger.warning(f"Inconsistency found on running lab: lab_instance not found for {lab_id=} {user_id=}")
+            current_app.logger.warning(f"Inconsistency found on running lab: lab_instance not found for {lab_id=} {user_uid=}")
             # TODO: create an lab instance? created from command line?
             continue
         lab_dict = {
@@ -68,11 +68,10 @@ def running_labs():
             "lab_id": lab_id,
             "lab_instance_id": lab_inst.id,
             "user": f"{user.name} ({user.email or 'NO-EMAIL'})",
-            "user_id": user_id,
             "resources": [],
         }
         created = None
-        for pod in running_labs[(lab_id, user_id)]:
+        for pod in running_labs[(lab_id, user_uid)]:
             if pod["kind"] != "pod":
                 continue
             #if pod["kind"] == "service":
@@ -127,7 +126,7 @@ def run_lab(lab_id):
 
     pod_hash = uuid.uuid4().hex[:14]
 
-    status, msg = k8s.create_lab(lab_id, lab.manifest, username=current_user.username, pod_hash=pod_hash)
+    status, msg = k8s.create_lab(lab_id, lab.manifest, user_uid=current_user.uid, pod_hash=pod_hash)
 
     if status:
         k8s_resources = []

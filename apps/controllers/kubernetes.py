@@ -70,14 +70,14 @@ class K8sController():
                 return app + "://"
         return "http://"
 
-    def get_labs_by_user(self, username, f_lab_id=None):
+    def get_labs_by_user(self, f_user_uid, f_lab_id=None):
         if not self.v1_api:
             return []
         now = datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0)
         self.update_nodes()
         label_selector = "app=hackinsdn-dashboard"
-        if username:
-            label_selector += f",user_id={username}"
+        if f_user_uid:
+            label_selector += f",user_uid={f_user_uid}"
         if f_lab_id:
             label_selector += f",lab_id={f_lab_id}"
         labs = defaultdict(list)
@@ -88,14 +88,14 @@ class K8sController():
         dep_uid = {}
         for dep in deployments.items:
             lab_id = dep.metadata.labels.get("lab_id")
-            user_id = dep.metadata.labels.get("user_id")
-            if not lab_id or not user_id:
+            user_uid = dep.metadata.labels.get("user_uid")
+            if not lab_id or not user_uid:
                 continue
             dep_uid[dep.metadata.uid] = dep
             containers = [
                 container.name for container in dep.spec.template.spec.containers
             ]
-            labs[(lab_id, user_id)].append({
+            labs[(lab_id, user_uid)].append({
                 "kind": "deployment",
                 "containers_total": dep.status.replicas,
                 "containers_ready": dep.status.ready_replicas,
@@ -130,18 +130,18 @@ class K8sController():
                 dep = rs_uid_to_dep[pod.metadata.owner_references[0].uid]
             except:
                 dep = None
-            lab_id, user_id = None, None
+            lab_id, user_uid = None, None
             if all([
                 app == "hackinsdn-dashboard",
-                not username or pod.metadata.labels.get("user_id") == username,
+                not f_user_uid or pod.metadata.labels.get("user_uid") == f_user_uid,
                 not f_lab_id or pod.metadata.labels.get("lab_id") == f_lab_id,
             ]):
                 lab_id = pod.metadata.labels.get("lab_id")
-                user_id = pod.metadata.labels.get("user_id")
+                user_uid = pod.metadata.labels.get("user_uid")
             elif dep:
                 lab_id = dep.metadata.labels.get("lab_id")
-                user_id = dep.metadata.labels.get("user_id")
-            if not lab_id or not user_id:
+                user_uid = dep.metadata.labels.get("user_uid")
+            if not lab_id or not user_uid:
                 continue
             pod_services[pod.metadata.uid] = []
             statuses = [
@@ -150,7 +150,7 @@ class K8sController():
             containers = [
                 container.name for container in pod.spec.containers
             ]
-            labs[(lab_id, user_id)].append({
+            labs[(lab_id, user_uid)].append({
                 "kind": "pod",
                 "containers_total": len(statuses),
                 "containers_ready": sum(statuses),
@@ -170,17 +170,17 @@ class K8sController():
         )
         for srv in services.items:
             lab_id = srv.metadata.labels.get("lab_id")
-            user_id = srv.metadata.labels.get("user_id")
-            if not lab_id or not user_id:
+            user_uid = srv.metadata.labels.get("user_uid")
+            if not lab_id or not user_uid:
                 continue
             ports = []
             links = []
+            node_ip = self.get_node_ip(pod.spec.node_name)
             for port in srv.spec.ports:
                 ports.append(
                     f"{port.target_port}:{port.node_port}/{port.protocol}"
                 )
                 for pod in app_pod_map.get(srv.spec.selector.get("app"), []):
-                    node_ip = self.get_node_ip(pod.spec.node_name)
                     service_link = [
                         port.name,
                         f"{self.try_get_app(port.name)}{node_ip}:{port.node_port}"
@@ -188,7 +188,7 @@ class K8sController():
                     if port.node_port:
                         pod_services[pod.metadata.uid].append(service_link)
                     links.append(service_link)
-            labs[(lab_id, user_id)].append({
+            labs[(lab_id, user_uid)].append({
                 "kind": "service",
                 "containers_total": 1,
                 "containers_ready": 1,
@@ -207,10 +207,10 @@ class K8sController():
         )
         for cfg in config_maps.items:
             lab_id = cfg.metadata.labels.get("lab_id")
-            user_id = cfg.metadata.labels.get("user_id")
-            if not lab_id or not user_id:
+            user_uid = cfg.metadata.labels.get("user_uid")
+            if not lab_id or not user_uid:
                 continue
-            labs[(lab_id, user_id)].append({
+            labs[(lab_id, user_uid)].append({
                 "kind": "config_map",
                 "containers_total": len(cfg.data),
                 "containers_ready": len(cfg.data),
@@ -282,7 +282,7 @@ class K8sController():
         lab_id,
         manifest,
         dry_run=False,
-        username=None,
+        user_uid=None,
         pod_hash=None,
         allowed_nodes=None,
     ):
@@ -300,7 +300,7 @@ class K8sController():
             try:
                 mapping[identf] = identf_func(
                     dry_run=dry_run,
-                    username=username,
+                    user_uid=user_uid,
                     pod_hash=pod_hash,
                     allowed_nodes=allowed_nodes,
                 )
@@ -322,7 +322,7 @@ class K8sController():
                 doc["metadata"].setdefault("labels", {})
                 doc["metadata"]["labels"] = {
                     "app": "hackinsdn-dashboard",
-                    "user_id": username,
+                    "user_uid": user_uid,
                     "lab_id": lab_id,
                 }
                 yaml_docs.append(doc)
