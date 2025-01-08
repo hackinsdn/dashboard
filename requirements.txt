@@ -1,0 +1,23 @@
+flask
+Werkzeug
+jinja2
+flask-login
+flask_migrate
+WTForms
+flask_wtf
+flask-sqlalchemy
+sqlalchemy
+email_validator
+flask-restx
+authlib
+requests
+python-dotenv
+gunicorn
+eventlet
+Flask-Minify
+flask_socketio
+kubernetes
+markdown2
+
+# flask_mysqldb
+# psycopg2-binary
