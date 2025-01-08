@@ -10,7 +10,6 @@ import re
 import traceback
 import datetime
 import uuid
-import markdown
 import random
 
 from kubernetes import config, client
