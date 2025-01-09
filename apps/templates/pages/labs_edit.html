@@ -239,6 +239,9 @@
               <!-- /.card-header -->
               <div class="card-body">
                 <p>Add here the Lab instructions for students/experimenters to run this Lab (step-by-step) using Markdown format (<a href="https://www.markdownguide.org/basic-syntax/" target="_blank">read more about Markdown syntax</a>):</p>
+                <button class="btn btn-outline-secondary" type="button" id="add-text-input-labguide">Add text question</button>
+                <button class="btn btn-outline-secondary" type="button" id="add-select-input-labguide">Add select question</button>
+                <button class="btn btn-outline-secondary" type="button" id="add-check-input-labguide">Add checkbox question</button>
                 <div class="mb-3">
                   <textarea name="lab_guide" id="lab-edit-guide" class="textarea" placeholder="Place some text here" rows="16">{{lab.lab_guide_md_str|default('', true)}}</textarea>
                 </div>
@@ -466,7 +469,22 @@
       });
       editorLabGuide.setSize("100%", 600);
       //Initialize Select2 Elements
-      $('.select2').select2()
+      $('.select2').select2();
+      $('#add-text-input-labguide').click(function () {
+        var doc = editorLabGuide.getDoc();
+        var cursor = doc.getCursor();
+        doc.replaceRange("<input type='text' name='xpto-foobar' placeholder='insert your text here'>", cursor);
+      });
+      $('#add-select-input-labguide').click(function () {
+        var doc = editorLabGuide.getDoc();
+        var cursor = doc.getCursor();
+        doc.replaceRange("<input type='text' name='xpto-foobar' placeholder='insert your select here'>", cursor);
+      });
+      $('#add-check-input-labguide').click(function () {
+        var doc = editorLabGuide.getDoc();
+        var cursor = doc.getCursor();
+        doc.replaceRange("<input type='text' name='xpto-foobar' placeholder='insert your check here'>", cursor);
+      });
     });
   </script>
 
