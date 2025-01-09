@@ -121,12 +121,46 @@ word-break: break-all;
               <!-- /.table -->
             </div>
             <!-- /.card-body -->
+            <!-- /.card-body -->
+            <div class="card-footer">
+              <button type="button" class="btn btn-outline-dark"  data-toggle="modal" data-target="#modal-finish-lab">
+                <i class="far fa-check"></i>  Finish Lab
+              </button>
+              <button type="button" class="btn btn-outline-dark save-answers">
+                <i class="far fa-save"></i> Save Answers
+              </button>
+            </div>
           </div>
           <!-- /.card -->
         </div>
         <!-- /.col -->
       </div>
       <!-- /.row -->
+
+      <!-- Modal confirmation -->
+      <div class="modal fade" id="modal-finish-lab">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">Confirm Finish Lab</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <p>Are you sure you want to Finish this Lab? (Make sure to save any data you want! After finishing the lab, resources will be deleted.)</p>
+            </div>
+            <div class="modal-footer justify-content-between">
+              <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+              <button type="button" class="btn btn-danger" id="delete-lab">Finish Lab</button>
+            </div>
+          </div>
+          <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+      </div>
+      <!-- /.modal -->
+
       <div class="row">
         <div class="col-md-12">
           <div class="card-dark">
@@ -134,10 +168,18 @@ word-break: break-all;
               <h3 class="card-title">Lab Guide</h3>
             </div>
             <!-- /.card-header -->
-            <div class="card-body">
+            <div class="card-body" id="lab-guide">
                 {{lab_guide|safe}}
             </div>
             <!-- /.card-body -->
+            <div class="card-footer">
+              <button type="button" class="btn btn-outline-dark"  data-toggle="modal" data-target="#modal-finish-lab">
+                <i class="far fa-check"></i>  Finish Lab
+              </button>
+              <button type="button" class="btn btn-outline-dark save-answers">
+                <i class="far fa-save"></i> Save Answers
+              </button>
+            </div>
           </div>
           <!-- /.card -->
         </div>
@@ -169,16 +211,15 @@ word-break: break-all;
   <!-- Page Script -->
   <script>
     $(function () {
+      // Copy button on pre.code
       function setTooltip(btn, message) {
         $(btn).tooltip('hide').attr('data-original-title', message).tooltip('show');
       }
-      
       function hideTooltip(btn) {
         setTimeout(function() {
           $(btn).attr('data-original-title', "Copy to clipboard");
         }, 1000);
       }
-
       var a = document.querySelectorAll("pre");
       [].forEach.call(a, function(a) {
           a.firstChild.insertAdjacentHTML("beforebegin", '<button class="btn btn-outline-dark btn-sm btn-sml float-right copy" title="Copy to clipboard" data-clipboard-snippet>Copy</button>')
@@ -197,6 +238,101 @@ word-break: break-all;
       $('button.copy').tooltip({
         trigger: 'hover focus click',
         placement: 'auto',
+      });
+      // finish lab
+      $('#delete-lab').click(function () {
+        var rows = $('#tableLabs tr').filter(':has(:checkbox:checked)');
+        $("#delete-lab").html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Finishing... ');
+        $("#delete-lab").prop('disabled', true);
+        var request = $.ajax({
+          url:  "/api/lab/{{lab['lab_instance_id']}}",
+          type: "DELETE",
+          dataType: "json",
+          contentType: "application/json",
+        });
+        request.done(function(data) {
+          sessionStorage.setItem('msgSuccess', data.result);
+          location.href = "{{url_for('home_blueprint.running_labs')}}";
+        });
+        request.fail(function(xhr) {
+          sessionStorage.setItem('msgFail', xhr.responseText);
+          location.href = "{{url_for('home_blueprint.running_labs')}}";
+        });
+      });
+      // save answers
+      $('.save-answers').click(function () {
+        var answers = {};
+        $("#lab-guide input, #lab-guide textarea, #lab-guide select").each(function(){
+          var input = $(this);
+          if ((input.attr('type') == "radio" || input.attr('type') == "checkbox") && !this.checked) {
+            return;
+          }
+          if (!input.val()) {
+            return;
+          }
+          answers[input.attr('name')] = input.val();
+        });
+        if (!answers) {
+          return;
+        }
+        var request = $.ajax({
+          url:  "/api/lab_answers/{{lab['lab_instance_id']}}",
+          type: "POST",
+          data: JSON.stringify(answers),
+          dataType: "json",
+          contentType: "application/json",
+        });
+        request.done(function(data) {
+          $(document).Toasts('create', {
+            class: 'bg-success',
+            title: 'Sucess',
+            autohide: true,
+            delay: 4000,
+            body: data.result
+          });
+        });
+        request.fail(function(xhr) {
+          $(document).Toasts('create', {
+            class: 'bg-danger',
+            title: 'Failure',
+            body: data.result
+          });
+        });
+      });
+      // load answers
+      $(window).on("load", function () {
+        var request = $.ajax({
+          url:  "/api/lab_answers/{{lab['lab_instance_id']}}",
+          type: "GET",
+        });
+        request.done(function(data) {
+          if (!data.result || $.isEmptyObject(data.result)) {
+            return;
+          }
+          $("#lab-guide input, #lab-guide textarea, #lab-guide select").each(function(){
+            var input = $(this);
+            if (input.attr('name') in data.result) {
+              if (input.attr('type') == "radio") {
+                if (input.val() == data.result[input.attr('name')]) {
+                  this.checked = true;
+                }
+              } else if (input.attr('type') == "checkbox") {
+                input.prop("checked", true);
+              } else {
+                input.val(data.result[input.attr('name')]);
+              }
+            }
+          });
+        });
+        request.fail(function(xhr) {
+          $(document).Toasts('create', {
+            class: 'bg-danger',
+            title: 'Failed to load answers',
+            autohide: true,
+            delay: 4000,
+            body: data.result
+          });
+        });
       });
     })
   </script>

@@ -1,10 +1,11 @@
 # -*- encoding: utf-8 -*-
 """HackInSDN"""
 
+import json
 from apps import db
 from apps.api import blueprint
 from apps.controllers import k8s
-from apps.home.models import Labs, LabInstances
+from apps.home.models import Labs, LabInstances, LabAnswers
 from apps.authentication.models import Users
 from flask import request, current_app
 from flask_login import login_required, current_user
@@ -134,3 +135,50 @@ def bulk_approve_users():
         return {"status": "fail", "result": "Failed to save updated data"}, 400
 
     return {"status": "ok", "result": "all users approved"}, 200
+
+@blueprint.route('/lab_answers/<lab_inst_id>', methods=["GET"])
+@login_required
+def get_lab_answers(lab_inst_id):
+    if current_user.category == "user":
+        return {}, 404
+
+    lab_inst = LabInstances.query.get(lab_inst_id)
+    if not lab_inst:
+        return {"status": "fail", "result": "Lab instance not found"}, 404
+
+    if lab_inst.user_id != current_user.id:
+        return {"status": "fail", "result": "Unauthorized access to this lab"}, 401
+
+    answers = {}
+    lab_answers = LabAnswers.query.filter_by(lab_id=lab_inst.lab_id, user_id=current_user.id).first()
+    if lab_answers:
+        answers = json.loads(lab_answers.answers)
+
+    return {"status": "ok", "result": answers}, 200
+
+@blueprint.route('/lab_answers/<lab_inst_id>', methods=["POST"])
+@login_required
+def save_lab_answers(lab_inst_id):
+    if current_user.category == "user":
+        return {}, 404
+
+    content = request.get_json(silent=True)
+    if not content:
+        return {"status": "fail", "result": "invalid content"}, 400
+
+    lab_inst = LabInstances.query.get(lab_inst_id)
+    if not lab_inst:
+        return {"status": "fail", "result": "Lab instance not found"}, 404
+
+    if lab_inst.user_id != current_user.id:
+        return {"status": "fail", "result": "Unauthorized access to this lab"}, 401
+
+    lab_answers = LabAnswers.query.filter_by(lab_id=lab_inst.lab_id, user_id=current_user.id).first()
+    if not lab_answers:
+        lab_answers = LabAnswers(user_id=current_user.id, lab_id=lab_inst.lab_id)
+        db.session.add(lab_answers)
+
+    lab_answers.answers = json.dumps(content)
+    db.session.commit()
+
+    return {"status": "ok", "result": "Answers saved successfully"}, 200

@@ -93,8 +93,7 @@ class LabAnswers(db.Model, AuditMixin):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     lab_id = db.Column(db.String(36), db.ForeignKey("labs.id"))
-    question_label = db.Column(db.String)
-    answer = db.Column(db.String)
+    answers = db.Column(db.String)
 
 
 @event.listens_for(Labs, 'after_insert')
