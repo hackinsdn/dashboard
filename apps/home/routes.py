@@ -39,7 +39,7 @@ def running_labs():
     if current_user.category == "user":
         return render_template('pages/waiting_approval.html')
 
-    filter_user = current_user.username
+    filter_user = current_user.uid
     if current_user.category in ["admin", "teacher"]:
         filter_user = None
     try:
@@ -106,10 +106,6 @@ def run_lab(lab_id):
     if current_user.category == "user":
         return render_template('pages/waiting_approval.html')
 
-    #filter_user = current_user.username
-    #if current_user.category in ["admin", "teacher"]:
-    #    filter_user = None
-
     # TODO: check if the user has permission for creating this lab
 
     msg_error = ""
@@ -149,10 +145,6 @@ def run_lab(lab_id):
 def check_lab_status(lab_id):
     if current_user.category == "user":
         return render_template('pages/waiting_approval.html')
-
-    #filter_user = current_user.username
-    #if current_user.category in ["admin", "teacher"]:
-    #    filter_user = None
 
     # TODO: check if the user has permission for creating this lab
 
@@ -255,9 +247,9 @@ def view_lab_instance(lab_id):
     if lab_instance.user_id != current_user.id:
         owner = Users.query.get(lab_instance.user_id)
 
-    running_labs = k8s.get_labs_by_user(owner.username, lab_instance.lab_id)
+    running_labs = k8s.get_labs_by_user(owner.uid, lab_instance.lab_id)
 
-    if not running_labs or (lab_instance.lab_id, owner.username) not in running_labs:
+    if not running_labs or (lab_instance.lab_id, owner.uid) not in running_labs:
         return render_template("pages/error.html", title="Lab instance is not running", msg="No resource found for Lab Instance")
 
     lab_dict = {
@@ -269,7 +261,7 @@ def view_lab_instance(lab_id):
         "resources": [],
     }
     created = None
-    for pod in running_labs[(lab_instance.lab_id, owner.username)]:
+    for pod in running_labs[(lab_instance.lab_id, owner.uid)]:
         if pod["kind"] != "pod":
             continue
         if not created or created > pod['created']:
