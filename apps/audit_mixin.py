@@ -22,6 +22,6 @@ def get_remote_addr():
 
 
 class AuditMixin(object):
-    created_at = Column(DateTime, default=utcnow())
-    updated_at = Column(DateTime, default=utcnow(), onupdate=utcnow())
+    created_at = Column(DateTime, default=utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
     updated_by = Column(Integer, ForeignKey("users.id"), default=get_user_id)
