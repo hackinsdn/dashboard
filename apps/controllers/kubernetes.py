@@ -64,6 +64,8 @@ class K8sController():
         self.nodes_last_updated = 0 
 
     def try_get_app(self, port_name):
+        if not port_name:
+            return "http://"
         known_apps = ["https", "http", "ssh", "vnc"]
         for app in known_apps:
             if port_name.startswith(app):
@@ -180,10 +182,11 @@ class K8sController():
                 ports.append(
                     f"{port.target_port}:{port.node_port}/{port.protocol}"
                 )
+                port_name = port.name if port.name else ports[-1]
                 for pod in app_pod_map.get(srv.spec.selector.get("app"), []):
                     service_link = [
-                        port.name,
-                        f"{self.try_get_app(port.name)}{node_ip}:{port.node_port}"
+                        port_name,
+                        f"{self.try_get_app(port_name)}{node_ip}:{port.node_port}"
                     ]
                     if port.node_port:
                         pod_services[pod.metadata.uid].append(service_link)
