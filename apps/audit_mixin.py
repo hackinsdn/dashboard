@@ -16,7 +16,7 @@ def get_user_id():
 
 def get_remote_addr():
     try:
-        return request.remote_addr
+        return ",".join(request.access_route)
     except:
         return "LOCAL"
 

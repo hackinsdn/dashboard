@@ -13,6 +13,7 @@ from flask_login import (
 
 from apps import db, login_manager, oauth
 from apps.config import app_config
+from apps.audit_mixin import get_remote_addr
 from apps.authentication import blueprint
 from apps.authentication.forms import LoginForm, CreateAccountForm
 from apps.authentication.models import Users, LoginLogging
@@ -43,12 +44,14 @@ def login():
         if user and verify_pass(password, user.password):
 
             login_user(user)
-            login_log = LoginLogging(ipaddr=request.remote_addr, login=username, auth_provider="local", success=True)
+            app.logger.info(f"Successful login ipaddr={get_remote_addr()} login={username} auth_provider=local")
+            login_log = LoginLogging(ipaddr=get_remote_addr(), login=username, auth_provider="local", success=True)
             db.session.add(login_log)
             db.session.commit()
             return redirect(url_for('authentication_blueprint.route_default'))
 
-        login_log = LoginLogging(ipaddr=request.remote_addr, login=username, auth_provider="local", success=False)
+        app.logger.warn(f"Failed login ipaddr={get_remote_addr()} login={username} auth_provider=local")
+        login_log = LoginLogging(ipaddr=get_remote_addr(), login=username, auth_provider="local", success=False)
         db.session.add(login_log)
         db.session.commit()
 
@@ -75,7 +78,6 @@ def login_oauth():
 def callback():
     """Callback redirect from OAuth Provider"""
     token = oauth.provider.authorize_access_token().get("userinfo", {})
-    print("Callback auth, token=", token)
     subject = token.get("sub", None)
     issuer = token.get("iss", None)
     given_name = token.get("given_name", None)
@@ -91,7 +93,8 @@ def callback():
         user = Users(subject=subject, issuer=issuer, given_name=given_name, family_name=family_name, email=email)
         db.session.add(user)
 
-    login_log = LoginLogging(ipaddr=request.remote_addr, login=subject, auth_provider=issuer, success=True)
+    app.logger.info(f"Successful login ipaddr={get_remote_addr()} login={subject} auth_provider={issuer}")
+    login_log = LoginLogging(ipaddr=get_remote_addr(), login=subject, auth_provider=issuer, success=True)
     db.session.add(login_log)
     db.session.commit()
 
