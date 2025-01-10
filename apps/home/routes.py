@@ -227,7 +227,7 @@ def edit_user(user_id=None):
         return render_template("pages/edit_user.html", msg_fail=msg, user=user, return_path=return_path)
 
 
-@blueprint.route('/labs/view/<lab_id>', methods=["GET"])
+@blueprint.route('/lab_instance/view/<lab_id>', methods=["GET"])
 @login_required
 def view_lab_instance(lab_id):
     if current_user.category == "user":
@@ -343,12 +343,16 @@ def view_users():
 
 
 @blueprint.route('/labs/view', methods=["GET"])
+@blueprint.route('/labs/view/<lab_id>', methods=["GET"])
 @login_required
-def view_labs():
+def view_labs(lab_id=None):
     if current_user.category == "user":
         return render_template('pages/waiting_approval.html')
-
-    labs = Labs.query.all()
+    labs = Labs.query.filter()
+    if lab_id:
+        labs = labs.filter(Labs.id == lab_id)
+    labs = labs.all()
+    print(lab_id, labs)
     lab_categories = {cat.id: cat for cat in LabCategories.query.all()}
     running_labs = {lab.lab_id: lab.id for lab in LabInstances.query.filter_by(user_id=current_user.id, active=True).all()}
     return render_template("pages/labs_view.html", labs=labs, lab_categories=lab_categories, running_labs=running_labs, segment="/labs/view")
