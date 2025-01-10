@@ -4,13 +4,14 @@ Copyright (c) 2019 - present AppSeed.us
 """
 
 from flask import render_template, redirect, request, url_for
+from flask import current_app as app
 from flask_login import (
     current_user,
     login_user,
     logout_user
 )
 
-from apps import db, login_manager, oauth, log
+from apps import db, login_manager, oauth
 from apps.config import app_config
 from apps.authentication import blueprint
 from apps.authentication.forms import LoginForm, CreateAccountForm
@@ -82,7 +83,7 @@ def callback():
     email = token.get("email", None)
 
     if not subject:
-        log.warn("Invalid auth token from OAUTH callback:", token)
+        app.logger.warn("Invalid auth token from OAUTH callback:", token)
         return render_template('pages/page-403.html'), 403
 
     user = Users.query.filter_by(subject=subject).first()

@@ -4,6 +4,8 @@ Copyright (c) 2019 - present AppSeed.us
 """
 
 import os
+import sys
+import logging
 
 from flask import Flask
 from flask_login import LoginManager
@@ -17,7 +19,6 @@ db = SQLAlchemy()
 login_manager = LoginManager()
 oauth = OAuth()
 socketio = SocketIO(cors_allowed_origins="*")
-log = None
 
 
 def register_extensions(app):
@@ -49,13 +50,18 @@ def configure_oauth(app):
     )
     #app.config["AUTH_PROVIDER"] = oauth
 
+def configure_log(app):
+    level = logging.DEBUG if app.config["DEBUG"] else logging.INFO
+    app.logger.setLevel(level)
+    for handler in app.logger.handlers:
+        handler.setFormatter(logging.Formatter(fmt=app.config["LOG_FMT"]))
+
 def create_app(config):
-    global log
     app = Flask(__name__)
     app.config.from_object(config)
     register_extensions(app)
     register_blueprints(app)
     configure_database(app)
     configure_oauth(app)
-    log = app.logger
+    configure_log(app)
     return app

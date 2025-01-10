@@ -2,13 +2,13 @@
 
 from apps import db
 from apps.authentication.models import Users
-from apps.audit_mixin import AuditMixin
+from apps.audit_mixin import AuditMixin, get_user_id
 import uuid
 import secrets
 import json
 import markdown2
 from sqlalchemy import event
-from flask import current_app
+from flask import current_app as app
 
 
 def generate_uuid():
@@ -97,10 +97,16 @@ class LabAnswers(db.Model, AuditMixin):
 
 
 @event.listens_for(Labs, 'after_insert')
-@event.listens_for(Labs, 'after_update')
-@event.listens_for(Labs, 'after_delete')
 @event.listens_for(LabInstances, 'after_insert')
+def logging_added(mapper, connection, target):
+    app.logger.info(f"object added target={target} user={get_user_id()}")
+
+@event.listens_for(Labs, 'after_update')
 @event.listens_for(LabInstances, 'after_update')
+def logging_changed(mapper, connection, target):
+    app.logger.info(f"object changed target={target} user={get_user_id()}")
+
 @event.listens_for(LabInstances, 'after_delete')
-def logging_changes(mapper, connection, target):
-    current_app.logger.info(f"update event mapper={mapper} target={target}")
+@event.listens_for(Labs, 'after_delete')
+def logging_deleted(mapper, connection, target):
+    app.logger.info(f"object deleted target={target} user={get_user_id()}")

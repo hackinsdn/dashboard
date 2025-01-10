@@ -69,6 +69,8 @@ class Config(object):
 
     # Base URL
     BASE_URL = 'https://dashboard.hackinsdn.ufba.br'
+
+    LOG_FMT = "%(asctime)s %(levelname)s [%(name)s] [%(filename)s:%(lineno)d] %(message)s"
     
 class ProductionConfig(Config):
     DEBUG = False

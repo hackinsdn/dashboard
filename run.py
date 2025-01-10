@@ -1,9 +1,7 @@
 # -*- encoding: utf-8 -*-
 
 import os
-import logging
-from   flask_migrate import Migrate
-from   sys import exit
+from flask_migrate import Migrate
 
 from apps.config import app_config
 from apps import create_app, db
@@ -14,14 +12,6 @@ DEBUG = (os.getenv('DEBUG', 'False') == 'True')
 app = create_app(app_config)
 Migrate(app, db)
 
-#handler = logging.FileHandler('dashboard-hackinsdn.log')
-#handler.setLevel(logging.DEBUG)
-#app.logger.addHandler(handler)
-#log = logging.getLogger('werkzeug')
-#log.setLevel(logging.DEBUG)
-#log.addHandler(handler)
-
-    
 if DEBUG:
     app.logger.info('DEBUG            = ' + str(DEBUG)             )
     app.logger.info('Page Compression = ' + 'FALSE' if DEBUG else 'TRUE' )
