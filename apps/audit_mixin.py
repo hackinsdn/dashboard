@@ -4,7 +4,7 @@ from flask_login import current_user
 from flask import request
 
 def utcnow():
-    return datetime.datetime.now(datetime.UTC)
+    return datetime.datetime.now(datetime.timezone.utc)
 
 
 def get_user_id():

@@ -1,14 +1,13 @@
 # -*- encoding: utf-8 -*-
 
 import uuid
-from datetime import datetime
 from flask_login import UserMixin
 from sqlalchemy.orm import validates
 
 from apps import db, login_manager
 
 from apps.authentication.util import hash_pass
-from apps.audit_mixin import AuditMixin
+from apps.audit_mixin import AuditMixin, utcnow
 
 def user_category():
     return "user"
@@ -98,7 +97,7 @@ class LoginLogging(db.Model):
     login = db.Column(db.String)
     auth_provider = db.Column(db.String(10))
     success = db.Column(db.Boolean)
-    datetime = db.Column(db.DateTime, default=datetime.now, nullable=False)
+    datetime = db.Column(db.DateTime, default=utcnow, nullable=False)
 
     def __repr__(self):
         return '<LoginLogging %s %s %s>' % (self.ip_address,
