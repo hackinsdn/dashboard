@@ -53,6 +53,10 @@ def configure_oauth(app):
 def configure_log(app):
     level = logging.DEBUG if app.config["DEBUG"] else logging.INFO
     app.logger.setLevel(level)
+    if app.config["LOG_FILE"]:
+        handler = logging.FileHandler(app.config["LOG_FILE"])
+        handler.setLevel(level)
+        app.logger.addHandler(handler)
     for handler in app.logger.handlers:
         handler.setFormatter(logging.Formatter(fmt=app.config["LOG_FMT"]))
 

@@ -71,6 +71,7 @@ class Config(object):
     BASE_URL = 'https://dashboard.hackinsdn.ufba.br'
 
     LOG_FMT = "%(asctime)s %(levelname)s [%(name)s] [%(filename)s:%(lineno)d] %(message)s"
+    LOG_FILE = os.getenv("LOG_FILE")
     
 class ProductionConfig(Config):
     DEBUG = False
