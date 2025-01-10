@@ -57,6 +57,10 @@ def configure_log(app):
         handler = logging.FileHandler(app.config["LOG_FILE"])
         handler.setLevel(level)
         app.logger.addHandler(handler)
+        # add this filehandler for webserver
+        wlog = logging.getLogger('werkzeug')
+        wlog.setLevel(level)
+        wlog.addHandler(handler)
     for handler in app.logger.handlers:
         handler.setFormatter(logging.Formatter(fmt=app.config["LOG_FMT"]))
 
