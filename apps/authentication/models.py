@@ -21,7 +21,7 @@ class Users(db.Model, UserMixin, AuditMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), unique=True)
     uid = db.Column(db.String(15), unique=True)
-    email = db.Column(db.String(64), unique=True)
+    email = db.Column(db.String(64))
     password = db.Column(db.LargeBinary)
     category = db.Column(db.String(10), default=user_category)
     given_name = db.Column(db.String(64))

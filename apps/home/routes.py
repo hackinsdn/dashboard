@@ -309,8 +309,8 @@ def edit_lab(lab_id):
     lab.category_id = request.form["lab_category"]
     lab.set_extended_desc(request.form["lab_extended_desc"])
     lab.set_lab_guide_md(request.form["lab_guide"])
-    lab.goals = request.form["lab_goals"]
     lab.manifest = request.form["lab_manifest"]
+    lab.goals = request.form.get("lab_goals", "")
     try:
         db.session.add(lab)
         db.session.commit()
