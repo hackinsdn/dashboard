@@ -1,0 +1,11 @@
+export OAUTH_CLIENT_ID=xxx
+export OAUTH_CLIENT_SECRET=xxx
+export OAUTH_DOMAIN=cilogon.org
+#export OAUTH_CLIENT_ID=xxx
+#export OAUTH_CLIENT_SECRET=xxx
+#export OAUTH_DOMAIN=orcid.org
+
+export K8S_NAMESPACE=xxx
+export SECRET_KEY=xxx
+export FLASK_ENV=development
+#export FLASK_ENV=production
