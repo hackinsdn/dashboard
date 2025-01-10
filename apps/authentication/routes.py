@@ -93,7 +93,7 @@ def callback():
         user = Users(subject=subject, issuer=issuer, given_name=given_name, family_name=family_name, email=email)
         db.session.add(user)
 
-    app.logger.info(f"Successful login ipaddr={get_remote_addr()} login={subject} auth_provider={issuer}")
+    app.logger.info(f"Successful login ipaddr={get_remote_addr()} login={subject} auth_provider={issuer} email={email}")
     login_log = LoginLogging(ipaddr=get_remote_addr(), login=subject, auth_provider=issuer, success=True)
     db.session.add(login_log)
     db.session.commit()
