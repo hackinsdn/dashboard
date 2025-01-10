@@ -71,7 +71,16 @@
               </div>
               <!-- /.card-body -->
               <div class="card-footer">
-                <a class="btn btn-primary mx-2" href="/run_lab/{{lab.id}}" role="button">Start Lab</a>
+                {% if lab.id in running_labs %}
+                {%   set route = 'home_blueprint.view_lab_instance' %}
+                {%   set lab_id = running_labs[lab.id] %}
+                {%   set link_text = 'Resume Lab' %}
+                {% else %}
+                {%   set route = 'home_blueprint.run_lab' %}
+                {%   set lab_id = lab.id %}
+                {%   set link_text = 'Start Lab' %}
+                {% endif %}
+                <a class="btn btn-primary mx-2" href="{{url_for(route, lab_id=lab_id)}}" role="button">{{link_text}}</a>
                 {% if current_user.category == "admin" or current_user.category == "teacher" %}
                 <a class="btn btn-warning mx-2" href="{{url_for('home_blueprint.edit_lab', lab_id=lab.id)}}" role="button">Update Lab</a>
                 {% endif %}

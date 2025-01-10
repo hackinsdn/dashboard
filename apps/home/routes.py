@@ -113,9 +113,9 @@ def run_lab(lab_id):
     if not lab:
         return render_template("pages/error.html", title="Error Running Labs", msg="Lab not found")
 
-    already_running = LabInstances.query.filter_by(lab_id=lab_id, user_id=current_user.id, active=True).count()
-    if already_running > 0:
-        return render_template("pages/error.html", title="This lab is already running!", msg="This lab is already running. Go to 'Running Labs' to see more details.")
+    already_running = LabInstances.query.filter_by(lab_id=lab_id, user_id=current_user.id, active=True).first()
+    if already_running:
+        return redirect(url_for('home_blueprint.view_lab_instance', lab_id=already_running.id))
 
     if request.method == "GET":
         return render_template("pages/run_lab.html", lab=lab)
@@ -350,7 +350,8 @@ def view_labs():
 
     labs = Labs.query.all()
     lab_categories = {cat.id: cat for cat in LabCategories.query.all()}
-    return render_template("pages/labs_view.html", labs=labs, lab_categories=lab_categories, segment="/labs/view")
+    running_labs = {lab.lab_id: lab.id for lab in LabInstances.query.filter_by(user_id=current_user.id, active=True).all()}
+    return render_template("pages/labs_view.html", labs=labs, lab_categories=lab_categories, running_labs=running_labs, segment="/labs/view")
 
 
 @blueprint.route('/gallery', methods=["GET"])
