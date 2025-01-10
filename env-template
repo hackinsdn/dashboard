@@ -7,5 +7,5 @@ export OAUTH_DOMAIN=cilogon.org
 
 export K8S_NAMESPACE=xxx
 export SECRET_KEY=xxx
-export FLASK_ENV=development
-#export FLASK_ENV=production
+# change to DEBUG=False when running in production
+export DEBUG=True
