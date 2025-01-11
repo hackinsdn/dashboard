@@ -125,24 +125,27 @@ class K8sController():
             namespace=self.namespace
         )
         for pod in pods.items:
-            app = (pod.metadata.labels or {}).get("app")
+            pod_labels = pod.metadata.labels or {}
+            app = pod_labels.get("app")
             if app:
                 app_pod_map[app].append(pod)
             try:
                 dep = rs_uid_to_dep[pod.metadata.owner_references[0].uid]
+                dep_labels = dep.metadata.labels or {}
             except:
                 dep = None
+                dep_labels = {}
             lab_id, user_uid = None, None
             if all([
                 app == "hackinsdn-dashboard",
-                not f_user_uid or pod.metadata.labels.get("user_uid") == f_user_uid,
-                not f_lab_id or pod.metadata.labels.get("lab_id") == f_lab_id,
+                not f_user_uid or pod_labels.get("user_uid") == f_user_uid,
+                not f_lab_id or pod_labels.get("lab_id") == f_lab_id,
             ]):
-                lab_id = pod.metadata.labels.get("lab_id")
-                user_uid = pod.metadata.labels.get("user_uid")
+                lab_id = pod_labels.get("lab_id")
+                user_uid = pod_labels.get("user_uid")
             elif dep:
-                lab_id = dep.metadata.labels.get("lab_id")
-                user_uid = dep.metadata.labels.get("user_uid")
+                lab_id = dep_labels.get("lab_id")
+                user_uid = dep_labels.get("user_uid")
             if not lab_id or not user_uid:
                 continue
             pod_services[pod.metadata.uid] = []
@@ -171,8 +174,9 @@ class K8sController():
             namespace=self.namespace, label_selector=label_selector
         )
         for srv in services.items:
-            lab_id = srv.metadata.labels.get("lab_id")
-            user_uid = srv.metadata.labels.get("user_uid")
+            srv_labels = srv.metadata.labels or {}
+            lab_id = srv_labels.get("lab_id")
+            user_uid = srv_labels.get("user_uid")
             if not lab_id or not user_uid:
                 continue
             ports = []
@@ -209,8 +213,9 @@ class K8sController():
             namespace=self.namespace, label_selector=label_selector
         )
         for cfg in config_maps.items:
-            lab_id = cfg.metadata.labels.get("lab_id")
-            user_uid = cfg.metadata.labels.get("user_uid")
+            cfg_labels = cfg.metadata.labels or {}
+            lab_id = cfg_labels.get("lab_id")
+            user_uid = cfg_labels.get("user_uid")
             if not lab_id or not user_uid:
                 continue
             labs[(lab_id, user_uid)].append({
