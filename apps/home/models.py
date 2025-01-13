@@ -102,6 +102,7 @@ class HomeLogging(db.Model):
     success = db.Column(db.Boolean)
     datetime = db.Column(db.DateTime, default=utcnow, nullable=False)
     lab_id = db.Column(db.String(36), db.ForeignKey("labs.id"))
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
 
     def __repr__(self):
         return '<HomeLogging %s %s %s>' % (self.ip_address,

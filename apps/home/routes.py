@@ -137,13 +137,13 @@ def run_lab(lab_id):
         lab_inst = LabInstances(pod_hash, current_user, lab, k8s_resources)
         db.session.add(lab_inst)
 
-        create_lab_log = HomeLogging(ipaddr=get_remote_addr(), action="create_lab", success= True)
+        create_lab_log = HomeLogging(ipaddr=get_remote_addr(), action="create_lab", success= True, lab_id=lab.id, user_id=current_user.id)
         db.session.add(create_lab_log)
         db.session.commit()
 
         return render_template("pages/run_lab_status.html", resources=k8s_resources, lab_instance_id=pod_hash)
     else:
-        create_lab_log_error = HomeLogging(ipaddr=get_remote_addr(), action="create_lab", success= False)
+        create_lab_log_error = HomeLogging(ipaddr=get_remote_addr(), action="create_lab", success= False, lab_id=lab.id, user_id=current_user.id)
         db.session.add(create_lab_log_error)
         db.session.commit()
         return render_template("pages/error.html", title="Error Running Labs", msg=msg)
@@ -221,10 +221,15 @@ def edit_user(user_id=None):
         return render_template("pages/edit_user.html", msg_fail="No changes applied.", user=user, return_path=return_path)
 
     try:
+        edit_user_log = HomeLogging(ipaddr=get_remote_addr(), action="edit_user", success= True, user_id=user.id )
+        db.session.add(edit_user_log)
         db.session.commit()
         status = True
         msg = "User profile updated successfully"
     except Exception as exc:
+        edit_user_log_error = HomeLogging(ipaddr=get_remote_addr(), action="edit_user", success= False, user_id=user.id )
+        db.session.add(edit_user_log_error)
+        db.session.commit()
         status = False
         msg = "Failed to update user profile"
         current_app.logger.error(f"{msg} - {exc}")
@@ -324,7 +329,7 @@ def edit_lab(lab_id):
         db.session.add(lab)
         db.session.commit()
 
-        edit_lab_log = HomeLogging(ipaddr=get_remote_addr(), action="edit_lab", success= True, lab_id=lab.id)
+        edit_lab_log = HomeLogging(ipaddr=get_remote_addr(), action="edit_lab", success= True, lab_id=lab.id, user_id=current_user.id)
         db.session.add(edit_lab_log)
         db.session.commit()
 
@@ -335,7 +340,7 @@ def edit_lab(lab_id):
         msg = "Failed to save Lab information"
         current_app.logger.error(f"{msg} - {exc}")
 
-        edit_lab_log_error = HomeLogging(ipaddr=get_remote_addr(), action="edit_lab", success= False, lab_id=lab.id)
+        edit_lab_log_error = HomeLogging(ipaddr=get_remote_addr(), action="edit_lab", success= False, lab_id=lab.id, user_id=current_user.id)
         db.session.add(edit_lab_log_error)
         db.session.commit()
     if status:
