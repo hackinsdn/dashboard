@@ -2,7 +2,7 @@
 
 from apps import db
 from apps.authentication.models import Users
-from apps.audit_mixin import AuditMixin, get_user_id
+from apps.audit_mixin import AuditMixin, get_user_id, utcnow
 import uuid
 import secrets
 import json
@@ -94,6 +94,18 @@ class LabAnswers(db.Model, AuditMixin):
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     lab_id = db.Column(db.String(36), db.ForeignKey("labs.id"))
     answers = db.Column(db.String)
+
+class HomeLogging(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    ipaddr = db.Column(db.String)
+    action = db.Column(db.String)
+    success = db.Column(db.Boolean)
+    datetime = db.Column(db.DateTime, default=utcnow, nullable=False)
+    lab_id = db.Column(db.String(36), db.ForeignKey("labs.id"))
+
+    def __repr__(self):
+        return '<HomeLogging %s %s %s>' % (self.ip_address,
+                                            self.action, self.datetime)
 
 
 @event.listens_for(Labs, 'after_insert')
