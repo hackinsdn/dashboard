@@ -72,4 +72,9 @@ def create_app(config):
     configure_database(app)
     configure_oauth(app)
     configure_log(app)
+   
+    # Importa e registra o blueprint de e-mail
+    from apps.config import mail_blueprint
+    app.register_blueprint(mail_blueprint)
+
     return app

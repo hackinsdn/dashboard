@@ -1,6 +1,6 @@
 # -*- encoding: utf-8 -*-
 import os, random, string
-from flask import Flask
+from flask import Flask, Blueprint, render_template
 from flask_mail import Mail, Message
 from dotenv import load_dotenv
 class Config(object):
@@ -109,11 +109,12 @@ except KeyError:
     raise ValueError('Error: Invalid <config_mode>. Expected values [Debug, Production] ')
 
 # Carregar variáveis de ambiente do arquivo .env
+
 load_dotenv()
 
-app = Flask(__name__)
+mail_blueprint = Blueprint('mail', __name__)  # Cria o blueprint
 
-# Usando as variáveis de ambiente
+app = Flask(__name__)
 app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
 app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT'))
 app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
@@ -123,16 +124,13 @@ app.config['MAIL_USE_SSL'] = os.getenv('MAIL_USE_SSL') == 'True'
 
 mail = Mail(app)
 
-@app.route("/")
-def index():
+@mail_blueprint.route("/email")
+def send_email():
     msg = Message(
         subject='Hello from the other side!',
-        sender=os.getenv('MAIL_USERNAME'),  # E-mail do remetente carregado da variável de ambiente
-        recipients=[os.getenv('MAIL_USERNAME')]  # E-mail do destinatário carregado da variável de ambiente
+        sender=os.getenv('MAIL_USERNAME'),
+        recipients=[os.getenv('MAIL_USERNAME')],
     )
     msg.body = "Hey, sending you this email from my Flask app, let me know if it works."
     mail.send(msg)
     return "Message sent!"
-
-if __name__ == '__main__':
-    app.run(debug=True)
