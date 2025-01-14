@@ -1,6 +1,8 @@
 # -*- encoding: utf-8 -*-
 import os, random, string
-
+from flask import Flask
+from flask_mail import Mail, Message
+from dotenv import load_dotenv
 class Config(object):
 
     basedir = os.path.abspath(os.path.dirname(__file__))
@@ -105,3 +107,32 @@ try:
 
 except KeyError:
     raise ValueError('Error: Invalid <config_mode>. Expected values [Debug, Production] ')
+
+# Carregar variáveis de ambiente do arquivo .env
+load_dotenv()
+
+app = Flask(__name__)
+
+# Usando as variáveis de ambiente
+app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
+app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT'))
+app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
+app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS') == 'True'
+app.config['MAIL_USE_SSL'] = os.getenv('MAIL_USE_SSL') == 'True'
+
+mail = Mail(app)
+
+@app.route("/")
+def index():
+    msg = Message(
+        subject='Hello from the other side!',
+        sender=os.getenv('MAIL_USERNAME'),  # E-mail do remetente carregado da variável de ambiente
+        recipients=[os.getenv('MAIL_USERNAME')]  # E-mail do destinatário carregado da variável de ambiente
+    )
+    msg.body = "Hey, sending you this email from my Flask app, let me know if it works."
+    mail.send(msg)
+    return "Message sent!"
+
+if __name__ == '__main__':
+    app.run(debug=True)
