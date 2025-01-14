@@ -6,13 +6,14 @@ Copyright (c) 2019 - present AppSeed.us
 import os
 import sys
 import logging
-from flask import Flask
+
 from flask import Flask
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 from flask_socketio import SocketIO
 from importlib import import_module
 from authlib.integrations.flask_client import OAuth
+
 
 db = SQLAlchemy()
 login_manager = LoginManager()
@@ -62,6 +63,7 @@ def configure_log(app):
         wlog.addHandler(handler)
     for handler in app.logger.handlers:
         handler.setFormatter(logging.Formatter(fmt=app.config["LOG_FMT"]))
+
 def create_app(config):
     app = Flask(__name__)
     app.config.from_object(config)
@@ -70,13 +72,4 @@ def create_app(config):
     configure_database(app)
     configure_oauth(app)
     configure_log(app)
-    app.config.from_object(config)
-    register_routes(app)
-
     return app
-
-if __name__ == '__main__':
-    app = create_app(Config)  
-    app.run(debug=True)
-
-

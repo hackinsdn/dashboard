@@ -5,11 +5,6 @@ Copyright (c) 2019 - present AppSeed.us
 
 from flask import render_template, redirect, request, url_for
 from flask import current_app as app
-from flask import Blueprint, redirect, session, url_for, request, abort
-from google_auth_oauthlib.flow import Flow
-import os
-from authlib.integrations.flask_client import OAuth
-
 from flask_login import (
     current_user,
     login_user,
@@ -103,16 +98,6 @@ def callback():
     db.session.add(login_log)
     db.session.commit()
 
-    # Armazena as credenciais na sessão
-    credentials = oauth.provider.fetch_token(request.url)
-    session['credentials'] = {
-        'token': credentials['access_token'],
-        'refresh_token': credentials.get('refresh_token'),
-        'token_uri': credentials['token_uri'],
-        'client_id': credentials['client_id'],
-        'client_secret': credentials['client_secret'],
-        'scopes': credentials['scopes']
-    }
     login_user(user)
     return redirect(url_for('authentication_blueprint.route_default'))
 
@@ -181,24 +166,3 @@ def not_found_error(error):
 @blueprint.errorhandler(500)
 def internal_error(error):
     return render_template('pages/page-500.html'), 500
-
-def register_routes(app):
-    @blueprint.route('/send-email')
-    def send_email_route():
-        send_email()
-        return "Message sent!"
-    
-    @blueprint.route('/')
-    def oauth_start():
-        flow = Flow.from_client_secrets_file(
-            'credentials.json',
-            scopes=['https://www.googleapis.com/auth/gmail.send'],
-            redirect_uri='http://localhost:5000/callback'
-        )
-        authorization_url, state = flow.authorization_url(prompt='consent')
-        session['state'] = state
-        return redirect(authorization_url)
-    app.register_blueprint(blueprint)
-    
-    if __name__ == '__main__':
-        app.run(debug=True)

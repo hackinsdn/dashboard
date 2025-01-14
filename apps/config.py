@@ -3,13 +3,6 @@ import os, random, string
 from flask import Flask
 from flask_mail import Mail, Message
 from dotenv import load_dotenv
-from email.mime.text import MIMEText
-import base64
-from flask import Flask, redirect, url_for, session
-from google_auth_oauthlib.flow import Flow
-from googleapiclient.discovery import build
-import os
-
 class Config(object):
 
     basedir = os.path.abspath(os.path.dirname(__file__))
@@ -143,61 +136,3 @@ def index():
 
 if __name__ == '__main__':
     app.run(debug=True)
-
-
-app = Flask(__name__)
-app.secret_key = os.getenv('SECRET_KEY', 'chave_padrão_segura')
-
-load_dotenv()
-
-# Replace 'your_credentials.json' with the path to your downloaded credentials file
-flow = Flow.from_client_secrets_file(
-    '/home/beatriz/projects/hackinsdn/dashboard/credentials.json',
-    scopes=['https://www.googleapis.com/auth/gmail.send'],
-    redirect_uri='http://localhost:5000/callback'
-)
-
-@app.route('/')
-def index():
-    authorization_url, state = flow.authorization_url(prompt='consent')
-    session['state'] = state
-    return redirect(authorization_url)
-
-@app.route('/callback')
-def callback():
-    flow.fetch_token(authorization_response=request.url)
-
-    if not session['state'] == request.args['state']:
-        abort(500)  # State does not match!
-
-    credentials = flow.credentials
-    session['credentials'] = {
-        'token': credentials.token,
-        'refresh_token': credentials.refresh_token,
-        'token_uri': credentials.token_uri,
-        'client_id': credentials.client_id,
-        'client_secret': credentials.client_secret,
-        'scopes': credentials.scopes
-    }
-    
-    return 'Authentication successful, you can now send emails.'
-
-if __name__ == '__main__':
-    app.run(debug=True)
-
-
-def send_email(service, user_id, message):
-    try:
-        message = (service.users().messages().send(userId=user_id, body=message)
-                   .execute())
-        print('Message Id: %s' % message['id'])
-        return message
-    except Exception as error:
-        print('An error occurred: %s' % error)
-
-def create_message(sender, to, subject, message_text):
-    message = MIMEText(message_text)
-    message['to'] = to
-    message['from'] = sender
-    message['subject'] = subject
-    return {'raw': base64.urlsafe_b64encode(message.as_string().encode()).decode()}
