@@ -1,11 +1,5 @@
 # -*- encoding: utf-8 -*-
 import os, random, string
-from flask import Flask, Blueprint, render_template
-from flask_mail import Mail, Message
-from dotenv import load_dotenv
-from datetime import datetime, timezone, timedelta
-from apps.authentication.models import Users
-import pytz
 
 class Config(object):
 
@@ -78,7 +72,15 @@ class Config(object):
 
     LOG_FMT = "%(asctime)s %(levelname)s [%(name)s] [%(filename)s:%(lineno)d] %(message)s"
     LOG_FILE = os.getenv("LOG_FILE")
-    
+
+    MAIL_SERVER = 'smtp.gmail.com'
+    MAIL_PORT = 587
+    MAIL_USERNAME = os.getenv("MAIL_USERNAME")
+    MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
+    MAIL_USE_TLS = True
+    MAIL_USE_SSL = False
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(os.getcwd(), 'db.sqlite3')    
+
 class ProductionConfig(Config):
     DEBUG = False
 
@@ -112,59 +114,4 @@ try:
 except KeyError:
     raise ValueError('Error: Invalid <config_mode>. Expected values [Debug, Production] ')
 
-# Carregar variáveis de ambiente do arquivo .env
-
-load_dotenv()
-
-mail_blueprint = Blueprint('mail', __name__)  # Cria o blueprint
-
-app = Flask(__name__)
-app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
-app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT'))
-app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
-app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
-app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS') == 'True'
-app.config['MAIL_USE_SSL'] = os.getenv('MAIL_USE_SSL') == 'True'
-
-mail = Mail(app)
-
-@mail_blueprint.route("/email")
-def send_email():
-    utc=pytz.UTC
-    # Calcula o tempo limite de 1 hora atrás
-    one_hour_ago = datetime.now(timezone.utc) - timedelta(hours=1)
-    one_hour_ago=one_hour_ago.replace(tzinfo=utc)
-    # Busca todos os usuários com mais de 1h de espera para validação
-    users = Users.query.filter(
-            Users.category == "user",  # Filtra por categoria "user"
-            Users.created_at <= one_hour_ago  # Verifica se foi criado há mais de 1 hora
-        ).all()
-
-    if not users:  # Corrigido de all_users para users
-        return "No users found."
-
-    # Lista para armazenar usuários que atendem aos critérios
-    valid_users = []
-    for user in users:
-        # Certifica-se de que `created_at` tem fuso horário (offset-aware)
-        if user.created_at.tzinfo is None:
-            user.created_at = user.created_at.replace(tzinfo=utc)
-
-        # Verifica se o usuário está ativo e atende ao critério de tempo
-        if user.created_at < one_hour_ago :
-            valid_users.append(user)  # Adiciona o usuário à lista de válidos
-
-    # Envia e-mails para usuários válidos
-    if valid_users:
-        for user in valid_users:
-            msg = Message(
-                subject="Approval Pending",
-                sender = os.getenv('MAIL_USERNAME'),
-                recipients=[os.getenv('MAIL_USERNAME')],
-                body=f"Hello,\n\n {user.name} have been waiting for approval for more than an hour."
-            )
-            mail.send(msg)
-
-        return "Emails sent to valid users."
-    else:
-        return "No valid users found."
+    

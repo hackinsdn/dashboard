@@ -13,20 +13,21 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_socketio import SocketIO
 from importlib import import_module
 from authlib.integrations.flask_client import OAuth
+from flask_mail import Mail
 
 
 db = SQLAlchemy()
 login_manager = LoginManager()
 oauth = OAuth()
 socketio = SocketIO(cors_allowed_origins="*")
-
+mail = Mail()
 
 def register_extensions(app):
     db.init_app(app)
     login_manager.init_app(app)
     oauth.init_app(app)
     socketio.init_app(app)
-
+    mail.init_app(app)  
 
 def register_blueprints(app):
     for module_name in ('authentication', 'home', 'api'):
@@ -72,9 +73,7 @@ def create_app(config):
     configure_database(app)
     configure_oauth(app)
     configure_log(app)
-   
-    # Importa e registra o blueprint de e-mail
-    from apps.config import mail_blueprint
-    app.register_blueprint(mail_blueprint)
 
+
+    
     return app
