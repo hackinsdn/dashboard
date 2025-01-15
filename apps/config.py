@@ -3,6 +3,10 @@ import os, random, string
 from flask import Flask, Blueprint, render_template
 from flask_mail import Mail, Message
 from dotenv import load_dotenv
+from datetime import datetime, timezone, timedelta
+from apps.authentication.models import Users
+import pytz
+
 class Config(object):
 
     basedir = os.path.abspath(os.path.dirname(__file__))
@@ -126,11 +130,43 @@ mail = Mail(app)
 
 @mail_blueprint.route("/email")
 def send_email():
-    msg = Message(
-        subject='Hello from the other side!',
-        sender=os.getenv('MAIL_USERNAME'),
-        recipients=[os.getenv('MAIL_USERNAME')],
-    )
-    msg.body = "Hey, sending you this email from my Flask app, let me know if it works."
-    mail.send(msg)
-    return "Message sent!"
+    utc=pytz.UTC
+    # Calcula o tempo limite de 1 hora atrás
+    one_hour_ago = datetime.now(timezone.utc) - timedelta(minutes=1)
+    one_hour_ago=one_hour_ago.replace(tzinfo=utc)
+    # Busca todos os usuários com mais de 1h de espera para validação
+    users = Users.query.filter(
+            Users.category == "user",  # Filtra por categoria "user"
+            Users.created_at <= one_hour_ago  # Verifica se foi criado há mais de 1 hora
+        ).all()
+
+    if not users:  # Corrigido de all_users para users
+        return "No users found."
+
+    # Lista para armazenar usuários que atendem aos critérios
+    valid_users = []
+    for user in users:
+        # Certifica-se de que `created_at` tem fuso horário (offset-aware)
+        if user.created_at.tzinfo is None:
+            user.created_at = user.created_at.replace(tzinfo=utc)
+
+        # Verifica se o usuário está ativo e atende ao critério de tempo
+        if user.created_at < one_hour_ago :
+            valid_users.append(user)  # Adiciona o usuário à lista de válidos
+        else:
+            print(f"User {user.username} does not meet criteria.")
+
+    # Envia e-mails para usuários válidos
+    if valid_users:
+        for user in valid_users:
+            msg = Message(
+                subject="Approval Pending",
+                sender=["MAIL_USERNAME"],  # Substitua pelo seu email
+                recipients=[app.config['MAIL_USERNAME']],  # Enviar para o seu próprio e-mail
+                body=f"Hello,\n\n] have been waiting for approval for more than an hour."
+            )
+            mail.send(msg)
+
+        return "Emails sent to valid users."
+    else:
+        return "No valid users found."
