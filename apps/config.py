@@ -159,8 +159,8 @@ def send_email():
         for user in valid_users:
             msg = Message(
                 subject="Approval Pending",
-                sender = os.getenv('MAIL_NAME'),
-                recipients=os.getenv('RECIPIENTS'),  # Enviar para o seu próprio e-mail
+                sender = os.getenv('MAIL_USERNAME'),
+                recipients=[os.getenv('MAIL_USERNAME')],
                 body=f"Hello,\n\n {user.name} have been waiting for approval for more than an hour."
             )
             mail.send(msg)
