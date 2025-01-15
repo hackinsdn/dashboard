@@ -132,7 +132,7 @@ mail = Mail(app)
 def send_email():
     utc=pytz.UTC
     # Calcula o tempo limite de 1 hora atrás
-    one_hour_ago = datetime.now(timezone.utc) - timedelta(minutes=1)
+    one_hour_ago = datetime.now(timezone.utc) - timedelta(hours=1)
     one_hour_ago=one_hour_ago.replace(tzinfo=utc)
     # Busca todos os usuários com mais de 1h de espera para validação
     users = Users.query.filter(
@@ -153,8 +153,6 @@ def send_email():
         # Verifica se o usuário está ativo e atende ao critério de tempo
         if user.created_at < one_hour_ago :
             valid_users.append(user)  # Adiciona o usuário à lista de válidos
-        else:
-            print(f"User {user.username} does not meet criteria.")
 
     # Envia e-mails para usuários válidos
     if valid_users:
@@ -163,7 +161,7 @@ def send_email():
                 subject="Approval Pending",
                 sender=["MAIL_USERNAME"],  # Substitua pelo seu email
                 recipients=[app.config['MAIL_USERNAME']],  # Enviar para o seu próprio e-mail
-                body=f"Hello,\n\n] have been waiting for approval for more than an hour."
+                body=f"Hello,\n\n] {user.name} have been waiting for approval for more than an hour."
             )
             mail.send(msg)
 
