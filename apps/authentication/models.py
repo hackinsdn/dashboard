@@ -29,6 +29,9 @@ class Users(db.Model, UserMixin, AuditMixin):
     subject = db.Column(db.String(255))
     issuer = db.Column(db.String(255))
     active = db.Column(db.Boolean, default=True)
+    confirmation_token = db.Column(db.String(100))
+    is_confirmed = db.Column(db.Boolean, default=False)
+    token_expiration_date = db.Column(db.DateTime, default= None)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     def __init__(self, **kwargs):

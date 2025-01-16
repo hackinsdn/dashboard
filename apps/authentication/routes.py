@@ -11,12 +11,15 @@ from flask_login import (
     logout_user
 )
 
-from apps import db, login_manager, oauth
+from apps import db, login_manager, oauth, mail
 from apps.config import app_config
 from apps.audit_mixin import get_remote_addr
 from apps.authentication import blueprint
 from apps.authentication.forms import LoginForm, CreateAccountForm
 from apps.authentication.models import Users, LoginLogging
+from flask_mail import Message
+import uuid
+from datetime import datetime, timezone, timedelta
 
 from apps.authentication.util import verify_pass
 
@@ -42,6 +45,12 @@ def login():
 
         # Check the password
         if user and verify_pass(password, user.password):
+
+            # Check if user has confirmed the account
+            if user.is_confirmed is False:
+                return render_template('pages/login.html',
+                                       msg='Please confirm your account before login',
+                                       form=login_form)
 
             login_user(user)
             app.logger.info(f"Successful login ipaddr={get_remote_addr()} login={username} auth_provider=local")
@@ -128,11 +137,23 @@ def register():
 
         # else we can create the user
         user = Users(**request.form)
+        user.confirmation_token = uuid.uuid4().hex[:14]
+        user.token_expiration_date = datetime.now(timezone.utc)
+
+        # Send email
+        msg = Message(
+            subject="Confirmação de cadastro no HackINSDN",
+            sender=app.config['MAIL_USERNAME'],
+            recipients=[email],
+            body=f"Clique aqui para confirmar seu cadastro: {app.config['BASE_URL']}/confirm/{user.confirmation_token}"
+        )
+        mail.send(msg)
+
         db.session.add(user)
         db.session.commit()
 
         return render_template('pages/register.html',
-                               msg='User created please <a href="/login">login</a>',
+                               msg='User created please open your email to confirm',
                                success=True,
                                form=create_account_form)
 
@@ -144,6 +165,31 @@ def register():
 def logout():
     logout_user()
     return redirect(url_for('authentication_blueprint.login'))
+
+@blueprint.route('/confirm/<token>', methods=['GET'])
+def confirm(token):
+    user = Users.query.filter_by(confirmation_token=token).first()
+
+    if not user:
+        return render_template('pages/page-403.html'), 403
+    
+    if user.token_expiration_date.tzinfo is None:
+        user.token_expiration_date = user.token_expiration_date.replace(tzinfo=timezone.utc)
+    
+    one_hour_ago = datetime.now(timezone.utc) - timedelta(hours=1)
+    already_expired = user.token_expiration_date < one_hour_ago
+
+    if already_expired:
+        return render_template('pages/page-403.html'), 403
+
+    user.confirmation_token = None
+    user.is_confirmed = True
+    
+    db.session.add(user)
+    db.session.commit()
+
+    return redirect(url_for('authentication_blueprint.login'))
+    
 
 
 # Errors
