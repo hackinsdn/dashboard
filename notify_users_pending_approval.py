@@ -30,7 +30,7 @@ def send_email():
             body += f"Name: {user.username}, Email: {user.email}, Data and Time: {user.created_at}\n"
 
         msg = Message(
-            subject="Pending User Approvals",
+            subject="[Dashboard HackInSDN] Pending User Approvals",
             sender=app.config['MAIL_USERNAME'],  
             recipients=[app.config['MAIL_SENDTO']], 
             body=body
