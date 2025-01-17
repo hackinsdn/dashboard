@@ -56,7 +56,7 @@ class Config(object):
     if USE_SQLITE:
 
         # This will create a file in <app> FOLDER
-         SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(DATA_DIR, 'db.sqlite3') 
+        SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(DATA_DIR, 'db.sqlite3') 
 
     # OAUTH Authentication
     CLIENT_ID     = os.getenv('OAUTH_CLIENT_ID', "")
