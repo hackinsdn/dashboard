@@ -143,7 +143,7 @@ def run_lab(lab_id):
 
         return render_template("pages/run_lab_status.html", resources=k8s_resources, lab_instance_id=pod_hash)
     else:
-        create_lab_log_error = HomeLogging(ipaddr=get_remote_addr(), action="create_lab", success= False, lab_id=lab.id, user_id=current_user.id)
+        create_lab_log_error = HomeLogging(ipaddr=get_remote_addr(), action="create_lab", success=False, lab_id=lab.id, user_id=current_user.id)
         db.session.add(create_lab_log_error)
         db.session.commit()
         return render_template("pages/error.html", title="Error Running Labs", msg=msg)
