@@ -227,7 +227,7 @@ def edit_user(user_id=None):
         status = True
         msg = "User profile updated successfully"
     except Exception as exc:
-        edit_user_log_error = HomeLogging(ipaddr=get_remote_addr(), action="edit_user", success= False, user_id=user.id )
+        edit_user_log_error = HomeLogging(ipaddr=get_remote_addr(), action="edit_user", success=False, user_id=user.id )
         db.session.add(edit_user_log_error)
         db.session.commit()
         status = False
