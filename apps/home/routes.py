@@ -137,7 +137,7 @@ def run_lab(lab_id):
         lab_inst = LabInstances(pod_hash, current_user, lab, k8s_resources)
         db.session.add(lab_inst)
 
-        create_lab_log = HomeLogging(ipaddr=get_remote_addr(), action="create_lab", success= True, lab_id=lab.id, user_id=current_user.id)
+        create_lab_log = HomeLogging(ipaddr=get_remote_addr(), action="create_lab", success=True, lab_id=lab.id, user_id=current_user.id)
         db.session.add(create_lab_log)
         db.session.commit()
 
