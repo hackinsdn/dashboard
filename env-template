@@ -9,3 +9,10 @@ export K8S_NAMESPACE=xxx
 export SECRET_KEY=xxx
 # change to DEBUG=False when running in production
 export DEBUG=True
+
+export MAIL_SERVER=xxxx
+export MAIL_PORT=xxxx
+export MAIL_USERNAME=xxxx
+export MAIL_SENDTO=xxxx
+export MAIL_PASSWORD=xxxx
+
