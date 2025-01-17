@@ -83,6 +83,7 @@ class Config(object):
     MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
     MAIL_USE_TLS = True
     MAIL_USE_SSL = False
+    MAIL_SENDTO = os.getenv("MAIL_SENDTO")
 
 class ProductionConfig(Config):
     DEBUG = False
