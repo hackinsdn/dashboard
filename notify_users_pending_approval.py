@@ -29,7 +29,7 @@ def send_email():
         msg = Message(
             subject="Pending User Approvals",
             sender=app.config['MAIL_USERNAME'],  
-            recipients=[app.config['MAIL_USERNAME']], 
+            recipients=[app.config['MAIL_SENDTO']], 
             body=body
         )
         mail.send(msg)  
