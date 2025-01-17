@@ -221,7 +221,7 @@ def edit_user(user_id=None):
         return render_template("pages/edit_user.html", msg_fail="No changes applied.", user=user, return_path=return_path)
 
     try:
-        edit_user_log = HomeLogging(ipaddr=get_remote_addr(), action="edit_user", success= True, user_id=user.id )
+        edit_user_log = HomeLogging(ipaddr=get_remote_addr(), action="edit_user", success=True, user_id=user.id )
         db.session.add(edit_user_log)
         db.session.commit()
         status = True
