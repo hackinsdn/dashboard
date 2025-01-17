@@ -22,12 +22,14 @@ oauth = OAuth()
 socketio = SocketIO(cors_allowed_origins="*")
 mail = Mail()
 
+
 def register_extensions(app):
     db.init_app(app)
     login_manager.init_app(app)
     oauth.init_app(app)
     socketio.init_app(app)
     mail.init_app(app)  
+
 
 def register_blueprints(app):
     for module_name in ('authentication', 'home', 'api'):
