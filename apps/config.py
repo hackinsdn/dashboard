@@ -1,5 +1,7 @@
 # -*- encoding: utf-8 -*-
 import os, random, string
+from dotenv import load_dotenv
+
 
 class Config(object):
 
@@ -54,7 +56,7 @@ class Config(object):
     if USE_SQLITE:
 
         # This will create a file in <app> FOLDER
-        SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(DATA_DIR, 'db.sqlite3') 
+         SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(DATA_DIR, 'db.sqlite3') 
 
     # OAUTH Authentication
     CLIENT_ID     = os.getenv('OAUTH_CLIENT_ID', "")
@@ -73,13 +75,14 @@ class Config(object):
     LOG_FMT = "%(asctime)s %(levelname)s [%(name)s] [%(filename)s:%(lineno)d] %(message)s"
     LOG_FILE = os.getenv("LOG_FILE")
 
-    MAIL_SERVER = 'smtp.gmail.com'
-    MAIL_PORT = 587
+    load_dotenv()
+
+    MAIL_SERVER = os.getenv("MAIL_SERVER")
+    MAIL_PORT = os.getenv("MAIL_PORT")
     MAIL_USERNAME = os.getenv("MAIL_USERNAME")
     MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
     MAIL_USE_TLS = True
     MAIL_USE_SSL = False
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(os.getcwd(), 'db.sqlite3')    
 
 class ProductionConfig(Config):
     DEBUG = False
