@@ -13,7 +13,7 @@ def send_email():
         return
 
 
-    with app.app_context():  # Contexto do Flask para garantir que as operações sejam feitas no app correto
+    with app.app_context():
         one_hour_ago = utcnow() - timedelta(hours=1)
 
         # Consulta para pegar usuários pendentes de aprovação
