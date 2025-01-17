@@ -328,11 +328,6 @@ def edit_lab(lab_id):
     try:
         db.session.add(lab)
         db.session.commit()
-
-        edit_lab_log = HomeLogging(ipaddr=get_remote_addr(), action="edit_lab", success= True, lab_id=lab.id, user_id=current_user.id)
-        db.session.add(edit_lab_log)
-        db.session.commit()
-
         status = True
         msg = "Lab saved with success"
     except Exception as exc:
@@ -340,9 +335,10 @@ def edit_lab(lab_id):
         msg = "Failed to save Lab information"
         current_app.logger.error(f"{msg} - {exc}")
 
-        edit_lab_log_error = HomeLogging(ipaddr=get_remote_addr(), action="edit_lab", success= False, lab_id=lab.id, user_id=current_user.id)
-        db.session.add(edit_lab_log_error)
-        db.session.commit()
+    edit_lab_log = HomeLogging(ipaddr=get_remote_addr(), action="edit_lab", success= status, lab_id=lab.id, user_id=current_user.id)
+    db.session.add(edit_lab_log)
+    db.session.commit()
+
     if status:
         return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, msg_ok=msg, segment="/labs/edit")
     else:
