@@ -8,7 +8,10 @@ from apps.config import Config
 from apps.audit_mixin import utcnow
 
 def send_email():
-    app = create_app(Config)  
+    app = create_app(Config)
+    if not app.config["MAIL_SENDTO"]:
+        return
+
 
     with app.app_context():  # Contexto do Flask para garantir que as operações sejam feitas no app correto
         one_hour_ago = utcnow() - timedelta(hours=1)
