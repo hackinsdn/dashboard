@@ -3,6 +3,9 @@ import os, random, string
 from dotenv import load_dotenv
 
 
+load_dotenv()
+
+
 class Config(object):
 
     basedir = os.path.abspath(os.path.dirname(__file__))
