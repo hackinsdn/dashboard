@@ -18,7 +18,7 @@ def send_email():
         # Consulta para pegar usuários pendentes de aprovação
         users = Users.query.filter(
                 Users.category == "user",
-                Users.created_at <= one_hour_ago,
+                Users.created_at <= utcnow() - timedelta(hours=1),
                 Users.active==True
             ).all()
 
