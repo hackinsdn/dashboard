@@ -14,7 +14,6 @@ def send_email():
 
 
     with app.app_context():
-        one_hour_ago = utcnow() - timedelta(hours=1)
 
         # Consulta para pegar usuários pendentes de aprovação
         users = Users.query.filter(
@@ -28,7 +27,7 @@ def send_email():
 
         body = "List of users pending approval:\n\n"
         for user in users:
-            body += f"Name: {user.username}, Email: {user.email}, Data and Time: {user.created_at}\n"
+            body += f"Name: {user.username}, Email: {user.email}, Created-At: {user.created_at}\n"
 
         msg = Message(
             subject="[Dashboard HackInSDN] Pending User Approvals",
