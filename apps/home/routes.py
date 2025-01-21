@@ -361,6 +361,10 @@ def view_labs(lab_id=None):
     labs = labs.all()
     lab_categories = {cat.id: cat for cat in LabCategories.query.all()}
     running_labs = {lab.lab_id: lab.id for lab in LabInstances.query.filter_by(user_id=current_user.id, active=True).all()}
+    
+    if(current_user.category == "student" and running_labs.user_id != current_user.id):
+        return render_template("pages/error.html", title="Unauthorized request", msg="You dont have permission to see this page")
+
     return render_template("pages/labs_view.html", labs=labs, lab_categories=lab_categories, running_labs=running_labs, segment="/labs/view")
 
 
