@@ -1,9 +1,9 @@
 # -*- encoding: utf-8 -*-
 
+from datetime import timezone, datetime
 import uuid
 from flask_login import UserMixin
 from sqlalchemy.orm import validates
-from datetime import datetime, timezone
 
 from apps import db, login_manager
 

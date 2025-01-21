@@ -8,15 +8,18 @@ from apps.config import Config
 from apps.audit_mixin import utcnow
 
 def send_email():
-    app = create_app(Config)  
+    app = create_app(Config)
+    if not app.config["MAIL_SENDTO"]:
+        return
 
-    with app.app_context():  # Contexto do Flask para garantir que as operações sejam feitas no app correto
-        one_hour_ago = utcnow() - timedelta(hours=1)
+
+    with app.app_context():
 
         # Consulta para pegar usuários pendentes de aprovação
         users = Users.query.filter(
                 Users.category == "user",
-                Users.created_at <= one_hour_ago
+                Users.created_at <= utcnow() - timedelta(hours=1),
+                Users.active==True
             ).all()
 
         if not users:
@@ -24,12 +27,12 @@ def send_email():
 
         body = "List of users pending approval:\n\n"
         for user in users:
-            body += f"Name: {user.username}, Email: {user.email}, Data and Time: {user.created_at}\n"
+            body += f"Name: {user.username}, Email: {user.email}, Created-At: {user.created_at}\n"
 
         msg = Message(
-            subject="Pending User Approvals",
+            subject="[Dashboard HackInSDN] Pending User Approvals",
             sender=app.config['MAIL_USERNAME'],  
-            recipients=[app.config['MAIL_USERNAME']], 
+            recipients=[app.config['MAIL_SENDTO']], 
             body=body
         )
         mail.send(msg)  

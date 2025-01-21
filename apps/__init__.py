@@ -75,7 +75,4 @@ def create_app(config):
     configure_database(app)
     configure_oauth(app)
     configure_log(app)
-
-
-    
     return app
