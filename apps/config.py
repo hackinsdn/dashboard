@@ -1,5 +1,10 @@
 # -*- encoding: utf-8 -*-
 import os, random, string
+from dotenv import load_dotenv
+
+
+load_dotenv()
+
 
 class Config(object):
 
@@ -72,7 +77,16 @@ class Config(object):
 
     LOG_FMT = "%(asctime)s %(levelname)s [%(name)s] [%(filename)s:%(lineno)d] %(message)s"
     LOG_FILE = os.getenv("LOG_FILE")
-    
+
+    MAIL_SERVER = os.getenv("MAIL_SERVER")
+    MAIL_PORT = os.getenv("MAIL_PORT", 587)
+    MAIL_USERNAME = os.getenv("MAIL_USERNAME")
+    MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
+    MAIL_DEFAULT_SENDER = os.getenv("MAIL_DEFAULT_SENDER")
+    MAIL_USE_TLS = True
+    MAIL_USE_SSL = False
+    MAIL_SENDTO = os.getenv("MAIL_SENDTO")
+
 class ProductionConfig(Config):
     DEBUG = False
 
