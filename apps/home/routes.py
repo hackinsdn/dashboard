@@ -150,11 +150,11 @@ def check_lab_status(lab_id):
 
     msg_error = ""
     lab = LabInstances.query.get(lab_id)
-    if(current_user.category == "student" and (lab.user_id != current_user.id)):
-        return render_template("pages/error.html", title="Error checking lab status", msg="You are not authorized to run this lab")
-
     if not lab:
         return render_template("pages/error.html", title="Error checking lab status", msg="Lab not found")
+    
+    if(current_user.category == "student" and (lab.user_id != current_user.id)):
+        return render_template("pages/error.html", title="Error checking lab status", msg="You are not authorized to run this lab")
 
     return render_template("pages/run_lab_status.html", resources=lab.k8s_resources, lab_instance_id=lab_id)
 
