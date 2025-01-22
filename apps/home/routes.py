@@ -107,14 +107,16 @@ def run_lab(lab_id):
     if current_user.category == "user":
         return render_template('pages/waiting_approval.html')
 
-    # TODO: check if the user has permission for creating this lab
-
     msg_error = ""
     lab = Labs.query.get(lab_id)
     if not lab:
         return render_template("pages/error.html", title="Error Running Labs", msg="Lab not found")
 
     already_running = LabInstances.query.filter_by(lab_id=lab_id, user_id=current_user.id, active=True).first()
+
+    if(current_user.category == "student" and (already_running.user_id != current_user.id)):
+        return render_template("pages/error.html", title="Error Running Labs", msg="You are not authorized to run this lab")
+
     if already_running:
         return redirect(url_for('home_blueprint.view_lab_instance', lab_id=already_running.id))
 
@@ -154,12 +156,13 @@ def check_lab_status(lab_id):
     if current_user.category == "user":
         return render_template('pages/waiting_approval.html')
 
-    # TODO: check if the user has permission for creating this lab
-
     msg_error = ""
     lab = LabInstances.query.get(lab_id)
     if not lab:
         return render_template("pages/error.html", title="Error checking lab status", msg="Lab not found")
+    
+    if(current_user.category == "student" and (lab.user_id != current_user.id)):
+        return render_template("pages/error.html", title="Error checking lab status", msg="You are not authorized to run this lab")
 
     return render_template("pages/run_lab_status.html", resources=lab.k8s_resources, lab_instance_id=lab_id)
 
@@ -168,6 +171,12 @@ def check_lab_status(lab_id):
 def xterm(lab_id, kind, pod, container):
     if current_user.category == "user":
         return render_template('pages/waiting_approval.html')
+    
+    lab = LabInstances.query.get(lab_id)
+    if not lab:
+        return render_template("pages/error.html", title="Error checking lab status", msg="Lab not found")
+    if(current_user.category == "student" and (lab.user_id != current_user.id)):
+        return render_template("pages/error.html", title="Error checking lab status", msg="You are not authorized to run this lab")
 
     return render_template('pages/xterm.html', host=f"{kind}/{pod}/{container}", container=container), 200
 
@@ -306,6 +315,14 @@ def edit_lab(lab_id):
         lab = Labs.query.get(lab_id)
         if not lab:
             return render_template("pages/labs_edit.html", segment="/labs/edit", msg_fail="Lab not found")
+        
+        lab_instance = LabInstances.query.get(lab_id)
+        if not lab_instance:
+            return render_template("pages/error.html", title="Error accessing Lab Instance", msg="Lab not found")
+    
+        if current_user.category == "student" and lab_instance.user_id != current_user.id:
+            return render_template("pages/error.html", title="Unauthorized request", msg="You dont have permission to see this page")
+        
     else:
         lab = Labs()
     lab_categories = {cat.id: cat for cat in LabCategories.query.all()}
