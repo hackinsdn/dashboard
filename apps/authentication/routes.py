@@ -142,7 +142,7 @@ def register():
 
         # Send email
         msg = Message(
-            subject="Confirmação de cadastro no HackINSDN",
+            subject="HackInSDN confirmation code",
             sender=app.config['MAIL_USERNAME'],
             recipients=[email],
             body=f"Clique aqui para confirmar seu cadastro: {app.config['BASE_URL']}/confirm/{user.confirmation_token}"
