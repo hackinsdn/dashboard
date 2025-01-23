@@ -153,7 +153,7 @@ def register():
         db.session.commit()
 
         return render_template('pages/register.html',
-                               msg='User created please open your email to confirm',
+                               msg='User created but pending confirmation',
                                success=True,
                                form=create_account_form)
 
