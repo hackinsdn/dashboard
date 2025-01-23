@@ -3,7 +3,7 @@
 Copyright (c) 2019 - present AppSeed.us
 """
 
-from flask import render_template, redirect, request, url_for
+from flask import render_template, redirect, request, url_for, session
 from flask import current_app as app
 from flask_login import (
     current_user,
@@ -15,7 +15,7 @@ from apps import db, login_manager, oauth, mail
 from apps.config import app_config
 from apps.audit_mixin import get_remote_addr
 from apps.authentication import blueprint
-from apps.authentication.forms import LoginForm, CreateAccountForm
+from apps.authentication.forms import LoginForm, CreateAccountForm, ConfirmAccountForm
 from apps.authentication.models import Users, LoginLogging
 from flask_mail import Message
 import uuid
@@ -137,29 +137,53 @@ def register():
 
         # else we can create the user
         user = Users(**request.form)
-        user.confirmation_token = uuid.uuid4().hex[:14]
-        user.token_expiration_date = datetime.now(timezone.utc)
+
+        confirmation_token = uuid.uuid4().hex[:14]
+        session['confirmation_token'] = confirmation_token
+        session['user'] = request.form
+        session['datetime'] = datetime.now(timezone.utc)
 
         # Send email
         msg = Message(
             subject="HackInSDN confirmation code",
             sender=app.config['MAIL_USERNAME'],
             recipients=[email],
-            body=f"Clique aqui para confirmar seu cadastro: {app.config['BASE_URL']}/confirm/{user.confirmation_token}"
+            body=f"This is your confirmation code: {confirmation_token}"
         )
         mail.send(msg)
 
-        db.session.add(user)
-        db.session.commit()
-
-        return render_template('pages/register.html',
-                               msg='User created but pending confirmation',
-                               success=True,
-                               form=create_account_form)
+        return redirect(url_for('authentication_blueprint.confirm_page'))
 
     else:
         return render_template('pages/register.html', form=create_account_form)
 
+@blueprint.route('/confirm', methods=['GET', 'POST'])
+def confirm_page():
+    form = ConfirmAccountForm(request.form)
+
+    confirmation_token = session.get('confirmation_token')
+    if not confirmation_token:
+        return render_template('pages/confirm.html', msg='No token found in session. Please register again.', success=False, form=form)
+        
+    if 'confirm' in request.form:
+        user = Users(**session.get('user'))
+        created_at = session.get('datetime')
+     
+        now = datetime.now(timezone.utc)
+        if now - created_at > timedelta(minutes=5):
+            return render_template('pages/confirm.html', msg='Token expired', success=False, form=form)
+
+        if request.form['confirmation_token'] != confirmation_token:
+            return render_template('pages/confirm.html', msg='Invalid token', success=False, form=form)
+
+        session.pop('confirmation_token')
+
+        db.session.add(user)
+        db.session.commit()
+
+        return redirect(url_for('authentication_blueprint.login'))
+    
+    return render_template('pages/confirm.html', form=form)
 
 @blueprint.route('/logout')
 def logout():
