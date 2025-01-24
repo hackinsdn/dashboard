@@ -84,6 +84,17 @@ class Groups(db.Model):
     __tablename__ = 'groups'
     id = db.Column(db.Integer, primary_key=True)
     groupname = db.Column(db.String(64), unique=True)
+    uid = db.Column(db.String(15), unique=True)
+    description = db.Column(db.String)
+    organization = db.Column(db.String)
+    expiration = db.Column(db.DateTime, nullable=True)
+    approved_users = db.Column(db.Text, nullable=True)
+    owner_id = db.Column(db.Integer, db.ForeignKey("users.id"))  
+    assistant_id = db.Column(db.Integer, db.ForeignKey("users.id"))  
+    member_id = db.Column(db.Integer, db.ForeignKey("users.id"))  
+   
+    def __repr__(self):
+        return f'<Group {self.groupname}>'
 
 class UserGroups(db.Model):
     __tablename__ = 'user_groups'

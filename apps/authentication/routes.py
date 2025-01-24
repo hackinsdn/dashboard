@@ -3,6 +3,7 @@
 Copyright (c) 2019 - present AppSeed.us
 """
 
+
 from flask import render_template, redirect, request, url_for
 from flask import current_app as app
 from flask_login import (
@@ -11,14 +12,17 @@ from flask_login import (
     logout_user
 )
 
+
 from apps import db, login_manager, oauth
 from apps.config import app_config
 from apps.audit_mixin import get_remote_addr
 from apps.authentication import blueprint
-from apps.authentication.forms import LoginForm, CreateAccountForm
-from apps.authentication.models import Users, LoginLogging
+from apps.authentication.forms import LoginForm, CreateAccountForm, GroupForm
+from apps.authentication.models import Users, LoginLogging, Groups
+
 
 from apps.authentication.util import verify_pass
+from sqlalchemy import DateTime
 
 
 @blueprint.route('/')
@@ -26,22 +30,29 @@ def route_default():
     return redirect(url_for('authentication_blueprint.login'))
 
 
+
+
 # Login & Registration
+
 
 @blueprint.route('/login/', methods=['GET', 'POST'])
 def login():
     login_form = LoginForm(request.form)
     if 'login' in request.form:
 
+
         # read form data
         username = request.form['username']
         password = request.form['password']
 
+
         # Locate user
         user = Users.query.filter_by(username=username).first()
 
+
         # Check the password
         if user and verify_pass(password, user.password):
+
 
             login_user(user)
             app.logger.info(f"Successful login ipaddr={get_remote_addr()} login={username} auth_provider=local")
@@ -50,20 +61,25 @@ def login():
             db.session.commit()
             return redirect(url_for('authentication_blueprint.route_default'))
 
+
         app.logger.warn(f"Failed login ipaddr={get_remote_addr()} login={username} auth_provider=local")
         login_log = LoginLogging(ipaddr=get_remote_addr(), login=username, auth_provider="local", success=False)
         db.session.add(login_log)
         db.session.commit()
+
 
         # Something (user or pass) is not ok
         return render_template('pages/login.html',
                                msg='Wrong user or password',
                                form=login_form)
 
+
     if not current_user.is_authenticated:
         return render_template('pages/login.html',
                                form=login_form)
     return redirect(url_for('home_blueprint.index'))
+
+
 
 
 @blueprint.route("/login/oauth")
@@ -72,6 +88,8 @@ def login_oauth():
     return oauth.provider.authorize_redirect(
         redirect_uri=app_config.BASE_URL + url_for("authentication_blueprint.callback", _external=False)
     )
+
+
 
 
 @blueprint.route("/login/callback", methods=["GET", "POST"])
@@ -84,22 +102,28 @@ def callback():
     family_name = token.get("family_name", None)
     email = token.get("email", None)
 
+
     if not subject:
         app.logger.warn("Invalid auth token from OAUTH callback:", token)
         return render_template('pages/page-403.html'), 403
+
 
     user = Users.query.filter_by(subject=subject).first()
     if not user:
         user = Users(subject=subject, issuer=issuer, given_name=given_name, family_name=family_name, email=email)
         db.session.add(user)
 
+
     app.logger.info(f"Successful login ipaddr={get_remote_addr()} login={subject} auth_provider={issuer} email={email}")
     login_log = LoginLogging(ipaddr=get_remote_addr(), login=subject, auth_provider=issuer, success=True)
     db.session.add(login_log)
     db.session.commit()
 
+
     login_user(user)
     return redirect(url_for('authentication_blueprint.route_default'))
+
+
 
 
 @blueprint.route('/register', methods=['GET', 'POST'])
@@ -107,8 +131,10 @@ def register():
     create_account_form = CreateAccountForm(request.form)
     if 'register' in request.form:
 
+
         username = request.form['username']
         email = request.form['email']
+
 
         # Check usename exists
         user = Users.query.filter_by(username=username).first()
@@ -118,6 +144,7 @@ def register():
                                    success=False,
                                    form=create_account_form)
 
+
         # Check email exists
         user = Users.query.filter_by(email=email).first()
         if user:
@@ -126,18 +153,74 @@ def register():
                                    success=False,
                                    form=create_account_form)
 
+
         # else we can create the user
         user = Users(**request.form)
         db.session.add(user)
         db.session.commit()
+
 
         return render_template('pages/register.html',
                                msg='User created please <a href="/login">login</a>',
                                success=True,
                                form=create_account_form)
 
+
     else:
         return render_template('pages/register.html', form=create_account_form)
+
+
+@blueprint.route('/groups', methods=['GET', 'POST'])
+def list_groups():
+    groups = Groups.query.all()
+    return render_template('pages/list_groups.html', groups=groups)
+
+
+@blueprint.route('/groups/create', methods=['GET', 'POST'])
+def create_group():
+    form = GroupForm(request.form)
+    if 'create' in request.form:
+        groupname = request.form['groupname']
+        uid = request.form['uid']
+        description = request.form['description']
+        organization = request.form['organization']
+        expiration = request.form['expiration']
+        approved_users = request.form.get('approved_users', None)
+        owner_id = request.form['owner_id']
+        assistant_id = request.form['assistant_id']
+        member_id = request.form['member_id']
+
+
+        # Criando um novo grupo
+        new_group = Groups(
+            groupname=groupname,
+            uid=uid,
+            description=description,
+            organization=organization,
+            expiration = db.Column(DateTime, nullable=True),
+            approved_users=approved_users,
+            owner_id=owner_id,
+            assistant_id=assistant_id,
+            member_id=member_id
+        )
+        db.session.add(new_group)
+        db.session.commit()
+        #pre_approved_emails = get_pre_approved_emails(group)  # Função que retorna os e-mails dos alunos aprovados
+        #group.pre_approved = ",".join(pre_approved_emails)  # Preenche com os e-mails dos alunos
+        #db.session.commit()
+        # def get_pre_approved_emails(group):
+        # Obtenha os e-mails dos alunos aprovados (isso depende do seu modelo de dados)
+        #approved_students = db.session.query(Users.email).filter(Users.id.in_(approved_student_ids)).all()
+        # Retorna a lista de e-mails
+        #return [student.email for student in approved_students]
+       
+        return redirect(url_for('groups_blueprint.list_groups'))
+
+
+    return render_template('pages/create_group.html', form=form)
+   
+    # Redireciona para a lista de grupos após a exclusão
+    return redirect(url_for('groups_blueprint.list_groups'))
 
 
 @blueprint.route('/logout')
@@ -146,11 +229,16 @@ def logout():
     return redirect(url_for('authentication_blueprint.login'))
 
 
+
+
 # Errors
+
 
 @login_manager.unauthorized_handler
 def unauthorized_handler():
     return render_template('pages/page-403.html'), 403
+
+
 
 
 @blueprint.errorhandler(403)
@@ -158,11 +246,18 @@ def access_forbidden(error):
     return render_template('pages/page-403.html'), 403
 
 
+
+
 @blueprint.errorhandler(404)
 def not_found_error(error):
     return render_template('pages/page-404.html'), 404
 
 
+
+
 @blueprint.errorhandler(500)
 def internal_error(error):
     return render_template('pages/page-500.html'), 500
+
+
+
