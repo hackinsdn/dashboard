@@ -1,0 +1,151 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Edit Group - {{ group.groupname }} {% endblock %} 
+
+<!-- Element injected in the BODY element -->
+{% block body_class %} sidebar-mini {% endblock body_class %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}
+
+  <!-- Google Font: Source Sans Pro -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
+  <!-- daterange picker -->
+  <link rel="stylesheet" href="/static/assets/plugins/daterangepicker/daterangepicker.css">
+  <!-- Select2 -->
+  <link rel="stylesheet" href="/static/assets/plugins/select2/css/select2.min.css">
+  <link rel="stylesheet" href="/static/assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
+  <!-- Theme style -->
+  <link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
+
+{% endblock stylesheets %}
+
+{% block content %}    
+
+  <!-- Content Wrapper. Contains page content -->
+  <div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+      <div class="container-fluid">
+        <div class="row mb-2">
+          <div class="col-sm-6">
+            <h1>Edit Group</h1>
+            {% if msg_ok %}
+            <div class="alert alert-success alert-dismissible">
+              <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+              <h5><i class="icon fas fa-check"></i> Group updated successfully!</h5>
+              {{ msg_ok }}
+            </div>
+            {% endif %}
+            {% if msg_fail %}
+            <div class="alert alert-danger alert-dismissible">
+              <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+              <h5><i class="icon fas fa-ban"></i> Fail to update group!</h5>
+              {{ msg_fail }}
+            </div>
+            {% endif %}
+          </div>
+          <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+              <li class="breadcrumb-item"><a href="/">Home</a></li>
+              <li class="breadcrumb-item"><a href="/groups">Groups</a></li>
+              <li class="breadcrumb-item active">{{ group.groupname }}</li>
+            </ol>
+          </div>
+        </div>
+      </div><!-- /.container-fluid -->
+    </section>
+
+    <!-- Main content -->
+    <section class="content">
+      <div class="container-fluid">
+        <div class="card card-default">
+          <div class="card-header">
+            <h3 class="card-title">Group - {{ group.groupname }}</h3>
+          </div>
+          <!-- /.card-header -->
+          <div class="card-body">
+            <form method="POST" action="{{ url_for('home_blueprint.edit_group', group_id=group.id) }}">
+              <h5>Group Information</h5>
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label>Group Name</label>
+                    <input name="groupname" type="text" class="form-control" value="{{ group.groupname }}" required/>
+                  </div>
+                  <!-- /.form-group -->
+                  <div class="form-group">
+                    <label>Description</label>
+                    <textarea name="description" class="form-control" rows="4" required>{{ group.description }}</textarea>
+                  </div>
+                  <!-- /.form-group -->
+                  <div class="form-group">
+                    <label>Organization</label>
+                    <input name="organization" type="text" class="form-control" value="{{ group.organization }}" required/>
+                  </div>
+                  <!-- /.form-group -->
+                  <div class="form-group">
+                    <label>Expiration Date</label>
+                    <input name="expiration" type="date" class="form-control" value="{{ group.expiration }}">
+                  </div>
+                  <!-- /.form-group -->
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label>Approved Users</label>
+                    <select name="approved_users" multiple class="form-control select2" data-placeholder="Select Students" style="width: 100%;">
+                      {% for student in students %}
+                      <option value="{{ student.id }}" {% if student.id in selected_students %} selected {% endif %}>{{ student.given_name }} {{ student.family_name }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                </div>
+              </div> <!-- /.row -->
+
+              <div class="row">
+                <button class="btn btn-primary" type="submit">Save</button>
+                <a href="{{ url_for('home_blueprint.view_group') }}" class="btn btn-secondary mx-2" role="button" aria-pressed="true">Cancel</a>
+              </div>
+              <!-- /.row -->
+            </form>
+          </div>
+        </div>
+        <!-- /.card -->
+      </div><!-- /.container-fluid -->
+    </section>
+    <!-- /.content -->
+  </div>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+  <!-- jQuery -->
+  <script src="/static/assets/plugins/jquery/jquery.min.js"></script>
+  <!-- Bootstrap 4 -->
+  <script src="/static/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <!-- Select2 -->
+  <script src="/static/assets/plugins/select2/js/select2.full.min.js"></script>
+  <!-- InputMask -->
+  <script src="/static/assets/plugins/moment/moment.min.js"></script>
+  <script src="/static/assets/plugins/inputmask/jquery.inputmask.min.js"></script>
+  <!-- date-range-picker -->
+  <script src="/static/assets/plugins/daterangepicker/daterangepicker.js"></script>
+  <!-- Tempusdominus Bootstrap 4 -->
+  <script src="/static/assets/plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js"></script>
+  <!-- AdminLTE App -->
+  <script src="/static/assets/js/adminlte.min.js"></script>
+  <!-- Page script -->
+  <script>
+    $(function () {
+      //Initialize Select2 Elements
+      $('.select2').select2({
+        theme: 'bootstrap4'
+      })
+    })
+  </script>
+
+{% endblock javascripts %}

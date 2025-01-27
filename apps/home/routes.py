@@ -451,27 +451,27 @@ def view_labs(lab_id=None):
     running_labs = {lab.lab_id: lab.id for lab in LabInstances.query.filter_by(user_id=current_user.id, active=True).all()}
     return render_template("pages/labs_view.html", labs=labs, lab_categories=lab_categories, running_labs=running_labs, segment="/labs/view")
 
-
-@blueprint.route('/groups/')
+@blueprint.route('/groups/', defaults={'group_id': None})
+@blueprint.route('/groups/<int:group_id>')
 @login_required
-def groups():
+def groups(group_id):
     if current_user.category == "user":
         return render_template('pages/waiting_approval.html')
 
+    if group_id:
+        group = Groups.query.get_or_404(group_id)
+        return render_template('pages/group_info.html', group=group)
 
     groups = []
     try:
-        user_groups = k8s.get_groups_by_user(current_user.uid)  # A função k8s.get_groups_by_user obtém os grupos do usuário
+        user_groups = k8s.get_groups_by_user(current_user.uid)  
     except Exception as exc:
         err = traceback.format_exc().replace("\n", ", ")
         current_app.logger.error(f"Error getting groups: {exc} -- {err}")
         return render_template("pages/error.html", title="Error getting groups", msg="Failed to obtain groups. Check logs for more information.")
 
-
-    # Aqui estamos buscando os grupos registrados no banco
     registered_groups = {group.id: group.groupname for group in Groups.query.all()}
     registered_users = {user.uid: user for user in Users.query.all()}
-
 
     for group_id, user_uid in user_groups:
         user = registered_users.get(user_uid)
@@ -483,7 +483,6 @@ def groups():
             current_app.logger.warning(f"Inconsistency found on group: group not found for {group_id=}")
             continue
 
-
         group_dict = {
             "groupname": registered_groups.get(group_id, f"Unknown Group {group_id}"),
             "group_id": group_id,
@@ -491,15 +490,12 @@ def groups():
             "members": [],
         }
 
-
-        # Verifica os membros do grupo, que podem ser assistentes, membros ou o próprio proprietário
         created = None
         member_ids = [group.owner_id, group.assistant_id, group.member_id]
         for member_id in member_ids:
             member = Users.query.get(member_id)
             if member:
-                # Supondo que você tenha informações como data de criação para cada membro, por exemplo
-                created = member.created  # Se você tiver a data de criação no modelo de Users ou no membro
+                created = member.created  
                 group_dict["members"].append({
                     "name": f"{member.given_name} {member.family_name}",
                     "role": "Owner" if member_id == group.owner_id else "Assistant" if member_id == group.assistant_id else "Member",
@@ -507,37 +503,34 @@ def groups():
                     "status": "Active" if member.active else "Inactive",
                 })
 
-
         if created:
             group_dict["created"] = created.strftime('%Y-%m-%d %H:%M:%S')
         else:
             group_dict["created"] = "--"
         groups.append(group_dict)
 
-
-    return render_template("pages/groups.html", segment="groups", groups=groups)
-
+    return render_template("pages/group_info.html", segment="groups", groups=groups)
 
 
-
-@blueprint.route('/group/view/<group_id>', methods=["GET"])
+@blueprint.route('/group/', defaults={'group_id': None}, methods=["GET"])
+@blueprint.route('/group/<int:group_id>', methods=["GET"])
 @login_required
 def view_group(group_id):
     if current_user.category == "user":
         return render_template('pages/waiting_approval.html')
 
+    if group_id is None:
+        groups = Groups.query.all()  
+        return render_template("pages/view_group.html", groups=groups)
 
     group = Groups.query.get(group_id)
     if not group:
         return render_template("pages/error.html", title="Error accessing Group", msg="Group not found")
 
-
     if current_user.category not in ["admin", "teacher"] and group.owner_id != current_user.id:
         return render_template("pages/error.html", title="Unauthorized access", msg="You don't have permission to access this group")
 
-
-    group_members = []  # Aqui você poderia adicionar a lógica para obter membros do grupo (associados no k8s ou banco)
-
+    group_members = []  
 
     group_dict = {
         "groupname": group.groupname,
@@ -546,18 +539,16 @@ def view_group(group_id):
         "members": group_members,
     }
 
+    return render_template("pages/view_group.html", group=group_dict)
 
-    return render_template("pages/group_view.html", group=group_dict)
-
-
-
-
-@blueprint.route('/group/edit/<group_id>', methods=["GET", "POST"])
+@blueprint.route('/group/edit/<int:group_id>', methods=["GET", "POST"])
 @login_required
 def edit_group(group_id):
     if current_user.category == "user":
         return render_template('pages/waiting_approval.html')
 
+
+    return_path = "home_blueprint.view_group"
 
     group = Groups.query.get(group_id)
     if not group:
@@ -572,21 +563,29 @@ def edit_group(group_id):
         return render_template("pages/edit_group.html", group=group)
 
 
-    group.groupname = request.form["groupname"]
-    group.description = request.form["description"]
-    group.organization = request.form["organization"]
-    group.expiration = request.form["expiration"] if request.form["expiration"] else None
-    group.save()
+    has_changes = False
+    for field in ["groupname", "description", "organization", "expiration"]:
+        new_value = request.form[field] if field != "expiration" or request.form[field] else None
+        if getattr(group, field) != new_value:
+            setattr(group, field, new_value)
+            has_changes = True
 
 
-    # Salva o log de edição
-    group_edit_log = HomeLogging(ipaddr=get_remote_addr(), action="edit_group", success=True, group_id=group.id, user_id=current_user.id)
-    db.session.add(group_edit_log)
-    db.session.commit()
+    if has_changes:
+        db.session.commit()
+        return render_template(
+            "pages/edit_group.html",
+            msg_ok="Group updated successfully",
+            group=group,
+            return_path=return_path
+        )
 
-
-    return render_template("pages/edit_group.html", msg_ok="Group updated successfully", group=group)
-
+    return render_template(
+        "pages/edit_group.html",
+        msg_fail="No changes were made to the group.",
+        group=group,
+        return_path=return_path
+    )
 
 @blueprint.route('/gallery', methods=["GET"])
 @login_required

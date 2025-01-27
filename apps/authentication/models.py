@@ -83,7 +83,7 @@ def request_loader(request):
 class Groups(db.Model):
     __tablename__ = 'groups'
     id = db.Column(db.Integer, primary_key=True)
-    groupname = db.Column(db.String(64), unique=True)
+    groupname = db.Column(db.String(64))
     uid = db.Column(db.String(15), unique=True)
     description = db.Column(db.String)
     organization = db.Column(db.String)
@@ -95,6 +95,7 @@ class Groups(db.Model):
    
     def __repr__(self):
         return f'<Group {self.groupname}>'
+
 
 class UserGroups(db.Model):
     __tablename__ = 'user_groups'

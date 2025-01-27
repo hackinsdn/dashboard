@@ -5,7 +5,7 @@ Copyright (c) 2019 - present AppSeed.us
 
 
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField
+from wtforms import StringField, PasswordField, DateField
 from wtforms.validators import Email, DataRequired
 
 
@@ -37,12 +37,14 @@ class CreateAccountForm(FlaskForm):
                              validators=[DataRequired()])
 
 
+
+
 class GroupForm(FlaskForm):
     groupname = StringField('Group Name', 
                             id='groupname', 
                             validators=[DataRequired()])
     description = StringField('Description', id='description')
     organization = StringField('Organization', id='organization')
-    expiration = StringField('Expiration', id='Expiration')
+    expiration = DateField("Data de Expiração", format='%Y-%m-%d')
  
 

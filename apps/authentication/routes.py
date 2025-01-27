@@ -22,8 +22,7 @@ from apps.authentication.models import Users, LoginLogging, Groups
 
 
 from apps.authentication.util import verify_pass
-from sqlalchemy import DateTime
-
+from datetime import datetime
 
 @blueprint.route('/')
 def route_default():
@@ -169,66 +168,40 @@ def register():
     else:
         return render_template('pages/register.html', form=create_account_form)
 
-
-@blueprint.route('/groups', methods=['GET', 'POST'])
-def list_groups():
-    groups = Groups.query.all()
-    return render_template('pages/list_groups.html', groups=groups)
-
-
 @blueprint.route('/groups/create', methods=['GET', 'POST'])
 def create_group():
-    form = GroupForm(request.form)
-    if 'create' in request.form:
-        groupname = request.form['groupname']
-        uid = request.form['uid']
-        description = request.form['description']
-        organization = request.form['organization']
-        expiration = request.form['expiration']
-        approved_users = request.form.get('approved_users', None)
-        owner_id = request.form['owner_id']
-        assistant_id = request.form['assistant_id']
-        member_id = request.form['member_id']
+    form = GroupForm()
+    students = Users.query.filter_by(category='student').all()
+    
+    if form.validate_on_submit():
 
 
-        # Criando um novo grupo
+        groupname = form.groupname.data
+        description = form.description.data
+        organization = form.organization.data
+        expiration = form.expiration.data  
+        
         new_group = Groups(
-            groupname=groupname,
-            uid=uid,
-            description=description,
-            organization=organization,
-            expiration = db.Column(DateTime, nullable=True),
-            approved_users=approved_users,
-            owner_id=owner_id,
-            assistant_id=assistant_id,
-            member_id=member_id
-        )
+        groupname=groupname,
+        description=description,
+        organization=organization,
+        expiration=expiration,
+    )
         db.session.add(new_group)
+        
         db.session.commit()
-        #pre_approved_emails = get_pre_approved_emails(group)  # Função que retorna os e-mails dos alunos aprovados
-        #group.pre_approved = ",".join(pre_approved_emails)  # Preenche com os e-mails dos alunos
-        #db.session.commit()
-        # def get_pre_approved_emails(group):
-        # Obtenha os e-mails dos alunos aprovados (isso depende do seu modelo de dados)
-        #approved_students = db.session.query(Users.email).filter(Users.id.in_(approved_student_ids)).all()
-        # Retorna a lista de e-mails
-        #return [student.email for student in approved_students]
-       
-        return redirect(url_for('groups_blueprint.list_groups'))
+        
+        return redirect(url_for('home_blueprint.view_group'))
+
+    return render_template('pages/create_group.html', form=form, students=students)
 
 
-    return render_template('pages/create_group.html', form=form)
-   
-    # Redireciona para a lista de grupos após a exclusão
-    return redirect(url_for('groups_blueprint.list_groups'))
 
 
 @blueprint.route('/logout')
 def logout():
     logout_user()
     return redirect(url_for('authentication_blueprint.login'))
-
-
 
 
 # Errors

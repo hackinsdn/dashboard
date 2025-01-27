@@ -1,14 +1,9 @@
 {% extends "layouts/base-fullscreen.html" %}
 
+{% block title %} View Group {% endblock %}
 
-{% block title %} List Groups {% endblock %}
+{% block body_class %} view-group-page {% endblock body_class %}
 
-
-<!-- Element injected in the BODY element -->
-{% block body_class %} list-groups-page {% endblock body_class %}
-
-
-<!-- Specific Page CSS goes HERE  -->
 {% block stylesheets %}
   <!-- Google Font: Source Sans Pro -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
@@ -21,16 +16,15 @@
   <link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
 {% endblock stylesheets %}
 
-
 {% block content %}
 <div class="container">
   <div class="card">
     <div class="card-header">
-      <h3 class="card-title">List of Groups</h3>
+      <h3 class="card-title">Group Details</h3>
     </div>
     <!-- /.card-header -->
     <div class="card-body">
-      <table id="groupsTable" class="table table-bordered table-striped">
+      <table class="table table-bordered table-striped">
         <thead>
           <tr>
             <th>ID</th>
@@ -38,24 +32,16 @@
             <th>Description</th>
             <th>Organization</th>
             <th>Expiration</th>
-            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
-          {% for group in groups %}
           <tr>
             <td>{{ group.id }}</td>
             <td>{{ group.groupname }}</td>
             <td>{{ group.description }}</td>
             <td>{{ group.organization }}</td>
             <td>{{ group.expiration or 'No expiration' }}</td>
-            <td>
-              <a href="{{ url_for('authentication_blueprint.view', group_id=group.id) }}" class="btn btn-info btn-sm">View</a>
-              <a href="{{ url_for('authentication_blueprint.edit', group_id=group.id) }}" class="btn btn-warning btn-sm">Edit</a>
-              <a href="{{ url_for('authentication_blueprint.delete', group_id=group.id) }}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?')">Delete</a>
-            </td>
           </tr>
-          {% endfor %}
         </tbody>
       </table>
     </div>
@@ -65,8 +51,6 @@
 </div>
 {% endblock content %}
 
-
-<!-- Specific Page JS goes HERE  -->
 {% block javascripts %}
   <!-- jQuery -->
   <script src="/static/assets/plugins/jquery/jquery.min.js"></script>
@@ -90,6 +74,3 @@
     });
   </script>
 {% endblock javascripts %}
-
-
-
