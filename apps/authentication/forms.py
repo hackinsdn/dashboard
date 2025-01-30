@@ -46,5 +46,6 @@ class GroupForm(FlaskForm):
     description = StringField('Description', id='description')
     organization = StringField('Organization', id='organization')
     expiration = DateField("Data de Expiração", format='%Y-%m-%d')
+    accesstoken = StringField('Accesstoken', id='accesstoken')
  
 

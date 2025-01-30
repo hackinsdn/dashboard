@@ -92,7 +92,8 @@ class Groups(db.Model):
     owner_id = db.Column(db.Integer, db.ForeignKey("users.id"))  
     assistant_id = db.Column(db.Integer, db.ForeignKey("users.id"))  
     member_id = db.Column(db.Integer, db.ForeignKey("users.id"))  
-   
+    accesstoken = db.Column(db.String)
+
     def __repr__(self):
         return f'<Group {self.groupname}>'
 
