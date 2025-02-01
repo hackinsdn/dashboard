@@ -451,6 +451,7 @@ def view_labs(lab_id=None):
     running_labs = {lab.lab_id: lab.id for lab in LabInstances.query.filter_by(user_id=current_user.id, active=True).all()}
     return render_template("pages/labs_view.html", labs=labs, lab_categories=lab_categories, running_labs=running_labs, segment="/labs/view")
 
+
 @blueprint.route('/groups/', defaults={'group_id': None})
 @blueprint.route('/groups/<int:group_id>')
 @login_required
@@ -541,6 +542,7 @@ def view_group(group_id):
 
     return render_template("pages/view_group.html", group=group_dict)
 
+
 @blueprint.route('/group/edit/<int:group_id>', methods=["GET", "POST"])
 @login_required
 def edit_group(group_id):
@@ -586,6 +588,7 @@ def edit_group(group_id):
         group=group,
         return_path=return_path
     )
+
 
 @blueprint.route('/gallery', methods=["GET"])
 @login_required
