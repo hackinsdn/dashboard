@@ -6,7 +6,7 @@ Copyright (c) 2019 - present AppSeed.us
 
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, DateField
-from wtforms.validators import Email, DataRequired
+from wtforms.validators import Email, DataRequired, Optional
 
 
 # login and registration
@@ -43,9 +43,9 @@ class GroupForm(FlaskForm):
     groupname = StringField('Group Name', 
                             id='groupname', 
                             validators=[DataRequired()])
-    description = StringField('Description', id='description')
-    organization = StringField('Organization', id='organization')
-    expiration = DateField("Data de Expiração", format='%Y-%m-%d')
-    accesstoken = StringField('Accesstoken', id='accesstoken')
+    description = StringField('Description', id='description', validators=[Optional()])
+    organization = StringField('Organization', id='organization', validators=[Optional()])
+    expiration = DateField("Data de Expiração", format='%Y-%m-%d', validators=[Optional()])
+    accesstoken = StringField('Accesstoken', id='accesstoken', validators=[Optional()])
  
 
