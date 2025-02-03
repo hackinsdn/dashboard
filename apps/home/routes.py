@@ -590,6 +590,26 @@ def edit_group(group_id):
     )
 
 
+@blueprint.route('/group/delete/<int:group_id>', methods=["GET"])
+@login_required
+def delete_group(group_id):
+    """Deletes a group by ID."""
+    if current_user.category not in ["admin", "teacher"]:
+        return render_template("pages/error.html", title="Unauthorized access", msg="You don't have permission to delete this group")
+
+    group = Groups.query.get(group_id)
+    if not group:
+        return render_template("pages/error.html", title="Error deleting Group", msg="Group not found")
+
+    try:
+        db.session.delete(group)
+        db.session.commit()
+        return redirect(url_for('home_blueprint.view_group'))
+    except Exception as exc:
+        current_app.logger.error(f"Failed to delete group {group_id}: {exc}")
+        return render_template("pages/error.html", title="Error deleting Group", msg="Failed to delete group")
+    
+
 @blueprint.route('/gallery', methods=["GET"])
 @login_required
 def view_gallery():

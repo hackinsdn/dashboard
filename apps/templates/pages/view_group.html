@@ -74,7 +74,7 @@
                       <a href="{{ url_for('home_blueprint.edit_group', group_id=group.id) }}" class="btn btn-outline-dark" role="button" aria-pressed="true">
                         <i class="fas fa-edit"></i> Edit
                       </a>
-                      <a href="{{ url_for('api_blueprint.delete_group', group_id=group.id) }}" class="btn btn-outline-danger delete-group" role="button" aria-pressed="true" onclick="return confirmDelete()">
+                      <a href="{{ url_for('home_blueprint.delete_group', group_id=group.id) }}" class="btn btn-outline-danger delete-group" role="button" aria-pressed="true" onclick="return confirmDelete()">
                         <i class="fas fa-trash"></i> Delete
                       </a>
                     {% endif %}

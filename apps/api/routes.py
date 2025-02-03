@@ -6,8 +6,8 @@ from apps import db
 from apps.api import blueprint
 from apps.controllers import k8s
 from apps.home.models import Labs, LabInstances, LabAnswers
-from apps.authentication.models import Users, Groups
-from flask import request, current_app, render_template, redirect, url_for
+from apps.authentication.models import Users
+from flask import request, current_app
 from flask_login import login_required, current_user
 
 
@@ -222,22 +222,3 @@ def save_lab_answers(lab_inst_id):
 
     return {"status": "ok", "result": "Answers saved successfully"}, 200
 
-
-@blueprint.route('/group/delete/<int:group_id>', methods=["GET"])
-@login_required
-def delete_group(group_id):
-    """Deletes a group by ID."""
-    if current_user.category not in ["admin", "teacher"]:
-        return render_template("pages/error.html", title="Unauthorized access", msg="You don't have permission to delete this group")
-
-    group = Groups.query.get(group_id)
-    if not group:
-        return render_template("pages/error.html", title="Error deleting Group", msg="Group not found")
-
-    try:
-        db.session.delete(group)
-        db.session.commit()
-        return redirect(url_for('home_blueprint.view_group'))
-    except Exception as exc:
-        current_app.logger.error(f"Failed to delete group {group_id}: {exc}")
-        return render_template("pages/error.html", title="Error deleting Group", msg="Failed to delete group")
