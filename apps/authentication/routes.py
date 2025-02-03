@@ -22,7 +22,6 @@ from apps.authentication.models import Users, LoginLogging, Groups
 
 
 from apps.authentication.util import verify_pass
-from datetime import datetime
 
 @blueprint.route('/')
 def route_default():

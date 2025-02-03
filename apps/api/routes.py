@@ -1,7 +1,6 @@
 # -*- encoding: utf-8 -*-
 """HackInSDN"""
 
-
 import json
 from apps import db
 from apps.api import blueprint
@@ -17,7 +16,6 @@ from flask_login import login_required, current_user
 def get_pods(lab_id):
     if current_user.category == "user":
         return {}, 404
-
 
     try:
         token = request.headers.get('Authorization').split()[1]
