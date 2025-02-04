@@ -138,7 +138,7 @@ def register():
         # else we can create the user
         user = Users(**request.form)
 
-        confirmation_token = uuid.uuid4().hex[:14]
+        confirmation_token = str(uuid.uuid4().int)[:6]
         session['confirmation_token'] = confirmation_token
         session['user'] = request.form
         session['datetime'] = datetime.now(timezone.utc)
@@ -163,7 +163,7 @@ def confirm_page():
 
     confirmation_token = session.get('confirmation_token')
     if not confirmation_token:
-        return render_template('pages/confirm.html', msg='No token found in session. Please register again.', success=False, form=form)
+        return render_template('pages/register.html', msg='No token found in session. Please register again.', success=False, form=form)
         
     if 'confirm' in request.form:
         user = Users(**session.get('user'))
