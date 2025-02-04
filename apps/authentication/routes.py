@@ -190,32 +190,6 @@ def logout():
     logout_user()
     return redirect(url_for('authentication_blueprint.login'))
 
-@blueprint.route('/confirm/<token>', methods=['GET'])
-def confirm(token):
-    user = Users.query.filter_by(confirmation_token=token).first()
-
-    if not user:
-        return render_template('pages/page-403.html'), 403
-    
-    if user.token_expiration_date.tzinfo is None:
-        user.token_expiration_date = user.token_expiration_date.replace(tzinfo=timezone.utc)
-    
-    one_hour_ago = datetime.now(timezone.utc) - timedelta(hours=1)
-    already_expired = user.token_expiration_date < one_hour_ago
-
-    if already_expired:
-        return render_template('pages/page-403.html'), 403
-
-    user.confirmation_token = None
-    user.is_confirmed = True
-    
-    db.session.add(user)
-    db.session.commit()
-
-    return redirect(url_for('authentication_blueprint.login'))
-    
-
-
 # Errors
 
 @login_manager.unauthorized_handler
