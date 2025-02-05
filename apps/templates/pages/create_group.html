@@ -26,18 +26,12 @@
         <img src="{{ url_for('static', filename='assets/img/hackinsdn.png') }}" alt="HackInSDN">
       </a>
     </div>
-
-
     <!-- /.create-group-logo -->
     <div class="card">
       <div class="card-body create-group-card-body">
         <p class="create-group-box-msg">Create a New Group</p>
-
-
         <form method="POST" action="{{ url_for('authentication_blueprint.create_group') }}">
           {{ form.hidden_tag() }}
-
-
           <div class="input-group mb-3">
             {{ form.groupname(class="form-control", placeholder="Enter group name") }}
             <div class="input-group-append">
@@ -46,8 +40,6 @@
               </div>
             </div>
           </div>
-
-
           <div class="input-group mb-3">
             {{ form.description(class="form-control", placeholder="Enter description") }}
             <div class="input-group-append">
@@ -56,8 +48,6 @@
               </div>
             </div>
           </div>
-
-
           <div class="input-group mb-3">
             {{ form.organization(class="form-control", placeholder="Enter organization name") }}
             <div class="input-group-append">
@@ -66,8 +56,6 @@
               </div>
             </div>
           </div>
-
-
           <div class="input-group mb-3">
             {{ form.expiration(class="form-control", type="date") }}
             <div class="input-group-append">
@@ -76,8 +64,6 @@
               </div>
             </div>
           </div>
-
-
           <div class="input-group mb-3">
             {{ form.accesstoken(class="form-control", placeholder="Enter access token") }}
             <div class="input-group-append">
@@ -95,8 +81,6 @@
             </div>
           </div>
         </form>
-
-
       </div>
       <!-- /.create-group-card-body -->
     </div>
@@ -111,6 +95,3 @@
   <!-- Bootstrap 4 -->
   <script src="/static/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
 {% endblock javascripts %}
-
-
-

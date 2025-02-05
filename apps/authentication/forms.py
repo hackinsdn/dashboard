@@ -3,15 +3,11 @@
 Copyright (c) 2019 - present AppSeed.us
 """
 
-
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, DateField
 from wtforms.validators import Email, DataRequired, Optional
 
-
 # login and registration
-
-
 
 
 class LoginForm(FlaskForm):
@@ -21,8 +17,6 @@ class LoginForm(FlaskForm):
     password = PasswordField('Password',
                              id='pwd_login',
                              validators=[DataRequired()])
-
-
 
 
 class CreateAccountForm(FlaskForm):
@@ -37,8 +31,6 @@ class CreateAccountForm(FlaskForm):
                              validators=[DataRequired()])
 
 
-
-
 class GroupForm(FlaskForm):
     groupname = StringField('Group Name', 
                             id='groupname', 
@@ -47,5 +39,3 @@ class GroupForm(FlaskForm):
     organization = StringField('Organization', id='organization', validators=[Optional()])
     expiration = DateField("Data de Expiração", format='%Y-%m-%d', validators=[Optional()])
     accesstoken = StringField('Accesstoken', id='accesstoken', validators=[Optional()])
- 
-
