@@ -240,7 +240,6 @@ def edit_user(user_id=None):
         msg = "Failed to update user profile"
         current_app.logger.error(f"{msg} - {exc}")
 
-
     if status:
         return render_template("pages/edit_user.html", msg_ok=msg, user=user, return_path=return_path)
     else:
@@ -312,12 +311,10 @@ def edit_lab(lab_id):
     if lab_id != "new":
         lab = Labs.query.get(lab_id)
         if not lab:
-            return render_template("pages/labs_edit.html", segment="/labs/edit", msg_fail="Lab not found")
-       
+            return render_template("pages/labs_edit.html", segment="/labs/edit", msg_fail="Lab not found") 
         lab_instance = LabInstances.query.get(lab_id)
         if not lab_instance:
             return render_template("pages/error.html", title="Error accessing Lab Instance", msg="Lab not found")
-   
         if current_user.category == "student" and lab_instance.user_id != current_user.id:
             return render_template("pages/error.html", title="Unauthorized request", msg="You dont have permission to see this page")       
     else:
