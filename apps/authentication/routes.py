@@ -13,13 +13,13 @@ from flask_login import (
 
 from apps import db, login_manager, oauth, mail
 from apps.config import app_config
-from apps.audit_mixin import get_remote_addr
+from apps.audit_mixin import get_remote_addr, utcnow
 from apps.authentication import blueprint
 from apps.authentication.forms import LoginForm, CreateAccountForm, ConfirmAccountForm
 from apps.authentication.models import Users, LoginLogging
 from flask_mail import Message
 import uuid
-from datetime import datetime, timezone, timedelta
+from datetime import timedelta
 
 from apps.authentication.util import verify_pass
 
@@ -141,7 +141,7 @@ def register():
         confirmation_token = str(uuid.uuid4().int)[:6]
         session['confirmation_token'] = confirmation_token
         session['user'] = request.form
-        session['datetime'] = datetime.now(timezone.utc)
+        session['datetime'] = utcnow()
 
         # Send email
         msg = Message(
@@ -163,15 +163,15 @@ def confirm_page():
 
     confirmation_token = session.get('confirmation_token')
     if not confirmation_token:
-        return render_template('pages/register.html', msg='No token found in session. Please register again.', success=False, form=form)
+        return redirect(url_for('authentication_blueprint.register'))
         
     if 'confirm' in request.form:
         user = Users(**session.get('user'))
         created_at = session.get('datetime')
      
-        now = datetime.now(timezone.utc)
-        if now - created_at > timedelta(minutes=5):
-            return render_template('pages/confirm.html', msg='Token expired', success=False, form=form)
+        now = utcnow()
+        if now - created_at > timedelta(minutes=1):
+            return redirect(url_for('authentication_blueprint.register'))
 
         if request.form['confirmation_token'] != confirmation_token:
             return render_template('pages/confirm.html', msg='Invalid token', success=False, form=form)
