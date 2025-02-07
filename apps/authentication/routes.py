@@ -18,7 +18,6 @@ from apps.authentication import blueprint
 from apps.authentication.forms import LoginForm, CreateAccountForm, GroupForm
 from apps.authentication.models import Users, LoginLogging, Groups
 
-
 from apps.authentication.util import verify_pass
 
 @blueprint.route('/')
