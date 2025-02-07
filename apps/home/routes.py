@@ -258,7 +258,6 @@ def view_lab_instance(lab_id):
     lab_instance = LabInstances.query.get(lab_id)
     if not lab_instance:
         return render_template("pages/error.html", title="Error accessing Lab Instance", msg="Lab not found")
-    
     if lab_instance.user_id != current_user.id and current_user.category != "admin":
         return render_template("pages/error.html", title="Error accessing Lab Instance", msg="Not authorized to access this Lab")
 
