@@ -170,8 +170,8 @@ def confirm_page():
         created_at = session.get('datetime')
      
         now = utcnow()
-        if now - created_at > timedelta(minutes=1):
-            return redirect(url_for('authentication_blueprint.register'))
+        if now - created_at > timedelta(minutes=5):
+            return render_template('pages/confirm.html', msg='Token expired, please <a href=/register>click here</a> to register again', success=False, form=form)
 
         if request.form['confirmation_token'] != confirmation_token:
             return render_template('pages/confirm.html', msg='Invalid token', success=False, form=form)
@@ -184,6 +184,21 @@ def confirm_page():
         return redirect(url_for('authentication_blueprint.login'))
     
     return render_template('pages/confirm.html', form=form)
+
+@blueprint.route('/resend-code', methods=['GET', 'POST'])
+def resend_code():
+    email = session.get('user').get('email')
+    confirmation_token = session.get('confirmation_token')
+
+    msg = Message(
+        subject="HackInSDN confirmation code",
+        sender=app.config['MAIL_USERNAME'],
+        recipients=[email],
+        body=f"This is your confirmation code: {confirmation_token}"
+    )
+    mail.send(msg)
+
+    return redirect(url_for('authentication_blueprint.confirm_page'))
 
 @blueprint.route('/logout')
 def logout():
