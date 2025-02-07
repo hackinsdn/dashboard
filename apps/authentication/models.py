@@ -15,6 +15,21 @@ def user_category():
 def generate_uid():
     return uuid.uuid4().hex[:14]
 
+class UserGroups(db.Model):
+    __tablename__ = 'user_groups'
+    user_id  = db.Column(db.Integer, db.ForeignKey("users.id"), primary_key=True)
+    group_id = db.Column(db.Integer, db.ForeignKey("groups.id"), primary_key=True)
+    user = db.relationship("Users", back_populates="user_groups") 
+    group = db.relationship("Groups", back_populates="user_groups") 
+
+    owner_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    assistant_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    member_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+
+    owner = db.relationship("Users", foreign_keys=[owner_id])
+    assistant = db.relationship("Users", foreign_keys=[assistant_id])
+    member = db.relationship("Users", foreign_keys=[member_id])
+
 class Users(db.Model, UserMixin, AuditMixin):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
@@ -29,6 +44,8 @@ class Users(db.Model, UserMixin, AuditMixin):
     issuer = db.Column(db.String(255))
     active = db.Column(db.Boolean, default=True)
 
+    groups = db.relationship('Groups', secondary=UserGroups.__table__, back_populates='users')
+    
     def __init__(self, **kwargs):
         for property, value in kwargs.items():
             # depending on whether value is an iterable or not, we must
@@ -89,20 +106,13 @@ class Groups(db.Model):
     organization = db.Column(db.String)
     expiration = db.Column(db.DateTime, nullable=True)
     approved_users = db.Column(db.Text, nullable=True)
-    owner_id = db.Column(db.Integer, db.ForeignKey("users.id"))  
-    assistant_id = db.Column(db.Integer, db.ForeignKey("users.id"))  
-    member_id = db.Column(db.Integer, db.ForeignKey("users.id"))  
     accesstoken = db.Column(db.String)
+
+    users = db.relationship('Users', secondary=UserGroups.__table__, back_populates='groups')
+    user_groups = db.relationship("UserGroups", back_populates="group", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f'<Group {self.groupname}>'
-
-
-class UserGroups(db.Model):
-    __tablename__ = 'user_groups'
-    user_id  = db.Column(db.Integer, db.ForeignKey("users.id"), primary_key=True)
-    group_id = db.Column(db.Integer, db.ForeignKey("groups.id"), primary_key=True)
-
 
 class LoginLogging(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)

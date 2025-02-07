@@ -258,6 +258,7 @@ def view_lab_instance(lab_id):
     lab_instance = LabInstances.query.get(lab_id)
     if not lab_instance:
         return render_template("pages/error.html", title="Error accessing Lab Instance", msg="Lab not found")
+    
     if lab_instance.user_id != current_user.id and current_user.category != "admin":
         return render_template("pages/error.html", title="Error accessing Lab Instance", msg="Not authorized to access this Lab")
 
@@ -319,8 +320,10 @@ def edit_lab(lab_id):
         lab_instance = LabInstances.query.get(lab_id)
         if not lab_instance:
             return render_template("pages/error.html", title="Error accessing Lab Instance", msg="Lab not found")
+        
         if current_user.category == "student" and lab_instance.user_id != current_user.id:
-            return render_template("pages/error.html", title="Unauthorized request", msg="You dont have permission to see this page")       
+            return render_template("pages/error.html", title="Unauthorized request", msg="You dont have permission to see this page")
+               
     else:
         lab = Labs()
     lab_categories = {cat.id: cat for cat in LabCategories.query.all()}
@@ -339,7 +342,7 @@ def edit_lab(lab_id):
     lab.set_lab_guide_md(request.form["lab_guide"])
     lab.manifest = request.form["lab_manifest"]
     lab.goals = request.form.get("lab_goals", "")   
-    
+
     try:
         db.session.add(lab)
         db.session.commit()
