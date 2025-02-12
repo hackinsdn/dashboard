@@ -458,8 +458,6 @@ def groups(group_id):
 @blueprint.route('/group/<int:group_id>', methods=["GET"])
 @login_required
 def view_group(group_id):
-    if current_user.category == "user":
-        return render_template('pages/waiting_approval.html')
 
     if group_id is None:
         groups = Groups.query.all()  
