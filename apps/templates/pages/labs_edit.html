@@ -98,8 +98,8 @@
                   </div>
                   <div class="form-group">
                     <label>Lab category</label>
-                    <select name="lab_category" class="form-control">
-                      <option value="">--</option>
+                    <select name="lab_category" class="form-control" required>
+                      <option value="" disabled>--</option>
                       {% for cat_id in lab_categories %}
                       <option {{'selected' if lab.category_id == cat_id else ""}} value="{{cat_id}}">{{lab_categories[cat_id].category}}</option>
                       {% endfor %}
