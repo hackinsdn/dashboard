@@ -29,7 +29,6 @@ class Users(db.Model, UserMixin, AuditMixin):
     issuer = db.Column(db.String(255))
     active = db.Column(db.Boolean, default=True)
 
-
     user_groups = db.relationship(
         'UserGroups',
         back_populates='user',
