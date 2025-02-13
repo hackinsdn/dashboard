@@ -71,7 +71,7 @@
                       <i class="fas fa-eye"></i> View
                     </a>
                     <button class="btn btn-success join-group" data-group-id="{{ group.id }}">
-                      <i class="fas fa-user-plus"></i> Participar
+                      <i class="fas fa-user-plus"></i> Join the group
                     </button>
                     {% if current_user.category == "admin" or current_user.category == "teacher" %}
                       <a href="{{ url_for('home_blueprint.edit_group', group_id=group.id) }}" class="btn btn-outline-dark" role="button" aria-pressed="true">
