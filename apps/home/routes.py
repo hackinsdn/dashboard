@@ -488,21 +488,17 @@ def edit_group(group_id):
     if current_user.category == "user":
         return render_template('pages/waiting_approval.html')
 
-
     return_path = "home_blueprint.view_group"
 
     group = Groups.query.get(group_id)
     if not group:
         return render_template("pages/error.html", title="Error editing Group", msg="Group not found")
 
-
     if current_user.category not in ["admin", "teacher"] and group.owner_id != current_user.id:
         return render_template("pages/error.html", title="Unauthorized access", msg="You don't have permission to edit this group")
 
-
     if request.method == "GET":
         return render_template("pages/edit_group.html", group=group)
-
 
     has_changes = False
     for field in ["groupname", "description", "organization", "expiration"]:
@@ -510,7 +506,6 @@ def edit_group(group_id):
         if getattr(group, field) != new_value:
             setattr(group, field, new_value)
             has_changes = True
-
 
     if has_changes:
         db.session.commit()
