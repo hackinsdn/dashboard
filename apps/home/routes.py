@@ -9,7 +9,7 @@ from apps import db
 from apps.home import blueprint
 from apps.controllers import k8s
 from apps.home.models import Labs, LabInstances, LabCategories, HomeLogging
-from apps.authentication.models import Users, Groups
+from apps.authentication.models import Users, Groups, UserGroups
 from flask import render_template, request, current_app, redirect, url_for, session
 from flask_login import login_required, current_user
 from jinja2 import TemplateNotFound
@@ -497,29 +497,33 @@ def edit_group(group_id):
     if current_user.category not in ["admin", "teacher"] and group.owner_id != current_user.id:
         return render_template("pages/error.html", title="Unauthorized access", msg="You don't have permission to edit this group")
 
-    if request.method == "GET":
-        return render_template("pages/edit_group.html", group=group)
+    approved_users = Users.query.filter_by(category="user").all()
+    
+    group_members = Users.query.join(
+        UserGroups, UserGroups.user_id == Users.id
+    ).filter(UserGroups.group_id == group.id).all()
 
-    has_changes = False
-    for field in ["groupname", "description", "organization", "expiration"]:
-        new_value = request.form[field] if field != "expiration" or request.form[field] else None
-        if getattr(group, field) != new_value:
-            setattr(group, field, new_value)
-            has_changes = True
+    if request.method == "POST":
+        selected_user_id = request.form.get("approved_user")
+        if selected_user_id:
+            user = Users.query.get(int(selected_user_id))
+            if user and user.category == "user":
+                user.category = "student"
 
-    if has_changes:
-        db.session.commit()
-        return render_template(
-            "pages/edit_group.html",
-            msg_ok="Group updated successfully",
-            group=group,
-            return_path=return_path
-        )
+                new_member = UserGroups(user_id=user.id, group_id=group.id)
+                db.session.add(new_member)
+                db.session.commit()
+
+                approved_users = Users.query.filter_by(category="user").all()
+                group_members = Users.query.join(
+                    UserGroups, UserGroups.user_id == Users.id
+                ).filter(UserGroups.group_id == group.id).all()
 
     return render_template(
         "pages/edit_group.html",
-        msg_fail="No changes were made to the group.",
         group=group,
+        approved_users=approved_users,
+        group_members=group_members,
         return_path=return_path
     )
 
