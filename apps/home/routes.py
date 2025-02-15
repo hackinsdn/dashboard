@@ -485,23 +485,18 @@ def view_group(group_id):
 @blueprint.route('/group/edit/<int:group_id>', methods=["GET", "POST"])
 @login_required
 def edit_group(group_id):
-    if current_user.category == "user":
-        return render_template('pages/waiting_approval.html')
-
-    return_path = "home_blueprint.view_group"
-
     group = Groups.query.get(group_id)
     if not group:
         return render_template("pages/error.html", title="Error editing Group", msg="Group not found")
 
-    if current_user.category not in ["admin", "teacher"] and group.owner_id != current_user.id:
+    if current_user.category in ["student", "user"] and group.owner_id != current_user.id:
         return render_template("pages/error.html", title="Unauthorized access", msg="You don't have permission to edit this group")
 
-    approved_users = Users.query.filter_by(category="user").all()
-    
     group_members = Users.query.join(
         UserGroups, UserGroups.user_id == Users.id
     ).filter(UserGroups.group_id == group.id).all()
+
+    approved_users = Users.query.filter_by(category="user").all()
 
     if request.method == "POST":
         selected_user_id = request.form.get("approved_user")
@@ -509,23 +504,52 @@ def edit_group(group_id):
             user = Users.query.get(int(selected_user_id))
             if user and user.category == "user":
                 user.category = "student"
-
-                new_member = UserGroups(user_id=user.id, group_id=group.id)
-                db.session.add(new_member)
-                db.session.commit()
-
                 approved_users = Users.query.filter_by(category="user").all()
+                db.session.commit()
                 group_members = Users.query.join(
                     UserGroups, UserGroups.user_id == Users.id
                 ).filter(UserGroups.group_id == group.id).all()
+
+                existing_member = UserGroups.query.filter_by(user_id=user.id, group_id=group.id).first()
+                if not existing_member:
+                    new_member = UserGroups(user_id=user.id, group_id=group.id)
+                    db.session.add(new_member)
+                    db.session.commit()
+
+                approved_users = Users.query.filter_by(category="user").all()
+
+                group_members = Users.query.join(
+                    UserGroups, UserGroups.user_id == Users.id
+                ).filter(UserGroups.group_id == group.id).all()
+
+
+        user_id_to_remove = request.form.get("remove_user")
+        if user_id_to_remove:
+            user_to_remove = Users.query.get(int(user_id_to_remove))
+            if user_to_remove and user_to_remove.category == "student":
+                user_group = UserGroups.query.filter_by(user_id=user_to_remove.id, group_id=group.id).first()
+                if user_group:
+                    db.session.delete(user_group)
+                    db.session.commit()
+
+                    user_to_remove.category = "user"
+                    db.session.commit()
+
+                approved_users = Users.query.filter_by(category="user").all()
+
+                group_members = Users.query.join(
+                    UserGroups, UserGroups.user_id == Users.id
+                ).filter(UserGroups.group_id == group.id).all()
+
+                group_members = [member for member in group_members if member.id != user_to_remove.id]
 
     return render_template(
         "pages/edit_group.html",
         group=group,
         approved_users=approved_users,
-        group_members=group_members,
-        return_path=return_path
+        group_members=group_members
     )
+
 
 
 @blueprint.route('/group/delete/<int:group_id>', methods=["GET"])
@@ -546,7 +570,43 @@ def delete_group(group_id):
     except Exception as exc:
         current_app.logger.error(f"Failed to delete group {group_id}: {exc}")
         return render_template("pages/error.html", title="Error deleting Group", msg="Failed to delete group")
+
+
+@blueprint.route('/join_group/<int:group_id>', methods=['GET', 'POST'])
+@login_required
+def join_group(group_id):
+    group = Groups.query.get(group_id)
+    if not group:
+        return render_template("pages/error.html", title="Error", msg="Group not found")
+
+    user_group = UserGroups.query.filter_by(user_id=current_user.id, group_id=group.id).first()
+    if user_group or current_user.category == "admin":
+        return render_template('pages/group_info.html', group=group)
     
+    if not user_group:
+        if request.method == 'GET':
+            return render_template("pages/enter_access_token.html", group_id=group_id)
+
+    if (current_user.category != "student" and
+        current_user.category not in ["admin"] and
+        not (user_group and (user_group.owner_id == current_user.id or
+                             user_group.assistant_id == current_user.id or
+                             user_group.member_id == current_user.id))):
+        return render_template("pages/enter_access_token.html", group_id=group_id)
+    
+    if 'access_token' not in request.form:
+        return render_template("pages/enter_access_token.html", group_id=group_id)
+
+    access_token = request.form['access_token']
+    if access_token != group.access_token:
+        return render_template("pages/error.html", title="Error", msg="Invalid access token")
+
+    new_user_group = UserGroups(user_id=current_user.id, group_id=group_id)
+    db.session.add(new_user_group)
+    db.session.commit()
+
+    return render_template('pages/group_info.html', group=group)
+
 
 @blueprint.route('/gallery', methods=["GET"])
 @login_required
