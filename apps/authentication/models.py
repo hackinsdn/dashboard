@@ -29,6 +29,19 @@ class Users(db.Model, UserMixin, AuditMixin):
     issuer = db.Column(db.String(255))
     active = db.Column(db.Boolean, default=True)
 
+    user_groups = db.relationship(
+        'UserGroups',
+        back_populates='user',
+        foreign_keys='[UserGroups.user_id]',  
+        cascade='all, delete-orphan'
+    )
+    groups = db.relationship(
+        'Groups',
+        secondary='user_groups',
+        back_populates='users',
+        foreign_keys='[UserGroups.user_id, UserGroups.group_id]'  
+    )
+
     def __init__(self, **kwargs):
         for property, value in kwargs.items():
             # depending on whether value is an iterable or not, we must
@@ -67,6 +80,36 @@ class Users(db.Model, UserMixin, AuditMixin):
         if value not in allowed:
             raise ValueError(f"Invalid user category: {value} -- {allowed}")
         return value
+    
+
+class UserGroups(db.Model):
+    __tablename__ = 'user_groups'
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), primary_key=True)
+    group_id = db.Column(db.Integer, db.ForeignKey("groups.id"), primary_key=True)
+    user = db.relationship("Users", back_populates="user_groups", foreign_keys=[user_id])
+    group = db.relationship("Groups", back_populates="user_groups")
+
+
+    owner_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    assistant_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    member_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+
+
+    owner = db.relationship(
+        "Users",
+        foreign_keys=[owner_id],
+        remote_side="Users.id"
+    )
+    assistant = db.relationship(
+        "Users",
+        foreign_keys=[assistant_id],
+        remote_side="Users.id"
+    )
+    member = db.relationship(
+        "Users",
+        foreign_keys=[member_id],
+        remote_side="Users.id"
+    )
 
 
 @login_manager.user_loader
@@ -83,12 +126,19 @@ def request_loader(request):
 class Groups(db.Model):
     __tablename__ = 'groups'
     id = db.Column(db.Integer, primary_key=True)
-    groupname = db.Column(db.String(64), unique=True)
+    groupname = db.Column(db.String(64))
+    uid = db.Column(db.String(15), unique=True)
+    description = db.Column(db.String)
+    organization = db.Column(db.String)
+    expiration = db.Column(db.DateTime, nullable=True)
+    approved_users = db.Column(db.Text, nullable=True)
+    accesstoken = db.Column(db.String)
 
-class UserGroups(db.Model):
-    __tablename__ = 'user_groups'
-    user_id  = db.Column(db.Integer, db.ForeignKey("users.id"), primary_key=True)
-    group_id = db.Column(db.Integer, db.ForeignKey("groups.id"), primary_key=True)
+    users = db.relationship('Users', secondary='user_groups', back_populates='groups', foreign_keys='[UserGroups.user_id, UserGroups.group_id]')
+    user_groups = db.relationship("UserGroups", back_populates="group", cascade="all, delete-orphan")
+
+    def __repr__(self):
+        return f'<Group {self.groupname}>'
 
 
 class LoginLogging(db.Model):
