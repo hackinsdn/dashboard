@@ -150,12 +150,14 @@ def create_group():
         description = form.description.data
         organization = form.organization.data
         expiration = form.expiration.data  
+        password = form.accesstoken.data
         
         new_group = Groups(
         groupname=groupname,
         description=description,
         organization=organization,
         expiration=expiration,
+        password=password
     )
         db.session.add(new_group)
         

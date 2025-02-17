@@ -6,9 +6,10 @@ from apps import db
 from apps.api import blueprint
 from apps.controllers import k8s
 from apps.home.models import Labs, LabInstances, LabAnswers
-from apps.authentication.models import Users
+from apps.authentication.models import Users, UserGroups, Groups
 from flask import request, current_app
 from flask_login import login_required, current_user
+from apps.authentication.util import verify_pass
 
 @blueprint.route('/pods/<lab_id>', methods=["GET"])
 @login_required
@@ -185,3 +186,24 @@ def save_lab_answers(lab_inst_id):
     db.session.commit()
 
     return {"status": "ok", "result": "Answers saved successfully"}, 200
+
+@blueprint.route('/join_group/<group_id>/<password>', methods=["POST"])
+@login_required
+def join_group(group_id, password):
+    user = Users.query.get(current_user.id)
+    if not user:
+        return {"status": "fail", "result": "User not found"}, 404
+
+    group = Groups.query.get(group_id)
+    if not group:
+        return {"status": "fail", "result": "Group not found"}, 404
+    
+
+    if not verify_pass(password, group.password):
+        return {"status": "fail", "result": "Invalid password"}, 401
+    
+    user_groups = UserGroups(user_id=user.id, group_id=group.id)
+    db.session.add(user_groups)
+    db.session.commit()
+
+    return {"status": "ok", "result": "User joined group"}, 200

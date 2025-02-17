@@ -39,7 +39,8 @@ class Users(db.Model, UserMixin, AuditMixin):
         'Groups',
         secondary='user_groups',
         back_populates='users',
-        foreign_keys='[UserGroups.user_id, UserGroups.group_id]'  
+        foreign_keys='[UserGroups.user_id, UserGroups.group_id]',
+        overlaps="user_groups,group"
     )
 
     def __init__(self, **kwargs):
@@ -133,9 +134,20 @@ class Groups(db.Model):
     expiration = db.Column(db.DateTime, nullable=True)
     approved_users = db.Column(db.Text, nullable=True)
     accesstoken = db.Column(db.String)
+    password = db.Column(db.String)
 
     users = db.relationship('Users', secondary='user_groups', back_populates='groups', foreign_keys='[UserGroups.user_id, UserGroups.group_id]')
     user_groups = db.relationship("UserGroups", back_populates="group", cascade="all, delete-orphan")
+
+    def __init__(self, **kwargs):
+        for property, value in kwargs.items():
+            if hasattr(value, '__iter__') and not isinstance(value, str):
+                value = value[0]
+
+            if property == 'password':
+                value = hash_pass(value)
+
+            setattr(self, property, value)
 
     def __repr__(self):
         return f'<Group {self.groupname}>'
