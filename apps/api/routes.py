@@ -35,8 +35,8 @@ def get_lab_status(lab_id):
 
     lab = LabInstances.query.get(lab_id)
     if not lab:
-        return {"status": "fail", "result": "Lab instance not found"}, 404  
-     
+        return {"status": "fail", "result": "Lab instance not found"}, 404
+ 
     if current_user.category == "student" and lab.user_id != current_user.id:
         return {"status": "fail", "result": "Unauthorized access to this lab"}, 401
 
@@ -187,9 +187,9 @@ def save_lab_answers(lab_inst_id):
 
     return {"status": "ok", "result": "Answers saved successfully"}, 200
 
-@blueprint.route('/join_group/<group_id>/<password>', methods=["POST"])
+@blueprint.route('/join_group/<group_id>/<accesstoken>', methods=["POST"])
 @login_required
-def join_group(group_id, password):
+def join_group(group_id, accesstoken):
     user = Users.query.get(current_user.id)
     if not user:
         return {"status": "fail", "result": "User not found"}, 404
@@ -199,8 +199,8 @@ def join_group(group_id, password):
         return {"status": "fail", "result": "Group not found"}, 404
     
 
-    if not verify_pass(password, group.password):
-        return {"status": "fail", "result": "Invalid password"}, 401
+    if not verify_pass(accesstoken, group.accesstoken):
+        return {"status": "fail", "result": "Invalid access token"}, 401
     
     user_groups = UserGroups(user_id=user.id, group_id=group.id)
     db.session.add(user_groups)

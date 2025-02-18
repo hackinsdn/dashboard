@@ -502,7 +502,7 @@ def edit_group(group_id):
 
     has_changes = False
     for field in ["groupname", "description", "organization", "expiration"]:
-        new_value = request.form[field] if field != "expiration" or request.form[field] else None
+        new_value = request.form[field] if request.form[field] else None  
         if getattr(group, field) != new_value:
             setattr(group, field, new_value)
             has_changes = True
@@ -528,7 +528,7 @@ def edit_group(group_id):
 @login_required
 def delete_group(group_id):
     """Deletes a group by ID."""
-    if current_user.category not in ["admin", "teacher"]:
+    if current_user.category == "admin" or (current_user.category == "teacher" and group.user_id == current_user.id):
         return render_template("pages/error.html", title="Unauthorized access", msg="You don't have permission to delete this group")
 
     group = Groups.query.get(group_id)
