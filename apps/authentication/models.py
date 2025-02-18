@@ -6,6 +6,7 @@ from sqlalchemy.orm import validates
 
 from apps import db, login_manager
 
+from sqlalchemy import UniqueConstraint
 from apps.authentication.util import hash_pass
 from apps.audit_mixin import AuditMixin, utcnow
 
@@ -19,7 +20,7 @@ class Users(db.Model, UserMixin, AuditMixin):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), unique=True)
-    uid = db.Column(db.String(15), unique=True)
+    uid = db.Column(db.String(15), unique=True, default=generate_uid)
     email = db.Column(db.String(64))
     password = db.Column(db.LargeBinary)
     category = db.Column(db.String(10), default=user_category)
@@ -32,14 +33,15 @@ class Users(db.Model, UserMixin, AuditMixin):
     user_groups = db.relationship(
         'UserGroups',
         back_populates='user',
-        foreign_keys='[UserGroups.user_id]',  
-        cascade='all, delete-orphan'
+        cascade='all, delete-orphan',
+        lazy='dynamic' 
     )
+
     groups = db.relationship(
-        'Groups',
-        secondary='user_groups',
-        back_populates='users',
-        foreign_keys='[UserGroups.user_id, UserGroups.group_id]'  
+        "Groups",
+        secondary="user_groups",
+        back_populates="members",
+        overlaps="user_groups" 
     )
 
     def __init__(self, **kwargs):
@@ -84,32 +86,15 @@ class Users(db.Model, UserMixin, AuditMixin):
 
 class UserGroups(db.Model):
     __tablename__ = 'user_groups'
+    
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), primary_key=True)
     group_id = db.Column(db.Integer, db.ForeignKey("groups.id"), primary_key=True)
-    user = db.relationship("Users", back_populates="user_groups", foreign_keys=[user_id])
-    group = db.relationship("Groups", back_populates="user_groups")
+    role = db.Column(db.Enum("member", "assistant", "owner"), nullable=False)  
 
+    __table_args__ = (UniqueConstraint('user_id', 'group_id', name='_user_group_uc'),)  # Restrição única
 
-    owner_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
-    assistant_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
-    member_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
-
-
-    owner = db.relationship(
-        "Users",
-        foreign_keys=[owner_id],
-        remote_side="Users.id"
-    )
-    assistant = db.relationship(
-        "Users",
-        foreign_keys=[assistant_id],
-        remote_side="Users.id"
-    )
-    member = db.relationship(
-        "Users",
-        foreign_keys=[member_id],
-        remote_side="Users.id"
-    )
+    user = db.relationship("Users", back_populates="user_groups", overlaps="groups")  # overlaps added
+    group = db.relationship("Groups", back_populates="user_groups", overlaps="members, assistants, owners")  # overlaps added
 
 
 @login_manager.user_loader
@@ -123,19 +108,43 @@ def request_loader(request):
     user = Users.query.filter_by(username=username).first()
     return user if user else None
 
+
 class Groups(db.Model):
     __tablename__ = 'groups'
     id = db.Column(db.Integer, primary_key=True)
     groupname = db.Column(db.String(64))
-    uid = db.Column(db.String(15), unique=True)
+    uid = db.Column(db.String(15), unique=True, default=generate_uid)
     description = db.Column(db.String)
     organization = db.Column(db.String)
     expiration = db.Column(db.DateTime, nullable=True)
     approved_users = db.Column(db.Text, nullable=True)
     accesstoken = db.Column(db.String)
 
-    users = db.relationship('Users', secondary='user_groups', back_populates='groups', foreign_keys='[UserGroups.user_id, UserGroups.group_id]')
-    user_groups = db.relationship("UserGroups", back_populates="group", cascade="all, delete-orphan")
+    user_groups = db.relationship("UserGroups", back_populates="group", cascade="all, delete-orphan", overlaps="members, assistants, owners")
+
+    members = db.relationship(
+        "Users",
+        secondary="user_groups",
+        primaryjoin=db.and_(id == UserGroups.group_id, UserGroups.role == 'member'),
+        back_populates="groups",
+        overlaps="user_groups, user" 
+    )
+
+    assistants = db.relationship(
+        "Users",
+        secondary="user_groups",
+        primaryjoin=db.and_(id == UserGroups.group_id, UserGroups.role == 'member'),
+        back_populates="groups",
+        overlaps="user_groups, user, members" 
+    )
+
+    owners = db.relationship(
+        "Users",
+        secondary="user_groups",
+        primaryjoin=db.and_(id == UserGroups.group_id, UserGroups.role == 'member'),
+        back_populates="groups",
+        overlaps="user_groups, user, members, assistants"  
+    )    
 
     def __repr__(self):
         return f'<Group {self.groupname}>'

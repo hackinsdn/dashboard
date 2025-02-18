@@ -37,5 +37,5 @@ class GroupForm(FlaskForm):
                             validators=[DataRequired()])
     description = StringField('Description', id='description', validators=[Optional()])
     organization = StringField('Organization', id='organization', validators=[Optional()])
-    expiration = DateField("Data de Expiração", format='%Y-%m-%d', validators=[Optional()])
+    expiration = DateField("Expiration", format='%Y-%m-%d', validators=[Optional()])
     accesstoken = StringField('Accesstoken', id='accesstoken', validators=[DataRequired()])

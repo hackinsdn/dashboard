@@ -34,8 +34,8 @@ def get_lab_status(lab_id):
 
     lab = LabInstances.query.get(lab_id)
     if not lab:
-        return {"status": "fail", "result": "Lab instance not found"}, 404  
-     
+        return {"status": "fail", "result": "Lab instance not found"}, 404
+ 
     if current_user.category == "student" and lab.user_id != current_user.id:
         return {"status": "fail", "result": "Unauthorized access to this lab"}, 401
 
