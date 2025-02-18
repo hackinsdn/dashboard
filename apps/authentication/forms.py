@@ -29,3 +29,8 @@ class CreateAccountForm(FlaskForm):
     password = PasswordField('Password',
                              id='pwd_create',
                              validators=[DataRequired()])
+
+class ConfirmAccountForm(FlaskForm):
+    confirmation_token = StringField('Confirmation Token',
+                                    id='confirmation_token',
+                                    validators=[DataRequired()])
