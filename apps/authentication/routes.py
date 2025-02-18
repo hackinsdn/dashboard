@@ -180,7 +180,7 @@ def confirm_page():
     
     return render_template('pages/confirm.html', form=form)
 
-@blueprint.route('/resend-code', methods=['GET', 'POST'])
+@blueprint.route('/resend-code', methods=['GET'])
 def resend_code():
     email = session.get('user').get('email')
     confirmation_token = session.get('confirmation_token')
