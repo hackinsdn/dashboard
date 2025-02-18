@@ -45,13 +45,6 @@ def login():
 
         # Check the password
         if user and verify_pass(password, user.password):
-
-            # Check if user has confirmed the account
-            if user.is_confirmed is False:
-                return render_template('pages/login.html',
-                                       msg='Please confirm your account before login',
-                                       form=login_form)
-
             login_user(user)
             app.logger.info(f"Successful login ipaddr={get_remote_addr()} login={username} auth_provider=local")
             login_log = LoginLogging(ipaddr=get_remote_addr(), login=username, auth_provider="local", success=True)
@@ -177,6 +170,8 @@ def confirm_page():
             return render_template('pages/confirm.html', msg='Invalid token', success=False, form=form)
 
         session.pop('confirmation_token')
+        session.pop('user')
+        session.pop('datetime')
 
         db.session.add(user)
         db.session.commit()

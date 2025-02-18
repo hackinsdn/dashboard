@@ -58,7 +58,7 @@
                 <button type="submit" name="confirm" class="btn btn-primary btn-block">Verify code</button>    
             </div>
             <div class="col-6">
-                <a href="/resend-code" class="btn btn-secondary btn-block">Resend code</a>
+                <a href="{{ url_for('authentication_blueprint.resend_code')}}" class="btn btn-secondary btn-block">Resend code</a>
           </div>
         </form>
 
