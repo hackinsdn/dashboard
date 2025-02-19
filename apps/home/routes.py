@@ -159,8 +159,8 @@ def check_lab_status(lab_id):
     msg_error = ""
     lab = LabInstances.query.get(lab_id)
     if not lab:
-        return render_template("pages/error.html", title="Error checking lab status", msg="Lab not found")   
-    
+        return render_template("pages/error.html", title="Error checking lab status", msg="Lab not found")
+
     if(current_user.category == "student" and (lab.user_id != current_user.id)):
         return render_template("pages/error.html", title="Error checking lab status", msg="You are not authorized to run this lab")
 
@@ -170,8 +170,8 @@ def check_lab_status(lab_id):
 @login_required
 def xterm(lab_id, kind, pod, container):
     if current_user.category == "user":
-        return render_template('pages/waiting_approval.html')  
-     
+        return render_template('pages/waiting_approval.html')
+
     lab = LabInstances.query.get(lab_id)
     if not lab:
         return render_template("pages/error.html", title="Error checking lab status", msg="Lab not found")
