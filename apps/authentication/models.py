@@ -3,7 +3,7 @@
 import uuid
 from flask_login import UserMixin
 from sqlalchemy.orm import validates
-
+import enum
 from apps import db, login_manager
 
 from sqlalchemy import UniqueConstraint
@@ -30,19 +30,7 @@ class Users(db.Model, UserMixin, AuditMixin):
     issuer = db.Column(db.String(255))
     active = db.Column(db.Boolean, default=True)
 
-    user_groups = db.relationship(
-        'UserGroups',
-        back_populates='user',
-        cascade='all, delete-orphan',
-        lazy='dynamic' 
-    )
-
-    groups = db.relationship(
-        "Groups",
-        secondary="user_groups",
-        back_populates="members",
-        overlaps="user_groups" 
-    )
+    groups = db.relationship("GroupMembers",back_populates="user")
 
     def __init__(self, **kwargs):
         for property, value in kwargs.items():
@@ -82,19 +70,23 @@ class Users(db.Model, UserMixin, AuditMixin):
         if value not in allowed:
             raise ValueError(f"Invalid user category: {value} -- {allowed}")
         return value
-    
 
-class UserGroups(db.Model):
-    __tablename__ = 'user_groups'
+class MemberType(enum.Enum):
+    regular = 1
+    assistant = 2
+    owner = 3
+
+class GroupMembers(db.Model):
+    __tablename__ = 'group_members'
     
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), primary_key=True)
     group_id = db.Column(db.Integer, db.ForeignKey("groups.id"), primary_key=True)
-    role = db.Column(db.Enum("member", "assistant", "owner"), nullable=False)  
+    member_type = db.Column(db.Integer, primary_key=True)  
 
     __table_args__ = (UniqueConstraint('user_id', 'group_id', name='_user_group_uc'),)  # Restrição única
 
-    user = db.relationship("Users", back_populates="user_groups", overlaps="groups")  # overlaps added
-    group = db.relationship("Groups", back_populates="user_groups", overlaps="members, assistants, owners")  # overlaps added
+    user = db.relationship( "Users" , back_populates="groups")  
+    group = db.relationship( "Groups",back_populates="users")  
 
 
 @login_manager.user_loader
@@ -108,6 +100,7 @@ def request_loader(request):
     user = Users.query.filter_by(username=username).first()
     return user if user else None
 
+
 class Groups(db.Model):
     __tablename__ = 'groups'
     id = db.Column(db.Integer, primary_key=True)
@@ -119,31 +112,19 @@ class Groups(db.Model):
     approved_users = db.Column(db.Text, nullable=True)
     accesstoken = db.Column(db.String)
 
-    user_groups = db.relationship("UserGroups", back_populates="group", cascade="all, delete-orphan", overlaps="members, assistants, owners")
+    users = db.relationship("GroupMembers",back_populates="group")
 
-    members = db.relationship(
-        "Users",
-        secondary="user_groups",
-        primaryjoin=db.and_(id == UserGroups.group_id, UserGroups.role == 'member'),
-        back_populates="groups",
-        overlaps="user_groups, user" 
-    )
+    
 
-    assistants = db.relationship(
-        "Users",
-        secondary="user_groups",
-        primaryjoin=db.and_(id == UserGroups.group_id, UserGroups.role == 'member'),
-        back_populates="groups",
-        overlaps="user_groups, user, members" 
-    )
+    def __init__(self, **kwargs):
+        for property, value in kwargs.items():
+            if hasattr(value, '__iter__') and not isinstance(value, str):
+                value = value[0]
 
-    owners = db.relationship(
-        "Users",
-        secondary="user_groups",
-        primaryjoin=db.and_(id == UserGroups.group_id, UserGroups.role == 'member'),
-        back_populates="groups",
-        overlaps="user_groups, user, members, assistants"  
-    )    
+            if property == 'accesstoken':
+                value = hash_pass(value) 
+
+            setattr(self, property, value)
 
     def __repr__(self):
         return f'<Group {self.groupname}>'
