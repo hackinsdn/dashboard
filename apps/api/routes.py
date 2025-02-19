@@ -6,7 +6,7 @@ from apps import db
 from apps.api import blueprint
 from apps.controllers import k8s
 from apps.home.models import Labs, LabInstances, LabAnswers
-from apps.authentication.models import Users, UserGroups, Groups
+from apps.authentication.models import Users, GroupMembers, Groups, MemberType
 from flask import request, current_app
 from flask_login import login_required, current_user
 from apps.authentication.util import verify_pass
@@ -202,7 +202,7 @@ def join_group(group_id, accesstoken):
     if not verify_pass(accesstoken, group.accesstoken):
         return {"status": "fail", "result": "Invalid access token"}, 401
     
-    user_groups = UserGroups(user_id=user.id, group_id=group.id)
+    user_groups = GroupMembers(user_id=user.id, group_id=group.id, member_type =  MemberType.regular.value)
     db.session.add(user_groups)
     db.session.commit()
 
