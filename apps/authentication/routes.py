@@ -142,29 +142,23 @@ def register():
 @blueprint.route('/groups/create', methods=['GET', 'POST'])
 def create_group():
     form = GroupForm()
-    students = Users.query.filter_by(category='student').all()
-    
-    if form.validate_on_submit():
+    msg = None
 
+    if request.method == "POST":
+        if form.validate_on_submit():
+            new_group = Groups(
+                groupname=form.groupname.data,
+                description=form.description.data,
+                organization=form.organization.data,
+                expiration=form.expiration.data  
+            )
+            db.session.add(new_group)
+            db.session.commit()
+            return redirect(url_for('home_blueprint.view_group'))
+        else:
+            msg = "The form was not considered valid. Please fix the errors below."
 
-        groupname = form.groupname.data
-        description = form.description.data
-        organization = form.organization.data
-        expiration = form.expiration.data  
-        
-        new_group = Groups(
-        groupname=groupname,
-        description=description,
-        organization=organization,
-        expiration=expiration,
-    )
-        db.session.add(new_group)
-        
-        db.session.commit()
-        
-        return redirect(url_for('home_blueprint.view_group'))
-
-    return render_template('pages/create_group.html', form=form, students=students)
+    return render_template('pages/create_group.html', form=form, msg=msg)
 
 @blueprint.route('/logout')
 def logout():

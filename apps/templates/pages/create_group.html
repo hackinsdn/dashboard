@@ -20,18 +20,19 @@
 
 
 {% block content %}
-  <div class="create-group-box">
-    <div class="create-group-logo">
-      <a target="_blank" rel="noopener noreferrer" href="https://hackinsdn.github.io/">
-        <img src="{{ url_for('static', filename='assets/img/hackinsdn.png') }}" alt="HackInSDN">
-      </a>
-    </div>
     <!-- /.create-group-logo -->
     <div class="card">
       <div class="card-body create-group-card-body">
         <p class="create-group-box-msg">Create a New Group</p>
         <form method="POST" action="{{ url_for('authentication_blueprint.create_group') }}">
           {{ form.hidden_tag() }}
+          <p class="create-group-box-msg">
+            {% if msg %}
+              <span class="text-danger">{{ msg }}</span>
+            {% else %}
+              Complete the form below to create a new group:
+            {% endif %}
+          </p>
           <div class="input-group mb-3">
             {{ form.groupname(class="form-control", placeholder="Enter group name") }}
             <div class="input-group-append">

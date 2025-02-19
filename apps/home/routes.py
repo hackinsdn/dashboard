@@ -220,7 +220,7 @@ def edit_user(user_id=None):
         user.email = request.form["email"]
         user.given_name = request.form["given_name"]
         user.family_name = request.form["family_name"]
-        has_changed = True  
+        has_changed = True
 
     if current_user.id == user.id and request.form["password"]:
         user.set_password(request.form["password"])
@@ -314,15 +314,13 @@ def edit_lab(lab_id):
     if lab_id != "new":
         lab = Labs.query.get(lab_id)
         if not lab:
-            return render_template("pages/labs_edit.html", segment="/labs/edit", msg_fail="Lab not found") 
+            return render_template("pages/labs_edit.html", segment="/labs/edit", msg_fail="Lab not found")
         
         lab_instance = LabInstances.query.get(lab_id)
         if not lab_instance:
             return render_template("pages/error.html", title="Error accessing Lab Instance", msg="Lab not found")
-        
         if current_user.category == "student" and lab_instance.user_id != current_user.id:
             return render_template("pages/error.html", title="Unauthorized request", msg="You dont have permission to see this page")
-               
     else:
         lab = Labs()
     lab_categories = {cat.id: cat for cat in LabCategories.query.all()}
@@ -340,7 +338,7 @@ def edit_lab(lab_id):
     lab.set_extended_desc(request.form["lab_extended_desc"])
     lab.set_lab_guide_md(request.form["lab_guide"])
     lab.manifest = request.form["lab_manifest"]
-    lab.goals = request.form.get("lab_goals", "")   
+    lab.goals = request.form.get("lab_goals", "")
 
     try:
         db.session.add(lab)
@@ -528,7 +526,8 @@ def edit_group(group_id):
 @login_required
 def delete_group(group_id):
     """Deletes a group by ID."""
-    if current_user.category == "admin" or (current_user.category == "teacher" and group.user_id == current_user.id):
+    group = Groups.query.get(group_id)
+    if (current_user.category != "admin" or (current_user.category != "teacher" and group.id == current_user.id)):
         return render_template("pages/error.html", title="Unauthorized access", msg="You don't have permission to delete this group")
 
     group = Groups.query.get(group_id)
