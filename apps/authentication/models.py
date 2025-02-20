@@ -100,7 +100,6 @@ def request_loader(request):
     user = Users.query.filter_by(username=username).first()
     return user if user else None
 
-
 class Groups(db.Model):
     __tablename__ = 'groups'
     id = db.Column(db.Integer, primary_key=True)
@@ -113,8 +112,6 @@ class Groups(db.Model):
     accesstoken = db.Column(db.String)
 
     users = db.relationship("GroupMembers",back_populates="group")
-
-    
 
     def __init__(self, **kwargs):
         for property, value in kwargs.items():
