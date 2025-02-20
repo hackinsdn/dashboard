@@ -170,6 +170,7 @@ def check_lab_status(lab_id):
 def xterm(lab_id, kind, pod, container):
     if current_user.category == "user":
         return render_template('pages/waiting_approval.html')
+    
     lab = LabInstances.query.get(lab_id)
     if not lab:
         return render_template("pages/error.html", title="Error checking lab status", msg="Lab not found")
@@ -219,6 +220,7 @@ def edit_user(user_id=None):
         user.given_name = request.form["given_name"]
         user.family_name = request.form["family_name"]
         has_changed = True
+
     if current_user.id == user.id and request.form["password"]:
         user.set_password(request.form["password"])
         has_changed = True
@@ -316,8 +318,10 @@ def edit_lab(lab_id):
         lab_instance = LabInstances.query.get(lab_id)
         if not lab_instance:
             return render_template("pages/error.html", title="Error accessing Lab Instance", msg="Lab not found")
+        
         if current_user.category == "student" and lab_instance.user_id != current_user.id:
             return render_template("pages/error.html", title="Unauthorized request", msg="You dont have permission to see this page")
+    
     else:
         lab = Labs()
     lab_categories = {cat.id: cat for cat in LabCategories.query.all()}
@@ -336,6 +340,7 @@ def edit_lab(lab_id):
     lab.set_lab_guide_md(request.form["lab_guide"])
     lab.manifest = request.form["lab_manifest"]
     lab.goals = request.form.get("lab_goals", "")
+    
     try:
         db.session.add(lab)
         db.session.commit()
