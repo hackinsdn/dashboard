@@ -14,6 +14,7 @@ function sendJoinRequest(groupId) {
         url: `/api/join_group/${groupId}/${password}`,
         success: function (data) {
             $('#joinGroupModal').modal('hide');
+            location.reload();  
         },
         error: function (data) {
             $('#modalError').text(data.responseJSON.result);
