@@ -31,7 +31,7 @@
             <th>Group Name</th>
             <th>Description</th>
             <th>Organization</th>
-            <th>Expiration</th>
+            <th>Membros</th>
           </tr>
         </thead>
         <tbody>
@@ -40,9 +40,19 @@
             <td>{{ group.groupname }}</td>
             <td>{{ group.description }}</td>
             <td>{{ group.organization }}</td>
-            <td>{{ group.expiration or 'No expiration' }}</td>
+            <td>
+              {% if members %}
+                <ul>
+                  {% for member in members %}
+                    <li>{{ member.name }} ({{ member.member_type }})</li>
+                  {% endfor %}
+                </ul>
+              {% else %}
+                Nenhum membro encontrado.
+              {% endif %}
+            </td>
           </tr>
-        </tbody>
+        </tbody>        
       </table>
     </div>
     <!-- /.card-body -->

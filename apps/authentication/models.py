@@ -79,11 +79,11 @@ class MemberType(enum.Enum):
 class GroupMembers(db.Model):
     __tablename__ = 'group_members'
     
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), primary_key=True)
-    group_id = db.Column(db.Integer, db.ForeignKey("groups.id"), primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    group_id = db.Column(db.Integer, db.ForeignKey("groups.id", ondelete="CASCADE"), primary_key=True)
     member_type = db.Column(db.Integer, primary_key=True)  
 
-    __table_args__ = (UniqueConstraint('user_id', 'group_id', name='_user_group_uc'),)  # Restrição única
+    __table_args__ = (UniqueConstraint('user_id', 'group_id', name='_user_group_uc'),)
 
     user = db.relationship( "Users" , back_populates="groups")  
     group = db.relationship( "Groups",back_populates="users")  
@@ -100,7 +100,6 @@ def request_loader(request):
     user = Users.query.filter_by(username=username).first()
     return user if user else None
 
-
 class Groups(db.Model):
     __tablename__ = 'groups'
     id = db.Column(db.Integer, primary_key=True)
@@ -112,9 +111,7 @@ class Groups(db.Model):
     approved_users = db.Column(db.Text, nullable=True)
     accesstoken = db.Column(db.String)
 
-    users = db.relationship("GroupMembers",back_populates="group")
-
-    
+    users = db.relationship("GroupMembers",back_populates="group", cascade='all, delete-orphan')
 
     def __init__(self, **kwargs):
         for property, value in kwargs.items():

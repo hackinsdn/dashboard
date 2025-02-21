@@ -1,9 +1,9 @@
-// Open Modal to join a group
-function joinGroup() {
-    $('#joinGroupModal').modal('show');
+function openJoinGroupModal(groupId) {
+    $('#joinGroupModal').data('group-id', groupId).modal('show');
 }
 
-function sendJoinRequest(groupId) {
+function sendJoinRequest() {
+    var groupId = $('#joinGroupModal').data('group-id');
     var password = $('#password').val();
     var data = {
         groupId: groupId,

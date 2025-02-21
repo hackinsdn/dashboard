@@ -71,7 +71,7 @@
                       <i class="fas fa-eye"></i> View
                     </a>
                     {% if not group.id in group_member_ids %}    
-                      <button class="btn btn-success join-group" data-group-id="{{ group.id }}" onclick="joinGroup()" >
+                      <button class="btn btn-success join-group" data-group-id="{{ group.id }}" onclick="openJoinGroupModal('{{ group.id }}')" >
                         <i class="fas fa-user-plus"></i> Join the group
                       </button>
                     {% endif %}
@@ -95,7 +95,7 @@
                           <div class="modal-body">
                             <p id="modalError" style="color: #f00; text-align: center;"></p>
                             <input type="password" class="form-control" id="password" name="password" placeholder="Enter the password">
-                            <button type="button" class="btn btn-primary mt-3" id="joinGroup" onclick="sendJoinRequest('{{group.id}}')" >Join</button>
+                            <button type="button" class="btn btn-primary mt-3" id="joinGroup" onclick="sendJoinRequest()" >Join</button>
                     </div>
                   </td>
                 </tr>

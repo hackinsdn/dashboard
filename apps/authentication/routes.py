@@ -16,7 +16,7 @@ from apps.config import app_config
 from apps.audit_mixin import get_remote_addr
 from apps.authentication import blueprint
 from apps.authentication.forms import LoginForm, CreateAccountForm, GroupForm
-from apps.authentication.models import Users, LoginLogging, Groups
+from apps.authentication.models import Users, LoginLogging, Groups, GroupMembers, MemberType
 
 from apps.authentication.util import verify_pass
 
@@ -142,31 +142,33 @@ def register():
 @blueprint.route('/groups/create', methods=['GET', 'POST'])
 def create_group():
     form = GroupForm()
-    students = Users.query.filter_by(category='student').all()
-    
-    if form.validate_on_submit():
+    msg = None
 
+    if request.method == "POST":
+        if form.validate_on_submit():
+            new_group = Groups(
+                groupname=form.groupname.data,
+                description=form.description.data,
+                organization=form.organization.data,
+                expiration=form.expiration.data,
+                accesstoken=form.accesstoken.data
+            )
+            db.session.add(new_group)
+            db.session.commit()
+            
+            owner_membership = GroupMembers(
+            user_id=current_user.id,
+            group_id=new_group.id,
+            member_type=MemberType.owner.value
+            )
+            db.session.add(owner_membership)
+            db.session.commit()
 
-        groupname = form.groupname.data
-        description = form.description.data
-        organization = form.organization.data
-        expiration = form.expiration.data  
-        accesstoken = form.accesstoken.data
-        
-        new_group = Groups(
-        groupname=groupname,
-        description=description,
-        organization=organization,
-        expiration=expiration,
-        accesstoken=accesstoken
-    )
-        db.session.add(new_group)
-        
-        db.session.commit()
-        
-        return redirect(url_for('home_blueprint.view_group'))
+            return redirect(url_for('home_blueprint.view_group'))
+        else:
+            msg = "The form was not considered valid. Please fix the errors below."
 
-    return render_template('pages/create_group.html', form=form, students=students)
+    return render_template('pages/create_group.html', form=form, msg=msg)
 
 @blueprint.route('/logout')
 def logout():
