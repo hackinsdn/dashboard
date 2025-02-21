@@ -16,7 +16,7 @@ from apps.config import app_config
 from apps.audit_mixin import get_remote_addr
 from apps.authentication import blueprint
 from apps.authentication.forms import LoginForm, CreateAccountForm, GroupForm
-from apps.authentication.models import Users, LoginLogging, Groups
+from apps.authentication.models import Users, LoginLogging, Groups, GroupMembers, MemberType
 
 from apps.authentication.util import verify_pass
 
@@ -154,6 +154,15 @@ def create_group():
             )
             db.session.add(new_group)
             db.session.commit()
+            
+            owner_membership = GroupMembers(
+            user_id=current_user.id,
+            group_id=new_group.id,
+            member_type=MemberType.owner.value
+            )
+            db.session.add(owner_membership)
+            db.session.commit()
+
             return redirect(url_for('home_blueprint.view_group'))
         else:
             msg = "The form was not considered valid. Please fix the errors below."

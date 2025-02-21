@@ -9,7 +9,7 @@ from apps import db
 from apps.home import blueprint
 from apps.controllers import k8s
 from apps.home.models import Labs, LabInstances, LabCategories, HomeLogging
-from apps.authentication.models import Users, Groups
+from apps.authentication.models import Users, Groups, GroupMembers, MemberType
 from flask import render_template, request, current_app, redirect, url_for, session
 from flask_login import login_required, current_user
 from jinja2 import TemplateNotFound
@@ -439,8 +439,6 @@ def groups(group_id):
                 created = member.created  
                 group_dict["members"].append({
                     "name": f"{member.given_name} {member.family_name}",
-                    "role": "Owner" if member_id == group.owner_id else "Assistant" if member_id == group.assistant_id else "Member",
-                    "joined": created.strftime('%Y-%m-%d %H:%M:%S') if created else "--",
                     "status": "Active" if member.active else "Inactive",
                 })
 
@@ -465,20 +463,8 @@ def view_group(group_id):
     group = Groups.query.get(group_id)
     if not group:
         return render_template("pages/error.html", title="Error accessing Group", msg="Group not found")
-
-    if current_user.category not in ["admin", "teacher"] and group.owner_id != current_user.id:
-        return render_template("pages/error.html", title="Unauthorized access", msg="You don't have permission to access this group")
-
-    group_members = []  
-
-    group_dict = {
-        "groupname": group.groupname,
-        "group_id": group.id,
-        "owner": f"{current_user.given_name} {current_user.family_name} ({current_user.email or 'NO-EMAIL'})",
-        "members": group_members,
-    }
-
-    return render_template("pages/view_group.html", group=group_dict)
+    
+    return render_template("pages/view_group.html", group=group)
 
 
 @blueprint.route('/group/edit/<int:group_id>', methods=["GET", "POST"])
@@ -490,12 +476,19 @@ def edit_group(group_id):
     return_path = "home_blueprint.view_group"
 
     group = Groups.query.get(group_id)
+    group_member = db.session.query(GroupMembers).filter_by(group_id=group_id, user_id=current_user.id).first()
     if not group:
         return render_template("pages/error.html", title="Error editing Group", msg="Group not found")
+    
+    if not group_member:
+        return render_template("pages/error.html", title="Unauthorized access", msg="Você não é membro deste grupo")
 
-    if current_user.category not in ["admin", "teacher"] and group.owner_id != current_user.id:
-        return render_template("pages/error.html", title="Unauthorized access", msg="You don't have permission to edit this group")
-
+    if not (current_user.category == "admin" or
+            group_member.member_type == MemberType.owner.value or
+            (current_user.category == "teacher" and
+             db.session.query(GroupMembers).filter_by(group_id=group_id, user_id=current_user.id, member_type=MemberType.teacher.value).first() is not None)):  # É professor deste grupo
+        return render_template("pages/error.html", title="Unauthorized access", msg="Você não tem permissão para deletar este grupo")
+    
     if request.method == "GET":
         return render_template("pages/edit_group.html", group=group)
 
@@ -528,18 +521,23 @@ def edit_group(group_id):
 def delete_group(group_id):
     """Deletes a group by ID."""
     group = Groups.query.get(group_id)
-    if (current_user.category != "admin" or (current_user.category != "teacher" and group.id == current_user.id)):
-        return render_template("pages/error.html", title="Unauthorized access", msg="You don't have permission to delete this group")
+    group_member = db.session.query(GroupMembers).filter_by(group_id=group_id, user_id=current_user.id).first()
+    
+    if not group_member:
+        return render_template("pages/error.html", title="Unauthorized access", msg="Você não é membro deste grupo")
 
-    group = Groups.query.get(group_id)
-    if not group:
-        return render_template("pages/error.html", title="Error deleting Group", msg="Group not found")
-
+    if not (current_user.category == "admin" or
+            group_member.member_type == MemberType.owner.value or
+            (current_user.category == "teacher" and
+             db.session.query(GroupMembers).filter_by(group_id=group_id, user_id=current_user.id, member_type=MemberType.teacher.value).first() is not None)):  # É professor deste grupo
+        return render_template("pages/error.html", title="Unauthorized access", msg="Você não tem permissão para deletar este grupo")
+    
     try:
         db.session.delete(group)
         db.session.commit()
         return redirect(url_for('home_blueprint.view_group'))
     except Exception as exc:
+        db.session.rollback()
         current_app.logger.error(f"Failed to delete group {group_id}: {exc}")
         return render_template("pages/error.html", title="Error deleting Group", msg="Failed to delete group")
     
