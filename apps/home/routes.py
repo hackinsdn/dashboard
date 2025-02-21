@@ -9,7 +9,7 @@ from apps import db
 from apps.home import blueprint
 from apps.controllers import k8s
 from apps.home.models import Labs, LabInstances, LabCategories, HomeLogging
-from apps.authentication.models import Users, Groups, GroupMembers, MemberType, GroupMembers
+from apps.authentication.models import Users, Groups, GroupMembers, MemberType, GroupMembers, MemberType, GroupMembers
 from flask import render_template, request, current_app, redirect, url_for, session
 from flask_login import login_required, current_user
 from jinja2 import TemplateNotFound

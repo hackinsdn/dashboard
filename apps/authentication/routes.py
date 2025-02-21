@@ -16,7 +16,7 @@ from apps.config import app_config
 from apps.audit_mixin import get_remote_addr
 from apps.authentication import blueprint
 from apps.authentication.forms import LoginForm, CreateAccountForm, GroupForm
-from apps.authentication.models import Users, LoginLogging, Groups, GroupMembers, MemberType
+from apps.authentication.models import Users, LoginLogging, Groups, GroupMembers, MemberType, GroupMembers, MemberType
 
 from apps.authentication.util import verify_pass
 
@@ -150,8 +150,7 @@ def create_group():
                 groupname=form.groupname.data,
                 description=form.description.data,
                 organization=form.organization.data,
-                expiration=form.expiration.data,
-                accesstoken=form.accesstoken.data
+                expiration=form.expiration.data  
             )
             db.session.add(new_group)
             db.session.commit()
