@@ -16,3 +16,7 @@ cp env-template .env
 # ==> you may also want to change apps/config.py
 ./run-flask.sh
 ```
+
+## License
+
+This software is under _MIT-License_. For more information please read `LICENSE` file.
