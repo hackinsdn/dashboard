@@ -150,7 +150,8 @@ def create_group():
                 groupname=form.groupname.data,
                 description=form.description.data,
                 organization=form.organization.data,
-                expiration=form.expiration.data  
+                expiration=form.expiration.data,
+                accesstoken=form.accesstoken.data
             )
             db.session.add(new_group)
             db.session.commit()
