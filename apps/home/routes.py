@@ -321,7 +321,7 @@ def edit_lab(lab_id):
         
         if current_user.category == "student" and lab_instance.user_id != current_user.id:
             return render_template("pages/error.html", title="Unauthorized request", msg="You dont have permission to see this page")
-    
+
     else:
         lab = Labs()
     lab_categories = {cat.id: cat for cat in LabCategories.query.all()}
@@ -399,62 +399,71 @@ def groups(group_id):
     if current_user.category == "user":
         return render_template('pages/waiting_approval.html')
 
-    if group_id:
-        group = Groups.query.get_or_404(group_id)
-        return render_template('pages/group_info.html', group=group)
+    registered_users = {user.uid: user for user in Users.query.all()}
 
-    groups = []
+    if group_id is not None:
+        group = Groups.query.get_or_404(group_id)
+        members = get_group_members(group_id, registered_users)
+        return render_template('pages/group_info.html', group=group, members=members)
+
     try:
-        user_groups = k8s.get_groups_by_user(current_user.uid)  
+        user_groups = k8s.get_groups_by_user(current_user.uid)
     except Exception as exc:
         err = traceback.format_exc().replace("\n", ", ")
         current_app.logger.error(f"Error getting groups: {exc} -- {err}")
-        return render_template("pages/error.html", title="Error getting groups", msg="Failed to obtain groups. Check logs for more information.")
+        return render_template("pages/error.html", title="Error", msg="Failed to retrieve groups.")
 
-    registered_groups = {group.id: group.groupname for group in Groups.query.all()}
-    registered_users = {user.uid: user for user in Users.query.all()}
+    registered_groups = {group.id: group for group in Groups.query.all()}
+    groups = []
 
     for group_id, user_uid in user_groups:
-        user = registered_users.get(user_uid)
-        if not user:
-            current_app.logger.warning(f"Inconsistency found on group: owner user not found in database {user_uid=} ({group_id=})")
-            continue
-        group = Groups.query.filter_by(id=group_id).first()
+        group = registered_groups.get(group_id)
         if not group:
-            current_app.logger.warning(f"Inconsistency found on group: group not found for {group_id=}")
+            current_app.logger.warning(f"Inconsistency found for group_id={group_id}, user_uid={user_uid}")
             continue
 
-        group_dict = {
-            "groupname": registered_groups.get(group_id, f"Unknown Group {group_id}"),
-            "group_id": group_id,
-            "user": f"{user.given_name} {user.family_name} ({user.email or 'NO-EMAIL'})",
-            "members": [],
-        }
+        members = get_group_members(group_id, registered_users)
+        groups.append({
+            "groupname": group.groupname,
+            "group_id": group.id,
+            "members": members,
+            "created": group.created.strftime('%Y-%m-%d %H:%M:%S') if group.created else "--"
+        })
 
-        created = None
-        member_ids = [group.owner_id, group.assistant_id, group.member_id]
-        for member_id in member_ids:
-            member = Users.query.get(member_id)
-            if member:
-                created = member.created  
-                group_dict["members"].append({
-                    "name": f"{member.given_name} {member.family_name}",
-                    "status": "Active" if member.active else "Inactive",
-                })
+    return render_template("pages/group_info.html", segment="groups", groups=groups, members=members)
 
-        if created:
-            group_dict["created"] = created.strftime('%Y-%m-%d %H:%M:%S')
-        else:
-            group_dict["created"] = "--"
-        groups.append(group_dict)
 
-    return render_template("pages/group_info.html", segment="groups", groups=groups)
+def get_group_members(group_id, registered_users):
+    members = []
+    group_members = db.session.query(GroupMembers).filter_by(group_id=group_id).all()
+    print(f"Group members for group_id={group_id}: {group_members}")
+
+    for member in group_members:
+        user = None
+        for uid, registered_user in registered_users.items():
+            if registered_user.id == member.user_id:
+                user = registered_user
+                break
+        member_role = MemberType(member.member_type).name
+
+        if user:
+            members.append({
+                "user_id": user.id,
+                "name": f"{user.given_name} {user.family_name}",
+                "member_type": member_role
+            })
+
+    print(f"Members list for group_id={group_id}: {members}")
+    return members
 
 
 @blueprint.route('/group/', defaults={'group_id': None}, methods=["GET"])
 @blueprint.route('/group/<int:group_id>', methods=["GET"])
 @login_required
 def view_group(group_id):
+
+    if current_user.category == "user":
+        return render_template('pages/waiting_approval.html')
 
     if group_id is None:
         groups = Groups.query.all()  
