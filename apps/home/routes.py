@@ -9,8 +9,8 @@ from apps import db
 from apps.home import blueprint
 from apps.controllers import k8s
 from apps.home.models import Labs, LabInstances, LabCategories, HomeLogging
-from apps.authentication.models import Users
-from flask import render_template, request, current_app, redirect, url_for
+from apps.authentication.models import Users, Groups, GroupMembers, MemberType
+from flask import render_template, request, current_app, redirect, url_for, session
 from flask_login import login_required, current_user
 from jinja2 import TemplateNotFound
 from apps.audit_mixin import get_remote_addr
@@ -160,7 +160,6 @@ def check_lab_status(lab_id):
     lab = LabInstances.query.get(lab_id)
     if not lab:
         return render_template("pages/error.html", title="Error checking lab status", msg="Lab not found")
-    
     if(current_user.category == "student" and (lab.user_id != current_user.id)):
         return render_template("pages/error.html", title="Error checking lab status", msg="You are not authorized to run this lab")
 
@@ -221,7 +220,7 @@ def edit_user(user_id=None):
         user.given_name = request.form["given_name"]
         user.family_name = request.form["family_name"]
         has_changed = True
-        
+
     if current_user.id == user.id and request.form["password"]:
         user.set_password(request.form["password"])
         has_changed = True
@@ -319,10 +318,10 @@ def edit_lab(lab_id):
         lab_instance = LabInstances.query.get(lab_id)
         if not lab_instance:
             return render_template("pages/error.html", title="Error accessing Lab Instance", msg="Lab not found")
-    
+        
         if current_user.category == "student" and lab_instance.user_id != current_user.id:
             return render_template("pages/error.html", title="Unauthorized request", msg="You dont have permission to see this page")
-        
+
     else:
         lab = Labs()
     lab_categories = {cat.id: cat for cat in LabCategories.query.all()}
@@ -392,6 +391,165 @@ def view_labs(lab_id=None):
     running_labs = {lab.lab_id: lab.id for lab in LabInstances.query.filter_by(user_id=current_user.id, active=True).all()}
     return render_template("pages/labs_view.html", labs=labs, lab_categories=lab_categories, running_labs=running_labs, segment="/labs/view")
 
+
+@blueprint.route('/groups/', defaults={'group_id': None})
+@blueprint.route('/groups/<int:group_id>')
+@login_required
+def groups(group_id):
+    if current_user.category == "user":
+        return render_template('pages/waiting_approval.html')
+
+    registered_users = {user.uid: user for user in Users.query.all()}
+
+    if group_id is not None:
+        group = Groups.query.get_or_404(group_id)
+        members = get_group_members(group_id, registered_users)
+        return render_template('pages/group_info.html', group=group, members=members)
+
+    try:
+        user_groups = k8s.get_groups_by_user(current_user.uid)
+    except Exception as exc:
+        err = traceback.format_exc().replace("\n", ", ")
+        current_app.logger.error(f"Error getting groups: {exc} -- {err}")
+        return render_template("pages/error.html", title="Error", msg="Failed to retrieve groups.")
+
+    registered_groups = {group.id: group for group in Groups.query.all()}
+    groups = []
+
+    for group_id, user_uid in user_groups:
+        group = registered_groups.get(group_id)
+        if not group:
+            current_app.logger.warning(f"Inconsistency found for group_id={group_id}, user_uid={user_uid}")
+            continue
+
+        members = get_group_members(group_id, registered_users)
+        groups.append({
+            "groupname": group.groupname,
+            "group_id": group.id,
+            "members": members,
+            "created": group.created.strftime('%Y-%m-%d %H:%M:%S') if group.created else "--"
+        })
+
+    return render_template("pages/group_info.html", segment="groups", groups=groups, members=members)
+
+
+def get_group_members(group_id, registered_users):
+    members = []
+    group_members = db.session.query(GroupMembers).filter_by(group_id=group_id).all()
+    print(f"Group members for group_id={group_id}: {group_members}")
+
+    for member in group_members:
+        user = None
+        for uid, registered_user in registered_users.items():
+            if registered_user.id == member.user_id:
+                user = registered_user
+                break
+        member_role = MemberType(member.member_type).name
+
+        if user:
+            members.append({
+                "user_id": user.id,
+                "name": f"{user.given_name} {user.family_name}",
+                "member_type": member_role
+            })
+
+    print(f"Members list for group_id={group_id}: {members}")
+    return members
+
+
+@blueprint.route('/group/', defaults={'group_id': None}, methods=["GET"])
+@blueprint.route('/group/<int:group_id>', methods=["GET"])
+@login_required
+def view_group(group_id):
+
+    if current_user.category == "user":
+        return render_template('pages/waiting_approval.html')
+
+    if group_id is None:
+        groups = Groups.query.all()  
+        return render_template("pages/view_group.html", groups=groups)
+
+    group = Groups.query.get(group_id)
+    if not group:
+        return render_template("pages/error.html", title="Error accessing Group", msg="Group not found")
+    
+    return render_template("pages/view_group.html", group=group)
+
+
+@blueprint.route('/group/edit/<int:group_id>', methods=["GET", "POST"])
+@login_required
+def edit_group(group_id):
+    if current_user.category == "user":
+        return render_template('pages/waiting_approval.html')
+
+    return_path = "home_blueprint.view_group"
+
+    group = Groups.query.get(group_id)
+    group_member = db.session.query(GroupMembers).filter_by(group_id=group_id, user_id=current_user.id).first()
+    if not group:
+        return render_template("pages/error.html", title="Error editing Group", msg="Group not found")
+    
+    if not group_member:
+        return render_template("pages/error.html", title="Unauthorized access", msg="Você não é membro deste grupo")
+
+    if not (current_user.category == "admin" or
+            group_member.member_type == MemberType.owner.value or
+            (current_user.category == "teacher" and
+             db.session.query(GroupMembers).filter_by(group_id=group_id, user_id=current_user.id, member_type=MemberType.teacher.value).first() is not None)):  # É professor deste grupo
+        return render_template("pages/error.html", title="Unauthorized access", msg="Você não tem permissão para deletar este grupo")
+    
+    if request.method == "GET":
+        return render_template("pages/edit_group.html", group=group)
+
+    has_changes = False
+    for field in ["groupname", "description", "organization", "expiration"]:
+        new_value = request.form[field] if request.form[field] else None  
+        if getattr(group, field) != new_value:
+            setattr(group, field, new_value)
+            has_changes = True
+
+    if has_changes:
+        db.session.commit()
+        return render_template(
+            "pages/edit_group.html",
+            msg_ok="Group updated successfully",
+            group=group,
+            return_path=return_path
+        )
+
+    return render_template(
+        "pages/edit_group.html",
+        msg_fail="No changes were made to the group.",
+        group=group,
+        return_path=return_path
+    )
+
+
+@blueprint.route('/group/delete/<int:group_id>', methods=["GET"])
+@login_required
+def delete_group(group_id):
+    """Deletes a group by ID."""
+    group = Groups.query.get(group_id)
+    group_member = db.session.query(GroupMembers).filter_by(group_id=group_id, user_id=current_user.id).first()
+    
+    if not group_member:
+        return render_template("pages/error.html", title="Unauthorized access", msg="Você não é membro deste grupo")
+
+    if not (current_user.category == "admin" or
+            group_member.member_type == MemberType.owner.value or
+            (current_user.category == "teacher" and
+             db.session.query(GroupMembers).filter_by(group_id=group_id, user_id=current_user.id, member_type=MemberType.teacher.value).first() is not None)):  # É professor deste grupo
+        return render_template("pages/error.html", title="Unauthorized access", msg="Você não tem permissão para deletar este grupo")
+    
+    try:
+        db.session.delete(group)
+        db.session.commit()
+        return redirect(url_for('home_blueprint.view_group'))
+    except Exception as exc:
+        db.session.rollback()
+        current_app.logger.error(f"Failed to delete group {group_id}: {exc}")
+        return render_template("pages/error.html", title="Error deleting Group", msg="Failed to delete group")
+    
 
 @blueprint.route('/gallery', methods=["GET"])
 @login_required
