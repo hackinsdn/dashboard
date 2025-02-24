@@ -153,13 +153,12 @@ def create_group():
                 expiration=form.expiration.data  
             )
             db.session.add(new_group)
-            db.session.commit()
             
             owner_membership = GroupMembers(
-            user_id=current_user.id,
-            group_id=new_group.id,
-            member_type=MemberType.owner.value
-            )
+                user_id=current_user.id,
+                group=new_group, 
+                member_type=MemberType.owner.value
+                )
             db.session.add(owner_membership)
             db.session.commit()
 

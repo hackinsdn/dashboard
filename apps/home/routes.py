@@ -160,6 +160,7 @@ def check_lab_status(lab_id):
     lab = LabInstances.query.get(lab_id)
     if not lab:
         return render_template("pages/error.html", title="Error checking lab status", msg="Lab not found")
+    
     if(current_user.category == "student" and (lab.user_id != current_user.id)):
         return render_template("pages/error.html", title="Error checking lab status", msg="You are not authorized to run this lab")
 
