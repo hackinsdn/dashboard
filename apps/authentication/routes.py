@@ -15,8 +15,8 @@ from apps import db, login_manager, oauth
 from apps.config import app_config
 from apps.audit_mixin import get_remote_addr
 from apps.authentication import blueprint
-from apps.authentication.forms import LoginForm, CreateAccountForm, GroupForm
-from apps.authentication.models import Users, LoginLogging, Groups, GroupMembers, MemberType
+from apps.authentication.forms import LoginForm, CreateAccountForm
+from apps.authentication.models import Users, LoginLogging
 
 from apps.authentication.util import verify_pass
 
@@ -139,34 +139,6 @@ def register():
     else:
         return render_template('pages/register.html', form=create_account_form)
 
-@blueprint.route('/groups/create', methods=['GET', 'POST'])
-def create_group():
-    form = GroupForm()
-    msg = None
-
-    if request.method == "POST":
-        if form.validate_on_submit():
-            new_group = Groups(
-                groupname=form.groupname.data,
-                description=form.description.data,
-                organization=form.organization.data,
-                expiration=form.expiration.data  
-            )
-            db.session.add(new_group)
-            
-            owner_membership = GroupMembers(
-                user_id=current_user.id,
-                group=new_group, 
-                member_type=MemberType.owner.value
-                )
-            db.session.add(owner_membership)
-            db.session.commit()
-
-            return redirect(url_for('home_blueprint.view_group'))
-        else:
-            msg = "The form was not considered valid. Please fix the errors below."
-
-    return render_template('pages/create_group.html', form=form, msg=msg)
 
 @blueprint.route('/logout')
 def logout():

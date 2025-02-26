@@ -47,7 +47,7 @@
               <h3 class="card-title">Groups</h3>
               <div class="float-right">
                 {% if current_user.category == "admin" or current_user.category == "teacher" %}
-                  <a class="btn btn-primary mt-3" href="{{ url_for('authentication_blueprint.create_group') }}" role="button">
+                  <a class="btn btn-primary mt-3" href="{{ url_for('home_blueprint.create_group') }}" role="button">
                     <i class="fas fa-plus"></i> Create New Group
                   </a>
                 {% endif %}
@@ -67,7 +67,7 @@
                 <tr id="{{group.id}}">
                   <td>{{ group.groupname }}</td>
                   <td class="text-right">
-                    <a href="{{ url_for('home_blueprint.groups', group_id=group.id) }}" class="btn btn-outline-dark" role="button" aria-pressed="true">
+                    <a href="{{ url_for('home_blueprint.view_groups', group_id=group.id) }}" class="btn btn-outline-dark" role="button" aria-pressed="true">
                       <i class="fas fa-eye"></i> View
                     </a>
                     <button class="btn btn-success join-group" data-group-id="{{ group.id }}">
