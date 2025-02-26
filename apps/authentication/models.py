@@ -3,7 +3,7 @@
 import uuid
 from flask_login import UserMixin
 from sqlalchemy.orm import validates
-
+import enum
 from apps import db, login_manager
 
 from apps.authentication.util import hash_pass
@@ -19,7 +19,7 @@ class Users(db.Model, UserMixin, AuditMixin):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), unique=True)
-    uid = db.Column(db.String(15), unique=True)
+    uid = db.Column(db.String(15), unique=True, default=generate_uid)
     email = db.Column(db.String(64))
     password = db.Column(db.LargeBinary)
     category = db.Column(db.String(10), default=user_category)
@@ -28,6 +28,8 @@ class Users(db.Model, UserMixin, AuditMixin):
     subject = db.Column(db.String(255))
     issuer = db.Column(db.String(255))
     active = db.Column(db.Boolean, default=True)
+
+    groups = db.relationship("GroupMembers",back_populates="user")
 
     def __init__(self, **kwargs):
         for property, value in kwargs.items():
@@ -68,6 +70,21 @@ class Users(db.Model, UserMixin, AuditMixin):
             raise ValueError(f"Invalid user category: {value} -- {allowed}")
         return value
 
+class MemberType(enum.Enum):
+    regular = 1
+    assistant = 2
+    owner = 3
+
+class GroupMembers(db.Model):
+    __tablename__ = 'group_members'
+    
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    group_id = db.Column(db.Integer, db.ForeignKey("groups.id", ondelete="CASCADE"), primary_key=True)
+    member_type = db.Column(db.Integer, primary_key=True)  
+
+    user = db.relationship( "Users" , back_populates="groups")  
+    group = db.relationship( "Groups",back_populates="users")  
+
 
 @login_manager.user_loader
 def user_loader(id):
@@ -83,12 +100,28 @@ def request_loader(request):
 class Groups(db.Model):
     __tablename__ = 'groups'
     id = db.Column(db.Integer, primary_key=True)
-    groupname = db.Column(db.String(64), unique=True)
+    groupname = db.Column(db.String(64))
+    uid = db.Column(db.String(15), unique=True, default=generate_uid)
+    description = db.Column(db.String)
+    organization = db.Column(db.String)
+    expiration = db.Column(db.DateTime, nullable=True)
+    approved_users = db.Column(db.Text, nullable=True)
+    accesstoken = db.Column(db.String)
 
-class UserGroups(db.Model):
-    __tablename__ = 'user_groups'
-    user_id  = db.Column(db.Integer, db.ForeignKey("users.id"), primary_key=True)
-    group_id = db.Column(db.Integer, db.ForeignKey("groups.id"), primary_key=True)
+    users = db.relationship("GroupMembers",back_populates="group", cascade='all, delete-orphan')
+
+    def __init__(self, **kwargs):
+        for property, value in kwargs.items():
+            if hasattr(value, '__iter__') and not isinstance(value, str):
+                value = value[0]
+
+            if property == 'accesstoken':
+                value = hash_pass(value) 
+
+            setattr(self, property, value)
+
+    def __repr__(self):
+        return f'<Group {self.groupname}>'
 
 
 class LoginLogging(db.Model):
