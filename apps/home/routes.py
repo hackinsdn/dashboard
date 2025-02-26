@@ -316,9 +316,6 @@ def edit_lab(lab_id):
         if not lab:
             return render_template("pages/labs_edit.html", segment="/labs/edit", msg_fail="Lab not found")
         
-        lab_instance = LabInstances.query.get(lab_id)
-        if not lab_instance:
-            return render_template("pages/error.html", title="Error accessing Lab Instance", msg="Lab not found")
         
         if current_user.category == "student" and lab_instance.user_id != current_user.id:
             return render_template("pages/error.html", title="Unauthorized request", msg="You dont have permission to see this page")
@@ -326,8 +323,9 @@ def edit_lab(lab_id):
     else:
         lab = Labs()
     lab_categories = {cat.id: cat for cat in LabCategories.query.all()}
+    groups = [groupMembers.group for groupMembers in GroupMembers.query.filter_by(user_id=current_user.id).all()]
     if request.method == "GET":
-        return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, segment="/labs/edit")
+        return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, segment="/labs/edit", groups=groups)
 
     # TODO: data validation/sanitization
     # validate manifest using k8s dry-run?
@@ -341,6 +339,8 @@ def edit_lab(lab_id):
     lab.set_lab_guide_md(request.form["lab_guide"])
     lab.manifest = request.form["lab_manifest"]
     lab.goals = request.form.get("lab_goals", "")
+    selected_group_ids = request.form.getlist('lab_allowed_groups')
+    lab.allowed_groups = Groups.query.filter(Groups.id.in_(selected_group_ids)).all()
     
     try:
         db.session.add(lab)

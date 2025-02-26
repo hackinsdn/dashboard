@@ -125,13 +125,9 @@
                     <div class="form-group">
                       <label>Access Control: Availabe groups (left) &gt;&gt; Allowed groups (right)</label>
                       <select name="lab_allowed_groups" class="duallistbox" multiple="multiple">
-                        <option>Group One</option>
-                        <option>MATA56</option>
-                        <option>UFBA - AAA</option>
-                        <option>Test Group</option>
-                        <option>Xpto</option>
-                        <option>Group N</option>
-                        <option>AnotherGroup</option>
+                        {% for group in groups %}
+                          <option value="{{group.id}}" {{'selected' if group.id in lab.allowed_groups else ""}}>{{group.groupname}}</option>
+                        {% endfor %}
                       </select>
                     </div>
                     <!-- /.form-group -->
