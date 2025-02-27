@@ -9,7 +9,7 @@ from apps import db
 from apps.home import blueprint
 from apps.controllers import k8s
 from apps.home.models import Labs, LabInstances, LabCategories, HomeLogging
-from apps.authentication.models import Users, Groups, GroupMembers, MemberType
+from apps.authentication.models import Users, Groups, GroupMembers, MemberType, GroupMembers, MemberType, GroupMembers
 from flask import render_template, request, current_app, redirect, url_for, session
 from flask_login import login_required, current_user
 from jinja2 import TemplateNotFound
@@ -431,7 +431,9 @@ def create_group():
 def view_groups(group_id):
     if group_id is None:
         groups = Groups.query.all()
-        return render_template("pages/view_groups.html", segment="groups", groups=groups)
+        group_members = GroupMembers.query.where(GroupMembers.user_id == current_user.id).all()
+        group_member_ids = [group.group_id for group in group_members]
+        return render_template("pages/view_groups.html", segment="groups", groups=groups, group_member_ids=group_member_ids)
 
     group = Groups.query.get_or_404(group_id)
     return render_template("pages/group_info.html", segment="groups", group=group)
