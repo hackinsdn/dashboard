@@ -15,6 +15,7 @@ from flask_login import login_required, current_user
 from jinja2 import TemplateNotFound
 from apps.audit_mixin import get_remote_addr
 from apps.authentication.forms import GroupForm
+from sqlalchemy import or_
 
 
 
@@ -386,7 +387,20 @@ def view_users():
 def view_labs(lab_id=None):
     if current_user.category == "user":
         return render_template('pages/waiting_approval.html')
-    labs = Labs.query.filter()
+    
+    if current_user.category == "admin":
+        labs = Labs.query
+    else:
+        user_group_ids = [membership.group_id for membership in 
+                         GroupMembers.query.filter_by(user_id=current_user.id).all()]
+        
+        labs = Labs.query.filter(
+            or_(
+                ~Labs.allowed_groups.any(),
+                Labs.allowed_groups.any(Groups.id.in_(user_group_ids))
+            )
+        )
+    
     if lab_id:
         labs = labs.filter(Labs.id == lab_id)
     labs = labs.all()
