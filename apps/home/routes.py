@@ -339,16 +339,16 @@ def edit_lab(lab_id):
     # validate mandatory fields
     # ...
 
-    if request.form["lab_category"] not in [str(cat_id) for cat_id in lab_categories]:
-        return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, msg_fail="Invalid Lab Category", segment="/labs/edit")
-
     lab.title = request.form["lab_title"]
     lab.description = request.form["lab_description"]
-    lab.category_id = request.form["lab_category"]
+    lab.category_id = int(request.form["lab_category"])
     lab.set_extended_desc(request.form["lab_extended_desc"])
     lab.set_lab_guide_md(request.form["lab_guide"])
     lab.manifest = request.form["lab_manifest"]
     lab.goals = request.form.get("lab_goals", "")
+
+    if lab.category_id not in [cat_id for cat_id in lab_categories]:
+        return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, msg_fail="Invalid Lab Category", segment="/labs/edit")
     
     try:
         db.session.add(lab)
