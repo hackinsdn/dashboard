@@ -3,7 +3,7 @@
 Copyright (c) 2019 - present AppSeed.us
 """
 
-from flask import render_template, redirect, request, url_for
+from flask import render_template, redirect, request, url_for, session
 from flask import current_app as app
 from flask_login import (
     current_user,
@@ -11,12 +11,15 @@ from flask_login import (
     logout_user
 )
 
-from apps import db, login_manager, oauth
+from apps import db, login_manager, oauth, mail
 from apps.config import app_config
-from apps.audit_mixin import get_remote_addr
+from apps.audit_mixin import get_remote_addr, utcnow
 from apps.authentication import blueprint
-from apps.authentication.forms import LoginForm, CreateAccountForm, GroupForm
+from apps.authentication.forms import LoginForm, CreateAccountForm, ConfirmAccountForm, GroupForm
 from apps.authentication.models import Users, LoginLogging, Groups, GroupMembers, MemberType, GroupMembers, MemberType
+from flask_mail import Message
+import uuid
+from datetime import timedelta
 
 from apps.authentication.util import verify_pass
 
@@ -42,7 +45,6 @@ def login():
 
         # Check the password
         if user and verify_pass(password, user.password):
-
             login_user(user)
             app.logger.info(f"Successful login ipaddr={get_remote_addr()} login={username} auth_provider=local")
             login_log = LoginLogging(ipaddr=get_remote_addr(), login=username, auth_provider="local", success=True)
@@ -128,17 +130,70 @@ def register():
 
         # else we can create the user
         user = Users(**request.form)
-        db.session.add(user)
-        db.session.commit()
 
-        return render_template('pages/register.html',
-                               msg='User created please <a href="/login">login</a>',
-                               success=True,
-                               form=create_account_form)
+        confirmation_token = str(uuid.uuid4().int)[:6]
+        session['confirmation_token'] = confirmation_token
+        session['user'] = request.form
+        session['datetime'] = utcnow()
+
+        # Send email
+        msg = Message(
+            subject="HackInSDN confirmation code",
+            sender=app.config['MAIL_USERNAME'],
+            recipients=[email],
+            body=f"This is your confirmation code: {confirmation_token}"
+        )
+        mail.send(msg)
+
+        return redirect(url_for('authentication_blueprint.confirm_page'))
 
     else:
         return render_template('pages/register.html', form=create_account_form)
 
+@blueprint.route('/confirm', methods=['GET', 'POST'])
+def confirm_page():
+    form = ConfirmAccountForm(request.form)
+
+    confirmation_token = session.get('confirmation_token')
+    if not confirmation_token:
+        return redirect(url_for('authentication_blueprint.register'))
+        
+    if 'confirm' in request.form:
+        user = Users(**session.get('user'))
+        created_at = session.get('datetime')
+     
+        now = utcnow()
+        if now - created_at > timedelta(minutes=5):
+            return render_template('pages/confirm.html', msg='Token expired, please <a href=/register>click here</a> to register again', success=False, form=form)
+
+        if request.form['confirmation_token'] != confirmation_token:
+            return render_template('pages/confirm.html', msg='Invalid token', success=False, form=form)
+
+        session.pop('confirmation_token')
+        session.pop('user')
+        session.pop('datetime')
+
+        db.session.add(user)
+        db.session.commit()
+
+        return redirect(url_for('authentication_blueprint.login'))
+    
+    return render_template('pages/confirm.html', form=form)
+
+@blueprint.route('/resend-code', methods=['GET'])
+def resend_code():
+    email = session.get('user').get('email')
+    confirmation_token = session.get('confirmation_token')
+
+    msg = Message(
+        subject="HackInSDN confirmation code",
+        sender=app.config['MAIL_USERNAME'],
+        recipients=[email],
+        body=f"This is your confirmation code: {confirmation_token}"
+    )
+    mail.send(msg)
+
+    return redirect(url_for('authentication_blueprint.confirm_page'))
 @blueprint.route('/groups/create', methods=['GET', 'POST'])
 def create_group():
     form = GroupForm()
@@ -174,7 +229,6 @@ def create_group():
 def logout():
     logout_user()
     return redirect(url_for('authentication_blueprint.login'))
-
 
 # Errors
 

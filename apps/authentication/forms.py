@@ -30,6 +30,10 @@ class CreateAccountForm(FlaskForm):
                              id='pwd_create',
                              validators=[DataRequired()])
 
+class ConfirmAccountForm(FlaskForm):
+    confirmation_token = StringField('Confirmation Token',
+                                    id='confirmation_token',
+                                    validators=[DataRequired()])
 
 class GroupForm(FlaskForm):
     groupname = StringField('Group Name', 
