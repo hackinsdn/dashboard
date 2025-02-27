@@ -126,7 +126,11 @@
                       <label>Access Control: Availabe groups (left) &gt;&gt; Allowed groups (right)</label>
                       <select name="lab_allowed_groups" class="duallistbox" multiple="multiple">
                         {% for group in groups %}
-                          <option value="{{group.id}}" {{'selected' if group.id in lab.allowed_groups else ""}}>{{group.groupname}}</option>
+                          {% if group in allowed_groups %}
+                          <option value="{{group.id}}" selected>{{group.groupname}}</option>
+                          {% else %}
+                          <option value="{{group.id}}">{{group.groupname}}</option>
+                          {% endif %}
                         {% endfor %}
                       </select>
                     </div>

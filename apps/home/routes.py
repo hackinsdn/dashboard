@@ -327,7 +327,7 @@ def edit_lab(lab_id):
     lab_categories = {cat.id: cat for cat in LabCategories.query.all()}
     groups = [groupMembers.group for groupMembers in GroupMembers.query.filter_by(user_id=current_user.id).all()]
     if request.method == "GET":
-        return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, segment="/labs/edit", groups=groups)
+        return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, segment="/labs/edit", groups=groups, allowed_groups=lab.allowed_groups)
 
     # TODO: data validation/sanitization
     # validate manifest using k8s dry-run?
@@ -359,7 +359,7 @@ def edit_lab(lab_id):
     db.session.commit()
 
     if status:
-        return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, msg_ok=msg, segment="/labs/edit")
+        return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, msg_ok=msg, segment="/labs/edit", groups=groups, allowed_groups=lab.allowed_groups)
     else:
         return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, msg_fail=msg, segment="/labs/edit")
 
