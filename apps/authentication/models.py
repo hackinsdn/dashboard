@@ -6,7 +6,6 @@ from sqlalchemy.orm import validates
 import enum
 from apps import db, login_manager
 
-from sqlalchemy import UniqueConstraint
 from apps.authentication.util import hash_pass
 from apps.audit_mixin import AuditMixin, utcnow
 
@@ -82,8 +81,6 @@ class GroupMembers(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
     group_id = db.Column(db.Integer, db.ForeignKey("groups.id", ondelete="CASCADE"), primary_key=True)
     member_type = db.Column(db.Integer, primary_key=True)  
-
-    __table_args__ = (UniqueConstraint('user_id', 'group_id', name='_user_group_uc'),)
 
     user = db.relationship( "Users" , back_populates="groups")  
     group = db.relationship( "Groups",back_populates="users")  
