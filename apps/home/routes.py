@@ -117,9 +117,6 @@ def run_lab(lab_id):
 
     already_running = LabInstances.query.filter_by(lab_id=lab_id, user_id=current_user.id, active=True).first()
 
-    if(current_user.category == "student" and (already_running.user_id != current_user.id)):
-        return render_template("pages/error.html", title="Error Running Labs", msg="You are not authorized to run this lab")
-
     if already_running:
         return redirect(url_for('home_blueprint.view_lab_instance', lab_id=already_running.id))
 
