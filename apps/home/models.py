@@ -26,6 +26,10 @@ class LabCategories(db.Model):
     category = db.Column(db.String(64))
     color_cls = db.Column(db.String(16))
 
+lab_groups = db.Table('lab_groups',
+    db.Column('lab_id', db.String(40), db.ForeignKey('labs.id'), primary_key=True),
+    db.Column('group_id', db.Integer, db.ForeignKey('groups.id'), primary_key=True)
+)
 class Labs(db.Model, AuditMixin):
     __tablename__ = 'labs'
     id = db.Column(db.String(40), primary_key=True, default=generate_uuid)
@@ -37,6 +41,8 @@ class Labs(db.Model, AuditMixin):
     lab_guide_html = db.Column(db.LargeBinary)
     goals = db.Column(db.Text)
     manifest = db.Column(db.Text)
+    allowed_groups = db.relationship('Groups', secondary=lab_groups, lazy='subquery',
+                                     backref=db.backref('labs', lazy=True))
 
     def set_extended_desc(self, desc_str):
         self.extended_desc = desc_str.encode()

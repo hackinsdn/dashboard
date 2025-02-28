@@ -15,6 +15,7 @@ from flask_login import login_required, current_user
 from jinja2 import TemplateNotFound
 from apps.audit_mixin import get_remote_addr
 from apps.authentication.forms import GroupForm
+from sqlalchemy import or_
 
 
 
@@ -42,11 +43,46 @@ def running_labs():
     if current_user.category == "user":
         return render_template('pages/waiting_approval.html')
 
+    # Initialize as defaultdict(list) to match the return type from k8s.get_labs_by_user()
+    from collections import defaultdict
+    running_labs = defaultdict(list)    
+    
     filter_user = current_user.uid
-    if current_user.category in ["admin", "teacher"]:
+    if current_user.category in ["admin"]:
         filter_user = None
+    else:
+        managed_groups = db.session.query(GroupMembers.group_id).filter(
+            GroupMembers.user_id == current_user.id,
+            GroupMembers.member_type.in_([MemberType.owner.value, MemberType.assistant.value])
+        ).all()
+        
+        if managed_groups:
+            managed_group_ids = [group[0] for group in managed_groups]
+
+            student_members = db.session.query(Users.uid).join(
+                GroupMembers, GroupMembers.user_id == Users.id
+            ).filter(
+                GroupMembers.group_id.in_(managed_group_ids)
+            ).all()
+            
+            student_uids = [member[0] for member in student_members]
+            if current_user.uid not in student_uids:
+                student_uids.append(current_user.uid)
+            
+            filter_user = student_uids
+    
     try:
-        running_labs = k8s.get_labs_by_user(filter_user)
+        if filter_user is None:
+            running_labs = k8s.get_labs_by_user(None)
+        else:
+            if isinstance(filter_user, list):
+                for user_id in filter_user:
+                    user_labs = k8s.get_labs_by_user(user_id)
+                    # Merge the dictionaries
+                    for key, value in user_labs.items():
+                        running_labs[key].extend(value)
+            else:
+                running_labs = k8s.get_labs_by_user(filter_user)
     except Exception as exc:
         err = traceback.format_exc().replace("\n", ", ")
         current_app.logger.error(f"Error getting running labs: {exc} -- {err}")
@@ -115,9 +151,6 @@ def run_lab(lab_id):
         return render_template("pages/error.html", title="Error Running Labs", msg="Lab not found")
 
     already_running = LabInstances.query.filter_by(lab_id=lab_id, user_id=current_user.id, active=True).first()
-
-    if(current_user.category == "student" and (already_running.user_id != current_user.id)):
-        return render_template("pages/error.html", title="Error Running Labs", msg="You are not authorized to run this lab")
 
     if already_running:
         return redirect(url_for('home_blueprint.view_lab_instance', lab_id=already_running.id))
@@ -318,9 +351,6 @@ def edit_lab(lab_id):
         if not lab:
             return render_template("pages/labs_edit.html", segment="/labs/edit", msg_fail="Lab not found")
         
-        lab_instance = LabInstances.query.get(lab_id)
-        if not lab_instance:
-            return render_template("pages/error.html", title="Error accessing Lab Instance", msg="Lab not found")
         
         if current_user.category == "student" and lab_instance.user_id != current_user.id:
             return render_template("pages/error.html", title="Unauthorized request", msg="You dont have permission to see this page")
@@ -328,8 +358,9 @@ def edit_lab(lab_id):
     else:
         lab = Labs()
     lab_categories = {cat.id: cat for cat in LabCategories.query.all()}
+    groups = [groupMembers.group for groupMembers in GroupMembers.query.filter_by(user_id=current_user.id).all()]
     if request.method == "GET":
-        return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, segment="/labs/edit")
+        return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, segment="/labs/edit", groups=groups, allowed_groups=lab.allowed_groups)
 
     # TODO: data validation/sanitization
     # validate manifest using k8s dry-run?
@@ -343,6 +374,8 @@ def edit_lab(lab_id):
     lab.set_lab_guide_md(request.form["lab_guide"])
     lab.manifest = request.form["lab_manifest"]
     lab.goals = request.form.get("lab_goals", "")
+    selected_group_ids = request.form.getlist('lab_allowed_groups')
+    lab.allowed_groups = Groups.query.filter(Groups.id.in_(selected_group_ids)).all()
     
     try:
         db.session.add(lab)
@@ -359,7 +392,7 @@ def edit_lab(lab_id):
     db.session.commit()
 
     if status:
-        return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, msg_ok=msg, segment="/labs/edit")
+        return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, msg_ok=msg, segment="/labs/edit", groups=groups, allowed_groups=lab.allowed_groups)
     else:
         return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, msg_fail=msg, segment="/labs/edit")
 
@@ -386,7 +419,20 @@ def view_users():
 def view_labs(lab_id=None):
     if current_user.category == "user":
         return render_template('pages/waiting_approval.html')
-    labs = Labs.query.filter()
+    
+    if current_user.category == "admin":
+        labs = Labs.query
+    else:
+        user_group_ids = [membership.group_id for membership in 
+                         GroupMembers.query.filter_by(user_id=current_user.id).all()]
+        
+        labs = Labs.query.filter(
+            or_(
+                ~Labs.allowed_groups.any(),
+                Labs.allowed_groups.any(Groups.id.in_(user_group_ids))
+            )
+        )
+    
     if lab_id:
         labs = labs.filter(Labs.id == lab_id)
     labs = labs.all()
