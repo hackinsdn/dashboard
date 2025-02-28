@@ -43,11 +43,46 @@ def running_labs():
     if current_user.category == "user":
         return render_template('pages/waiting_approval.html')
 
+    # Initialize as defaultdict(list) to match the return type from k8s.get_labs_by_user()
+    from collections import defaultdict
+    running_labs = defaultdict(list)    
+    
     filter_user = current_user.uid
-    if current_user.category in ["admin", "teacher"]:
+    if current_user.category in ["admin"]:
         filter_user = None
+    else:
+        managed_groups = db.session.query(GroupMembers.group_id).filter(
+            GroupMembers.user_id == current_user.id,
+            GroupMembers.member_type.in_([MemberType.owner.value, MemberType.assistant.value])
+        ).all()
+        
+        if managed_groups:
+            managed_group_ids = [group[0] for group in managed_groups]
+
+            student_members = db.session.query(Users.uid).join(
+                GroupMembers, GroupMembers.user_id == Users.id
+            ).filter(
+                GroupMembers.group_id.in_(managed_group_ids)
+            ).all()
+            
+            student_uids = [member[0] for member in student_members]
+            if current_user.uid not in student_uids:
+                student_uids.append(current_user.uid)
+            
+            filter_user = student_uids
+    
     try:
-        running_labs = k8s.get_labs_by_user(filter_user)
+        if filter_user is None:
+            running_labs = k8s.get_labs_by_user(None)
+        else:
+            if isinstance(filter_user, list):
+                for user_id in filter_user:
+                    user_labs = k8s.get_labs_by_user(user_id)
+                    # Merge the dictionaries
+                    for key, value in user_labs.items():
+                        running_labs[key].extend(value)
+            else:
+                running_labs = k8s.get_labs_by_user(filter_user)
     except Exception as exc:
         err = traceback.format_exc().replace("\n", ", ")
         current_app.logger.error(f"Error getting running labs: {exc} -- {err}")
