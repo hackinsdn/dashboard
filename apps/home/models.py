@@ -31,7 +31,7 @@ class Labs(db.Model, AuditMixin):
     id = db.Column(db.String(40), primary_key=True, default=generate_uuid)
     title = db.Column(db.String(255))
     description = db.Column(db.String)
-    category_id = db.Column(db.Integer, db.ForeignKey("lab_categories.id"))
+    category_id = db.Column(db.Integer, db.ForeignKey("lab_categories.id"), nullable=False)
     extended_desc = db.Column(db.LargeBinary)
     lab_guide_md = db.Column(db.LargeBinary)
     lab_guide_html = db.Column(db.LargeBinary)
