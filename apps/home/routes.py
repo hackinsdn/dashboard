@@ -347,7 +347,7 @@ def edit_lab(lab_id):
     lab.manifest = request.form["lab_manifest"]
     lab.goals = request.form.get("lab_goals", "")
 
-    if lab.category_id not in [cat_id for cat_id in lab_categories]:
+    if lab.category_id not in lab_categories:
         return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, msg_fail="Invalid Lab Category", segment="/labs/edit")
     
     try:
