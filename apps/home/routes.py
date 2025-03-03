@@ -336,7 +336,7 @@ def edit_lab(lab_id):
 
     lab.title = request.form["lab_title"]
     lab.description = request.form["lab_description"]
-    lab.category_id = int(request.form["lab_category"])
+    lab.category_id = int(request.form["lab_category"]) if request.form.get("lab_category") else None
     lab.set_extended_desc(request.form["lab_extended_desc"])
     lab.set_lab_guide_md(request.form["lab_guide"])
     lab.manifest = request.form["lab_manifest"]
