@@ -10,7 +10,7 @@ from apps.home import blueprint
 from apps.controllers import k8s
 from apps.home.models import Labs, LabInstances, LabCategories, HomeLogging
 from apps.authentication.models import Users, Groups, GroupMembers, MemberType
-from flask import render_template, request, current_app, redirect, url_for, session
+from flask import render_template, request, current_app, redirect, url_for
 from flask_login import login_required, current_user
 from jinja2 import TemplateNotFound
 from apps.audit_mixin import get_remote_addr
