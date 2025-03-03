@@ -78,8 +78,9 @@ The other section on that page is the "Lab guide", which is basically a document
 
 ## Creating Labs
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/YKb_MtTeZ1k?si=8_GIV7v0MZGUqj37" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+[![altimg](https://img.youtube.com/vi/YKb_MtTeZ1k/0.jpg)](https://www.youtube.com/watch?v=YKb_MtTeZ1k)
+
 
 ## Using Labs
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/o5lC5tBhZM0?si=Na6M_eLczpJ0eGpO" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+[![altimg](https://img.youtube.com/vi/o5lC5tBhZM0/0.jpg)](https://www.youtube.com/watch?v=o5lC5tBhZM0)
