@@ -61,14 +61,107 @@ For academic/research usage, there are also many projects that offer experimenta
 <a name="run-with-docker"/>
 ## Running with Docker
 
-TODO
+To run Dashboard with Docker you can leverage the pre-build image available in https://hub.docker.com/r/hackinsdn/dashboard. The steps are described below:
+
+1. Run the docker image:
+```
+docker run -d --name dashboard1 -p 8080:8080 -v $PWD/kube-config.yaml:/etc/kube-config.yaml -e INIT_SCRIPT=/app/dbinit.py -e DEBUG=True -e KUBECONFIG=/etc/kube-config.yaml -e K8S_NAMESPACE=hackinsdn -e BASE_URL=http://192.168.64.17:8080 -e SECRET_KEY=xxxxx -e OAUTH_CLIENT_ID=APP-xxxyyyzzz -e OAUTH_CLIENT_SECRET=xxx-yyy-zzz-www-aaaa -e OAUTH_DOMAIN=orcid.org hackinsdn/dashboard:latest
+```
+
+Some options used above are described as follows:
+
+- `KUBECONFIG`: filename containing kubernetes config file to connect to the cluster (if you followed the documentation on [setup single-node kubernetes cluster in a VM](./install-k8s-vm.md), you should have a file named `kube-config-ns-admin@hackinsdn.yaml`)
+
+- `INIT_SCRIPT`: the script which will provide some initial database setup. You can customize the default dbinit file as needed. The standard INIT file will create a login named "admin" with a random password displayed on the container logs (`docker logs dashboard1`). Furthermore, the standard INIT script will create a Hello World Lab to test the installation.
+
+- `DEBUG`: enable debugging (and auto-reloading)
+
+- `K8S_NAMESPACE`: default namespace that will be used
+
+- `SECRET_KEY`: used to create session IDs and other secrets on the application. Choose a secret key for you to use among container restarts to avoid session being invalidated
+
+- `BASE_URL`: used basically to create the redirect URL when submitting external Oauth2 authentication
+
+- `OAUTH_DOMAIN`: Oauth2 authentication provider (needs to be created -- see above)
+
+- `OAUTH_CLIENT_ID`: Oauth2 client ID
+
+- `OAUTH_CLIENT_SECRET`: Oauth2 client secret
 
 <a name="install"/>
 ## Installation step-by-step
 
-TODO
+Manual Dashboard installation requires the steps below:
+
+1. You can install the Dashboard on a number of different systems. You will only need to have Python 3.12 available. So, the first step is to make sure Python 3.12 (or newer) is installed. Two python libraries are also required: pip and venv. 
+
+2. Clone Dashboard repo and create a virtual environment, then install the requirements:
+
+```
+git clone https://github.com/hackinsdn/dashboard
+cd dashboard
+python3 -m venv venv
+source venv/bin/activate
+python3 -m pip install -r requirements.txt
+```
+
+3. Install `kubectl` as documented here: https://kubernetes.io/docs/tasks/tools/#kubectl
+
+4. Copy the Kubernetes config file into your file system `~/.kube/config`
+
+5. Initialize the database:
+
+```
+python3 dbinit.py
+```
+
+you should see the output of the script showing the random password configured for the user "admin".
+
+6. Setup some environment variables and start the application:
+
+```
+export K8S_NAMESPACE=hackinsdn
+export DEBUG=True
+export SECRET_KEY=xxxx
+
+flask --app run.py run --with-threads --port 8080 --host 0.0.0.0 --debug
+```
+
+You should see something like:
+```
+ * Serving Flask app 'run.py'
+ * Debug mode: on
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8080
+ * Running on http://192.168.64.2:8080
+Press CTRL+C to quit
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: xxx-xxx-xxx
+```
 
 <a name="helloworld"/>
 ## Running a Hello World Lab
 
-TODO
+Once you have setup the Dashboard, you can open your brower and type the IP address of your installation and port 8080 (protocol HTTP). You should be able to see the login page. Login with the admin user and the random password created above.
+
+Navigate on the system in Labs > View Labs. You should see the "Hello World" Lab, then click on "Start Lab".
+
+![view-labs](./img/lab-view.png)
+
+The next screen will show a few options, you can leave the default values and then click on "Run".
+
+![view-labs](./img/lab-run.png)
+
+Next screen you will see the process of setting up the resources (which will take a few seconds):
+
+![view-labs](./img/lab-starting.png)
+
+After setup the resources, you should see green button to "Start using the Lab ..." (click on it!).
+
+![view-labs](./img/lab-ready.png)
+
+Finally, the Lab guide should provide you with a step by step of the next actions!
+
+![view-labs](./img/lab-guide.png)
