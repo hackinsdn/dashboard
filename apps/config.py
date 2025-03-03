@@ -68,12 +68,11 @@ class Config(object):
 
     # Kubernetes
     K8S_NAMESPACE = os.getenv('K8S_NAMESPACE', "")
-    #K8S_CONFIG = os.path.expanduser("/home/italo/.kube/config")
-    K8S_CONFIG = os.path.expanduser("~/.kube/config")
+    K8S_CONFIG = os.path.expanduser(os.getenv("KUBECONFIG", "~/.kube/config"))
     K8S_AVOID_NODES = ["whx-rn", "ids-pb", "ids-pe", "vm1-ac", "vm1-mt", "whx-pb", "whx-rn"]
 
     # Base URL
-    BASE_URL = 'https://dashboard.hackinsdn.ufba.br'
+    BASE_URL = os.getenv("BASE_URL", 'https://dashboard.hackinsdn.ufba.br')
 
     LOG_FMT = "%(asctime)s %(levelname)s [%(name)s] [%(filename)s:%(lineno)d] %(message)s"
     LOG_FILE = os.getenv("LOG_FILE")
