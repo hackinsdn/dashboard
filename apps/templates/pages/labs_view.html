@@ -80,9 +80,7 @@
                 {%   set lab_id = lab.id %}
                 {%   set link_text = 'Start Lab' %}
                 {% endif %}
-                {% if labs|length > 1 %}
                 <a class="btn btn-outline-dark mx-2" href="{{url_for('home_blueprint.view_labs', lab_id=lab.id)}}" role="button"><i class="fas fa-eye"></i> View Lab</a>
-                {% endif %}
                 <a class="btn btn-outline-dark mx-2" href="{{url_for(route, lab_id=lab_id)}}" role="button"><i class="far fa-play-circle"></i> {{link_text}}</a>
                 {% if current_user.category == "admin" or current_user.category == "teacher" %}
                 <a class="btn btn-outline-dark mx-2" href="{{url_for('home_blueprint.edit_lab', lab_id=lab.id)}}" role="button"><i class="fas fa-edit"></i> Update Lab</a>
