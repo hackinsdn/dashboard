@@ -8,7 +8,8 @@ RUN --mount=source=requirements.txt,target=/mnt/requirements.txt,type=bind \
  && rm -rf /var/lib/apt/lists/* /tmp/*
 
 WORKDIR /app
-COPY apps dbinit.py docker-entrypoint.sh scripts run.py /app/
+RUN --mount=source=.,target=/mnt,type=bind \
+    cp -r apps dbinit.py docker-entrypoint.sh scripts run.py /app/
 
 EXPOSE 8080
 
