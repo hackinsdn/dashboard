@@ -259,8 +259,7 @@ word-break: break-all;
           location.href = "{{url_for('home_blueprint.running_labs')}}";
         });
       });
-      // save answers
-      $('.save-answers').click(function () {
+      function saveAnswers(showToast = true) {
         var answers = {};
         $("#lab-guide input, #lab-guide textarea, #lab-guide select").each(function(){
           var input = $(this);
@@ -282,6 +281,9 @@ word-break: break-all;
           dataType: "json",
           contentType: "application/json",
         });
+	if (!showToast) {
+	  return;
+	}
         request.done(function(data) {
           $(document).Toasts('create', {
             class: 'bg-success',
@@ -298,6 +300,17 @@ word-break: break-all;
             body: data.result
           });
         });
+      }
+      // save answers
+      $('.save-answers').click(function () {
+	saveAnswers();
+      });
+      var timeoutSave;
+      $("#lab-guide input, #lab-guide textarea, #lab-guide select").on('input propertychange change', function() {
+          clearTimeout(timeoutSave);
+          timeoutSave = setTimeout(function() {
+              saveAnswers(false);
+          }, 1000);
       });
       // load answers
       $(window).on("load", function () {
