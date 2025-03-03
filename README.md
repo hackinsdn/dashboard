@@ -1,6 +1,6 @@
 # Welcome to HackInSDN Dashboard!
 
-Dashboard HackInSDN: a web platform for experimentation on cybersecurity and networking using Kuberentes clusters
+Dashboard HackInSDN: a web platform for experimentation on cybersecurity and networking using Kubernetes clusters
 
 - [Getting started](#getting-started)
 - [Documentation](#documentation)
