@@ -7,7 +7,6 @@ This document describe the steps for installing Dashboard HackInSDN and integrat
 [Installing step-by-step](#install)
 [Running a hello world](#helloworld)  
 
-<a name="prereq"/>
 ## Pre-requirements
 
 Two main pre requirements are necessary to run Dashboard with its main funcionality: 1) **Authentication** credentials with a Oauth2 provider; 2) **Kubernetes** credentials for a cluster that will provide the actual experimentation resources.
@@ -58,7 +57,6 @@ For academic/research usage, there are also many projects that offer experimenta
 
 - [NRP Kubernetes portal](https://portal.nrp-nautilus.io) 
 
-<a name="run-with-docker"/>
 ## Running with Docker
 
 To run Dashboard with Docker you can leverage the pre-build image available in https://hub.docker.com/r/hackinsdn/dashboard. The steps are described below:
@@ -88,7 +86,6 @@ Some options used above are described as follows:
 
 - `OAUTH_CLIENT_SECRET`: Oauth2 client secret
 
-<a name="install"/>
 ## Installation step-by-step
 
 Manual Dashboard installation requires the steps below:
@@ -141,7 +138,6 @@ Press CTRL+C to quit
  * Debugger PIN: xxx-xxx-xxx
 ```
 
-<a name="helloworld"/>
 ## Running a Hello World Lab
 
 Once you have setup the Dashboard, you can open your brower and type the IP address of your installation and port 8080 (protocol HTTP). You should be able to see the login page. Login with the admin user and the random password created above.
