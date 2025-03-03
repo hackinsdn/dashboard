@@ -33,7 +33,7 @@ proof-of-concept labs in the RNP's Hackers do Bem project.
 
 The Dashboard HackInSDN architecture is showed below:
 
-![img-alt](./img/dashboard-hackinsdn-2.png)
+![img-alt](./doc/img/dashboard-hackinsdn-2.png)
 
 The main components of the Dashboard are:
 
@@ -49,19 +49,19 @@ The main components of the Dashboard are:
 
 Initial/home page with statistics and resources available on the Kubernetes cluster:
 
-![img-alt](./img/dashboard-tela-inicial.png)
+![img-alt](./doc/img/dashboard-tela-inicial.png)
 
 View Labs page:
 
-![img-alt](./img/dashboard-lab-view.png)
+![img-alt](./doc/img/dashboard-lab-view.png)
 
 Lab instance page, including Mininet-sec service opened (left hand side) and Lab guide / Lab resources (right hand side), and an example of console opened for one of the containers (bottom of the image):
 
-![img-alt](./img/dashboard-lab-running.png)
+![img-alt](./doc/img/dashboard-lab-running.png)
 
 Create Lab page:
 
-![img-alt](./img/dashboard-create-update-lab.png)
+![img-alt](./doc/img/dashboard-create-update-lab.png)
 
 ## License
 
