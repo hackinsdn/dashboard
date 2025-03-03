@@ -110,16 +110,6 @@ class Groups(db.Model):
 
     users = db.relationship("GroupMembers",back_populates="group", cascade='all, delete-orphan')
 
-    def __init__(self, **kwargs):
-        for property, value in kwargs.items():
-            if hasattr(value, '__iter__') and not isinstance(value, str):
-                value = value[0]
-
-            if property == 'accesstoken':
-                value = hash_pass(value) 
-
-            setattr(self, property, value)
-
     def __repr__(self):
         return f'<Group {self.groupname}>'
 
