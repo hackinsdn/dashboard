@@ -394,7 +394,6 @@ def view_labs(lab_id=None):
     lab_categories = {cat.id: cat for cat in LabCategories.query.all()}
     if not lab_categories:
         return render_template("pages/error.html", title="No Lab Categories", msg="No lab categories found. Please create a Lab Category first.")
-    
     running_labs = {lab.lab_id: lab.id for lab in LabInstances.query.filter_by(user_id=current_user.id, active=True).all()}
     return render_template("pages/labs_view.html", labs=labs, lab_categories=lab_categories, running_labs=running_labs, segment="/labs/view")
 
