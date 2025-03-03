@@ -322,6 +322,8 @@ def edit_lab(lab_id):
         lab = Labs()
 
     lab_categories = {cat.id: cat for cat in LabCategories.query.all()}
+    if not lab_categories:
+        return render_template("pages/labs_edit.html", segment="/labs/edit", msg_fail="No Lab Categories found. Please create a Lab Category first.", lab=lab)
 
     if request.method == "GET":
         return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, segment="/labs/edit")
@@ -331,13 +333,17 @@ def edit_lab(lab_id):
     # validate lab category
     # validate mandatory fields
     # ...
+
     lab.title = request.form["lab_title"]
     lab.description = request.form["lab_description"]
-    lab.category_id = request.form["lab_category"]
+    lab.category_id = int(request.form["lab_category"]) if request.form.get("lab_category") else None
     lab.set_extended_desc(request.form["lab_extended_desc"])
     lab.set_lab_guide_md(request.form["lab_guide"])
     lab.manifest = request.form["lab_manifest"]
     lab.goals = request.form.get("lab_goals", "")
+
+    if lab.category_id not in lab_categories:
+        return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, msg_fail="Invalid Lab Category", segment="/labs/edit")
     
     try:
         db.session.add(lab)
@@ -386,6 +392,8 @@ def view_labs(lab_id=None):
         labs = labs.filter(Labs.id == lab_id)
     labs = labs.all()
     lab_categories = {cat.id: cat for cat in LabCategories.query.all()}
+    if not lab_categories:
+        return render_template("pages/error.html", title="No Lab Categories", msg="No lab categories found. Please create a Lab Category first.")
     running_labs = {lab.lab_id: lab.id for lab in LabInstances.query.filter_by(user_id=current_user.id, active=True).all()}
     return render_template("pages/labs_view.html", labs=labs, lab_categories=lab_categories, running_labs=running_labs, segment="/labs/view")
 
