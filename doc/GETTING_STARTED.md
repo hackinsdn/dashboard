@@ -76,11 +76,11 @@ On the footer of the Lab resources section, you will two buttons for Finishing t
 
 The other section on that page is the "Lab guide", which is basically a documentation provided by the Lab author to guide you throughout the lab execution: step-by-step instructions on how to use the Lab. Two features deserves mentioning on this section: a) the "copy" button which allows you to copy the commands provided on the guide to facilitate execution; b) Lab questions, also provided by Lab author to measure engagement and learning progress.
 
-## Creating Labs
+## Video on Creating Labs
 
 [![altimg](https://img.youtube.com/vi/YKb_MtTeZ1k/0.jpg)](https://www.youtube.com/watch?v=YKb_MtTeZ1k)
 
 
-## Using Labs
+## Video on Using Labs
 
 [![altimg](https://img.youtube.com/vi/o5lC5tBhZM0/0.jpg)](https://www.youtube.com/watch?v=o5lC5tBhZM0)
