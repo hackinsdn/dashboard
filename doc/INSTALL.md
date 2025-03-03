@@ -2,10 +2,10 @@
 
 This document describe the steps for installing Dashboard HackInSDN and integrate it with a Kubernetes cluster. The document is structured in the following way:
 
-[Pre-requirements](#prereq)  
-[Running with Docker](#run-with-docker)
-[Installing step-by-step](#install)
-[Running a hello world](#helloworld)  
+- [Pre-requirements](#pre-requirements)  
+- [Running with Docker](#running-with-docker)
+- [Installing step-by-step](#installation-step-by-step)
+- [Running a hello world](#running-a-hello-world-lab)
 
 ## Pre-requirements
 
