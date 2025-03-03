@@ -21,7 +21,7 @@ CILogon and ORCID are two very interesting Oauth2 providers because they have in
 
 - [ORCID Registering a Public API client](https://info.orcid.org/documentation/integration-guide/registering-a-public-api-client/)
 
-Once you have the client registration information, you will need the following information to configure Dashboard HackInSDN (those information dont actually need to be exported like showed below: you can configure them into the `apps/config.py` file. We show below just for ilustrate the information needed):
+Once you have the client registration information, you will need the following information to configure Dashboard HackInSDN (those information dont actually need to be exported like showed below: you can configure them into the `apps/config.py` file or start the docker container with environment variables. We show below just for ilustrate the information needed):
 
 ```
 # example for CILogon

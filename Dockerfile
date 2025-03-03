@@ -7,8 +7,8 @@ RUN --mount=source=requirements.txt,target=/mnt/requirements.txt,type=bind \
  && install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl \
  && rm -rf /var/lib/apt/lists/* /tmp/*
 
-COPY . /app
 WORKDIR /app
+COPY apps dbinit.py docker-entrypoint.sh scripts run.py /app/
 
 EXPOSE 8080
 
