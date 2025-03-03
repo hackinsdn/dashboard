@@ -311,18 +311,21 @@ def edit_lab(lab_id):
     if current_user.category == "user":
         return render_template('pages/waiting_approval.html')
 
-    if current_user.category == "student":
-        return render_template("pages/error.html", title="Unauthorized request", msg="You dont have permission to see this page")
-
     if lab_id != "new":
         lab = Labs.query.get(lab_id)
         if not lab:
             return render_template("pages/labs_edit.html", segment="/labs/edit", msg_fail="Lab not found")
+        
+        lab_instance = LabInstances.query.get(lab_id)
+        if not lab_instance:
+            return render_template("pages/error.html", title="Error accessing Lab Instance", msg="Lab not found")
+    
+        if current_user.category == "student" and lab_instance.user_id != current_user.id:
+            return render_template("pages/error.html", title="Unauthorized request", msg="You dont have permission to see this page")
+        
     else:
         lab = Labs()
-
     lab_categories = {cat.id: cat for cat in LabCategories.query.all()}
-
     if request.method == "GET":
         return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, segment="/labs/edit")
 

@@ -104,7 +104,7 @@ word-break: break-all;
                     {%   else %}
                     {%     set link_icon = 'desktop' %}
                     {%     set link_name = link %}
-                    {%     set link_href = url_for('home_blueprint.xterm', lab_id=lab['lab_instance_id'], kind=resource['kind'], pod=resource['name'], container=link)  %}
+                    {%     set link_href = url_for('home_blueprint.xterm', lab_id=lab['lab_id'], kind=resource['kind'], pod=resource['name'], container=link)  %}
                     {%   endif %}
                     <a class="btn btn-outline-dark mx-2" href="{{link_href}}" target="_blank" role="button"><i class="fas fa-{{link_icon}}"></i> {{link_name}}</a>
                     {% endfor %}

@@ -46,10 +46,7 @@ class K8sController():
             return
         try:
             config.load_kube_config(config_file=app_config.K8S_CONFIG)
-        except Exception as exc:
-            msg = f"Error while loading kube config ({app_config.K8S_CONFIG}): {exc}"
-            err = traceback.format_exc().replace("\n", ", ")
-            print(msg + " -- " + err)
+        except:
             return
         self.v1_api = client.CoreV1Api()
         self.apps_v1_api = client.AppsV1Api()
