@@ -2,6 +2,15 @@
 
 Dashboard HackInSDN: a web platform for experimentation on cybersecurity and networking using Kuberentes clusters
 
+- [Getting started](#getting-started)
+- [Documentation](#documentation)
+- [Context and Motivation](#context-and-motivation)
+- [Architecture and main features](#architecture-and-main-features)
+- [Screenshots](#screenshots)
+- [License](#license)
+
+![img-alt](./doc/img/dashboard-overview.gif)
+
 ## Getting started
 
 See [installation instructions](./doc/INSTALL.md) and [Getting started / usage](./doc/GETTING_STARTED.md).
