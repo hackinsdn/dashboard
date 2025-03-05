@@ -68,7 +68,7 @@
               </div>
             </div>
             <!-- /.card-header -->
-            <div class="card-body lab-items">
+            <div class="card-body table-responsive lab-items">
               <table id="tableLabs" class="table table-striped display">
                 <thead>
                   <tr>
@@ -218,7 +218,7 @@
     $(function () {
       // config DataTable
       var table = $("#tableLabs").DataTable({
-        responsive: true,
+        responsive: false,
         autoWidth: false,
         language: {
           emptyTable: 'No running labs',
