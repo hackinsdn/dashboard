@@ -9,7 +9,7 @@ from apps import db
 from apps.home import blueprint
 from apps.controllers import k8s
 from apps.home.models import Labs, LabInstances, LabCategories, HomeLogging
-from apps.authentication.models import Users, Groups, GroupMembers, MemberType
+from apps.authentication.models import Users, Groups
 from flask import render_template, request, current_app, redirect, url_for
 from flask_login import login_required, current_user
 from jinja2 import TemplateNotFound
@@ -400,92 +400,148 @@ def view_labs(lab_id=None):
     return render_template("pages/labs_view.html", labs=labs, lab_categories=lab_categories, running_labs=running_labs, segment="/labs/view")
 
 
-@blueprint.route('/groups/create', methods=['GET', 'POST'])
-def create_group():
-    form = GroupForm()
-    msg = None
-
-    if request.method == "POST":
-        if form.validate_on_submit():
-            new_group = Groups(
-                groupname=form.groupname.data,
-                description=form.description.data,
-                organization=form.organization.data,
-                expiration=form.expiration.data  
-            )
-            db.session.add(new_group)
-            
-            owner_membership = GroupMembers(
-                user_id=current_user.id,
-                group=new_group, 
-                member_type=MemberType.owner.value
-                )
-            db.session.add(owner_membership)
-            db.session.commit()
-
-            return redirect(url_for('home_blueprint.view_groups'))
-        else:
-            msg = "The form was not considered valid. Please fix the errors below."
-
-    return render_template('pages/create_group.html', form=form, msg=msg)
-
-
-@blueprint.route('/groups/', defaults={'group_id': None})
-@blueprint.route('/groups/<int:group_id>')
+@blueprint.route('/groups/list')
 @login_required
-def view_groups(group_id):
-    if group_id is None:
-        groups = Groups.query.all()
-        return render_template("pages/view_groups.html", segment="groups", groups=groups)
-
-    group = Groups.query.get_or_404(group_id)
-    return render_template("pages/group_info.html", segment="groups", group=group)
+def list_groups():
+    # even unprivileged user can see the groups!
+    groups = Groups.query.all()
+    return render_template("pages/groups_list.html", segment="/groups/list", groups=groups)
 
 
-@blueprint.route('/group/edit/<int:group_id>', methods=["GET", "POST"])
+@blueprint.route('/groups/edit/<group_id>', methods=["GET", "POST"])
 @login_required
 def edit_group(group_id):
     if current_user.category == "user":
         return render_template('pages/waiting_approval.html')
 
-    owner = GroupMembers.query.get((current_user.id, group_id, MemberType.owner.value))
-    assistant = GroupMembers.query.get((current_user.id, group_id, MemberType.assistant.value))
-    group = Groups.query.get(group_id)
+    if group_id == "new":
+        action_name = "Create"
+        group = Groups()
+        if current_user.category not in ["admin", "teacher"]:
+            return render_template(
+                "pages/error.html",
+                title="Unauthorized access",
+                msg="You don't have permission to edit this group."
+            )
+    else:
+        action_name = "Update"
+        group = Groups.query.get(int(group_id))
+        if not group:
+            return render_template("pages/groups_edit.html", segment="/groups/edit", msg_fail="Group not found")
+        if (current_user.category == "teacher" and current_user.id not in group.owners) or (current_user.category == "student" and current_user.id not in group.assistants):
+            return render_template(
+                "pages/error.html",
+                title="Unauthorized access",
+                msg="You don't have permission to edit this group."
+            )
 
-    if current_user.category == "teacher":
-        teacher_as_owner = GroupMembers.query.get((current_user.id, group_id, MemberType.owner.value))
-        if not teacher_as_owner and not assistant:
-            return render_template("pages/error.html", title="Unauthorized access", msg="You don't have permission to edit this group.")
-
-    if not group:
-        return render_template("pages/error.html", title="Error editing Group", msg="Group not found")
-
-    if current_user.category not in ["admin"] and not owner and not assistant:
-        return render_template("pages/error.html", title="Unauthorized access", msg="You don't have permission to edit this group.")
+    users = {}
+    users_info = {}
+    for user in Users.query.filter(Users.active==True).all():
+        users[user.id] = user
+        users_info[user.id] = f"{user.name} ({user.email or 'NO-EMAIL'})"
 
     if request.method == "GET":
-        return render_template("pages/edit_group.html", group=group)
+        return render_template("pages/groups_edit.html", group=group, action_name=action_name, users=users_info)
 
     has_changes = False
-    for field in ["groupname", "description", "organization", "expiration"]:
+    for field in ["groupname", "description", "organization", "expiration", "accesstoken", "approved_users"]:
         new_value = request.form[field] if request.form[field] else None  
         if getattr(group, field) != new_value:
             setattr(group, field, new_value)
             has_changes = True
 
-    if has_changes:
-        db.session.commit()
+    # members
+    current_members = group.members_dict
+    for user_id in request.form.getlist("group_members"):
+        try:
+            user = users[int(user_id)]
+        except Exception as exc:
+            current_app.logger.warn(f"Failed to process group_members {user_id=}: user not found")
+            continue
+        if user.id not in current_members:
+            group.members.append(user)
+            has_changes = True
+        else:
+            current_members.pop(user.id)
+    for user in current_members.values():
+        has_changes = True
+        group.members.remove(user)
+
+    # assistants
+    current_assistants = group.assistants_dict
+    for user_id in request.form.getlist("group_assistants"):
+        try:
+            user = users[int(user_id)]
+        except Exception as exc:
+            current_app.logger.warn(f"Failed to process group_assistants {user_id=}: user not found")
+            continue
+        if user.id not in current_assistants:
+            group.assistants.append(user)
+            has_changes = True
+        else:
+            current_assistants.pop(user.id)
+    for user in current_assistants.values():
+        has_changes = True
+        group.assistants.remove(user)
+
+    # owners
+    current_owners = group.owners_dict
+    current_app.logger.info(f"{users=}")
+    current_app.logger.info(f"{current_owners=}")
+    current_app.logger.info(f"{request.form.getlist('group_owners')=}")
+    for user_id in request.form.getlist("group_owners"):
+        try:
+            user = users[int(user_id)]
+        except Exception as exc:
+            current_app.logger.warn(f"Failed to process group_owners {user_id=}: user not found")
+            continue
+        if user.id not in current_owners:
+            current_app.logger.info("append user {user}")
+            group.owners.append(user)
+            has_changes = True
+        else:
+            current_owners.pop(user.id)
+    for user in current_owners.values():
+        has_changes = True
+        current_app.logger.info(f"remove user {user}")
+        group.owners.remove(user)
+
+    if not has_changes:
         return render_template(
-            "pages/edit_group.html",
-            msg_ok="Group updated successfully",
+            "pages/groups_edit.html",
+            msg_fail="No changes were made to the group.",
             group=group,
+            action_name=action_name,
+            users=users_info,
             return_path="home_blueprint.view_groups"
         )
 
+    if group_id == "new":
+        db.session.add(group)
+
+    try:
+        db.session.commit()
+    except Exception as exc:
+        current_app.logger.error(f"Failed to update group: {exc}")
+        return render_template(
+            "pages/groups_edit.html",
+            msg_fail="Failed to update grupo.",
+            group=group,
+            action_name=action_name,
+            users=users_info,
+            return_path="home_blueprint.view_groups"
+        )
+
+    if group_id == "new":
+        return redirect(url_for('home_blueprint.list_groups'))
+
     return render_template(
-        "pages/edit_group.html",
-        msg_fail="No changes were made to the group.",
+        "pages/groups_edit.html",
+        msg_ok="Group updated successfully",
         group=group,
+        action_name=action_name,
+        users=users_info,
         return_path="home_blueprint.view_groups"
     )
 
@@ -497,14 +553,14 @@ def delete_group(group_id):
     if not group:
         return render_template("pages/error.html", title="Unauthorized access", msg="Você não é membro deste grupo")
 
-    owner = GroupMembers.query.get((current_user.id, group_id, MemberType.owner.value))
-    assistant = GroupMembers.query.get((current_user.id, group_id, MemberType.assistant.value))
+    #owner = GroupMembers.query.get((current_user.id, group_id, MemberType.owner.value))
+    #assistant = GroupMembers.query.get((current_user.id, group_id, MemberType.assistant.value))
 
-    if current_user.category not in ["admin"] and not owner and not assistant:
-        return render_template("pages/error.html", title="Unauthorized access", msg="You don't have permission to delete this group.")
+    #if current_user.category not in ["admin"] and not owner and not assistant:
+    #    return render_template("pages/error.html", title="Unauthorized access", msg="You don't have permission to delete this group.")
 
-    if current_user.category == "teacher" and not (owner or assistant):
-        return render_template("pages/error.html", title="Unauthorized access", msg="You don't have permission to delete this group.")
+    #if current_user.category == "teacher" and not (owner or assistant):
+    #    return render_template("pages/error.html", title="Unauthorized access", msg="You don't have permission to delete this group.")
     
     try:
         db.session.delete(group)

@@ -47,8 +47,8 @@
             </a>
           </li>
           <li class="nav-item">
-            <a href="{{ url_for('home_blueprint.view_groups', group_id=None) }}" 
-               class="nav-link {% if request.url_rule.endpoint == 'home_blueprint.view_groups' %} active {% endif %}">
+            <a href="{{ url_for('home_blueprint.list_groups') }}" 
+               class="nav-link {% if request.url_rule.endpoint == 'home_blueprint.list_groups' %} active {% endif %}">
               <i class="nav-icon fas fa-users"></i>
               <p>Groups</p>
             </a>

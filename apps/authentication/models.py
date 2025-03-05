@@ -1,9 +1,10 @@
 # -*- encoding: utf-8 -*-
-
+from __future__ import annotations
 import uuid
+from typing import List
 from flask_login import UserMixin
 from sqlalchemy.orm import validates
-import enum
+from sqlalchemy.orm import Mapped
 from apps import db, login_manager
 
 from apps.authentication.util import hash_pass
@@ -14,6 +15,30 @@ def user_category():
 
 def generate_uid():
     return uuid.uuid4().hex[:14]
+
+
+group_members = db.Table(
+    "group_members",
+    db.Model.metadata,
+    db.Column("group_id", db.ForeignKey("groups.id"), primary_key=True),
+    db.Column("user_id", db.ForeignKey("users.id"), primary_key=True),
+)
+
+
+group_owners = db.Table(
+    "group_owners",
+    db.Model.metadata,
+    db.Column("group_id", db.ForeignKey("groups.id"), primary_key=True),
+    db.Column("user_id", db.ForeignKey("users.id"), primary_key=True),
+)
+
+group_assistants = db.Table(
+    "group_assistants",
+    db.Model.metadata,
+    db.Column("group_id", db.ForeignKey("groups.id"), primary_key=True),
+    db.Column("user_id", db.ForeignKey("users.id"), primary_key=True),
+)
+
 
 class Users(db.Model, UserMixin, AuditMixin):
     __tablename__ = 'users'
@@ -29,7 +54,15 @@ class Users(db.Model, UserMixin, AuditMixin):
     issuer = db.Column(db.String(255))
     active = db.Column(db.Boolean, default=True)
 
-    groups = db.relationship("GroupMembers",back_populates="user")
+    member_of_groups: Mapped[List[Groups]] = db.relationship(
+        secondary=group_members, back_populates="members"
+    )
+    assistant_of_groups: Mapped[List[Groups]] = db.relationship(
+        secondary=group_assistants, back_populates="assistants"
+    )
+    owner_of_groups: Mapped[List[Groups]] = db.relationship(
+        secondary=group_owners, back_populates="owners"
+    )
 
     def __init__(self, **kwargs):
         for property, value in kwargs.items():
@@ -70,21 +103,6 @@ class Users(db.Model, UserMixin, AuditMixin):
             raise ValueError(f"Invalid user category: {value} -- {allowed}")
         return value
 
-class MemberType(enum.Enum):
-    regular = 1
-    assistant = 2
-    owner = 3
-
-class GroupMembers(db.Model):
-    __tablename__ = 'group_members'
-    
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
-    group_id = db.Column(db.Integer, db.ForeignKey("groups.id", ondelete="CASCADE"), primary_key=True)
-    member_type = db.Column(db.Integer, primary_key=True)  
-
-    user = db.relationship( "Users" , back_populates="groups")  
-    group = db.relationship( "Groups",back_populates="users")  
-
 
 @login_manager.user_loader
 def user_loader(id):
@@ -108,10 +126,30 @@ class Groups(db.Model):
     approved_users = db.Column(db.Text, nullable=True)
     accesstoken = db.Column(db.String)
 
-    users = db.relationship("GroupMembers",back_populates="group", cascade='all, delete-orphan')
+    members: Mapped[List[Users]] = db.relationship(
+        secondary=group_members, back_populates="member_of_groups"
+    )
+    assistants: Mapped[List[Users]] = db.relationship(
+        secondary=group_assistants, back_populates="assistant_of_groups"
+    )
+    owners: Mapped[List[Users]] = db.relationship(
+        secondary=group_owners, back_populates="owner_of_groups"
+    )
 
     def __repr__(self):
         return f'<Group {self.groupname}>'
+
+    @property
+    def members_dict(self):
+        return {user.id: user for user in self.members}
+
+    @property
+    def owners_dict(self):
+        return {user.id: user for user in self.owners}
+
+    @property
+    def assistants_dict(self):
+        return {user.id: user for user in self.assistants}
 
 
 class LoginLogging(db.Model):
