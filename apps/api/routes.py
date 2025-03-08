@@ -2,7 +2,7 @@
 """HackInSDN"""
 
 import json
-from apps import db
+from apps import db, cache
 from apps.api import blueprint
 from apps.controllers import k8s
 from apps.home.models import Labs, LabInstances, LabAnswers
@@ -71,6 +71,9 @@ def delete_lab(lab_id):
 
     lab.active = False
     db.session.commit()
+
+    running_labs = LabInstances.query.filter_by(active=True, user_id=current_user.id).count()
+    cache.set(f"running_labs-{current_user.id}", running_labs)
 
     if sum(results) == len(lab.k8s_resources):
         return {"status": "ok", "result": "Resources removed successfully!"}, 200

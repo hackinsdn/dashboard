@@ -184,13 +184,13 @@ class K8sController():
                 continue
             ports = []
             links = []
-            node_ip = self.get_node_ip(pod.spec.node_name)
             for port in srv.spec.ports:
                 ports.append(
                     f"{port.target_port}:{port.node_port}/{port.protocol}"
                 )
                 port_name = port.name if port.name else ports[-1]
                 for pod in app_pod_map.get(srv.spec.selector.get("app"), []):
+                    node_ip = self.get_node_ip(pod.spec.node_name)
                     service_link = [
                         port_name,
                         f"{self.try_get_app(port_name)}{node_ip}:{port.node_port}"

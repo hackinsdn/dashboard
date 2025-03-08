@@ -162,7 +162,7 @@ def check_lab_status(lab_id):
     lab = LabInstances.query.get(lab_id)
     if not lab:
         return render_template("pages/error.html", title="Error checking lab status", msg="Lab not found")
-    
+
     if(current_user.category == "student" and (lab.user_id != current_user.id)):
         return render_template("pages/error.html", title="Error checking lab status", msg="You are not authorized to run this lab")
 
@@ -173,7 +173,7 @@ def check_lab_status(lab_id):
 def xterm(lab_id, kind, pod, container):
     if current_user.category == "user":
         return render_template('pages/waiting_approval.html')
-    
+
     lab = LabInstances.query.get(lab_id)
     if not lab:
         return render_template("pages/error.html", title="Error checking lab status", msg="Lab not found")
@@ -346,7 +346,7 @@ def edit_lab(lab_id):
 
     if lab.category_id not in lab_categories:
         return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, msg_fail="Invalid Lab Category", segment="/labs/edit")
-    
+
     try:
         db.session.add(lab)
         db.session.commit()
@@ -446,7 +446,7 @@ def edit_group(group_id):
 
     has_changes = False
     for field in ["groupname", "description", "organization", "expiration", "accesstoken", "approved_users"]:
-        new_value = request.form[field] if request.form[field] else None  
+        new_value = request.form[field] if request.form[field] else None
         if getattr(group, field) != new_value:
             setattr(group, field, new_value)
             has_changes = True
@@ -561,7 +561,7 @@ def delete_group(group_id):
 
     #if current_user.category == "teacher" and not (owner or assistant):
     #    return render_template("pages/error.html", title="Unauthorized access", msg="You don't have permission to delete this group.")
-    
+
     try:
         db.session.delete(group)
         db.session.commit()
@@ -570,7 +570,124 @@ def delete_group(group_id):
         db.session.rollback()
         current_app.logger.error(f"Failed to delete group {group_id}: {exc}")
         return render_template("pages/error.html", title="Error deleting Group", msg="Failed to delete group")
-    
+
+
+@blueprint.route('/lab_answers/list')
+@login_required
+def list_lab_answers():
+    if current_user.category == "user":
+        return render_template('pages/waiting_approval.html')
+    if current_user.category == "student":
+        return render_template("pages/error.html", title="Unauthorized request", msg="You dont have permission to see this page")
+
+    filter_lab_id = request.args.get('filter_lab')
+    filter_group_id = int(request.args.get('filter_group') or 0)
+    check_answer_sheet = request.args.get('check_answer_sheet')
+
+    labs = {lab.id: lab for lab in Labs.query.all()}
+    groups = {group.id: group for group in Groups.query.filter_by(is_deleted=False).all()}
+
+    if filter_lab_id and filter_lab_id not in labs:
+        return render_template("pages/lab_answers_list.html", segment="/lab_answers/list", lab_answers=[], labs=labs, groups=groups, filter_lab=filter_lab_id, filter_group=filter_group_id, msg_fail="Invalid Lab provided for filtering.")
+
+    filtered_members = {}
+    if filter_group_id:
+        if filter_group_id not in groups:
+            return render_template("pages/lab_answers_list.html", segment="/lab_answers/list", lab_answers=[], labs=labs, groups=groups, filter_lab=filter_lab_id, filter_group=filter_group_id, msg_fail="Invalid Group provided for filtering.")
+        filtered_group = groups[filter_group_id]
+        filtered_members = filtered_group.members_dict
+
+    answer_sheet = {}
+    if check_answer_sheet:
+        if not filter_lab_id:
+            return render_template("pages/lab_answers_list.html", lab_answers=[], labs=labs, groups=groups, filter_lab=filter_lab_id, filter_group=filter_group_id, msg_fail="To check with the Answer Sheet you must provide a Lab (Filter by Lab).")
+        lab_answer_sheet = LabAnswerSheet.query.filter_by(lab_id=filter_lab_id).first()
+        if lab_answer_sheet:
+            answer_sheet = lab_answer_sheet.answers_dict
+
+    users = {user.id: user for user in Users.query.filter_by(is_deleted=False).all()}
+    lab_query = LabAnswers.query
+    if filter_lab_id:
+        lab_query = lab_query.filter_by(lab_id=filter_lab_id)
+    lab_answers = []
+    for lab_answer in lab_query.all():
+        user = users.get(lab_answer.user_id)
+        lab = labs.get(lab_answer.lab_id)
+        if not user or not lab:
+            continue
+        if filter_group_id and user.id not in filtered_members:
+            continue
+        answers = lab_answer.answers_dict
+        total, correct = 0, 0
+        for question, expected_answer in answer_sheet.items():
+            total += 1
+            try:
+                if re.match(fr"^{expected_answer}$", answers.get(question)):
+                    correct += 1
+            except:
+                continue
+        score = "%.2f" % (100*correct/total) if total > 0 else "--"
+        lab_answers.append({
+            "id": lab_answer.id,
+            "lab_title": lab.title,
+            "user": f"{user.name} ({user.email or 'NO-EMAIL'})",
+            "answers": lab_answer.answers_table,
+            "score": score,
+        })
+    return render_template("pages/lab_answers_list.html", segment="/lab_answers/list", lab_answers=lab_answers, labs=labs, groups=groups, filter_lab=filter_lab_id, filter_group=filter_group_id)
+
+
+@blueprint.route('/lab_answers/answer_sheet/', methods=["GET", "POST"])
+@login_required
+def add_answer_sheet():
+    if current_user.category == "user":
+        return render_template('pages/waiting_approval.html')
+    if current_user.category == "student":
+        return render_template("pages/error.html", title="Unauthorized request", msg="You dont have permission to see this page")
+
+    labs = {lab.id: lab for lab in Labs.query.all()}
+
+    lab_id = request.args.get('lab_id')
+    if not lab_id:
+        return render_template("pages/lab_answers_sheet.html", labs=labs)
+
+    if lab_id not in labs:
+        return render_template("pages/lab_answers_sheet.html", labs=labs, lab_id=lab_id, msg_fail="Invalid Lab provided. Please choose the Lab.")
+
+    answers = {}
+    lab_answer_sheet = LabAnswerSheet.query.filter_by(lab_id=lab_id).first()
+    if lab_answer_sheet:
+        answers = lab_answer_sheet.answers_dict
+
+    if request.method == "GET":
+        return render_template("pages/lab_answers_sheet.html", labs=labs, lab_id=lab_id, answers=answers)
+
+    answers.clear()
+    for q, a in zip(request.form.getlist("question"), request.form.getlist("answer")):
+        if not q:
+            continue
+        answers[q] = a
+
+    if not lab_answer_sheet:
+        lab_answer_sheet = LabAnswerSheet()
+        lab_answer_sheet.lab_id = lab_id
+        db.session.add(lab_answer_sheet)
+    lab_answer_sheet.set_answers(answers)
+
+    try:
+        db.session.commit()
+    except Exception as exc:
+        current_app.logger.error(f"Failed to update lab answer sheet: {exc}")
+        return render_template(
+            "pages/lab_answers_sheet.html",
+            msg_fail="Failed to update lab answers sheet.",
+            labs=labs,
+            lab_id=lab_id,
+            answers=answers,
+        )
+
+    return render_template("pages/lab_answers_sheet.html", labs=labs, lab_id=lab_id, answers=answers, msg_ok="Lab answer sheet saved!")
+
 
 @blueprint.route('/gallery', methods=["GET"])
 @login_required
