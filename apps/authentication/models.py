@@ -1,6 +1,7 @@
 # -*- encoding: utf-8 -*-
 from __future__ import annotations
 import uuid
+import json
 from typing import List
 from flask_login import UserMixin
 from sqlalchemy.orm import validates
@@ -52,7 +53,7 @@ class Users(db.Model, UserMixin, AuditMixin):
     family_name = db.Column(db.String(64))
     subject = db.Column(db.String(255))
     issuer = db.Column(db.String(255))
-    active = db.Column(db.Boolean, default=True)
+    is_deleted = db.Column(db.Boolean, default=False)
 
     member_of_groups: Mapped[List[Groups]] = db.relationship(
         secondary=group_members, back_populates="members"
@@ -118,13 +119,14 @@ def request_loader(request):
 class Groups(db.Model):
     __tablename__ = 'groups'
     id = db.Column(db.Integer, primary_key=True)
+    is_deleted = db.Column(db.Boolean, default=False)
     groupname = db.Column(db.String(64))
     uid = db.Column(db.String(15), unique=True, default=generate_uid)
     description = db.Column(db.String)
     organization = db.Column(db.String)
     expiration = db.Column(db.DateTime, nullable=True)
     approved_users = db.Column(db.Text, nullable=True)
-    accesstoken = db.Column(db.String)
+    accesstoken = db.Column(db.String(32))
 
     members: Mapped[List[Users]] = db.relationship(
         secondary=group_members, back_populates="member_of_groups"
@@ -140,6 +142,25 @@ class Groups(db.Model):
         return f'<Group {self.groupname}>'
 
     @property
+    def approved_users_list(self):
+        if not self.approved_users:
+            return []
+        return json.loads(self.approved_users)
+
+    @property
+    def approved_users_str(self):
+        if not self.approved_users:
+            return ""
+        try:
+            data = json.loads(self.approved_users)
+        except:
+            return self.approved_users
+        return "\n".join(data)
+
+    def set_approved_users(self, approved_users):
+        self.approved_users = json.dumps(approved_users)
+
+    @property
     def members_dict(self):
         return {user.id: user for user in self.members}
 
@@ -150,6 +171,32 @@ class Groups(db.Model):
     @property
     def assistants_dict(self):
         return {user.id: user for user in self.assistants}
+
+    def is_owner(self, user_id):
+        return db.session.query(group_owners).filter(
+            group_owners.c.group_id==self.id, group_owners.c.user_id==user_id
+        ).count() == 1
+
+    def is_member(self, user_id):
+        return db.session.query(group_members).filter(
+            group_members.c.group_id==self.id, group_members.c.user_id==user_id
+        ).count() == 1
+
+    def is_assistant(self, user_id):
+        return db.session.query(group_assistants).filter(
+            group_assistants.c.group_id==self.id, group_assistants.c.user_id==user_id
+        ).count() == 1
+
+
+class DeletedGroupUsers(db.Model):
+    __tablename__ = 'deleted_group_users'
+    id = db.Column(db.Integer, primary_key=True)
+    object_id = db.Column(db.Integer)
+    object_type = db.Column(db.String(6))
+    members = db.Column(db.String)
+    owners = db.Column(db.String)
+    assistants = db.Column(db.String)
+    datetime = db.Column(db.DateTime, default=utcnow, nullable=False)
 
 
 class LoginLogging(db.Model):

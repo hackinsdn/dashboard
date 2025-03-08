@@ -76,6 +76,18 @@
                   <p>Create Lab</p>
                 </a>
               </li>
+              <li class="nav-item">
+                <a href="{{url_for('home_blueprint.list_lab_answers')}}" class="nav-link {% if request.url_rule.endpoint == 'home_blueprint.list_lab_answers' %} active {% endif %}">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Lab Answers</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{url_for('home_blueprint.add_answer_sheet')}}" class="nav-link {% if request.url_rule.endpoint == 'home_blueprint.add_answer_sheet' %} active {% endif %}">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Answer Sheet</p>
+                </a>
+              </li>
               {% endif %}
             </ul>
           </li>
@@ -84,7 +96,7 @@
               <i class="nav-icon far fa-calendar-alt"></i>
               <p>
                 Running Labs
-                <span class="badge badge-info right">{{g.running_labs}}</span>
+		<span class="badge badge-info right">{{g.running_labs}}</span>
               </p>
             </a>
           </li>
