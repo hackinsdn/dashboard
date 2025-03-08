@@ -635,6 +635,7 @@ def list_lab_answers():
         })
     return render_template("pages/lab_answers_list.html", segment="/lab_answers/list", lab_answers=lab_answers, labs=labs, groups=groups, filter_lab=filter_lab_id, filter_group=filter_group_id)
 
+
 @blueprint.route('/lab_answers/answer_sheet/', methods=["GET", "POST"])
 @login_required
 def add_answer_sheet():

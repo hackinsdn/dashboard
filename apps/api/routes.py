@@ -71,7 +71,7 @@ def delete_lab(lab_id):
 
     lab.is_deleted = True
     db.session.commit()
-        
+
     running_labs = LabInstances.query.filter_by(is_deleted=False, user_id=current_user.id).count()
     cache.set(f"running_labs-{current_user.id}", running_labs)
 
