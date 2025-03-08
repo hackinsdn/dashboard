@@ -86,6 +86,10 @@ class Config(object):
     MAIL_USE_SSL = False
     MAIL_SENDTO = os.getenv("MAIL_SENDTO")
 
+    # Flask Cache (https://flask-caching.readthedocs.io/en/latest/)
+    CACHE_TYPE = "SimpleCache"
+    CACHE_DEFAULT_TIMEOUT = int(os.getenv("CACHE_DEFAULT_TIMEOUT", 300))
+
 class ProductionConfig(Config):
     DEBUG = False
 
