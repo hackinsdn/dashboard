@@ -8,7 +8,8 @@ from flask import current_app as app
 from flask_login import (
     current_user,
     login_user,
-    logout_user
+    logout_user,
+    login_required,
 )
 
 from apps import db, login_manager, oauth, mail
@@ -50,6 +51,9 @@ def login():
             login_log = LoginLogging(ipaddr=get_remote_addr(), login=username, auth_provider="local", success=True)
             db.session.add(login_log)
             db.session.commit()
+            if "next_url" in session:
+                next_url = session.pop("next_url")
+                return redirect(next_url)
             return redirect(url_for('authentication_blueprint.route_default'))
 
         app.logger.warn(f"Failed login ipaddr={get_remote_addr()} login={username} auth_provider=local")
@@ -101,6 +105,11 @@ def callback():
     db.session.commit()
 
     login_user(user)
+
+    if "next_url" in session:
+        next_url = session.pop("next_url")
+        return redirect(next_url)
+
     return redirect(url_for('authentication_blueprint.route_default'))
 
 
@@ -196,6 +205,7 @@ def resend_code():
     return redirect(url_for('authentication_blueprint.confirm_page'))
 
 @blueprint.route('/logout')
+@login_required
 def logout():
     logout_user()
     return redirect(url_for('authentication_blueprint.login'))
@@ -204,7 +214,9 @@ def logout():
 
 @login_manager.unauthorized_handler
 def unauthorized_handler():
-    return render_template('pages/page-403.html'), 403
+    if 'login' not in request.path:
+        session['next_url'] = request.path
+    return redirect(url_for('authentication_blueprint.login'))
 
 
 @blueprint.errorhandler(403)
