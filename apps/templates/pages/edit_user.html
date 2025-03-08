@@ -91,7 +91,7 @@
                   <input name="family_name" type="text" class="form-control" value="{{user.family_name|default('', true)}}" {{'disabled' if user.id != current_user.id and current_user.category != 'admin' else ''}}/>
                 </div>
                 <!-- /.form-group -->
-                {% if current_user.id == user.id %}
+                {% if current_user.id == user.id or current_user.category == 'admin' %}
                 <div class="form-group">
                   <label>Password</label>
                   <input name="password" type="password" class="form-control" placeholder="Password">
@@ -114,13 +114,27 @@
               </div>
               <div class="col-md-6">
                 <div class="form-group">
-                  <label>User groups</label>
-                  <select name="groups" multiple class="form-control">
-                    <option>group 1</option>
-                    <option>group 2</option>
-                    <option>group 3</option>
-                    <option>group 4</option>
-                    <option>group 5</option>
+                  <label>Member of groups:</label>
+                  <select name="member_of_groups" multiple class="form-control" disabled>
+                    {% for group in user.member_of_groups %}
+		    <option>{{group.groupname}}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Assistant of groups:</label>
+                  <select name="assistant_of_groups" multiple class="form-control" disabled>
+                    {% for group in user.assistant_of_groups %}
+		    <option>{{group.groupname}}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Owner of groups:</label>
+                  <select name="owner_of_groups" multiple class="form-control" disabled>
+                    {% for group in user.owner_of_groups %}
+		    <option>{{group.groupname}}</option>
+                    {% endfor %}
                   </select>
                 </div>
               </div>

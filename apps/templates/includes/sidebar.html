@@ -46,6 +46,13 @@
               </p>
             </a>
           </li>
+          <li class="nav-item">
+            <a href="{{ url_for('home_blueprint.list_groups') }}" 
+               class="nav-link {% if request.url_rule.endpoint == 'home_blueprint.list_groups' %} active {% endif %}">
+              <i class="nav-icon fas fa-users"></i>
+              <p>Groups</p>
+            </a>
+          </li>
           <li class="nav-item has-treeview {% if 'labs' in segment %} menu-open {% endif %}">
             <a href="#" class="nav-link {% if 'labs' in segment %} active {% endif %}">
               <i class="nav-icon fas fa-th"></i>
@@ -69,6 +76,18 @@
                   <p>Create Lab</p>
                 </a>
               </li>
+              <li class="nav-item">
+                <a href="{{url_for('home_blueprint.list_lab_answers')}}" class="nav-link {% if request.url_rule.endpoint == 'home_blueprint.list_lab_answers' %} active {% endif %}">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Lab Answers</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{url_for('home_blueprint.add_answer_sheet')}}" class="nav-link {% if request.url_rule.endpoint == 'home_blueprint.add_answer_sheet' %} active {% endif %}">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Answer Sheet</p>
+                </a>
+              </li>
               {% endif %}
             </ul>
           </li>
@@ -81,8 +100,8 @@
               </p>
             </a>
           </li>
-          {% if current_user.category == "admin" or current_user.category == "teacher" %}
           <li class="nav-header">MANAGEMENT</li>
+          {% if current_user.category == "admin" or current_user.category == "teacher" %}
           <li class="nav-item">
             <a href="{{url_for('home_blueprint.view_users')}}" class="nav-link {% if request.url_rule.endpoint == 'home_blueprint.view_users' %} active {% endif %}">
               <i class="nav-icon fas fa-users"></i>

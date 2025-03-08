@@ -1,0 +1,256 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Edit Group - {{ group.groupname }} {% endblock %} 
+
+<!-- Element injected in the BODY element -->
+{% block body_class %} sidebar-mini {% endblock body_class %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}
+
+  <!-- Google Font: Source Sans Pro -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
+  <!-- daterange picker -->
+  <link rel="stylesheet" href="/static/assets/plugins/daterangepicker/daterangepicker.css">
+  <!-- Select2 -->
+  <link rel="stylesheet" href="/static/assets/plugins/select2/css/select2.min.css">
+  <link rel="stylesheet" href="/static/assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
+  <!-- Bootstrap4 Duallistbox -->
+  <link rel="stylesheet" href="/static/assets/plugins/bootstrap4-duallistbox/bootstrap-duallistbox.min.css">
+  <!-- Theme style -->
+  <link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
+
+{% endblock stylesheets %}
+
+{% block content %}    
+
+  <!-- Content Wrapper. Contains page content -->
+  <div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+      <div class="container-fluid">
+        <div class="row mb-2">
+          <div class="col-sm-6">
+            <h1>Edit Group</h1>
+            {% if msg_ok %}
+            <div class="alert alert-success alert-dismissible">
+              <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+              <h5><i class="icon fas fa-check"></i> Group updated successfully!</h5>
+              {{ msg_ok }}
+            </div>
+            {% endif %}
+            {% if msg_fail %}
+            <div class="alert alert-danger alert-dismissible">
+              <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+              <h5><i class="icon fas fa-ban"></i> Fail to update group!</h5>
+              {{ msg_fail }}
+            </div>
+            {% endif %}
+          </div>
+          <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+              <li class="breadcrumb-item"><a href="/">Home</a></li>
+	      <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.list_groups') }}">Groups</a></li>
+              <li class="breadcrumb-item active">{{ group.groupname }}</li>
+            </ol>
+          </div>
+        </div>
+      </div><!-- /.container-fluid -->
+    </section>
+
+    <!-- Main content -->
+    <section class="content">
+      <div class="container-fluid">
+        <div class="card card-dark">
+          <div class="card-header">
+            <h3 class="card-title">Group - {{ group.groupname|default("New-Group", true) }}</h3>
+          </div>
+          <!-- /.card-header -->
+          <div class="card-body">
+            <form method="POST" action="">
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="card card-primary">
+                    <div class="card-header">
+                      <h3 class="card-title">General Information</h3>
+                    </div>
+                    <div class="card-body">
+                      <div class="form-group">
+                        <label>Group Name</label>
+                        <input name="groupname" type="text" class="form-control" value="{{ group.groupname|default("", true) }}"/>
+                      </div>
+                      <!-- /.form-group -->
+                      <div class="form-group">
+                        <label>Description</label>
+                        <textarea name="description" class="form-control" rows="4" >{{ group.description|default("", true) }}</textarea>
+                      </div>
+                      <!-- /.form-group -->
+                      <div class="form-group">
+                        <label>Organization</label>
+                        <input name="organization" type="text" class="form-control" value="{{ group.organization|default("", true) }}" />
+                      </div>
+                      <div class="form-group">
+                        <label>Access Token</label>
+		        <p>Access token is a method of allowing <i>self enrolment/auto join</i> to a group. Users will be asked to supply the access token to be authorized as a member of the group.</p>
+                        <input name="accesstoken" type="text" class="form-control" value="{{ group.accesstoken|default("", true) }}"/>
+                      </div>
+                      <!-- /.form-group -->
+                      <!-- /.form-group -->
+                      <div class="form-group">
+                        <label>Expiration Date</label>
+		        <p>The date after which this group and its resources will no longer be available. Can be used, for instance, to setup a due date for running a lab (for an exam, contest, CTF, etc). Default: never expires.</p>
+                        <div class="input-group date" id="expiredate" data-target-input="nearest">
+                            <input name="expiration" type="text" class="form-control datetimepicker-input" data-target="#reservationdate" value="{{ group.expiration|default("", true) }}" />
+                            <div class="input-group-append" data-target="#expiredate" data-toggle="datetimepicker">
+                                <div class="input-group-text"><i class="fa fa-calendar"></i></div>
+                            </div>
+                        </div>
+                      </div>
+                      <!-- /.form-group -->
+                      <div class="form-group">
+		        <label>Pre-Approved Users</label>
+		        <p>Please provide a list of users (e-mail addresses, one per line) to be automatically approved when they first login.</p>
+		        <textarea name="approved_users"
+		           placeholder="user1@domain.com
+user2@ufxpto.edu.br"
+                           class="form-control" rows="8" >{{ group.approved_users_str|default("", true) }}</textarea>
+                      </div>
+                      <!-- /.form-group -->
+                    </div>
+                    <!-- /.card-body -->
+                  </div>
+                  <!-- /.card -->
+                </div>
+                <div class="col-md-6">
+                  <div class="card card-info">
+                    <div class="card-header">
+                      <h3 class="card-title">Members</h3>
+                    </div>
+                    <div class="card-body">
+                      <div class="form-group">
+		        <p>Select the users (left) which will be <i>members</i> of the group (right). Group members cannot change any attribute of the group (only used for Labs access control).</p>
+                        <select name="group_members" class="duallistbox" multiple="multiple">
+	                {% set members_dict = group.members_dict %}
+	                {% for user_id in users %}
+		        {%   set selected = "" %}
+		        {%   if user_id in members_dict %}
+		        {%     set selected = "selected" %}
+		        {%   endif %}
+		          <option {{selected}} value={{user_id}}>{{users[user_id]}}</option>
+		        {% endfor %}
+                        </select>
+                      </div>
+                    </div>
+                    <!-- /.card-body -->
+                  </div>
+                  <!-- /.card -->
+                  <div class="card card-info">
+                    <div class="card-header">
+                      <h3 class="card-title">Assistants</h3>
+                    </div>
+                    <div class="card-body">
+                      <div class="form-group">
+		        <p>Select the users (left) which will be <i>assistants</i> of the group (right). Group assistants are only allowed to modify the list of members and access group resources (labs and lab instances).</p>
+                        <select name="group_assistants" class="duallistbox" multiple="multiple">
+	                {% set assistants_dict = group.assistants_dict %}
+	                {% for user_id in users %}
+		        {%   set selected = "" %}
+		        {%   if user_id in assistants_dict %}
+		        {%     set selected = "selected" %}
+		        {%   endif %}
+		          <option {{selected}} value={{user_id}}>{{users[user_id]}}</option>
+		        {% endfor %}
+                        </select>
+                      </div>
+                    </div>
+                    <!-- /.card-body -->
+                  </div>
+                  <!-- /.card -->
+                  <div class="card card-info">
+                    <div class="card-header">
+                      <h3 class="card-title">Owners</h3>
+                    </div>
+                    <div class="card-body">
+                      <div class="form-group">
+		        <p>Select the users (left) which will be <i>owners</i> of the group (right). Group owner are allowed to modify any attribute of the group, as well as remove it.</p>
+                        <select name="group_owners" class="duallistbox" multiple="multiple">
+	                {% set owners_dict = group.owners_dict %}
+	                {% for user_id in users %}
+		        {%   set selected = "" %}
+		        {%   if action_name == "Create" %}
+		        {%     if (current_user.category == "admin" or current_user.category == "teacher") and current_user.id == user_id %}
+		        {%       set selected = "selected" %}
+		        {%     endif %}
+		        {%   else %}
+		        {%     if user_id in owners_dict %}
+		        {%       set selected = "selected" %}
+		        {%     endif %}
+		        {%   endif %}
+		          <option {{selected}} value={{user_id}}>{{users[user_id]}}</option>
+		        {% endfor %}
+                        </select>
+                      </div>
+                    </div>
+                    <!-- /.card-body -->
+                  </div>
+                  <!-- /.card -->
+                </div>
+              </div> <!-- /.row -->
+
+              <div class="row">
+		<button class="btn btn-primary" type="submit">{{action_name}}</button>
+                <a href="{{ url_for('home_blueprint.list_groups') }}" class="btn btn-secondary mx-2" role="button" aria-pressed="true">Cancel</a>
+              </div>
+              <!-- /.row -->
+            </form>
+          </div>
+        </div>
+        <!-- /.card -->
+      </div><!-- /.container-fluid -->
+    </section>
+    <!-- /.content -->
+  </div>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+  <!-- jQuery -->
+  <script src="/static/assets/plugins/jquery/jquery.min.js"></script>
+  <!-- Bootstrap 4 -->
+  <script src="/static/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <!-- Bootstrap4 Duallistbox -->
+  <script src="/static/assets/plugins/bootstrap4-duallistbox/jquery.bootstrap-duallistbox.min.js"></script>
+  <!-- Select2 -->
+  <script src="/static/assets/plugins/select2/js/select2.full.min.js"></script>
+  <!-- InputMask -->
+  <script src="/static/assets/plugins/moment/moment.min.js"></script>
+  <script src="/static/assets/plugins/inputmask/jquery.inputmask.min.js"></script>
+  <!-- date-range-picker -->
+  <script src="/static/assets/plugins/daterangepicker/daterangepicker.js"></script>
+  <!-- Tempusdominus Bootstrap 4 -->
+  <script src="/static/assets/plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js"></script>
+  <!-- AdminLTE App -->
+  <script src="/static/assets/js/adminlte.min.js"></script>
+  <!-- Page script -->
+  <script>
+    $(function () {
+      //Initialize Select2 Elements
+      $('.select2').select2({
+        theme: 'bootstrap4'
+      });
+      //Bootstrap Duallistbox
+      $('.duallistbox').bootstrapDualListbox({
+        infoText: false,
+      });
+      //Date range picker
+      $('#expiredate').datetimepicker({
+          format: 'L'
+      });
+    })
+  </script>
+
+{% endblock javascripts %}

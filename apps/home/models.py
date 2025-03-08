@@ -64,7 +64,7 @@ class LabInstances(db.Model, AuditMixin):
     _k8s_resources = db.Column(db.String)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     lab_id = db.Column(db.String(36), db.ForeignKey("labs.id"))
-    active = db.Column(db.Boolean, default=True)
+    is_deleted = db.Column(db.Boolean, default=False)
 
     def __init__(self, id, user, lab, k8s_resources):
         self.id = id
@@ -129,7 +129,6 @@ class LabAnswerSheet(db.Model, AuditMixin):
 
     def set_answers(self, data):
         self.answers = json.dumps(data)
-
 
 class HomeLogging(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
