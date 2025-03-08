@@ -5,7 +5,7 @@ Copyright (c) 2019 - present AppSeed.us
 import traceback
 import uuid
 
-from apps import db
+from apps import db, cache
 from apps.home import blueprint
 from apps.controllers import k8s
 from apps.home.models import Labs, LabInstances, LabCategories, HomeLogging
@@ -14,6 +14,12 @@ from flask import render_template, request, current_app, redirect, url_for
 from flask_login import login_required, current_user
 from jinja2 import TemplateNotFound
 from apps.audit_mixin import get_remote_addr
+from apps.utils import update_running_labs_stats
+
+
+@blueprint.before_request
+def get_info_before_request():
+    update_running_labs_stats()
 
 
 @blueprint.route('/index')
@@ -147,6 +153,9 @@ def run_lab(lab_id):
         lab_inst = LabInstances(pod_hash, current_user, lab, k8s_resources)
         db.session.add(lab_inst)
         db.session.commit()
+
+        running_labs = LabInstances.query.filter_by(active=True, user_id=current_user.id).count()
+        cache.set(f"running_labs-{current_user.id}", running_labs)
 
         return render_template("pages/run_lab_status.html", resources=k8s_resources, lab_instance_id=pod_hash)
     else:
