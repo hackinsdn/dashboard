@@ -1,0 +1,185 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Lab Answers Sheet {% endblock %}
+
+{% block body_class %} sidebar-mini layout-navbar-fixed {% endblock body_class %}
+
+{% block stylesheets %}
+  <!-- Google Font: Source Sans Pro -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
+  <!-- DataTables -->
+  <link rel="stylesheet" href="/static/assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
+  <link rel="stylesheet" href="/static/assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css">
+  <!-- icheck bootstrap -->
+  <link rel="stylesheet" href="/static/assets/plugins/icheck-bootstrap/icheck-bootstrap.min.css">
+  <!-- Theme style -->
+  <link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
+{% endblock stylesheets %}
+
+{% block content %}
+  <!-- Content Wrapper. Contains page content -->
+  <div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+      <div class="container-fluid">
+        <div class="row mb-2">
+          <div class="col-sm-6">
+            <h1>Lab Answers Sheet</h1>
+            {% if msg_ok %}
+            <div class="alert alert-success alert-dismissible">
+              <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+              <h5><i class="icon fas fa-check"></i> Lab Answers Sheet</h5>
+              {{ msg_ok }}
+            </div>
+            {% endif %}
+            {% if msg_fail %}
+            <div class="alert alert-danger alert-dismissible">
+              <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+              <h5><i class="icon fas fa-ban"></i> Failure on answer sheet</h5>
+              {{ msg_fail }}
+            </div>
+            {% endif %}
+          </div>
+          <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+              <li class="breadcrumb-item"><a href="{{url_for('home_blueprint.index')}}">Home</a></li>
+	      <li class="breadcrumb-item"><a href="{{url_for('home_blueprint.view_labs')}}">Labs</a></li>
+	      <li class="breadcrumb-item"><a href="{{url_for('home_blueprint.list_lab_answers')}}">Labs Answers</a></li>
+              <li class="breadcrumb-item active">Lab Answers Sheet</li>
+            </ol>
+          </div>
+        </div>
+	<div class="row">
+          <p>The lab answer sheet can be used to automatically validate the answers provided by the users by using regular expression matching. Please choose the Lab below and, for each question, provide the expected regex which the answer should match to be considered correct (the calculation is done in Python using <code>re</code> library, pretty much like this: <code>re.match(fr"^{expected_answer}$", answer)</code>). Only the registered questions in the answer sheet will be used actually used for validating the score (for example: if your Lab has 5 questions and the answer sheet only contains 3 expected answers, then people who provide the 3 correct ones will be considered 100% correct.</p>
+        </div>
+      </div><!-- /.container-fluid -->
+    </section>
+
+    <!-- Main content -->
+    <section class="content">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="card">
+            <div class="card-header">
+              <div class="row">
+                <!-- left column -->
+                <div class="col-md-6">
+                  <form>
+                    <div class="form-group row">
+                      <label>Choose the Lab:</label>
+                      <select name="lab_id" class="form-control" onchange="this.form.submit()">
+                          <option value="">--</option>
+			{% for labid in labs %}
+			  <option value="{{labid}}" {{'selected' if labid == lab_id else ''}}>{{labs[labid].title}}</option>
+			{% endfor %}
+                      </select>
+                    </div>
+                  </form>
+                  <!--./form-->
+                </div>
+                <!--/.col (left) -->
+                <!-- right column -->
+                <div class="col-md-6">
+                </div>
+                <!--/.col (right) -->
+              </div>
+	      <!-- /.row -->
+            </div>
+            <!-- /.card-header -->
+            <div class="card-body group-items">
+              {% if lab_id %}
+              <form method="post">
+                <table id="tableLabAnswers" class="table table-striped display">
+                  <thead>
+                    <tr>
+                      <th>Question</th>
+                      <th>Expected Answer (regex)</th>
+                    </tr>
+                  </thead>
+                  <tbody id="table-body-answers">
+                  {% for question in answers %}
+                  <tr>
+                    <td><input class="form-control" type="text" name="question" value="{{question}}"></td>
+                    <td><input class="form-control" type="text" name="answer" value="{{answers[question]}}"></td>
+                  </tr>
+                  {% endfor %}
+	          <tr id="copy-answer-row">
+                    <td><input class="form-control" type="text" name="question"></td>
+                    <td><input class="form-control" type="text" name="answer"></td>
+	          </tr>
+                  </tbody>
+	          <tfoot>
+                    <tr><td colspan='2'>
+                      <button type="button" class="btn btn-secondary add-more"><i class="fa fa-plus"></i> Add more answers</button>
+                      <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Save answer sheet</button>
+                    </td></tr>
+                  </tfoot>
+                </table>
+                <!-- /.table -->
+	      </form>
+	      {% endif %}
+            </div>
+            <!-- /.card-body -->
+          </div>
+          <!-- /.card -->
+        </div>
+        <!-- /.col -->
+      </div>
+      <!-- /.row -->
+    </section>
+  </div>
+{% endblock content %}
+
+{% block javascripts %}
+  <!-- REQUIRED SCRIPTS -->
+  <!-- jQuery -->
+  <script src="/static/assets/plugins/jquery/jquery.min.js"></script>
+
+  <!-- Bootstrap -->
+  <script src="/static/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+  <!-- DataTables -->
+  <script src="/static/assets/plugins/datatables/jquery.dataTables.min.js"></script>
+  <script src="/static/assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
+  <script src="/static/assets/plugins/datatables-responsive/js/dataTables.responsive.min.js"></script>
+  <script src="/static/assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js"></script>
+
+  <!-- overlayScrollbars -->
+  <script src="/static/assets/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js"></script>
+
+  <!-- AdminLTE App -->
+  <script src="/static/assets/js/adminlte.js"></script>
+
+  <!-- Custom Script for Delete Functionality -->
+  <script>
+    function confirmDelete() {
+      return confirm("Are you sure you want to delete this group?");
+    }
+    $(function () {
+      if ( sessionStorage.getItem('msgSuccess') ) {
+        $(document).Toasts('create', {
+          class: 'bg-success',
+          title: 'Sucess',
+          body: sessionStorage.getItem('msgSuccess')
+        });
+        sessionStorage.removeItem('msgSuccess');
+      }
+      if ( sessionStorage.getItem('msgFail') ) {
+        $(document).Toasts('create', {
+          class: 'bg-danger',
+          title: 'Failure',
+          body: sessionStorage.getItem('msgFail')
+        });
+        sessionStorage.removeItem('msgFail');
+      }
+      $(".add-more").on('click', function(){
+          //$("#copy-answer-row").clone().appendTo("#table-body-answers");
+	  var answerRow = '<tr id="copy-answer-row"><td><input class="form-control" type="text" name="question"></td><td><input class="form-control" type="text" name="answer"></td></tr>';
+	  var $e = $('<div/>').html(answerRow).contents();
+          $('#table-body-answers').append($e);
+      });
+    });
+  </script>
+{% endblock javascripts %}
