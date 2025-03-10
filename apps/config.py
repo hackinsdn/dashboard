@@ -90,6 +90,10 @@ class Config(object):
     CACHE_TYPE = "SimpleCache"
     CACHE_DEFAULT_TIMEOUT = int(os.getenv("CACHE_DEFAULT_TIMEOUT", 300))
 
+    # Analytics measurement
+    ANALYTICS_JSFILE = os.getenv("ANALYTICS_JSFILE", "")
+    ANALYTICS_SCRIPT = os.getenv("ANALYTICS_SCRIPT", "")
+
 class ProductionConfig(Config):
     DEBUG = False
 
