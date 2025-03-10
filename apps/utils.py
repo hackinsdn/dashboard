@@ -16,7 +16,7 @@ def update_running_labs_stats():
     running_labs = cache.get(f"running_labs-{user_id}")
     if running_labs is None:
         running_labs = LabInstances.query.filter_by(is_deleted=False)
-        if user_id != "all" and getattr(current_user, "category", "student") not in ["admin", "teacher"]:
+        if user_id != "all":
             running_labs = running_labs.filter_by(user_id=user_id)
         running_labs = running_labs.count()
         cache.set(f"running_labs-{user_id}", running_labs)
