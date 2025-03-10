@@ -425,7 +425,10 @@ def view_labs(lab_id=None):
 @login_required
 def list_groups():
     # even unprivileged user can see the groups!
-    groups = Groups.query.filter_by(is_deleted=False).all()
+    groups = Groups.query.filter(Groups.is_deleted==False)
+    if current_user.category != "admin":
+        groups = groups.filter(Groups.organization.isnot("SYSTEM"))
+    groups = groups.all()
     mygroups = {group.id: group for group in current_user.member_of_groups}
     msg_ok = session.pop("msg_ok", None)
     return render_template("pages/groups_list.html", segment="/groups/list", groups=groups, mygroups=mygroups, msg_ok=msg_ok)
@@ -457,6 +460,13 @@ def edit_group(group_id):
                 title="Unauthorized access",
                 msg="You don't have permission to edit this group."
             )
+
+    if current_user.category != "admin" and "SYSTEM" in [group.organization, request.form.get("organization")]:
+        return render_template(
+            "pages/error.html",
+            title="Unauthorized access",
+            msg="Only admins can create/change System groups."
+        )
 
     users = {}
     users_info = {}
@@ -602,7 +612,7 @@ def list_lab_answers():
     check_answer_sheet = request.args.get('check_answer_sheet')
 
     labs = {lab.id: lab for lab in Labs.query.all()}
-    groups = {group.id: group for group in Groups.query.filter_by(is_deleted=False).all()}
+    groups = {group.id: group for group in Groups.query.filter(Groups.is_deleted==False, Groups.organization.isnot("SYSTEM")).all()}
 
     if filter_lab_id and filter_lab_id not in labs:
         return render_template("pages/lab_answers_list.html", segment="/lab_answers/list", lab_answers=[], labs=labs, groups=groups, filter_lab=filter_lab_id, filter_group=filter_group_id, msg_fail="Invalid Lab provided for filtering.")

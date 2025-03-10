@@ -62,7 +62,7 @@ def login():
         user = Users.query.filter_by(username=username).first()
 
         # Check the password
-        if user and verify_pass(password, user.password):
+        if user and user.password and verify_pass(password, user.password):
             _check_pre_approved(user)
             login_user(user)
             app.logger.info(f"Successful login ipaddr={get_remote_addr()} login={username} auth_provider=local")

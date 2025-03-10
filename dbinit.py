@@ -1,6 +1,6 @@
 from apps import db
 from run import app
-from apps.authentication.models import Users
+from apps.authentication.models import Users, Groups
 from apps.home.models import Labs, LabCategories
 from sqlalchemy import event
 import sys
@@ -15,7 +15,11 @@ def dbinit():
     except:
         pass
     db.create_all()
-    default_pw = uuid.uuid4().hex[:8]
+
+    everybody = Groups(groupname="Everybody", organization="SYSTEM", description="System Group that includes everybody")
+    db.session.add(everybody)
+
+    default_pw = uuid.uuid4().hex[:16]
     admin = Users(
         username="admin",
         password=default_pw,
