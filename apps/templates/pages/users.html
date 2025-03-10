@@ -232,9 +232,9 @@
           var row = table.row( index );
           items.push(row.id());
         });
-        var delete_url = '/api/users';
+        var delete_url = '/api/users/bulk';
         if (items.length === 1) {
-          delete_url = '/api/user/' + items[0];
+          delete_url = '/api/users/' + items[0];
         }
         var request = $.ajax({
           url: delete_url,

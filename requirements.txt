@@ -19,6 +19,7 @@ flask_socketio
 kubernetes
 markdown2
 flask_mail
+Flask-Caching
 
 # flask_mysqldb
 # psycopg2-binary

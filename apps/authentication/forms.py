@@ -39,3 +39,9 @@ class GroupForm(FlaskForm):
     organization = StringField('Organization', id='organization', validators=[Optional()])
     expiration = DateField("Expiration", format='%Y-%m-%d', validators=[Optional()])
     accesstoken = StringField('Accesstoken', id='accesstoken', validators=[DataRequired()])
+
+
+class ConfirmAccountForm(FlaskForm):
+    confirmation_token = StringField('Confirmation Token',
+                                    id='confirmation_token',
+                                    validators=[DataRequired()])
