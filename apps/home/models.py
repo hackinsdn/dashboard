@@ -20,16 +20,19 @@ def generate_uuid_14():
 def generate_token():
     return secrets.token_urlsafe(64)
 
+
+lab_groups = db.Table('lab_groups',
+    db.Column('lab_id', db.String(40), db.ForeignKey('labs.id'), primary_key=True),
+    db.Column('group_id', db.Integer, db.ForeignKey('groups.id'), primary_key=True)
+)
+
+
 class LabCategories(db.Model):
     __tablename__ = 'lab_categories'
     id = db.Column(db.Integer, primary_key=True)
     category = db.Column(db.String(64))
     color_cls = db.Column(db.String(16))
 
-lab_groups = db.Table('lab_groups',
-    db.Column('lab_id', db.String(40), db.ForeignKey('labs.id'), primary_key=True),
-    db.Column('group_id', db.Integer, db.ForeignKey('groups.id'), primary_key=True)
-)
 class Labs(db.Model, AuditMixin):
     __tablename__ = 'labs'
     id = db.Column(db.String(40), primary_key=True, default=generate_uuid)
