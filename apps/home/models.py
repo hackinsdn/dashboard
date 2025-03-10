@@ -20,6 +20,13 @@ def generate_uuid_14():
 def generate_token():
     return secrets.token_urlsafe(64)
 
+
+lab_groups = db.Table('lab_groups',
+    db.Column('lab_id', db.String(40), db.ForeignKey('labs.id'), primary_key=True),
+    db.Column('group_id', db.Integer, db.ForeignKey('groups.id'), primary_key=True)
+)
+
+
 class LabCategories(db.Model):
     __tablename__ = 'lab_categories'
     id = db.Column(db.Integer, primary_key=True)
@@ -37,6 +44,8 @@ class Labs(db.Model, AuditMixin):
     lab_guide_html = db.Column(db.LargeBinary)
     goals = db.Column(db.Text)
     manifest = db.Column(db.Text)
+    allowed_groups = db.relationship('Groups', secondary=lab_groups, lazy='subquery',
+                                     backref=db.backref('labs', lazy=True))
 
     def set_extended_desc(self, desc_str):
         self.extended_desc = desc_str.encode()

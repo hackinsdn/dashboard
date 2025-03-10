@@ -104,6 +104,24 @@ class Users(db.Model, UserMixin, AuditMixin):
             raise ValueError(f"Invalid user category: {value} -- {allowed}")
         return value
 
+    @property
+    def privileged_group_ids(self):
+        """Returns a set of group IDs for owner and assistant membership type."""
+        group_ids = set()
+        for group in self.assistant_of_groups:
+            group_ids.add(group.id)
+        for group in self.owner_of_groups:
+            group_ids.add(group.id)
+        return group_ids
+
+    @property
+    def all_group_ids(self):
+        """Returns a set of group IDs for all types of membership."""
+        group_ids = self.privileged_group_ids
+        for group in self.member_of_groups:
+            group_ids.add(group.id)
+        return group_ids
+
 
 @login_manager.user_loader
 def user_loader(id):

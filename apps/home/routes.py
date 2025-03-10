@@ -47,66 +47,66 @@ def running_labs():
     if current_user.category == "user":
         return render_template('pages/waiting_approval.html')
 
-    filter_user = current_user.uid
-    if current_user.category in ["admin", "teacher"]:
-        filter_user = None
-    try:
-        running_labs = k8s.get_labs_by_user(filter_user)
-    except Exception as exc:
-        err = traceback.format_exc().replace("\n", ", ")
-        current_app.logger.error(f"Error getting running labs: {exc} -- {err}")
-        return render_template("pages/error.html", title="Error getting running labs", msg="Failed to obtain running labs. Check logs for more information.")
+    filter_group = request.args.get("filter_group", "")
+    if filter_group.isdigit():
+        filter_group = int(filter_group)
 
-    registered_labs = {lab.id: lab.title for lab in Labs.query.all()}
-    registered_user = {user.uid: user for user in Users.query.filter_by(is_deleted=False).all()}
+    registered_labs = {}
+    allowed_groups_by_lab = {}
+    for lab in Labs.query.all():
+        registered_labs[lab.id] = lab.title
+        allowed_groups_by_lab[lab.id] = {group.id: group for group in lab.allowed_groups}
+
+    registered_user = {current_user.id: current_user}
+    if filter_group:
+        registered_user = {user.id: user for user in Users.query.filter_by(is_deleted=False).all()}
+
+    current_user_groups = {}
+    for group in current_user.member_of_groups:
+        current_user_groups[group.id] = group
+    for group in current_user.assistant_of_groups:
+        current_user_groups[group.id] = group
+    for group in current_user.owner_of_groups:
+        current_user_groups[group.id] = group
+
+    lab_instances = LabInstances.query.filter_by(is_deleted=False)
+    if not filter_group:
+        lab_instances = lab_instances.filter_by(user_id=current_user.id)
 
     labs = []
-    for lab_id, user_uid in running_labs:
-        user = registered_user.get(user_uid)
-        if not user:
-            current_app.logger.warning(f"Inconsistency found on running lab: owner user not found on database {user_uid=} ({lab_id=})")
-            continue
-        lab_inst = LabInstances.query.filter_by(lab_id=lab_id, user_id=user.id, is_deleted=False).first()
-        if not lab_inst:
-            current_app.logger.warning(f"Inconsistency found on running lab: lab_instance not found for {lab_id=} {user_uid=}")
-            # TODO: create an lab instance? created from command line?
-            continue
-        lab_dict = {
-            "title": registered_labs.get(lab_id, f"Unknow Lab {lab_id}"),
-            "lab_id": lab_id,
-            "lab_instance_id": lab_inst.id,
-            "user": f"{user.name} ({user.email or 'NO-EMAIL'})",
-            "resources": [],
-        }
-        created = None
-        for pod in running_labs[(lab_id, user_uid)]:
-            if pod["kind"] != "pod":
-                continue
-            #if pod["kind"] == "service":
-            #    status = ",".join(pod["ports"])
-            #    links = pod["links"]
-            #else:
-            #    status = f"{pod['containers_ready']}/{pod['containers_total']}"
-            #    links = pod["containers"]
-            if not created or created > pod['created']:
-                created = pod["created"]
-            lab_dict["resources"].append({
-                "kind": pod["kind"],
-                "name": pod["name"],
-                "ready": pod["phase"],
-                "links": pod["containers"],
-                "services": pod["services"],
-                "age": pod['age'],
-                "node_name": pod.get("node_name", "--"),
-                "pod_ip": pod.get("pod_ip", "--"),
-            })
-        if created:
-            lab_dict["created"] = created.strftime('%Y-%m-%d %H:%M:%S')
+    for li in lab_instances.all():
+        groups = []
+        current_app.logger.info(f"filter lab_instances {filter_group=} {current_user_groups=} {allowed_groups_by_lab[li.lab_id]=}")
+        if filter_group == "all":
+            for group_id in current_user_groups:
+                if group_id in allowed_groups_by_lab[li.lab_id]:
+                    groups.append(allowed_groups_by_lab[li.lab_id][group_id].groupname)
+        elif filter_group:
+            if filter_group in allowed_groups_by_lab[li.lab_id]:
+                groups.append(allowed_groups_by_lab[li.lab_id][filter_group].groupname)
         else:
-            lab_dict["created"] = "--"
-        labs.append(lab_dict)
+            if li.user_id == current_user.id:
+                groups.append("--")
+        if not groups:
+            continue
 
-    return render_template("pages/running.html", segment="running", labs=labs)
+        user = registered_user.get(li.user_id)
+        if not user:
+            current_app.logger.warning(
+                "Inconsistency found on running lab: owner user not found on database"
+                f" {li.user_id=} instance={li.id} lab={li.lab_id}"
+            )
+            continue
+
+        labs.append({
+            "title": registered_labs.get(li.lab_id, f"Unknow Lab {li.lab_id}"),
+            "lab_id": li.lab_id,
+            "lab_instance_id": li.id,
+            "user": f"{user.name} ({user.email or 'NO-EMAIL'})",
+            "created": li.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+        })
+
+    return render_template("pages/running.html", segment="running", labs=labs, groups=current_user_groups, filter_group=filter_group)
 
 @blueprint.route('/run_lab/<lab_id>', methods=["GET", "POST"])
 @login_required
@@ -263,12 +263,18 @@ def view_lab_instance(lab_id):
     lab_instance = LabInstances.query.get(lab_id)
     if not lab_instance:
         return render_template("pages/error.html", title="Error accessing Lab Instance", msg="Lab not found")
-    if lab_instance.user_id != current_user.id and current_user.category != "admin":
-        return render_template("pages/error.html", title="Error accessing Lab Instance", msg="Not authorized to access this Lab")
 
     lab = Labs.query.get(lab_instance.lab_id)
     if not lab:
         return render_template("pages/error.html", title="Error accessing Lab Instance", msg="Lab instance belongs to an unknown Lab.")
+
+    if lab_instance.user_id != current_user.id and current_user.category != "admin":
+        privileged_group_ids = current_user.privileged_group_ids
+        for group in lab.allowed_groups:
+            if group.id in privileged_group_ids:
+                break
+        else:
+            return render_template("pages/error.html", title="Error accessing Lab Instance", msg="Not authorized to access this Lab")
 
     owner = current_user
     if lab_instance.user_id != current_user.id:
@@ -330,12 +336,13 @@ def edit_lab(lab_id):
     if not lab_categories:
         return render_template("pages/labs_edit.html", segment="/labs/edit", msg_fail="No Lab Categories found. Please create a Lab Category first.", lab=lab)
 
+    groups = Groups.query.filter_by(is_deleted=False).all()
+
     if request.method == "GET":
-        return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, segment="/labs/edit")
+        return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, groups=groups, allowed_groups=lab.allowed_groups, segment="/labs/edit")
 
     # TODO: data validation/sanitization
     # validate manifest using k8s dry-run?
-    # validate lab category
     # validate mandatory fields
     # ...
 
@@ -346,9 +353,11 @@ def edit_lab(lab_id):
     lab.set_lab_guide_md(request.form["lab_guide"])
     lab.manifest = request.form["lab_manifest"]
     lab.goals = request.form.get("lab_goals", "")
+    selected_group_ids = request.form.getlist('lab_allowed_groups')
+    lab.allowed_groups = Groups.query.filter(Groups.id.in_(selected_group_ids), Groups.is_deleted==False).all()
 
     if lab.category_id not in lab_categories:
-        return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, msg_fail="Invalid Lab Category", segment="/labs/edit")
+        return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, msg_fail="Invalid Lab Category", segment="/labs/edit", groups=groups, allowed_groups=lab.allowed_groups)
     
     try:
         db.session.add(lab)
@@ -365,9 +374,9 @@ def edit_lab(lab_id):
     db.session.commit()
 
     if status:
-        return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, msg_ok=msg, segment="/labs/edit")
+        return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, msg_ok=msg, segment="/labs/edit", groups=groups, allowed_groups=lab.allowed_groups)
     else:
-        return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, msg_fail=msg, segment="/labs/edit")
+        return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, msg_fail=msg, segment="/labs/edit", groups=groups, allowed_groups=lab.allowed_groups)
 
 @blueprint.route('/users')
 @login_required
@@ -392,13 +401,22 @@ def view_users():
 def view_labs(lab_id=None):
     if current_user.category == "user":
         return render_template('pages/waiting_approval.html')
-    labs = Labs.query.filter()
-    if lab_id:
-        labs = labs.filter(Labs.id == lab_id)
-    labs = labs.all()
+
     lab_categories = {cat.id: cat for cat in LabCategories.query.all()}
     if not lab_categories:
         return render_template("pages/error.html", title="No Lab Categories", msg="No lab categories found. Please create a Lab Category first.")
+
+    if current_user.category == "admin":
+        labs = Labs.query
+    else:
+        labs = Labs.query.filter(
+            Labs.allowed_groups.any(Groups.id.in_(current_user.all_group_ids))
+        )
+
+    if lab_id:
+        labs = labs.filter(Labs.id == lab_id)
+    
+    labs = labs.all()
     running_labs = {lab.lab_id: lab.id for lab in LabInstances.query.filter_by(user_id=current_user.id, is_deleted=False).all()}
     return render_template("pages/labs_view.html", labs=labs, lab_categories=lab_categories, running_labs=running_labs, segment="/labs/view")
 
