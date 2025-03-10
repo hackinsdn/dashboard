@@ -4,12 +4,14 @@ import uuid
 import json
 from typing import List
 from flask_login import UserMixin
+from sqlalchemy import event, insert
 from sqlalchemy.orm import validates
 from sqlalchemy.orm import Mapped
 from apps import db, login_manager
 
 from apps.authentication.util import hash_pass
 from apps.audit_mixin import AuditMixin, utcnow
+
 
 def user_category():
     return "user"
@@ -228,3 +230,11 @@ class LoginLogging(db.Model):
     def __repr__(self):
         return '<LoginLogging %s %s %s>' % (self.ip_address,
                                             self.login, self.datetime)
+
+
+@event.listens_for(Users, 'after_insert')
+def add_user_to_sysgrp_everybody(mapper, connection, user):
+    everybody = Groups.query.filter_by(groupname="Everybody", organization="SYSTEM").first()
+    if not everybody:
+        return
+    connection.execute(insert(group_members), dict(user_id=user.id, group_id=everybody.id))

@@ -234,10 +234,10 @@ def delete_group(group_id):
     if not group or group.is_deleted:
         return {"status": "fail", "result": "Group not found"}, 404
 
-    if any([
-        current_user.category not in ["admin", "teacher"],
-        current_user.category == "teacher" and not group.is_owner(current_user.id),
-    ]):
+    if group.organization == "SYSTEM" and current_user.category != "admin":
+        return {"status": "fail", "result": "Only admins can change System groups"}, 404
+
+    if current_user.category == "teacher" and not group.is_owner(current_user.id):
         return {"status": "fail", "result": "Unauthorized access to this group"}, 401
 
     group.is_deleted = True
@@ -270,6 +270,9 @@ def join_group(group_id):
     group = Groups.query.get(group_id)
     if not group or group.is_deleted:
         return {"status": "fail", "result": "Group not found"}, 404
+
+    if group.organization == "SYSTEM" and current_user.category != "admin":
+        return {"status": "fail", "result": "Only admins can change System groups"}, 404
 
     if not group.accesstoken or group.accesstoken != content.get("accessToken"):
         return {"status": "fail", "result": "Invalid group access token"}, 400
