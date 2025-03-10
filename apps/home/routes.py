@@ -75,19 +75,22 @@ def running_labs():
 
     labs = []
     for li in lab_instances.all():
-        groups = []
+        show_labinst = False
         current_app.logger.info(f"filter lab_instances {filter_group=} {current_user_groups=} {allowed_groups_by_lab[li.lab_id]=}")
         if filter_group == "all":
-            for group_id in current_user_groups:
-                if group_id in allowed_groups_by_lab[li.lab_id]:
-                    groups.append(allowed_groups_by_lab[li.lab_id][group_id].groupname)
+            if current_user.category == "admin":
+                show_labinst = True
+            else:
+                for group_id in current_user_groups:
+                    if group_id in allowed_groups_by_lab[li.lab_id]:
+                        show_labinst = True
         elif filter_group:
             if filter_group in allowed_groups_by_lab[li.lab_id]:
-                groups.append(allowed_groups_by_lab[li.lab_id][filter_group].groupname)
+                show_labinst = True
         else:
             if li.user_id == current_user.id:
-                groups.append("--")
-        if not groups:
+                show_labinst = True
+        if not show_labinst:
             continue
 
         user = registered_user.get(li.user_id)
