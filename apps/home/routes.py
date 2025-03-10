@@ -17,7 +17,6 @@ from jinja2 import TemplateNotFound
 from apps.audit_mixin import get_remote_addr
 from apps.authentication.forms import GroupForm
 from apps.utils import update_running_labs_stats
-from sqlalchemy import or_
 
 
 @blueprint.before_request
@@ -411,10 +410,7 @@ def view_labs(lab_id=None):
         labs = Labs.query
     else:
         labs = Labs.query.filter(
-            or_(
-                ~Labs.allowed_groups.any(),
-                Labs.allowed_groups.any(Groups.id.in_(current_user.all_group_ids))
-            )
+            Labs.allowed_groups.any(Groups.id.in_(current_user.all_group_ids))
         )
 
     if lab_id:
