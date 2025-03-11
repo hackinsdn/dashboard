@@ -30,12 +30,10 @@
 {% block javascripts %}{% endblock javascripts %}
 
 <!-- Analytics measurements -->
-{% if config.ANALYTICS_JSFILE %}
-<script async src="{{config.ANALYTICS_JSFILE}}"></script>
-{% endif %}
-{% if config.ANALYTICS_SCRIPT %}
+{% if config.GTAG %}
+<script async src="https://www.googletagmanager.com/gtag/js?id={{config.GTAG}}"></script>
 <script>
-{{config.ANALYTICS_SCRIPT|safe}}
+window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);};gtag('js',new Date());gtag('config', '{{config.GTAG}}');
 </script>
 {% endif %}
 
