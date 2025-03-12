@@ -11,6 +11,7 @@ import logging
 from flask import Flask
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 from flask_socketio import SocketIO
 from importlib import import_module
 from authlib.integrations.flask_client import OAuth
@@ -24,6 +25,7 @@ oauth = OAuth()
 socketio = SocketIO(cors_allowed_origins="*")
 mail = Mail()
 cache = Cache()
+migrate = Migrate()
 
 
 def register_extensions(app):
@@ -33,6 +35,7 @@ def register_extensions(app):
     socketio.init_app(app)
     mail.init_app(app)
     cache.init_app(app)
+    migrate.init_app(app, db)
 
 
 def register_blueprints(app):
@@ -76,7 +79,7 @@ def create_app(config):
     app.config.from_object(config)
     register_extensions(app)
     register_blueprints(app)
-    configure_database(app)
+    #configure_database(app)
     configure_oauth(app)
     configure_log(app)
     return app

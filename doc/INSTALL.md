@@ -138,6 +138,97 @@ Press CTRL+C to quit
  * Debugger PIN: xxx-xxx-xxx
 ```
 
+## Migrations
+
+This project makes use of [Flask-Migrate](https://flask-migrate.readthedocs.io/en/latest/index.html) -- a Flask extension based on the Alembic library, allowing you to manage database migrations. Database migration is transferring data between different database schemas without any data loss. It’s commonly used to upgrade a database, change its schema by adding new table columns or relationships, and ensure a smooth transition with minimal downtime and no data loss.
+
+Suppose you have a fresh installation of the HackInSDN Dashboard and want to migrate to a newer version (or even an old one). See below some steps and recommendations you can follow to run the database migrations:
+
+- DB initialization script: the `dbinit.py` script is responsable for creating the basic schema on the database and populate the database with some data.
+
+- Checking the current schema and migration phase:
+```
+flask --app run.py db current
+```
+
+- If you have already initialized your database using the dbinit script or restoring a dump, you will probably notice that the command above will return an unknown state. If that is the case, you can set the revision in the database to the one given as an argument, without performing any migrations (below the example shows setting up the schema according to version 2.0):
+```
+flask --app run.py db stamp 2.0
+```
+
+- Next you can upgrade or downgrade your schema as needed:
+```
+flask --app run.py db upgrade
+```
+
+Or... if you want to downgrade:
+```
+flask --app run.py db downgrade
+```
+
+As an example, suppose the following scenario: you have deployed HackInSDN Dashboard a while ago, based on previous database schema and your database already have a lot of records. Now you want to migrate to the latest version. Here are some procedures you can follow:
+
+1. Stop the application
+
+2. (**Very important!!**) Start by making a backup of your database, including data and schema. As an example, you can use the following commands for SQLite3 (you may need to install sqlite3 command line utility):
+```
+sqlite3 apps/data/db.sqlite3 .dump > database-dump-$(date +%Y%m%d).sql
+sqlite3 apps/data/db.sqlite3 .schema > database-schema-$(date +%Y%m%d).sql
+grep -vx -f database-schema-$(date +%Y%m%d).sql database-dump-$(date +%Y%m%d).sql > database-data-$(date +%Y%m%d).sql
+```
+
+3. If you are using a old version of the Dashboard, make sure it has the Flask-Migrate correctly configured:
+```
+diff --git a/apps/__init__.py b/apps/__init__.py
+index 4931e75..23d8f36 100644
+--- a/apps/__init__.py
++++ b/apps/__init__.py
+@@ -11,6 +11,7 @@ import logging
+ from flask import Flask
+ from flask_login import LoginManager
+ from flask_sqlalchemy import SQLAlchemy
++from flask_migrate import Migrate
+ from flask_socketio import SocketIO
+ from importlib import import_module
+ from authlib.integrations.flask_client import OAuth
+@@ -24,6 +25,7 @@ oauth = OAuth()
+ socketio = SocketIO(cors_allowed_origins="*")
+ mail = Mail()
+ cache = Cache()
++migrate = Migrate()
+
+
+ def register_extensions(app):
+@@ -33,6 +35,7 @@ def register_extensions(app):
+     socketio.init_app(app)
+     mail.init_app(app)
+     cache.init_app(app)
++    migrate.init_app(app, db)
+
+
+ def register_blueprints(app):
+@@ -76,7 +79,7 @@ def create_app(config):
+     app.config.from_object(config)
+     register_extensions(app)
+     register_blueprints(app)
+-    configure_database(app)
++    #configure_database(app)
+     configure_oauth(app)
+     configure_log(app)
+     return app
+```
+
+4. Now you should be able to run the following commands to make sure the Dashboard is synchronized with the old migration schema:
+```
+flask --app run.py db current
+flask --app run.py db stamp 1.0
+```
+
+5. Finally, you can run the migration to upgrade your database:
+```
+flask --app run.py db upgrade
+```
+
 ## Running a Hello World Lab
 
 Once you have setup the Dashboard, you can open your brower and type the IP address of your installation and port 8080 (protocol HTTP). You should be able to see the login page. Login with the admin user and the random password created above.
