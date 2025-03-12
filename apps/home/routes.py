@@ -206,7 +206,7 @@ def edit_user(user_id=None):
     if current_user.id == user_id and request.method == "GET":
         return render_template("pages/edit_user.html", user=current_user)
 
-    if current_user.id != user_id and current_user.category not in ["admin", "teacher"]:
+    if current_user.id != user_id and current_user.category not in ["admin"]:
         return render_template("pages/error.html", title="Unauthorized access", msg="You dont have access for this page")
 
     user = Users.query.get(user_id)
@@ -216,11 +216,10 @@ def edit_user(user_id=None):
     if request.method == "GET":
         return render_template("pages/edit_user.html", user=user, return_path=return_path)
 
-    has_changed = False
-    if current_user.category == "teacher" and request.form["user_category"] == "student":
-        user.category = "student"
-        has_changed = True
+    if not re.match(r"^[a-zA-Z0-9-]{1,30}$", request.form["username"]):
+        return render_template("pages/edit_user.html", msg_fail="Invalid username. Max size: 30. Allowed characters: a-z, A-Z, 0-9 or -", user=user, return_path=return_path)
 
+    has_changed = False
     if current_user.category == "admin":
         user.category = request.form["user_category"]
         has_changed = True
@@ -457,7 +456,7 @@ def edit_group(group_id):
         group = Groups.query.get(int(group_id))
         if not group or group.is_deleted:
             return render_template("pages/groups_edit.html", segment="/groups/edit", msg_fail="Group not found")
-        if (current_user.category == "teacher" and current_user.id not in group.owners) or (current_user.category == "student" and current_user.id not in group.assistants):
+        if (current_user.category == "teacher" and current_user not in group.owners) or (current_user.category == "student" and current_user not in group.assistants):
             return render_template(
                 "pages/error.html",
                 title="Unauthorized access",
@@ -614,8 +613,20 @@ def list_lab_answers():
     filter_group_id = int(request.args.get('filter_group') or 0)
     check_answer_sheet = request.args.get('check_answer_sheet')
 
-    labs = {lab.id: lab for lab in Labs.query.all()}
-    groups = {group.id: group for group in Groups.query.filter(Groups.is_deleted==False, Groups.organization.isnot("SYSTEM")).all()}
+    mygroups = current_user.privileged_group_ids
+    groups = {}
+    for group in Groups.query.filter(Groups.is_deleted==False, Groups.organization.isnot("SYSTEM")).all():
+        if current_user.category == "admin" or group.id in mygroups:
+            groups[group.id] = group
+    labs = {}
+    for lab in Labs.query.all():
+        if current_user.category == "admin":
+            labs[lab.id] = lab
+            continue
+        for group in lab.allowed_groups:
+            if group.id in mygroups:
+                labs[lab.id] = lab
+                continue
 
     if filter_lab_id and filter_lab_id not in labs:
         return render_template("pages/lab_answers_list.html", segment="/lab_answers/list", lab_answers=[], labs=labs, groups=groups, filter_lab=filter_lab_id, filter_group=filter_group_id, msg_fail="Invalid Lab provided for filtering.")

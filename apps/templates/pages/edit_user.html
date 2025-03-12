@@ -67,7 +67,7 @@
           </div>
           <!-- /.card-header -->
           <div class="card-body">
-          <form method="POST">
+          <form id="userForm" method="POST">
             <h5>User information</h5>
             <div class="row">
               <div class="col-md-6">
@@ -98,19 +98,19 @@
                 </div>
                 {% endif %}
                 <!-- /.form-group -->
-                {% if current_user.category == "admin" or current_user.category == "teacher" %}
                 <div class="form-group">
                   <label>User category</label>
+                  {% if current_user.category == "admin" %}
                   <select name="user_category" class="form-control">
                     <option {{'selected' if user.category == 'user' else ''}}>user</option>
                     <option {{'selected' if user.category == 'student' else ''}}>student</option>
-                    {% if current_user.category == "admin" %}
                     <option {{'selected' if user.category == 'teacher' else ''}}>teacher</option>
                     <option {{'selected' if user.category == 'admin' else ''}}>admin</option>
-                    {% endif %}
                   </select>
+		  {% else %}
+                  <input type="text" class="form-control" disabled="disabled" value="{{current_user.category}}"/>
+		  {% endif %}
                 </div>
-                {% endif %}
               </div>
               <div class="col-md-6">
                 <div class="form-group">
@@ -165,6 +165,9 @@
   <script src="/static/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
   <!-- Select2 -->
   <script src="/static/assets/plugins/select2/js/select2.full.min.js"></script>
+  <!-- jquery-validation -->
+  <script src="/static/assets/plugins/jquery-validation/jquery.validate.min.js"></script>
+  <script src="/static/assets/plugins/jquery-validation/additional-methods.min.js"></script>
   <!-- InputMask -->
   <script src="/static/assets/plugins/moment/moment.min.js"></script>
   <script src="/static/assets/plugins/inputmask/jquery.inputmask.min.js"></script>
@@ -177,6 +180,31 @@
   <!-- Page script -->
   <script>
     $(function () {
+      $('#userForm').validate({
+        rules: {
+          username: {
+            required: true,
+            pattern: /^[a-zA-Z0-9-]+$/,
+            maxlength: 30,
+          },
+        },
+        messages: {
+          username: {
+            pattern: "Invalid format. Allowed: a-z, A-Z, 0-9 or -",
+          },
+        },
+        errorElement: 'span',
+        errorPlacement: function (error, element) {
+          error.addClass('invalid-feedback');
+          element.closest('.form-group').append(error);
+        },
+        highlight: function (element, errorClass, validClass) {
+          $(element).addClass('is-invalid');
+        },
+        unhighlight: function (element, errorClass, validClass) {
+          $(element).removeClass('is-invalid');
+        }
+      });
       //Initialize Select2 Elements
       $('.select2').select2()
 
