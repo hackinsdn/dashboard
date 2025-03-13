@@ -2,6 +2,8 @@ import datetime
 from sqlalchemy import Column, DateTime, Integer, ForeignKey
 from flask_login import current_user
 from flask import request
+from functools import wraps
+from flask import render_template
 
 def utcnow():
     return datetime.datetime.now(datetime.timezone.utc)
@@ -25,3 +27,13 @@ class AuditMixin(object):
     created_at = Column(DateTime, default=utcnow)
     updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
     updated_by = Column(Integer, ForeignKey("users.id"), default=get_user_id)
+
+def check_user_category(allowed_categories):
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if current_user.category not in allowed_categories:
+                return render_template("pages/error.html", title="Unauthorized request", msg="You dont have permission to see this page")
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
