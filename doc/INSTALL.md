@@ -97,9 +97,32 @@ Manual Dashboard installation requires the steps below:
 ```
 git clone https://github.com/hackinsdn/dashboard
 cd dashboard
-python3 -m venv venv
-source venv/bin/activate
+- On Windows:
+
+Create the environment
+python -m venv name_of_the_environment
+
+Activate the virtual environment
+.\name_of_the_environment\Scripts\activate
+
+Install the dependencies listed in requirements.txt
+python -m pip install -r requirements.txt
+
+To deactivate the virtual environment
+deactivate
+
+- On Linux
+Create the environment
+python3 -m venv name_of_the_environment
+
+Activate the virtual environment
+source name_of_the_environment/bin/activate
+
+Install the dependencies listed in requirements.txt
 python3 -m pip install -r requirements.txt
+
+To deactivate the environment
+deactivate
 ```
 
 3. Install `kubectl` as documented here: https://kubernetes.io/docs/tasks/tools/#kubectl
