@@ -99,20 +99,20 @@ The module `apps.home.models` has the following classes:
 
 The module `apps.home.routes` defines the application routes when navigating and clicking on the links:
 
-GET /index: Displays the home page with statistics and information about the Kubernetes cluster.
-GET /running: Displays the list of running labs for the authenticated user, with options to filter by group.
-GET /run_lab: Displays the form to start a specific lab (GET) or processes the request to start the lab (POST).
-GET /lab_status: Checks the status of a specific running lab.
-GET /xterm/: Displays an interactive terminal (xterm) for a specific container within a lab pod.
-GET /users and GET /profile: Displays and processes the form to edit user information (profile).
-GET /lab_instance/view: Displays details of a running lab instance.
-GET /labs/edit: Displays and processes the form to edit information for a specific lab.
-GET /users: Displays the list of registered users.
-GET /labs/view and GET /labs/view: Displays the list of available labs or details of a specific lab.
-GET /groups/list: Displays the list of user groups.
-GET /groups/edit: Displays and processes the form to edit user group information.
-GET /lab_answers/list: Displays the list of lab answers submitted by users.
-GET /lab_answers/answer_sheet/: Displays and processes the form to add or edit a lab's answer sheet.
-GET /gallery: Displays an image gallery page.
-GET /documentation: Displays the application's documentation.
-GET /contact: Displays the contact page.
+- `GET /index: Displays the home page with statistics and information about the Kubernetes cluster.`
+- `GET /running: Displays the list of running labs for the authenticated user, with options to filter by group.`
+- `GET /run_lab: Displays the form to start a specific lab (GET) or processes the request to start the lab (POST).`
+- `GET /lab_status: Checks the status of a specific running lab.`
+- `GET /xterm/: Displays an interactive terminal (xterm) for a specific container within a lab pod.`
+- `GET /users and GET /profile: Displays and processes the form to edit user information (profile).`
+- `GET /lab_instance/view: Displays details of a running lab instance.`
+- `GET /labs/edit: Displays and processes the form to edit information for a specific lab.`
+- `GET /users: Displays the list of registered users.`
+- `GET /labs/view and GET /labs/view: Displays the list of available labs or details of a specific lab.`
+- `GET /groups/list: Displays the list of user groups.`
+- `GET /groups/edit: Displays and processes the form to edit user group information.`
+- `GET /lab_answers/list: Displays the list of lab answers submitted by users.`
+- `GET /lab_answers/answer_sheet/: Displays and processes the form to add or edit a lab's answer sheet.`
+- `GET /gallery: Displays an image gallery page.`
+- `GET /documentation: Displays the application's documentation.`
+- `GET /contact: Displays the contact page.`
