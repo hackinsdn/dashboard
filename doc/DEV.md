@@ -66,14 +66,14 @@ Below you can find a overall description of each module and class that compose D
 
 On the authentication module you will basically find everything that is related to authentication: models and controllers.
 
-The module `apps.authentication.models` define the following classes:
+The module `apps.authentication.models` defines the following classes:
 
 - `Users`: main user class and its attributes such as username, e-mail, ID (number), UID (string), etc.
 - `Groups`: main group class stores information about user groups and their associated privileges. The owner has full control, the assistant has elevated but limited privileges, and the member can participate and access resources.
 - `UserGroups`: class to keep track of group membership
 - `LoginLogging`: used mainly for auditing and logging purposes
 
-The module `apps.authentication.routes` define the application routes when navigating and clicking on the links:
+The module `apps.authentication.routes` defines the application routes when navigating and clicking on the links:
 
 - `GET /`: view the home page with statistics and information about the Kubernetes cluster
 - `GET /login` and `POST /login`: visualization of the login form and submit handler for login attempts
@@ -89,10 +89,30 @@ The module `apps.authentication.routes` define the application routes when navig
 
 The `home` module is responsible for the main features of the Dashboard: lab orchestration, group membership, etc.
 
-The module `apps.home.models` have the following classes:
+The module `apps.home.models` has the following classes:
 
 - class LabCategories: categories used by the labs
 - class Labs: main laboratory class with its attributes
 - class LabInstances: lab instance class with information about the Lab and the user running it
 - class LabAnswers: for each Lab, the Lab creator can define questions and this class keeps track of the answers provided by users per Lab
 - class HomeLogging: mainly used to logging actions of the features
+
+The module `apps.home.routes` defines the application routes when navigating and clicking on the links:
+
+GET /index: Displays the home page with statistics and information about the Kubernetes cluster.
+GET /running: Displays the list of running labs for the authenticated user, with options to filter by group.
+GET /run_lab: Displays the form to start a specific lab (GET) or processes the request to start the lab (POST).
+GET /lab_status: Checks the status of a specific running lab.
+GET /xterm/: Displays an interactive terminal (xterm) for a specific container within a lab pod.
+GET /users and GET /profile: Displays and processes the form to edit user information (profile).
+GET /lab_instance/view: Displays details of a running lab instance.
+GET /labs/edit: Displays and processes the form to edit information for a specific lab.
+GET /users: Displays the list of registered users.
+GET /labs/view and GET /labs/view: Displays the list of available labs or details of a specific lab.
+GET /groups/list: Displays the list of user groups.
+GET /groups/edit: Displays and processes the form to edit user group information.
+GET /lab_answers/list: Displays the list of lab answers submitted by users.
+GET /lab_answers/answer_sheet/: Displays and processes the form to add or edit a lab's answer sheet.
+GET /gallery: Displays an image gallery page.
+GET /documentation: Displays the application's documentation.
+GET /contact: Displays the contact page.
