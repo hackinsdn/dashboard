@@ -262,7 +262,7 @@ export MAIL_PASSWORD=xxxx
 
 ## Running a Hello World Lab
 
-Once you have set up the Dashboard, you can open your brower and type the IP address of your installation and port 8080 (protocol HTTP). You should be able to see the login page. Login with the admin user and the random password created above.
+Once you have set up the Dashboard, you can open your browser and type the IP address of your installation and port 8080 (protocol HTTP). You should be able to see the login page. Login with the admin user and the random password created above.
 
 Navigate on the system in Labs > View Labs. You should see the "Hello World" Lab, then click on "Start Lab".
 
@@ -276,7 +276,7 @@ Next screen you will see the process of setting up the resources (which will tak
 
 ![view-labs](./img/lab-starting.png)
 
-After set up the resources, you should see green button to "Start using the Lab ..." (click on it!).
+After setting up the resources, you should see a green button to "Start using the Lab ..." (click on it!).
 
 ![view-labs](./img/lab-ready.png)
 
