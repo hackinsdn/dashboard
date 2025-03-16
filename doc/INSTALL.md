@@ -137,7 +137,7 @@ python3 dbinit.py
 
 you should see the output of the script showing the random password configured for the user "admin".
 
-6. Setup some environment variables and start the application:
+6. Set up some environment variables and start the application:
 
 ```
 export K8S_NAMESPACE=hackinsdn
@@ -251,10 +251,18 @@ flask --app run.py db stamp 1.0
 ```
 flask --app run.py db upgrade
 ```
+6. Set up some environment variables for email sending:
+```
+export MAIL_SERVER=xxxx
+export MAIL_PORT=xxxx
+export MAIL_USERNAME=xxxx
+export MAIL_SENDTO=xxxx
+export MAIL_PASSWORD=xxxx
+```
 
 ## Running a Hello World Lab
 
-Once you have setup the Dashboard, you can open your brower and type the IP address of your installation and port 8080 (protocol HTTP). You should be able to see the login page. Login with the admin user and the random password created above.
+Once you have set up the Dashboard, you can open your brower and type the IP address of your installation and port 8080 (protocol HTTP). You should be able to see the login page. Login with the admin user and the random password created above.
 
 Navigate on the system in Labs > View Labs. You should see the "Hello World" Lab, then click on "Start Lab".
 
@@ -268,7 +276,7 @@ Next screen you will see the process of setting up the resources (which will tak
 
 ![view-labs](./img/lab-starting.png)
 
-After setup the resources, you should see green button to "Start using the Lab ..." (click on it!).
+After set up the resources, you should see green button to "Start using the Lab ..." (click on it!).
 
 ![view-labs](./img/lab-ready.png)
 
