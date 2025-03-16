@@ -69,7 +69,7 @@ On the authentication module you will basically find everything that is related 
 The module `apps.authentication.models` define the following classes:
 
 - `Users`: main user class and its attributes such as username, e-mail, ID (number), UID (string), etc.
-- `Groups`: main group class and its attributes
+- `Groups`: main group class stores information about user groups and their associated privileges. The owner has full control, the assistant has elevated but limited privileges, and the member can participate and access resources.
 - `UserGroups`: class to keep track of group membership
 - `LoginLogging`: used mainly for auditing and logging purposes
 
