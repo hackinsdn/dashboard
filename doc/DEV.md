@@ -116,3 +116,14 @@ The module `apps.home.routes` defines the application routes when navigating and
 - `GET /gallery: Displays an image gallery page.`
 - `GET /documentation: Displays the application's documentation.`
 - `GET /contact: Displays the contact page.`
+
+##apps.audit_mixin.py
+The AuditMixin is a crucial component for maintaining auditability and traceability within the system. It ensures that any modifications to database records are automatically logged, providing a clear history of changes.
+
+The mixin introduces three key fields that track record creation and updates:
+
+-`created_at: Stores the timestamp when the record was first created.`
+-`updated_at: Stores the timestamp of the most recent modification.`
+-`updated_by: Logs the ID of the user who made the last update.`
+
+The AuditMixin uses the `utcnow()` function to ensure that date and time records are made in UTC time, avoiding issues related to different time zones, especially in distributed systems or with users in different regions.
