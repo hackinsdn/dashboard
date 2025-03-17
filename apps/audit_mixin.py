@@ -33,6 +33,9 @@ def check_user_category(allowed_categories):
         @wraps(f)
         def decorated_function(*args, **kwargs):
             if current_user.category not in allowed_categories:
+                if current_user.category == "user":
+                    return render_template('pages/waiting_approval.html')
+                
                 return render_template("pages/error.html", title="Unauthorized request", msg="You dont have permission to see this page")
             return f(*args, **kwargs)
         return decorated_function
