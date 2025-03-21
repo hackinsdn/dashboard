@@ -20,15 +20,6 @@
   <!-- Theme style -->
   <link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
   <style type="text/css">
-    td.dt-control {
-      background: url('/static/assets/img/square-plus-solid.svg') no-repeat center center;
-      background-size: 1.4em;
-      cursor: pointer;
-    }
-    tr.shown td.dt-control {
-      background: url('/static/assets/img/square-minus-solid.svg') no-repeat center center;
-      background-size: 1.4em;
-    }
   </style>
 {% endblock stylesheets %}
 
@@ -96,23 +87,20 @@
 	      <!-- /.row -->
             </div>
             <!-- /.card-header -->
-            <div class="card-body lab-items">
+            <div class="card-body table-responsive lab-items">
               <table id="tableLabs" class="table table-striped display">
                 <thead>
                   <tr>
-                    <th></th>
                     <th></th>
                     <th>User</th>
                     <th>Lab title</th>
                     <th>Created</th>
                     <th>Actions</th>
-                    <th>Resources</th>
                   </tr>
                 </thead>
                 <tbody>
             	{% for lab in labs %}
                 <tr id="{{lab['lab_instance_id']}}">
-                  <td></td>
                   <td>
                     <div class="icheck-primary">
                       <input type="checkbox" value="" id="checkbox-{{lab['lab_instance_id']}}">
@@ -124,52 +112,6 @@
                   <td>{{lab['created']}}</td>
                   <td>
                     <a class="btn btn-default" href="{{url_for('home_blueprint.view_lab_instance', lab_id=lab['lab_instance_id'])}}"><i class="fas fa-eye"></i> View</a>
-                  </td>
-                  <td>
-                    <table id="tableLabsResource{{loop.index}}" class="table table-hover">
-                      <thead class="thead-dark">
-                      <tr>
-                        <th>Name</th>
-                        <th>Info</th>
-                        <th>Node</th>
-                        <th>IP</th>
-                        <th>Age</th>
-                        <th>Links</th>
-                        <th>Services</th>
-                      </tr>
-                      </thead>
-                      <tbody>
-                      {% for resource in lab['resources'] %}
-                      <tr>
-                        <td>{{resource['kind']}}/{{resource['name']}}</td>
-                        <td>{{resource['ready']}}</td>
-                        <td>{{resource['node_name']}}</td>
-                        <td>{{resource['pod_ip']}}</td>
-                        <td>{{resource['age']}}</td>
-                        <td>
-                          {% for link in resource['links'] %}
-                          {%   if resource['kind'] == 'service' %}
-                          {%     set link_icon = 'globe' %}
-                          {%     set link_name = link[0] %}
-                          {%     set link_href = link[1] %}
-                          {%   else %}
-                          {%     set link_icon = 'desktop' %}
-                          {%     set link_name = link %}
-                          {%     set link_href = url_for('home_blueprint.xterm', lab_id=lab['lab_instance_id'], kind=resource['kind'], pod=resource['name'], container=link)  %}
-                          {%   endif %}
-                          <a class="btn btn-outline-dark mx-2" href="{{link_href}}" target="_blank" role="button"><i class="fas fa-{{link_icon}}"></i> {{link_name}}</a>
-                          {% endfor %}
-                        </td>
-                        <td>
-                          {% for service in resource['services'] %}
-                          <a class="btn btn-outline-dark mx-2" href="{{service[1]}}" target="_blank" role="button"><i class="fas fa-globe"></i> {{service[0]}}</a>
-                          {% endfor %}
-                        </td>
-                      </tr>
-                      {% endfor %}
-                      </tbody>
-                    </table>
-                    <!-- table -->
                   </td>
                 </tr>
                 {% endfor %}
@@ -246,17 +188,12 @@
     $(function () {
       // config DataTable
       var table = $("#tableLabs").DataTable({
-        responsive: true,
+        responsive: false,
         autoWidth: false,
         language: {
           emptyTable: 'No running labs',
         },
         columns: [
-          {
-            className: 'dt-control',
-            orderable: false,
-            name: 'dt-control',
-          },
           {
             orderable: false,
             name: 'select',
@@ -268,13 +205,8 @@
             orderable: false,
             name: 'actions',
           },
-          {
-            visible: false,
-            searchable: false,
-            name: 'resources'
-          },
         ],
-        order: [[3, 'asc']]
+        order: [[2, 'asc']]
       });
       if ( sessionStorage.getItem('msgSuccess') ) {
         $(document).Toasts('create', {
@@ -292,23 +224,6 @@
         });
         sessionStorage.removeItem('msgFail');
       }
-      // Add event listener for opening and closing details
-      table.on('click', 'td.dt-control', function (e) {
-          //var tr = e.target.closest('tr');
-          var tr = $(this).closest('tr');
-          var row = table.row(tr);
-       
-          if (row.child.isShown()) {
-              // This row is already open - close it
-              row.child.hide();
-              tr.removeClass('shown');
-          }
-          else {
-              // Open this row
-              row.child(row.data()[6]).show();
-              tr.addClass('shown');
-          }
-      });
       //Enable check and uncheck all functionality
       $('#delete-labs').click(function () {
         var rows = $('#tableLabs tr').filter(':has(:checkbox:checked)');

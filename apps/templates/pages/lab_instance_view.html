@@ -75,49 +75,51 @@ word-break: break-all;
                 <li>Lab title: {{lab['title']}}</li>
                 <li>Lab owner: {{lab['user']}}</li>
               </ul>
-              <table id="tableLabsResource" class="table table-hover">
-                <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Info</th>
-                  <th>Node</th>
-                  <th>IP</th>
-                  <th>Age</th>
-                  <th>Links</th>
-                  <th>Services</th>
-                </tr>
-                </thead>
-                <tbody>
-                {% for resource in lab['resources'] %}
-                <tr>
-                  <td>{{resource['kind']}}/{{resource['name']}}</td>
-                  <td>{{resource['ready']}}</td>
-                  <td>{{resource['node_name']}}</td>
-                  <td>{{resource['pod_ip']}}</td>
-                  <td>{{resource['age']}}</td>
-                  <td>
-                    {% for link in resource['links'] %}
-                    {%   if resource['kind'] == 'service' %}
-                    {%     set link_icon = 'globe' %}
-                    {%     set link_name = link[0] %}
-                    {%     set link_href = link[1] %}
-                    {%   else %}
-                    {%     set link_icon = 'desktop' %}
-                    {%     set link_name = link %}
-                    {%     set link_href = url_for('home_blueprint.xterm', lab_id=lab['lab_instance_id'], kind=resource['kind'], pod=resource['name'], container=link)  %}
-                    {%   endif %}
-                    <a class="btn btn-outline-dark mx-2" href="{{link_href}}" target="_blank" role="button"><i class="fas fa-{{link_icon}}"></i> {{link_name}}</a>
-                    {% endfor %}
-                  </td>
-                  <td>
-                    {% for service in resource['services'] %}
-                    <a class="btn btn-outline-dark mx-2" href="{{service[1]}}" target="_blank" role="button"><i class="fas fa-globe"></i> {{service[0]}}</a>
-                    {% endfor %}
-                  </td>
-                </tr>
-                {% endfor %}
-                </tbody>
-              </table>
+              <div class="table-responsive">
+                <table id="tableLabsResource" class="table table-hover">
+                  <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Info</th>
+                    <th>Node</th>
+                    <th>IP</th>
+                    <th>Age</th>
+                    <th>Links</th>
+                    <th>Services</th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  {% for resource in lab['resources'] %}
+                  <tr>
+                    <td>{{resource['kind']}}/{{resource['name']}}</td>
+                    <td>{{resource['ready']}}</td>
+                    <td>{{resource['node_name']}}</td>
+                    <td>{{resource['pod_ip']}}</td>
+                    <td>{{resource['age']}}</td>
+                    <td>
+                      {% for link in resource['links'] %}
+                      {%   if resource['kind'] == 'service' %}
+                      {%     set link_icon = 'globe' %}
+                      {%     set link_name = link[0] %}
+                      {%     set link_href = link[1] %}
+                      {%   else %}
+                      {%     set link_icon = 'desktop' %}
+                      {%     set link_name = link %}
+                      {%     set link_href = url_for('home_blueprint.xterm', lab_id=lab['lab_instance_id'], kind=resource['kind'], pod=resource['name'], container=link)  %}
+                      {%   endif %}
+                      <a class="btn btn-outline-dark mx-2" href="{{link_href}}" target="_blank" role="button"><i class="fas fa-{{link_icon}}"></i> {{link_name}}</a>
+                      {% endfor %}
+                    </td>
+                    <td>
+                      {% for service in resource['services'] %}
+                      <a class="btn btn-outline-dark mx-2" href="{{service[1]}}" target="_blank" role="button"><i class="fas fa-globe"></i> {{service[0]}}</a>
+                      {% endfor %}
+                    </td>
+                  </tr>
+                  {% endfor %}
+                  </tbody>
+                </table>
+              </div>
               <!-- /.table -->
             </div>
             <!-- /.card-body -->
