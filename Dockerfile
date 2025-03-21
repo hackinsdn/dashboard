@@ -11,6 +11,6 @@ WORKDIR /app
 RUN --mount=source=.,target=/mnt,type=bind \
     cd /mnt && cp -r apps dbinit.py docker-entrypoint.sh scripts run.py /app/
 
-EXPOSE 8080
+EXPOSE 3000
 
 ENTRYPOINT ["/app/docker-entrypoint.sh"]

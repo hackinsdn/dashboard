@@ -29,15 +29,13 @@
 <!-- Specific Page JS goes HERE  -->
 {% block javascripts %}{% endblock javascripts %}
 
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-TM8NVXT7SK"></script>
+<!-- Analytics measurements -->
+{% if config.GTAG %}
+<script async src="https://www.googletagmanager.com/gtag/js?id={{config.GTAG}}"></script>
 <script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-TM8NVXT7SK');
+window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);};gtag('js',new Date());gtag('config', '{{config.GTAG}}');
 </script>
+{% endif %}
 
 </body>
 </html>

@@ -298,8 +298,8 @@ word-break: break-all;
         request.fail(function(xhr) {
           $(document).Toasts('create', {
             class: 'bg-danger',
-            title: 'Failure',
-            body: data.result
+            title: 'Failure to save Lab Answers',
+            body: xhr.responseText
           });
         });
       }
@@ -340,12 +340,15 @@ word-break: break-all;
           });
         });
         request.fail(function(xhr) {
+          if (xhr.status == 401) {
+            return;
+          }
           $(document).Toasts('create', {
             class: 'bg-danger',
-            title: 'Failed to load answers',
+            title: 'Failed to load Lab Answers',
             autohide: true,
             delay: 4000,
-            body: data.result
+            body: xhr.responseText
           });
         });
       });

@@ -114,6 +114,11 @@
         </div>
       </li>
       <li class="nav-item">
+        <a class="nav-link" data-toggle="tooltip" title="Reload profile"  href="{{ url_for('authentication_blueprint.reload_profile') }}" role="button">
+          <i class="fas fa-redo"></i>
+        </a>
+      </li>
+      <li class="nav-item">
         <a class="nav-link" data-toggle="tooltip" title="Sign-out"  href="{{ url_for('authentication_blueprint.logout') }}" role="button">
           <i class="fas fa-sign-out-alt"></i>
         </a>

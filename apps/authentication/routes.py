@@ -8,7 +8,8 @@ from flask import current_app as app
 from flask_login import (
     current_user,
     login_user,
-    logout_user
+    logout_user,
+    login_required,
 )
 
 from apps import db, login_manager, oauth, mail
@@ -16,12 +17,29 @@ from apps.config import app_config
 from apps.audit_mixin import get_remote_addr, utcnow
 from apps.authentication import blueprint
 from apps.authentication.forms import LoginForm, CreateAccountForm, ConfirmAccountForm
-from apps.authentication.models import Users, LoginLogging
+from apps.authentication.models import Users, Groups, LoginLogging
 from flask_mail import Message
 import uuid
 from datetime import timedelta
 
 from apps.authentication.util import verify_pass
+
+
+def _check_pre_approved(user):
+    """Given an user, check if this is user is on the list of pre-approved users or member of any group"""
+    if user.category != "user":
+        return
+    if user.member_of_groups:
+        user.category = "student"
+        return True
+    added_group = False
+    groups = Groups.query.filter(Groups.is_deleted==False, Groups.approved_users!="").all()
+    for group in groups:
+        if user.email in group.approved_users_list:
+            user.category = "student"
+            group.members.append(user)
+            added_group = True
+    return added_group
 
 
 @blueprint.route('/')
@@ -44,12 +62,16 @@ def login():
         user = Users.query.filter_by(username=username).first()
 
         # Check the password
-        if user and verify_pass(password, user.password):
+        if user and user.password and verify_pass(password, user.password):
+            _check_pre_approved(user)
             login_user(user)
             app.logger.info(f"Successful login ipaddr={get_remote_addr()} login={username} auth_provider=local")
             login_log = LoginLogging(ipaddr=get_remote_addr(), login=username, auth_provider="local", success=True)
             db.session.add(login_log)
             db.session.commit()
+            if "next_url" in session:
+                next_url = session.pop("next_url")
+                return redirect(next_url)
             return redirect(url_for('authentication_blueprint.route_default'))
 
         app.logger.warn(f"Failed login ipaddr={get_remote_addr()} login={username} auth_provider=local")
@@ -95,12 +117,18 @@ def callback():
         user = Users(subject=subject, issuer=issuer, given_name=given_name, family_name=family_name, email=email)
         db.session.add(user)
 
+    _check_pre_approved(user)
     app.logger.info(f"Successful login ipaddr={get_remote_addr()} login={subject} auth_provider={issuer} email={email}")
     login_log = LoginLogging(ipaddr=get_remote_addr(), login=subject, auth_provider=issuer, success=True)
     db.session.add(login_log)
     db.session.commit()
 
     login_user(user)
+
+    if "next_url" in session:
+        next_url = session.pop("next_url")
+        return redirect(next_url)
+
     return redirect(url_for('authentication_blueprint.route_default'))
 
 
@@ -196,15 +224,25 @@ def resend_code():
     return redirect(url_for('authentication_blueprint.confirm_page'))
 
 @blueprint.route('/logout')
+@login_required
 def logout():
     logout_user()
     return redirect(url_for('authentication_blueprint.login'))
+
+@blueprint.route('/profile/reload')
+@login_required
+def reload_profile():
+    if _check_pre_approved(current_user):
+        db.session.commit()
+    return redirect(url_for('authentication_blueprint.route_default'))
 
 # Errors
 
 @login_manager.unauthorized_handler
 def unauthorized_handler():
-    return render_template('pages/page-403.html'), 403
+    if 'login' not in request.path:
+        session['next_url'] = request.path
+    return redirect(url_for('authentication_blueprint.login'))
 
 
 @blueprint.errorhandler(403)

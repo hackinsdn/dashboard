@@ -66,6 +66,34 @@
                   <i class="far fa-trash-alt"></i>
                 </button>
               </div>
+              <div class="row">
+                <!-- left column -->
+                <div class="col-md-6">
+                  <form>
+                    <div class="form-group row">
+                      <div class="col-md-4">
+                        <label>Filter by group:</label>
+                      </div>
+                      <div class="col-md-8">
+                        <select name="filter_group" class="form-control" onchange="this.form.submit()">
+                          <option value="">My owm labs</option>
+                          <option value="all" {{'selected' if filter_group == 'all' else ''}}>All labs</option>
+                          {% for group_id in groups %}
+                          <option value="{{group_id}}" {{'selected' if filter_group == group_id else ''}}>{{groups[group_id].groupname}}</option>
+                          {% endfor %}
+                        </select>
+	              </div>
+                    </div>
+                  </form>
+                  <!--./form-->
+                </div>
+                <!--/.col (left) -->
+                <!-- right column -->
+                <div class="col-md-6">
+                </div>
+                <!--/.col (right) -->
+              </div>
+	      <!-- /.row -->
             </div>
             <!-- /.card-header -->
             <div class="card-body table-responsive lab-items">

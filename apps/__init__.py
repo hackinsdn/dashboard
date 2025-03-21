@@ -1,6 +1,7 @@
 # -*- encoding: utf-8 -*-
 """
-Copyright (c) 2019 - present AppSeed.us
+Copyright (c) 2019 - 2024 AppSeed.us
+Copyright (c) 2014 - present HackInSDN Team
 """
 
 import os
@@ -10,10 +11,12 @@ import logging
 from flask import Flask
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 from flask_socketio import SocketIO
 from importlib import import_module
 from authlib.integrations.flask_client import OAuth
 from flask_mail import Mail
+from flask_caching import Cache
 
 
 db = SQLAlchemy()
@@ -21,6 +24,8 @@ login_manager = LoginManager()
 oauth = OAuth()
 socketio = SocketIO(cors_allowed_origins="*")
 mail = Mail()
+cache = Cache()
+migrate = Migrate()
 
 
 def register_extensions(app):
@@ -28,7 +33,9 @@ def register_extensions(app):
     login_manager.init_app(app)
     oauth.init_app(app)
     socketio.init_app(app)
-    mail.init_app(app)  
+    mail.init_app(app)
+    cache.init_app(app)
+    migrate.init_app(app, db)
 
 
 def register_blueprints(app):
@@ -72,7 +79,7 @@ def create_app(config):
     app.config.from_object(config)
     register_extensions(app)
     register_blueprints(app)
-    configure_database(app)
+    #configure_database(app)
     configure_oauth(app)
     configure_log(app)
     return app

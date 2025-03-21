@@ -2,6 +2,7 @@
   <head>
     <meta charset="utf-8" />
     <title>{{container}} - xterm</title>
+    <link rel="icon" href="/static/assets/favicon.ico">
     <style>
       html {
         font-family: arial;
@@ -10,6 +11,15 @@
     <link rel="stylesheet" href="https://unpkg.com/xterm@4.11.0/css/xterm.css"/>
   </head>
   <body>
+    <!-- Analytics measurements -->
+    {% if config.ANALYTICS_JSFILE %}
+    <script async src="{{config.ANALYTICS_JSFILE}}"></script>
+    {% endif %}
+    {% if config.ANALYTICS_SCRIPT %}
+    <script>
+    {{config.ANALYTICS_SCRIPT|safe}}
+    </script>
+    {% endif %}
     <div style="width: 100%; height: calc(100% - 50px)" id="terminal"></div>
     <!-- xterm -->
     <script src="https://unpkg.com/xterm@4.11.0/lib/xterm.js"></script>

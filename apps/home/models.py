@@ -20,6 +20,13 @@ def generate_uuid_14():
 def generate_token():
     return secrets.token_urlsafe(64)
 
+
+lab_groups = db.Table('lab_groups',
+    db.Column('lab_id', db.String(40), db.ForeignKey('labs.id'), primary_key=True),
+    db.Column('group_id', db.Integer, db.ForeignKey('groups.id'), primary_key=True)
+)
+
+
 class LabCategories(db.Model):
     __tablename__ = 'lab_categories'
     id = db.Column(db.Integer, primary_key=True)
@@ -37,6 +44,8 @@ class Labs(db.Model, AuditMixin):
     lab_guide_html = db.Column(db.LargeBinary)
     goals = db.Column(db.Text)
     manifest = db.Column(db.Text)
+    allowed_groups = db.relationship('Groups', secondary=lab_groups, lazy='subquery',
+                                     backref=db.backref('labs', lazy=True))
 
     def set_extended_desc(self, desc_str):
         self.extended_desc = desc_str.encode()
@@ -64,7 +73,7 @@ class LabInstances(db.Model, AuditMixin):
     _k8s_resources = db.Column(db.String)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     lab_id = db.Column(db.String(36), db.ForeignKey("labs.id"))
-    active = db.Column(db.Boolean, default=True)
+    is_deleted = db.Column(db.Boolean, default=False)
 
     def __init__(self, id, user, lab, k8s_resources):
         self.id = id
@@ -88,12 +97,47 @@ class LabInstances(db.Model, AuditMixin):
         lab = Labs.query.get(self.lab_id)
         return lab.title
 
+
 class LabAnswers(db.Model, AuditMixin):
     __tablename__ = 'lab_answers'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     lab_id = db.Column(db.String(36), db.ForeignKey("labs.id"))
     answers = db.Column(db.String)
+
+    @property
+    def answers_dict(self):
+        try:
+            return json.loads(self.answers)
+        except:
+            return {}
+
+    @property
+    def answers_table(self):
+        data = self.answers_dict
+        output = "<table class='table table-bordered'>"
+        output += "<tr><th>Question</th><th>Answer</th></tr>"
+        for k, v in data.items():
+            output += f"<tr><td><b>{k}</b></td><td>{v}</td></tr>"
+        output += "</table>"
+        return output
+
+
+class LabAnswerSheet(db.Model, AuditMixin):
+    __tablename__ = 'lab_answer_sheet'
+    id = db.Column(db.Integer, primary_key=True)
+    lab_id = db.Column(db.String(36), db.ForeignKey("labs.id"))
+    answers = db.Column(db.String)
+
+    @property
+    def answers_dict(self):
+        try:
+            return json.loads(self.answers)
+        except:
+            return {}
+
+    def set_answers(self, data):
+        self.answers = json.dumps(data)
 
 class HomeLogging(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
