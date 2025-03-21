@@ -14,7 +14,7 @@ from apps.authentication.models import Users, Groups
 from flask import render_template, request, current_app, redirect, url_for, session
 from flask_login import login_required, current_user
 from jinja2 import TemplateNotFound
-from apps.audit_mixin import get_remote_addr
+from apps.audit_mixin import get_remote_addr, check_user_category
 from apps.authentication.forms import GroupForm
 from apps.utils import update_running_labs_stats
 
@@ -25,10 +25,8 @@ def get_info_before_request():
 
 @blueprint.route('/index')
 @login_required
+@check_user_category(["admin", "teacher", "student"])
 def index():
-    if current_user.category == "user":
-        return render_template('pages/waiting_approval.html')
-
     stats = {
         "lab_instances": 23,
         "registered_labs": 57,
@@ -43,9 +41,8 @@ def index():
 
 @blueprint.route('/running/')
 @login_required
+@check_user_category(["admin", "teacher", "student"])
 def running_labs():
-    if current_user.category == "user":
-        return render_template('pages/waiting_approval.html')
 
     filter_group = request.args.get("filter_group", "")
     if filter_group.isdigit():
@@ -113,9 +110,8 @@ def running_labs():
 
 @blueprint.route('/run_lab/<lab_id>', methods=["GET", "POST"])
 @login_required
+@check_user_category(["admin", "teacher", "student"])
 def run_lab(lab_id):
-    if current_user.category == "user":
-        return render_template('pages/waiting_approval.html')
 
     msg_error = ""
     lab = Labs.query.get(lab_id)
@@ -162,9 +158,8 @@ def run_lab(lab_id):
 
 @blueprint.route('/lab_status/<lab_id>', methods=["GET"])
 @login_required
+@check_user_category(["admin", "teacher", "student"])
 def check_lab_status(lab_id):
-    if current_user.category == "user":
-        return render_template('pages/waiting_approval.html')
 
     msg_error = ""
     lab = LabInstances.query.get(lab_id)
@@ -178,10 +173,8 @@ def check_lab_status(lab_id):
 
 @blueprint.route('/xterm/<lab_id>/<kind>/<pod>/<container>', methods=["GET"])
 @login_required
+@check_user_category(["admin", "teacher", "student"])
 def xterm(lab_id, kind, pod, container):
-    if current_user.category == "user":
-        return render_template('pages/waiting_approval.html')
-    
     lab = LabInstances.query.get(lab_id)
     if not lab:
         return render_template("pages/error.html", title="Error checking lab status", msg="Lab not found")
@@ -194,9 +187,8 @@ def xterm(lab_id, kind, pod, container):
 @blueprint.route('/users/<int:user_id>', methods=["GET", "POST"])
 @blueprint.route('/profile', methods=["GET", "POST"])
 @login_required
+@check_user_category(["admin", "teacher", "student"])
 def edit_user(user_id=None):
-    if current_user.category == "user":
-        return render_template('pages/waiting_approval.html')
 
     return_path = "home_blueprint.view_users"
     if not user_id:
@@ -258,9 +250,8 @@ def edit_user(user_id=None):
 
 @blueprint.route('/lab_instance/view/<lab_id>', methods=["GET"])
 @login_required
+@check_user_category(["admin", "teacher", "student"])
 def view_lab_instance(lab_id):
-    if current_user.category == "user":
-        return render_template('pages/waiting_approval.html')
 
     lab_instance = LabInstances.query.get(lab_id)
     if not lab_instance:
@@ -320,12 +311,8 @@ def view_lab_instance(lab_id):
 
 @blueprint.route('/labs/edit/<lab_id>', methods=["GET", "POST"])
 @login_required
+@check_user_category(["admin", "teacher"])
 def edit_lab(lab_id):
-    if current_user.category == "user":
-        return render_template('pages/waiting_approval.html')
-
-    if current_user.category == "student":
-        return render_template("pages/error.html", title="Unauthorized request", msg="You dont have permission to see this page")
 
     if lab_id != "new":
         lab = Labs.query.get(lab_id)
@@ -382,13 +369,9 @@ def edit_lab(lab_id):
 
 @blueprint.route('/users')
 @login_required
+@check_user_category(["admin", "teacher"])
 def view_users():
-    if current_user.category == "user":
-        return render_template('pages/waiting_approval.html')
-
-    if current_user.category == "student":
-        return render_template("pages/error.html", title="Unauthorized request", msg="You dont have permission to see this page")
-
+   
     users = Users.query.filter_by(is_deleted=False)
     if current_user.category in ["teacher"]:
         users = users.filter(Users.category == "user")
@@ -400,9 +383,8 @@ def view_users():
 @blueprint.route('/labs/view', methods=["GET"])
 @blueprint.route('/labs/view/<lab_id>', methods=["GET"])
 @login_required
+@check_user_category(["admin", "teacher", "student"])
 def view_labs(lab_id=None):
-    if current_user.category == "user":
-        return render_template('pages/waiting_approval.html')
 
     lab_categories = {cat.id: cat for cat in LabCategories.query.all()}
     if not lab_categories:
@@ -438,9 +420,8 @@ def list_groups():
 
 @blueprint.route('/groups/edit/<group_id>', methods=["GET", "POST"])
 @login_required
+@check_user_category(["admin", "teacher", "student"])
 def edit_group(group_id):
-    if current_user.category == "user":
-        return render_template('pages/waiting_approval.html')
 
     if group_id == "new":
         action_name = "Create"
@@ -603,11 +584,8 @@ def edit_group(group_id):
 
 @blueprint.route('/lab_answers/list')
 @login_required
+@check_user_category(["admin", "teacher"])
 def list_lab_answers():
-    if current_user.category == "user":
-        return render_template('pages/waiting_approval.html')
-    if current_user.category == "student":
-        return render_template("pages/error.html", title="Unauthorized request", msg="You dont have permission to see this page")
 
     filter_lab_id = request.args.get('filter_lab')
     filter_group_id = int(request.args.get('filter_group') or 0)
@@ -680,11 +658,8 @@ def list_lab_answers():
 
 @blueprint.route('/lab_answers/answer_sheet/', methods=["GET", "POST"])
 @login_required
+@check_user_category(["admin", "teacher"])
 def add_answer_sheet():
-    if current_user.category == "user":
-        return render_template('pages/waiting_approval.html')
-    if current_user.category == "student":
-        return render_template("pages/error.html", title="Unauthorized request", msg="You dont have permission to see this page")
 
     labs = {lab.id: lab for lab in Labs.query.all()}
 
