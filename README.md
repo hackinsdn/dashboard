@@ -72,6 +72,11 @@ Create Lab page:
 
 ![img-alt](./doc/img/dashboard-create-update-lab.png)
 
+### Help and Support  
+
+Found a bug or need help? Report it here!  
+To contact the development team, email hackinsdn@ufba.br.
+
 ## License
 
 This software is under _MIT-License_. For more information please read `LICENSE` file.
