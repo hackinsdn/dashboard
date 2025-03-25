@@ -29,7 +29,9 @@ def _check_pre_approved(user):
     """Given an user, check if this is user is on the list of pre-approved users or member of any group"""
     if user.category != "user":
         return
-    if user.member_of_groups:
+    for group in user.member_of_groups:
+        if group.organization == "SYSTEM":
+            continue
         user.category = "student"
         return True
     added_group = False
