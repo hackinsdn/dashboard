@@ -17,7 +17,6 @@ from importlib import import_module
 from authlib.integrations.flask_client import OAuth
 from flask_mail import Mail
 from flask_caching import Cache
-from apps.audit_mixin import get_remote_addr
 
 
 db = SQLAlchemy()
@@ -74,17 +73,6 @@ def configure_log(app):
         wlog.addHandler(handler)
     for handler in app.logger.handlers:
         handler.setFormatter(logging.Formatter(fmt=app.config["LOG_FMT"]))
-
-    # adding IP remote addr extra field
-    old_factory = logging.getLogRecordFactory()
-
-    def record_factory(*args, **kwargs):
-        record = old_factory(*args, **kwargs)
-        record.remoteaddr = get_remote_addr()
-        return record
-
-    logging.setLogRecordFactory(record_factory)
-
 
 def create_app(config):
     app = Flask(__name__)
