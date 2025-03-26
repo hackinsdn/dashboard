@@ -63,18 +63,14 @@ word-break: break-all;
 
     <!-- Main content -->
     <section class="content">
-      <div class="row">
+      <div class="row sticky-top">
         <div class="col-md-12">
           <div class="card card-dark">
             <div class="card-header">
-              <h3 class="card-title">Lab resources</h3>
+              <h3 class="card-title">Lab title: {{lab['title']}} / Lab owner: {{lab['user']}}</h3>
             </div>
             <!-- /.card-header -->
             <div class="card-body">
-              <ul>
-                <li>Lab title: {{lab['title']}}</li>
-                <li>Lab owner: {{lab['user']}}</li>
-              </ul>
               <div class="table-responsive">
                 <table id="tableLabsResource" class="table table-hover">
                   <thead>
@@ -84,7 +80,7 @@ word-break: break-all;
                     <th>Node</th>
                     <th>IP</th>
                     <th>Age</th>
-                    <th>Links</th>
+                    <th>Terminals</th>
                     <th>Services</th>
                   </tr>
                   </thead>
@@ -165,7 +161,7 @@ word-break: break-all;
 
       <div class="row">
         <div class="col-md-12">
-          <div class="card-dark">
+          <div class="card card-dark">
             <div class="card-header">
               <h3 class="card-title">Lab Guide</h3>
             </div>
