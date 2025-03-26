@@ -20,43 +20,266 @@
 {% endblock stylesheets %}
 
 {% block content %}
+<style>
+  :root {
+    --primary-color: #00b0e6;
+    --secondary-color: #444444;
+    --background-color: #f5f5f5;
+    --card-background: #ffffff;
+    --text-color: #333333;
+    --error-color: #e74c3c;
+    --warning-color: #f39c12;
+    --success-color: #2ecc71;
+  }
 
-  <div class="login-box">
+  .container{
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+  .error-card {
+    background-color: var(--card-background);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    padding: 40px;
+    width: 100%;
+    max-width: 600px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .error-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 5px;
+    background: linear-gradient(90deg, var(--primary-color), #36d1dc);
+  }
+
+  .error-code {
+    font-size: 5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 10px;
+    position: relative;
+    display: inline-block;
+  }
+
+  .error-code::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 3px;
+    background-color: var(--primary-color);
+    border-radius: 3px;
+  }
+
+  .error-title {
+    font-size: 1.8rem;
+    color: var(--text-color);
+    margin-bottom: 20px;
+  }
+
+  .error-message {
+    font-size: 1.1rem;
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 30px;
+  }
+
+  .action-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    padding: 12px 25px;
+    font-size: 1rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+    border: 2px solid var(--primary-color);
+  }
+
+  .btn-primary:hover {
+    background-color: transparent;
+    color: var(--primary-color);
+  }
+
+  .btn-secondary {
+    background-color: transparent;
+    color: var(--secondary-color);
+    border: 2px solid var(--secondary-color);
+  }
+
+  .btn-secondary:hover {
+    background-color: var(--secondary-color);
+    color: white;
+  }
+
+  .footer {
+    margin-top: 40px;
+    color: #888;
+    font-size: 0.9rem;
+    text-align: center;
+  }
+
+  .footer a {
+    color: var(--primary-color);
+    text-decoration: none;
+  }
+
+  .footer a:hover {
+    text-decoration: underline;
+  }
+
+  /* Animation for the error icon */
+  .error-icon {
+    width: 100px;
+    height: 100px;
+    margin: 0 auto 20px;
+    position: relative;
+  }
+
+  .lock {
+    position: absolute;
+    width: 60px;
+    height: 45px;
+    background-color: var(--secondary-color);
+    border-radius: 8px;
+    top: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .lock::before {
+    content: "";
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    border: 8px solid var(--secondary-color);
+    border-radius: 40px 40px 0 0;
+    left: 50%;
+    transform: translateX(-50%);
+    top: -30px;
+  }
+
+  .lock::after {
+    content: "";
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background-color: var(--card-background);
+    border-radius: 50%;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 20px;
+    box-shadow: 0 0 0 2px var(--card-background);
+    animation: keyhole 3s infinite;
+  }
+
+  .shield {
+    position: absolute;
+    color: var(--error-color);
+    font-size: 30px;
+    top: 0;
+    right: 10px;
+    transform: rotate(20deg);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes keyhole {
+
+    0%,
+    100% {
+      box-shadow: 0 0 0 2px var(--card-background);
+    }
+
+    50% {
+      box-shadow: 0 0 0 2px var(--card-background), 0 0 8px 2px var(--primary-color);
+    }
+  }
+
+  @keyframes pulse {
+
+    0%,
+    100% {
+      transform: scale(1) rotate(20deg);
+      opacity: 1;
+    }
+
+    50% {
+      transform: scale(1.1) rotate(20deg);
+      opacity: 0.8;
+    }
+  }
+
+  /* Responsiveness */
+  @media (max-width: 768px) {
+    .error-card {
+      padding: 30px 20px;
+    }
+
+    .error-code {
+      font-size: 4rem;
+    }
+
+    .error-title {
+      font-size: 1.5rem;
+    }
+
+    .action-buttons {
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .btn {
+      width: 100%;
+    }
+  }
+</style>
+
+<div class="container">
 
     <div class="login-logo">
-        <a target="_blank" rel="noopener noreferrer" 
-           href="https://appseed.us/product/adminlte/flask/">Flask <b>Admin</b>LTE</a>
+        <img src="{{ url_for('static', filename='assets/img/hackinsdn.png') }}" alt="HackInSDN Logo" class="brand-image" style="opacity: .8">
     </div>
 
-    <!-- /.login-logo -->
-    <div class="card">
-
-      <div class="card-body login-card-body">
-
-        <h5 class="login-box-msg">
-          Error 403 - Access Denied
-        </h5>
-        <p class="login-box-msg">
-          Authentication is required to access this resource 
-          - please <a href="{{ url_for('authentication_blueprint.login') }}" class="text-center">Login</a>
-        </p>
-
-        <br />
-        <div class="text-center">
-            Not a member? <a href="{{ url_for('authentication_blueprint.register') }}" class="text-center">Register</a>
-            <br />
-            <br />
-            &copy; ColorLib 
-            <a target="_blank" rel="noopener noreferrer"
-               href="https://appseed.us/product/adminlte/flask/"><b>Admin</b>LTE</a> 
-            - coded by <a target="_blank" rel="noopener noreferrer" href="https://appseed.us">AppSeed</a>.
-        </div>
-
-      </div>
-      <!-- /.login-card-body -->
+  <div class="error-card">
+    <div class="error-icon">
+      <div class="lock"></div>
+      <div class="shield">⚠️</div>
     </div>
-
+    <h2 class="error-code">403</h2>
+    <h3 class="error-title">Access Forbidden</h3>
+    <p class="error-message">
+      You don't have permission to access this resource. This might be due to
+      insufficient privileges or security restrictions on this server.
+    </p>
+    <div class="action-buttons">
+      <a href="javascript:history.back()" class="btn btn-primary">Go Back</a>
+    </div>
   </div>
+
+</div>
 
 {% endblock content %}
 
