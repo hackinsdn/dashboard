@@ -82,8 +82,8 @@ class Config(object):
     MAIL_USERNAME = os.getenv("MAIL_USERNAME")
     MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
     MAIL_DEFAULT_SENDER = os.getenv("MAIL_DEFAULT_SENDER")
-    MAIL_USE_TLS = True
-    MAIL_USE_SSL = False
+    MAIL_USE_TLS = os.getenv("MAIL_USE_TLS", "False") == "True"
+    MAIL_USE_SSL = os.getenv("MAIL_USE_SSL", "False") == "True"
     MAIL_SENDTO = os.getenv("MAIL_SENDTO")
 
     # Flask Cache (https://flask-caching.readthedocs.io/en/latest/)
