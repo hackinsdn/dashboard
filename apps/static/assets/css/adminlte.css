@@ -277,6 +277,9 @@ legend {
 progress {
   vertical-align: baseline; }
 
+iframe {
+  max-width: 100%; }
+
 [type="number"]::-webkit-inner-spin-button,
 [type="number"]::-webkit-outer-spin-button {
   height: auto; }
