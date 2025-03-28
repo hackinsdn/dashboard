@@ -9,7 +9,7 @@ flask-sqlalchemy
 sqlalchemy
 email_validator
 flask-restx
-authlib
+authlib @ git+https://github.com/italovalcy/authlib@v1.5.1-p1
 requests
 python-dotenv
 gunicorn
