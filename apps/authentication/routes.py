@@ -168,10 +168,18 @@ def register():
 
         # Send email
         msg = Message(
-            subject="HackInSDN confirmation code",
+            subject="HackInSDN - Verify your identity",
             sender=app.config['MAIL_USERNAME'],
             recipients=[email],
-            body=f"This is your confirmation code: {confirmation_token}"
+            body=(
+                "Help us protect your account\n\n"
+                "Before you sign up, we need to verify your identity. Enter the following code on the sign-up page.\n\n"
+                f"{confirmation_token}\n\n"
+                "If you have not recently tried to sign up into HackInSDN, you can ignore this e-mail.\n\n"
+                "--\n\n"
+                f"You're receiving this email because of your account on Dashboard HackInSDN."
+            ),
+            html=render_template('mail/confirmation_token.html', confirmation_token=confirmation_token),
         )
         mail.send(msg)
 
@@ -216,10 +224,18 @@ def resend_code():
     confirmation_token = session.get('confirmation_token')
 
     msg = Message(
-        subject="HackInSDN confirmation code",
+        subject="HackInSDN - Verify your identity",
         sender=app.config['MAIL_USERNAME'],
         recipients=[email],
-        body=f"This is your confirmation code: {confirmation_token}"
+        body=(
+            "Help us protect your account\n\n"
+            "Before you sign up, we need to verify your identity. Enter the following code on the sign-up page.\n\n"
+            f"{confirmation_token}\n\n"
+            "If you have not recently tried to sign up into HackInSDN, you can ignore this e-mail.\n\n"
+            "--\n\n"
+            f"You're receiving this email because of your account on Dashboard HackInSDN."
+        ),
+        html=render_template('mail/confirmation_token.html', confirmation_token=confirmation_token),
     )
     mail.send(msg)
 
