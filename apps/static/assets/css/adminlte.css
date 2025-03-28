@@ -170,7 +170,10 @@ figure {
 
 img {
   vertical-align: middle;
-  border-style: none; }
+  border-style: none; 
+  max-width:100%; 
+  max-height: fit-content
+}
 
 svg {
   overflow: hidden;
@@ -208,7 +211,9 @@ textarea {
   margin: 0;
   font-family: inherit;
   font-size: inherit;
-  line-height: inherit; }
+  line-height: inherit; 
+  max-width: 100%;
+}
 
 button,
 input {
@@ -271,6 +276,9 @@ legend {
 
 progress {
   vertical-align: baseline; }
+
+iframe {
+  max-width: 100%; }
 
 [type="number"]::-webkit-inner-spin-button,
 [type="number"]::-webkit-outer-spin-button {
