@@ -69,7 +69,7 @@ class Config(object):
     # Kubernetes
     K8S_NAMESPACE = os.getenv('K8S_NAMESPACE', "")
     K8S_CONFIG = os.path.expanduser(os.getenv("KUBECONFIG", "~/.kube/config"))
-    K8S_AVOID_NODES = ["whx-rn", "ids-pb", "ids-pe", "vm1-ac", "vm1-mt", "whx-pb", "whx-rn"]
+    K8S_AVOID_NODES = os.getenv("K8S_AVOID_NODES", "").split(",")
 
     # Base URL
     BASE_URL = os.getenv("BASE_URL", 'https://dashboard.hackinsdn.ufba.br')
