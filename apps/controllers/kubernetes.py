@@ -54,7 +54,7 @@ class K8sController():
         self.v1_api = client.CoreV1Api()
         self.apps_v1_api = client.AppsV1Api()
         self.k8s_client = client.ApiClient()
-        self.k8s_avoid_nodes = app_config.K8S_AVOID_NODES
+        self.k8s_avoid_nodes = set(app_config.K8S_AVOID_NODES)
 
         self.identifiers = {
             "pod_hash": self.get_pod_hash,
