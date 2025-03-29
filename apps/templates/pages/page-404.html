@@ -20,36 +20,210 @@
 {% endblock stylesheets %}
 
 {% block content %}
+  <style>
+    :root {
+            --primary-color: #00b0e6;
+            --secondary-color: #444444;
+            --background-color: #f5f5f5;
+            --card-background: #ffffff;
+            --text-color: #333333;
+            --error-color: #e74c3c;
+            --warning-color: #f39c12;
+            --success-color: #2ecc71;
+        }
+      
+    .container{
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+      
+     .error-card {
+            background-color: var(--card-background);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
 
-  <div class="login-box">
+        .error-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, var(--primary-color), #36d1dc);
+        }
+
+        .error-code {
+            font-size: 5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            position: relative;
+            display: inline-block;
+        }
+
+        .error-code::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 3px;
+            background-color: var(--primary-color);
+            border-radius: 3px;
+        }
+
+        .error-title {
+            font-size: 1.8rem;
+            color: var(--text-color);
+            margin-bottom: 20px;
+        }
+
+        .error-message {
+            font-size: 1.1rem;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+            border: 2px solid var(--primary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: transparent;
+            color: var(--primary-color);
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            color: var(--secondary-color);
+            border: 2px solid var(--secondary-color);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+
+        .footer {
+            margin-top: 40px;
+            color: #888;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        .footer a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Animation for the error icon */
+        .error-icon {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 20px;
+            position: relative;
+        }
+
+        .question-mark {
+            color: var(--warning-color);
+            font-size: 90px;
+            font-weight: bold;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-15px);
+            }
+            60% {
+                transform: translateY(-7px);
+            }
+        }
+
+        /* Responsiveness */
+        @media (max-width: 768px) {
+            .error-card {
+                padding: 30px 20px;
+            }
+            
+            .error-code {
+                font-size: 4rem;
+            }
+            
+            .error-title {
+                font-size: 1.5rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+
+      }
+  </style>
+
+  <div class="container">
 
     <div class="login-logo">
-        <a target="_blank" rel="noopener noreferrer" 
-           href="https://appseed.us/product/adminlte/flask/">Flask <b>Admin</b>LTE</a>
+      <img src="{{ url_for('static', filename='assets/img/hackinsdn.png') }}" alt="HackInSDN Logo" class="brand-image" style="opacity: .8">
     </div>
 
-    <!-- /.login-logo -->
-    <div class="card">
-
-      <div class="card-body login-card-body">
-
-        <h5 class="login-box-msg">
-          Error 404 - Page not found
-        </h5>
-        <p class="login-box-msg">
-          Please contact support - <a href="/" class="text-center">Home</a>
-        </p>
-
-        <br />
-        <div class="text-center">
-            &copy; ColorLib 
-            <a target="_blank" rel="noopener noreferrer"
-               href="https://appseed.us/product/adminlte/flask/"><b>Admin</b>LTE</a> 
-            - coded by <a target="_blank" rel="noopener noreferrer" href="https://appseed.us">AppSeed</a>.
+    <div class="error-card">
+        <div class="error-icon">
+            <div class="question-mark">?</div>
         </div>
-
-      </div>
-      <!-- /.login-card-body -->
+        <h2 class="error-code">404</h2>
+        <h3 class="error-title">Page Not Found</h3>
+        <p class="error-message">
+            The page you are looking for might have been removed, had its name changed, 
+            or is temporarily unavailable. Please check the URL for any mistakes.
+        </p>
+        <div class="action-buttons">
+            <a href="{{ url_for('authentication_blueprint.login')}}" class="btn btn-primary">Return to Home</a>
+            <a href="javascript:history.back()" class="btn btn-secondary">Go Back</a>
+        </div>
     </div>
 
   </div>

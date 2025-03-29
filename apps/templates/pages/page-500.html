@@ -20,36 +20,250 @@
 {% endblock stylesheets %}
 
 {% block content %}
+  <style>
+    :root {
+            --primary-color: #00b0e6;
+            --secondary-color: #444444;
+            --background-color: #f5f5f5;
+            --card-background: #ffffff;
+            --text-color: #333333;
+            --error-color: #e74c3c;
+            --success-color: #2ecc71;
+        }
+    
+    .container{
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+        
+    .error-card {
+            background-color: var(--card-background);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
 
-  <div class="login-box">
+        .error-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, var(--primary-color), #36d1dc);
+        }
+
+        .error-code {
+            font-size: 5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            position: relative;
+            display: inline-block;
+        }
+
+        .error-code::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 3px;
+            background-color: var(--primary-color);
+            border-radius: 3px;
+        }
+
+        .error-title {
+            font-size: 1.8rem;
+            color: var(--text-color);
+            margin-bottom: 20px;
+        }
+
+        .error-message {
+            font-size: 1.1rem;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+            border: 2px solid var(--primary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: transparent;
+            color: var(--primary-color);
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            color: var(--secondary-color);
+            border: 2px solid var(--secondary-color);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+
+        .footer {
+            margin-top: 40px;
+            color: #888;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        .footer a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        .error-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            position: relative;
+        }
+
+        .server {
+            width: 60px;
+            height: 80px;
+            background-color: var(--secondary-color);
+            border-radius: 5px;
+            position: relative;
+            margin: 0 auto;
+        }
+
+        .server::before, .server::after {
+            content: "";
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            animation: blink 2s infinite alternate;
+        }
+
+        .server::before {
+            top: 15px;
+            left: 10px;
+            animation-delay: 0.5s;
+        }
+
+        .server::after {
+            top: 15px;
+            right: 10px;
+        }
+
+        .lightning {
+            position: absolute;
+            top: -20px;
+            right: -10px;
+            color: var(--error-color);
+            font-size: 30px;
+            transform: rotate(20deg);
+            animation: flash 3s infinite;
+        }
+
+        @keyframes blink {
+            0%, 40% {
+                opacity: 1;
+            }
+            50%, 90% {
+                opacity: 0.3;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+
+        @keyframes flash {
+            0%, 50%, 100% {
+                opacity: 0;
+            }
+            55%, 65% {
+                opacity: 1;
+            }
+        }
+
+        /* Responsiveness */
+        @media (max-width: 768px) {
+            .error-card {
+                padding: 30px 20px;
+            }
+            
+            .error-code {
+                font-size: 4rem;
+            }
+            
+            .error-title {
+                font-size: 1.5rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+        }
+  </style>
+
+  <div class="container">
 
     <div class="login-logo">
-        <a target="_blank" rel="noopener noreferrer" 
-           href="https://appseed.us/product/adminlte/flask/">Flask <b>Admin</b>LTE</a>
+      <img src="{{ url_for('static', filename='assets/img/hackinsdn.png') }}" alt="HackInSDN Logo" class="brand-image" style="opacity: .8">
     </div>
 
-    <!-- /.login-logo -->
-    <div class="card">
-
-      <div class="card-body login-card-body">
-
-        <h5 class="login-box-msg">
-          Error 500 - Server Error
-        </h5>
-        <p class="login-box-msg">
-          Please contact support - <a href="/" class="text-center">Home</a>
-        </p>
-
-        <br />
-        <div class="text-center">
-            &copy; ColorLib 
-            <a target="_blank" rel="noopener noreferrer"
-               href="https://appseed.us/product/adminlte/flask/"><b>Admin</b>LTE</a> 
-            - coded by <a href="https://appseed.us">AppSeed</a>.
+    <div class="error-card">
+        <div class="error-icon">
+            <div class="server"></div>
+            <div class="lightning">⚡</div>
         </div>
-
-      </div>
-      <!-- /.login-card-body -->
+        <h2 class="error-code">500</h2>
+        <h3 class="error-title">Internal Server Error</h3>
+        <p class="error-message">
+            Our servers are currently experiencing technical difficulties. 
+            Our team has been notified and is working to resolve the issue as quickly as possible.
+        </p>
+        <div class="action-buttons">
+            <a href="{{ url_for('authentication_blueprint.login')}}" class="btn btn-primary">Return to Home</a>
+            <a href="mailto:support@hackinsdn.com" class="btn btn-secondary">Contact Support</a>
+        </div>
     </div>
 
   </div>
