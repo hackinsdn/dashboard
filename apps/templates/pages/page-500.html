@@ -20,36 +20,116 @@
 {% endblock stylesheets %}
 
 {% block content %}
+  <style>
+    :root {
+            --primary-color: #00b0e6;
+            --secondary-color: #444444;
+            --error-color: #e74c3c;
+        }
 
-  <div class="login-box">
+        .error-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            position: relative;
+        }
+
+        .server {
+            width: 60px;
+            height: 80px;
+            background-color: var(--secondary-color);
+            border-radius: 5px;
+            position: relative;
+            margin: 0 auto;
+        }
+
+        .server::before, .server::after {
+            content: "";
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            animation: blink 2s infinite alternate;
+        }
+
+        .server::before {
+            top: 15px;
+            left: 10px;
+            animation-delay: 0.5s;
+        }
+
+        .server::after {
+            top: 15px;
+            right: 10px;
+        }
+
+        .lightning {
+            position: absolute;
+            top: -20px;
+            right: -10px;
+            color: var(--error-color);
+            font-size: 30px;
+            transform: rotate(20deg);
+            animation: flash 3s infinite;
+        }
+
+        @keyframes blink {
+            0%, 40% {
+                opacity: 1;
+            }
+            50%, 90% {
+                opacity: 0.3;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+
+        @keyframes flash {
+            0%, 50%, 100% {
+                opacity: 0;
+            }
+            55%, 65% {
+                opacity: 1;
+            }
+        }
+
+        /* Responsiveness */
+        @media (max-width: 768px) {
+            
+            .action-buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+        }
+  </style>
+
+  <div class="container text-center d-flex flex-column justify-content-center align-items-center">
 
     <div class="login-logo">
-        <a target="_blank" rel="noopener noreferrer" 
-           href="https://appseed.us/product/adminlte/flask/">Flask <b>Admin</b>LTE</a>
+      <img src="{{ url_for('static', filename='assets/img/hackinsdn.png') }}" alt="HackInSDN Logo" class="brand-image" style="opacity: .8">
     </div>
 
-    <!-- /.login-logo -->
-    <div class="card">
-
-      <div class="card-body login-card-body">
-
-        <h5 class="login-box-msg">
-          Error 500 - Server Error
-        </h5>
-        <p class="login-box-msg">
-          Please contact support - <a href="/" class="text-center">Home</a>
-        </p>
-
-        <br />
-        <div class="text-center">
-            &copy; ColorLib 
-            <a target="_blank" rel="noopener noreferrer"
-               href="https://appseed.us/product/adminlte/flask/"><b>Admin</b>LTE</a> 
-            - coded by <a href="https://appseed.us">AppSeed</a>.
+    <div class="card shadow-lg p-4 text-center">
+        <div class="error-icon">
+            <div class="server"></div>
+            <div class="lightning">⚡</div>
         </div>
-
-      </div>
-      <!-- /.login-card-body -->
+        <h2 class="display-1 text-primary font-weight-bold">500</h2>
+        <h3 class="h4 text-dark">Internal Server Error</h3>
+        <p class="text-muted" style="max-width: 40rem;">
+            Our servers are currently experiencing technical difficulties. 
+            Our team has been notified and is working to resolve the issue as quickly as possible.
+        </p>
+        <div class="d-flex justify-content-center gap-3 flex-wrap mt-3">
+            <a href="{{ url_for('authentication_blueprint.login')}}" class="btn btn-primary m-2">Return to Home</a>
+            <a href="mailto:support@hackinsdn.com" class="btn btn-secondary m-2">Contact Support</a>
+        </div>
     </div>
 
   </div>
