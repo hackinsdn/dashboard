@@ -45,3 +45,16 @@ class ConfirmAccountForm(FlaskForm):
     confirmation_token = StringField('Confirmation Token',
                                     id='confirmation_token',
                                     validators=[DataRequired()])
+    
+class ResetPasswordForm(FlaskForm):
+    identifier = StringField('Identifier',
+                      id='identifier',
+                      validators=[DataRequired()])
+
+class ResetPasswordConfirmForm(FlaskForm):
+    password = PasswordField('Password',
+                             id='pwd_reset',
+                             validators=[DataRequired()])
+    confirmation_token = StringField('Confirmation Token',
+                                    id='confirmation_token',
+                                    validators=[DataRequired()])
