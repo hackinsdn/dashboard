@@ -11,7 +11,7 @@ from wtforms.validators import Email, DataRequired, Optional
 
 
 class LoginForm(FlaskForm):
-    username = StringField('Username',
+    identifier = StringField('Identifier',
                          id='username_login',
                          validators=[DataRequired()])
     password = PasswordField('Password',
