@@ -96,17 +96,48 @@
           <!-- /.col -->
           <div class="col-12 col-sm-6 col-md-3">
             <div class="info-box mb-3">
-              <span class="info-box-icon bg-success elevation-1"><i class="fas fa-thumbs-up"></i></span>
-
+                <button type="button" class="info-box-icon bg-success border-0" data-toggle="modal" data-target="#modal-star">
+                    <i class="fas fa-thumbs-up"></i>
+                </button>
               <div class="info-box-content">
                 <span class="info-box-text">Likes</span>
                 <span class="info-box-number">{{stats['likes']}}</span>
               </div>
-              <!-- /.info-box-content -->
             </div>
-            <!-- /.info-box -->
           </div>
-          <!-- /.col -->
+        </div>
+        <div class="modal fade" id="modal-star">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title">Rating</h4>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="rating">Rating:</label>
+                            <div id="stars" class="star-rating">
+                                <i class="far fa-star" data-index="1"></i>
+                                <i class="far fa-star" data-index="2"></i>
+                                <i class="far fa-star" data-index="3"></i>
+                                <i class="far fa-star" data-index="4"></i>
+                                <i class="far fa-star" data-index="5"></i>
+                            </div>
+                            <input type="hidden" id="star-item-id" />
+                        </div>
+                        <div class="form-group">
+                            <label for="comment">Comment (Optional):</label>
+                            <textarea class="form-control" id="comment" rows="3" placeholder="Deixe seu comentário..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer justify-content-between">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="submit-star">Submit</button>
+                    </div>
+                </div>
+            </div>
         </div>
         <!-- /.row -->
 
@@ -500,4 +531,77 @@
   <!-- PAGE SCRIPTS -->
   <script src="/static/assets/js/pages/dashboard2.js"></script>
 
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+    const stars = document.querySelectorAll("#stars i");
+    const commentInput = document.getElementById("comment");
+    const submitButton = document.getElementById("submit-star");
+    let selectedRating = 0;
+    let hasRated = false;
+
+
+    stars.forEach((star, index) => {
+        star.addEventListener("mouseover", function () {
+            highlightStars(index + 1);
+        });
+
+
+        star.addEventListener("click", function () {
+            selectedRating = index + 1;
+        });
+    });
+
+
+    document.getElementById("stars").addEventListener("mouseleave", function () {
+        highlightStars(selectedRating);
+    });
+
+
+    function highlightStars(count) {
+        stars.forEach((star, index) => {
+            star.classList.toggle("fas", index < count);
+            star.classList.toggle("far", index >= count);
+        });
+    }
+
+
+    submitButton.addEventListener("click", function () {
+        if (hasRated) {
+            alert("Você já enviou um feedback.");
+            return;
+        }
+
+        if (selectedRating === 0) {
+            alert("Por favor, selecione uma avaliação antes de enviar.");
+            return;
+        }
+       
+        const comment = commentInput.value.trim();
+        const ratingData = {
+            stars: selectedRating,
+            comment: comment
+        };
+
+        fetch('/handle_star_like', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(ratingData)
+        }).then(response => response.json())
+        .then(data => {
+            if (data.status === "ok") {
+                alert("Avaliação enviada com sucesso!");
+                document.querySelector(".info-box-number").textContent = data.likes;
+            } else {
+                alert("Erro ao enviar a avaliação: " + data.result);
+            }
+        })
+        .catch(error => console.error('Erro:', error));
+
+        hasRated = true;
+        submitButton.disabled = true;
+        $('#modal-star').modal('hide');
+    });
+});
+</script>
 {% endblock javascripts %}
