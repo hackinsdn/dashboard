@@ -71,7 +71,7 @@ word-break: break-all;
             </div>
             <!-- /.card-header -->
             <div class="card-body">
-              <div class="table-responsive">
+              <div class="table-responsive" style="max-height: 130px;">
                 <table id="tableLabsResource" class="table table-hover">
                   <thead>
                   <tr>
@@ -106,7 +106,7 @@ word-break: break-all;
                       <a class="btn btn-outline-dark mx-2" href="{{link_href}}" target="_blank" role="button"><i class="fas fa-{{link_icon}}"></i> {{link_name}}</a>
                       {% endfor %}
                     </td>
-                    <td>
+                    <td class="d-flex">
                       {% for service in resource['services'] %}
                       <a class="btn btn-outline-dark mx-2" href="{{service[1]}}" target="_blank" role="button"><i class="fas fa-globe"></i> {{service[0]}}</a>
                       {% endfor %}
