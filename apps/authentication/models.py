@@ -226,6 +226,7 @@ class LoginLogging(db.Model):
     auth_provider = db.Column(db.String(10))
     success = db.Column(db.Boolean)
     datetime = db.Column(db.DateTime, default=utcnow, nullable=False)
+    message = db.Column(db.String)
 
     def __repr__(self):
         return '<LoginLogging %s %s %s>' % (self.ip_address,
