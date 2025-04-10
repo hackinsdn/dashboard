@@ -22,6 +22,7 @@ from flask_mail import Message
 import uuid
 from datetime import timedelta
 from sqlalchemy import or_
+import secrets
 
 from apps.authentication.util import verify_pass, hash_pass
 
@@ -253,10 +254,11 @@ def reset_password():
             return redirect(url_for('authentication_blueprint.confirm_reset_password'))
   
         # Send email
-        confirmation_token = str(uuid.uuid4().int)[:6]
+        confirmation_token = secrets.token_hex(8)
         session['confirmation_token'] = confirmation_token
         session['user'] = user.email
         session['datetime'] = utcnow()
+        session['try'] = 0	
 
         msg = Message(
             subject="HackInSDN - Reset your password",
@@ -284,21 +286,42 @@ def confirm_reset_password():
     form = ResetPasswordConfirmForm(request.form)
 
     confirmation_token = session.get('confirmation_token')
-        
+
+    if not confirmation_token or not session.get('user') or not session.get('datetime') or session.get('try') == None:
+        db.session.add(LoginLogging(ipaddr=get_remote_addr(), login=session.get('user'), auth_provider="local", success=False, message="Invalid session parameters"))
+        db.session.commit()
+        return redirect(url_for('authentication_blueprint.reset_password'))
+    
+   
     if 'confirm' in request.form:
         user = Users.query.filter_by(email=session.get('user')).first()
         created_at = session.get('datetime')
+
+        if session.get('try') > 3:
+            db.session.add(LoginLogging(ipaddr=get_remote_addr(), login=session.get('user'), auth_provider="local", success=False, message="Too many tries"))
+            db.session.commit()
+            session.pop('confirmation_token')
+            session.pop('user')
+            session.pop('datetime')
+            session.pop('try')
+            return render_template('pages/confirm_reset_password.html', msg='Too many tries, please <a href=/reset-password>click here</a> to reset your password again', success=False, form=form)
+            
      
         now = utcnow()
         if now - created_at > timedelta(minutes=5):
-            return render_template('pages/confirm.html', msg='Token expired, please <a href=/reset-password>click here</a> to reset your password again', success=False, form=form)
+            return render_template('pages/confirm_reset_password.html', msg='Token expired, please <a href=/reset-password>click here</a> to reset your password again', success=False, form=form)
 
         if request.form['confirmation_token'] != confirmation_token:
-            return render_template('pages/confirm.html', msg='Invalid token', success=False, form=form)
+            db.session.add(LoginLogging(ipaddr=get_remote_addr(), login=session.get('user'), auth_provider="local", success=False, message="Invalid token"))
+            db.session.commit()
+            # Increment try
+            session['try'] += 1
+            return render_template('pages/confirm_reset_password.html', msg='Invalid token', success=False, form=form)
 
         session.pop('confirmation_token')
         session.pop('user')
         session.pop('datetime')
+        session.pop('try')
 
         user.password = hash_pass(request.form['password'])
         db.session.add(user)
