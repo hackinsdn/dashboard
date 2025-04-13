@@ -96,7 +96,7 @@
           <!-- /.col -->
           <div class="col-12 col-sm-6 col-md-3">
             <div class="info-box mb-3">
-                <button type="button" class="info-box-icon bg-success border-0" data-toggle="modal" data-target="#modal-star">
+                <button type="button" class="info-box-icon bg-success border-0" data-toggle="modal" data-target="#modal-feedback">
                     <i class="fas fa-thumbs-up"></i>
                 </button>
               <div class="info-box-content">
@@ -106,7 +106,7 @@
             </div>
           </div>
         </div>
-        <div class="modal fade" id="modal-star">
+        <div class="modal fade" id="modal-feedback">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -568,12 +568,12 @@
 
     submitButton.addEventListener("click", function () {
         if (hasRated) {
-            alert("Você já enviou um feedback.");
+            alert("You have already submitted feedback.");
             return;
         }
 
         if (selectedRating === 0) {
-            alert("Por favor, selecione uma avaliação antes de enviar.");
+            alert("Please select a rating before submitting.");
             return;
         }
        
@@ -583,24 +583,24 @@
             comment: comment
         };
 
-        fetch('/handle_star_like', {
+        fetch('/api/feedback', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(ratingData)
         }).then(response => response.json())
         .then(data => {
             if (data.status === "ok") {
-                alert("Avaliação enviada com sucesso!");
+                alert("Rating submitted successfully!");
                 document.querySelector(".info-box-number").textContent = data.likes;
             } else {
-                alert("Erro ao enviar a avaliação: " + data.result);
+                alert("Error submitting rating: " + data.result);
             }
         })
         .catch(error => console.error('Erro:', error));
 
         hasRated = true;
         submitButton.disabled = true;
-        $('#modal-star').modal('hide');
+        $('#modal-feedback').modal('hide');
     });
 });
 </script>

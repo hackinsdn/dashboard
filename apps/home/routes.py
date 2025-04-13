@@ -9,7 +9,7 @@ import re
 from apps import db, cache
 from apps.home import blueprint
 from apps.controllers import k8s
-from apps.home.models import Labs, LabInstances, LabCategories, LabAnswers, LabAnswerSheet, HomeLogging, UserLikes ,UserFeedbacks
+from apps.home.models import Labs, LabInstances, LabCategories, LabAnswers, LabAnswerSheet, HomeLogging, UserLikes, UserFeedbacks
 from apps.authentication.models import Users, Groups
 from flask import render_template, request, current_app, redirect, url_for, session
 from flask_login import login_required, current_user
@@ -17,7 +17,6 @@ from jinja2 import TemplateNotFound
 from apps.audit_mixin import get_remote_addr, check_user_category
 from apps.authentication.forms import GroupForm
 from apps.utils import update_running_labs_stats
-from flask import jsonify
 from sqlalchemy.sql import func
 
 
@@ -721,54 +720,6 @@ def add_answer_sheet():
         )
 
     return render_template("pages/lab_answers_sheet.html", labs=labs, lab_id=lab_id, answers=answers, msg_ok="Lab answer sheet saved!")
-
-
-@blueprint.route('/handle_star_like', methods=["POST"])
-@login_required
-def handle_star_like():
-    try:
-        data = request.get_json()
-        stars = data.get("stars")
-        comment = data.get("comment", "")
-
-        if not stars:
-            return jsonify({"status": "fail", "result": "Stars rating is required"}), 400
-
-        existing_feedback = UserFeedbacks.query.filter_by(user_id=current_user.id).first()
-        if existing_feedback:
-            return jsonify({"status": "fail", "result": "Feedback already given"}), 400
-
-        new_feedback = UserFeedbacks(
-            user_id=current_user.id,
-            stars=stars,
-            comment=comment
-        )
-        db.session.add(new_feedback)
-
-        already_liked = UserLikes.query.filter_by(user_id=current_user.id).first()
-        if not already_liked:
-            new_like = UserLikes(user_id=current_user.id)
-            db.session.add(new_like)
-
-        db.session.commit()
-
-        total_feedbacks = UserFeedbacks.query.count()
-        average_stars = db.session.query(func.avg(UserFeedbacks.stars)).scalar() or 0
-        like_count = UserLikes.query.count()
-
-        return jsonify({
-            "status": "ok",
-            "result": "Feedback given successfully",
-            "total_feedbacks": total_feedbacks,
-            "average_stars": round(average_stars, 2),
-            "likes": like_count
-        }), 200
-
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"status": "error", "message": str(e)}), 500
-
-
 @blueprint.route('/gallery', methods=["GET"])
 @login_required
 def view_gallery():
