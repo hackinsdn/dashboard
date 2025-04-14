@@ -720,6 +720,8 @@ def add_answer_sheet():
         )
 
     return render_template("pages/lab_answers_sheet.html", labs=labs, lab_id=lab_id, answers=answers, msg_ok="Lab answer sheet saved!")
+
+
 @blueprint.route('/gallery', methods=["GET"])
 @login_required
 def view_gallery():

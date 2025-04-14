@@ -11,6 +11,7 @@ from flask import request, current_app
 from flask_login import login_required, current_user
 from flask import jsonify
 from sqlalchemy.sql import func
+import redis
 
 @blueprint.route('/pods/<lab_id>', methods=["GET"])
 @login_required
@@ -327,6 +328,11 @@ def feedback():
         total_feedbacks = UserFeedbacks.query.count()
         average_stars = db.session.query(func.avg(UserFeedbacks.stars)).scalar() or 0
         like_count = UserLikes.query.count()
+        redis_client = redis.Redis(host='localhost', port=6379, db=0)
+        
+        redis_client.set('total_feedbacks', total_feedbacks)
+        redis_client.set('average_stars', average_stars)
+        redis_client.set('like_count', like_count)
 
         return jsonify({
             "status": "ok",
@@ -339,3 +345,16 @@ def feedback():
     except Exception as e:
         db.session.rollback()
         return jsonify({"status": "error", "message": str(e)}), 500
+
+@blueprint.route('/get_stats')
+def get_stats():
+    redis_client = redis.Redis(host='localhost', port=6379, db=0)
+    total_feedbacks = int(redis_client.get('total_feedbacks') or 0)
+    average_stars = float(redis_client.get('average_stars') or 0)
+    like_count = int(redis_client.get('like_count') or 0)
+    
+    return jsonify({
+        'total_feedbacks': total_feedbacks,
+        'average_stars': round(average_stars, 2),
+        'likes': like_count
+    })
