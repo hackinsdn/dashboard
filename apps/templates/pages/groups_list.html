@@ -224,8 +224,8 @@
         });
         sessionStorage.removeItem('msgFail');
       }
-      $( ".button-delete-group" ).on('click', function(){
-	var groupId = $(this).data('id');
+      $( "#modal-delete-group" ).on('show.bs.modal', function(event){
+        var groupId = $(event.relatedTarget).data('id');
         $("#delete-group-id").val( groupId );
       });
       $('#delete-group').click(function () {
