@@ -27,14 +27,60 @@ def get_info_before_request():
 @login_required
 @check_user_category(["admin", "teacher", "student"])
 def index():
+
+    lab_instances = LabInstances.query.filter_by(is_deleted=False).count()
+    users = Users.query.filter_by(is_deleted=False).count()
+    labs = Labs.query.count()
+    
+    k8s.update_nodes()
+    total_cpu_capacity = 0
+    total_cpu_usage = 0
+    total_memory_capacity = 0
+    total_memory_usage = 0
+    total_storage_capacity = 0
+    total_storage_usage = 0
+    total_pods = 0
+    total_nodes = len(k8s.ready_nodes)
+
+    for node_name in k8s.ready_nodes:
+        node = k8s.nodes.get(node_name)
+        if node:
+            # CPU
+            cpu_capacity = int(node.status.capacity.get("cpu", 0))
+            total_cpu_capacity += cpu_capacity
+            cpu_usage = int(node.status.allocatable.get("cpu", 0))
+            total_cpu_usage += cpu_usage
+
+            # Memory
+            memory_capacity = int(node.status.capacity.get("memory", "0").rstrip("Ki")) // (1024*1024)
+            total_memory_capacity += memory_capacity
+            memory_usage = int(node.status.allocatable.get("memory", "0").rstrip("Ki")) // (1024*1024)
+            total_memory_usage += memory_usage
+
+            # Storage
+            storage_capacity = int(node.status.capacity.get("ephemeral-storage", "0").rstrip("Ki")) // (1024*1024)
+            total_storage_capacity += storage_capacity
+            storage_usage = int(node.status.allocatable.get("ephemeral-storage", "0").rstrip("Ki")) // (1024*1024)
+            total_storage_usage += storage_usage
+
+            # Pods
+            pods_capacity = int(node.status.capacity.get("pods", 0))
+            total_pods += pods_capacity
+
     stats = {
-        "lab_instances": 23,
-        "registered_labs": 57,
+        "lab_instances": lab_instances,
+        "registered_labs": labs,
         "likes": 23,
-        "users": 38,
+        "users": users,
         "lab_inst_period_report": "1 Jul, 2014 - 23 Nov, 2014",
-        "cpu_usage": 15,
-        "cpu_capacity": 2304,
+        "cpu_usage": total_cpu_usage,
+        "cpu_capacity": total_cpu_capacity,
+        "memory_usage": total_memory_usage,
+        "memory_capacity": total_memory_capacity,
+        "storage_usage": total_storage_usage,
+        "storage_capacity": total_storage_capacity,
+        "total_pods": total_pods,
+        "total_nodes": total_nodes,
     }
     return render_template('pages/index.html', stats=stats, segment='index')
 

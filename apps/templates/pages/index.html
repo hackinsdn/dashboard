@@ -140,7 +140,7 @@
 
                       <div class="info-box-content">
                         <span class="info-box-text">Available CPU</span>
-                        <span class="info-box-number">380</span>
+                        <span class="info-box-number">{{stats['cpu_usage']}}/{{stats['cpu_capacity']}}</span>
                       </div>
                       <!-- /.info-box-content -->
                     </div>
@@ -150,7 +150,7 @@
 
                       <div class="info-box-content">
                         <span class="info-box-text">Available Memory</span>
-                        <span class="info-box-number">92,050 GB</span>
+                        <span class="info-box-number">{{stats['memory_usage']}}/{{stats['memory_capacity']}} GB</span>
                       </div>
                       <!-- /.info-box-content -->
                     </div>
@@ -160,7 +160,7 @@
 
                       <div class="info-box-content">
                         <span class="info-box-text">Storage</span>
-                        <span class="info-box-number">114,381 GB</span>
+                        <span class="info-box-number">{{stats['storage_usage']}}/{{stats['storage_capacity']}} GB</span>
                       </div>
                       <!-- /.info-box-content -->
                     </div>
@@ -170,7 +170,7 @@
 
                       <div class="info-box-content">
                         <span class="info-box-text">Pods</span>
-                        <span class="info-box-number">23 / 12,000</span>
+                        <span class="info-box-number">{{stats['total_pods']}}</span>
                       </div>
                       <!-- /.info-box-content -->
                     </div>
@@ -180,7 +180,7 @@
 
                       <div class="info-box-content">
                         <span class="info-box-text">Nodes</span>
-                        <span class="info-box-number">9 / 11</span>
+                        <span class="info-box-number">{{stats['total_nodes']}}</span>
                       </div>
                       <!-- /.info-box-content -->
                     </div>
