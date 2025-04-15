@@ -141,6 +141,7 @@
               <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                 <span aria-hidden="true">&times;</span>
               </button>
+	      <input type="hidden" id="join-group-id" />
             </div>
             <div class="modal-body">
               <div class="form-group row">
@@ -223,8 +224,12 @@
         });
         sessionStorage.removeItem('msgFail');
       }
+      $( ".button-delete-group" ).on('click', function(){
+	var groupId = $(this).data('id');
+        $("#delete-group-id").val( groupId );
+      });
       $('#delete-group').click(function () {
-	var groupId = $( ".button-delete-group" ).data('id');
+	var groupId = $("#delete-group-id").val();
         var request = $.ajax({
           url: '/api/groups/' + groupId,
           type: "DELETE",
@@ -242,8 +247,12 @@
           location.reload();
         });
       });
+      $( ".button-join-group" ).on('click', function(){
+	var groupId = $(this).data('id');
+        $("#join-group-id").val( groupId );
+      });
       $('#join-group').click(function () {
-	var groupId = $(".button-join-group").data('id');
+	var groupId = $("#join-group-id").val();
 	var accessToken = $("#accessToken").val();
         var request = $.ajax({
           url: '/api/groups/join/' + groupId,
