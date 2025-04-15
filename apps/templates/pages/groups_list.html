@@ -247,8 +247,8 @@
           location.reload();
         });
       });
-      $( ".button-join-group" ).on('click', function(){
-	var groupId = $(this).data('id');
+      $("#modal-join-group").on('show.bs.modal', function(event) {
+        var groupId = $(event.relatedTarget).data('id');
         $("#join-group-id").val( groupId );
       });
       $('#join-group').click(function () {
