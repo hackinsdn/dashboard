@@ -21,7 +21,7 @@ from apps.authentication.models import Users, Groups, LoginLogging
 from flask_mail import Message
 import uuid
 from datetime import timedelta
-
+from sqlalchemy import or_
 from apps.authentication.util import verify_pass
 
 
@@ -57,18 +57,18 @@ def login():
     if 'login' in request.form:
 
         # read form data
-        username = request.form['username']
+        identifier = request.form['identifier']
         password = request.form['password']
 
         # Locate user
-        user = Users.query.filter_by(username=username).first()
+        user = Users.query.filter(or_(Users.email == identifier, Users.username == identifier)).first()
 
         # Check the password
-        if user and user.password and verify_pass(password, user.password):
+        if user and not user.is_deleted and user.password and verify_pass(password, user.password):
             _check_pre_approved(user)
             login_user(user)
-            app.logger.info(f"Successful login ipaddr={get_remote_addr()} login={username} auth_provider=local")
-            login_log = LoginLogging(ipaddr=get_remote_addr(), login=username, auth_provider="local", success=True)
+            app.logger.info(f"Successful login ipaddr={get_remote_addr()} login={identifier} auth_provider=local")
+            login_log = LoginLogging(ipaddr=get_remote_addr(), login=identifier, auth_provider="local", success=True)
             db.session.add(login_log)
             db.session.commit()
             if "next_url" in session:
@@ -76,8 +76,8 @@ def login():
                 return redirect(next_url)
             return redirect(url_for('authentication_blueprint.route_default'))
 
-        app.logger.warn(f"Failed login ipaddr={get_remote_addr()} login={username} auth_provider=local")
-        login_log = LoginLogging(ipaddr=get_remote_addr(), login=username, auth_provider="local", success=False)
+        app.logger.warn(f"Failed login ipaddr={get_remote_addr()} login={identifier} auth_provider=local")
+        login_log = LoginLogging(ipaddr=get_remote_addr(), login=identifier, auth_provider="local", success=False)
         db.session.add(login_log)
         db.session.commit()
 
