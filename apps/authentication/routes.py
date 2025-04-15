@@ -64,7 +64,7 @@ def login():
         user = Users.query.filter(or_(Users.email == identifier, Users.username == identifier)).first()
 
         # Check the password
-        if user and user.password and verify_pass(password, user.password):
+        if user and not user.is_deleted and user.password and verify_pass(password, user.password):
             _check_pre_approved(user)
             login_user(user)
             app.logger.info(f"Successful login ipaddr={get_remote_addr()} login={identifier} auth_provider=local")
