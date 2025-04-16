@@ -510,6 +510,10 @@ def edit_group(group_id):
             current_app.logger.warn(f"Failed to process group_members {user_id=}: user not found")
             continue
         if user.id not in current_members:
+            current_app.logger.info(
+                f"Adding member to group: group={group.groupname}"
+                f" user={user} author={current_user}"
+            )
             group.members.append(user)
             has_changes = True
         else:
@@ -517,6 +521,10 @@ def edit_group(group_id):
     for user in current_members.values():
         has_changes = True
         group.members.remove(user)
+        current_app.logger.info(
+            f"Removing member to group: group={group.groupname}"
+            f" user={user} author={current_user}"
+        )
 
     # assistants
     current_assistants = group.assistants_dict
@@ -528,12 +536,20 @@ def edit_group(group_id):
             continue
         if user.id not in current_assistants:
             group.assistants.append(user)
+            current_app.logger.info(
+                f"Adding assistant to group: group={group.groupname}"
+                f" user={user} author={current_user}"
+            )
             has_changes = True
         else:
             current_assistants.pop(user.id)
     for user in current_assistants.values():
         has_changes = True
         group.assistants.remove(user)
+        current_app.logger.info(
+            f"Removing assistant to group: group={group.groupname}"
+            f" user={user} author={current_user}"
+        )
 
     # owners
     current_owners = group.owners_dict
@@ -545,13 +561,20 @@ def edit_group(group_id):
             continue
         if user.id not in current_owners:
             group.owners.append(user)
+            current_app.logger.info(
+                f"Adding owner to group: group={group.groupname}"
+                f" user={user} author={current_user}"
+            )
             has_changes = True
         else:
             current_owners.pop(user.id)
     for user in current_owners.values():
         has_changes = True
-        current_app.logger.info(f"remove user {user}")
         group.owners.remove(user)
+        current_app.logger.info(
+            f"Removing owner to group: group={group.groupname}"
+            f" user={user} author={current_user}"
+        )
 
     if not has_changes:
         return render_template(
