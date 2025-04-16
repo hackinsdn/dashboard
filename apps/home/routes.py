@@ -64,10 +64,16 @@ def running_labs():
 
     current_user_groups = {}
     current_user_priv_groups = {}
-    for group in current_user.member_of_groups:
-        if group.organization == "SYSTEM":
-            continue
-        current_user_groups[group.id] = group
+    if current_user.category == "admin":
+        for group in Groups.query.filter(
+            Groups.is_deleted==False, Groups.organization.isnot("SYSTEM")
+        ).all():
+            current_user_groups[group.id] = group
+    else:
+        for group in current_user.member_of_groups:
+            if group.organization == "SYSTEM":
+                continue
+            current_user_groups[group.id] = group
     for group in current_user.assistant_of_groups:
         current_user_groups[group.id] = group
         current_user_priv_groups[group.id] = group
