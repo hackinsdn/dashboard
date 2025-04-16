@@ -21,45 +21,43 @@
 
 {% block content %}
   <style>
-        /* Animation for the error icon */
-        .error-icon {
-            width: 100px;
-            height: 100px;
-            margin: 0 auto 20px;
-            position: relative;
-        }
+/* Animation for the error icon */
+.error-icon {
+    width: 100px;
+    height: 100px;
+    margin: 0 auto 20px;
+    position: relative;
+}
 
-        .question-mark {
-            color: #f39c12;
-            font-size: 90px;
-            font-weight: bold;
-            animation: bounce 2s infinite;
-        }
+.question-mark {
+    color: #f39c12;
+    font-size: 90px;
+    font-weight: bold;
+    animation: bounce 2s infinite;
+}
 
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% {
-                transform: translateY(0);
-            }
-            40% {
-                transform: translateY(-15px);
-            }
-            60% {
-                transform: translateY(-7px);
-            }
-        }
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(-15px);
+    }
+    60% {
+        transform: translateY(-7px);
+    }
+}
 
-        /* Responsiveness */
-        @media (max-width: 768px) {
-
-            .action-buttons {
-                flex-direction: column;
-                gap: 10px;
-            }
-            
-            .btn {
-                width: 100%;
-            }
-      }
+/* Responsiveness */
+@media (max-width: 768px) {
+    .action-buttons {
+        flex-direction: column;
+        gap: 10px;
+    }
+    .btn {
+        width: 100%;
+    }
+}
   </style>
 
   <div class="container text-center d-flex flex-column justify-content-center align-items-center">
