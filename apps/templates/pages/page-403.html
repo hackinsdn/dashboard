@@ -20,43 +20,117 @@
 {% endblock stylesheets %}
 
 {% block content %}
+<style>
+:root {
+  --primary-color: #00b0e6;
+  --secondary-color: #444444;
+  --card-background: #ffffff;
+  --error-color: #e74c3c;
+}
 
-  <div class="login-box">
+/* Animation for the error icon */
+.error-icon {
+  width: 100px;
+  height: 100px;
+  margin: 0 auto 20px;
+  position: relative;
+}
+
+.lock {
+  position: absolute;
+  width: 60px;
+  height: 45px;
+  background-color: var(--secondary-color);
+  border-radius: 8px;
+  top: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.lock::before {
+  content: "";
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border: 8px solid var(--secondary-color);
+  border-radius: 40px 40px 0 0;
+  left: 50%;
+  transform: translateX(-50%);
+  top: -30px;
+}
+
+.lock::after {
+  content: "";
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background-color: var(--card-background);
+  border-radius: 50%;
+  left: 50%;
+  transform: translateX(-50%);
+  top: 20px;
+  box-shadow: 0 0 0 2px var(--card-background);
+  animation: keyhole 3s infinite;
+}
+
+.shield {
+  position: absolute;
+  color: var(--error-color);
+  font-size: 30px;
+  top: 0;
+  right: 10px;
+  transform: rotate(20deg);
+  animation: pulse 2s infinite;
+}
+
+@keyframes keyhole {
+  0%,
+  100% {
+    box-shadow: 0 0 0 2px var(--card-background);
+  }
+
+  50% {
+    box-shadow: 0 0 0 2px var(--card-background), 0 0 8px 2px var(--primary-color);
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1) rotate(20deg);
+    opacity: 1;
+  }
+
+  50% {
+    transform: scale(1.1) rotate(20deg);
+    opacity: 0.8;
+  }
+}
+</style>
+
+<div class="container text-center d-flex flex-column justify-content-center align-items-center">
 
     <div class="login-logo">
-        <a target="_blank" rel="noopener noreferrer" 
-           href="https://appseed.us/product/adminlte/flask/">Flask <b>Admin</b>LTE</a>
+        <img src="{{ url_for('static', filename='assets/img/hackinsdn.png') }}" alt="HackInSDN Logo" class="brand-image" style="opacity: .8">
     </div>
 
-    <!-- /.login-logo -->
-    <div class="card">
-
-      <div class="card-body login-card-body">
-
-        <h5 class="login-box-msg">
-          Error 403 - Access Denied
-        </h5>
-        <p class="login-box-msg">
-          Authentication is required to access this resource 
-          - please <a href="{{ url_for('authentication_blueprint.login') }}" class="text-center">Login</a>
-        </p>
-
-        <br />
-        <div class="text-center">
-            Not a member? <a href="{{ url_for('authentication_blueprint.register') }}" class="text-center">Register</a>
-            <br />
-            <br />
-            &copy; ColorLib 
-            <a target="_blank" rel="noopener noreferrer"
-               href="https://appseed.us/product/adminlte/flask/"><b>Admin</b>LTE</a> 
-            - coded by <a target="_blank" rel="noopener noreferrer" href="https://appseed.us">AppSeed</a>.
-        </div>
-
-      </div>
-      <!-- /.login-card-body -->
+  <div class="card shadow-lg p-4 text-center">
+    <div class="error-icon">
+      <div class="lock"></div>
+      <div class="shield">⚠️</div>
     </div>
-
+    <h2 class="display-1 text-primary font-weight-bold">403</h2>
+    <h3 class="h4 text-dark">Access Forbidden</h3>
+    <p class="text-muted" style="max-width: 40rem;">
+      You don't have permission to access this resource. This might be due to
+      insufficient privileges or security restrictions on this server.
+    </p>
+    <div class="d-flex justify-content-center gap-3 flex-wrap mt-3">
+      <a href="javascript:history.back()" class="btn btn-secondary">Go Back</a>
+    </div>
   </div>
+
+</div>
 
 {% endblock content %}
 

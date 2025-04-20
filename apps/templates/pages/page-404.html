@@ -20,36 +20,66 @@
 {% endblock stylesheets %}
 
 {% block content %}
+  <style>
+/* Animation for the error icon */
+.error-icon {
+    width: 100px;
+    height: 100px;
+    margin: 0 auto 20px;
+    position: relative;
+}
 
-  <div class="login-box">
+.question-mark {
+    color: #f39c12;
+    font-size: 90px;
+    font-weight: bold;
+    animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(-15px);
+    }
+    60% {
+        transform: translateY(-7px);
+    }
+}
+
+/* Responsiveness */
+@media (max-width: 768px) {
+    .action-buttons {
+        flex-direction: column;
+        gap: 10px;
+    }
+    .btn {
+        width: 100%;
+    }
+}
+  </style>
+
+  <div class="container text-center d-flex flex-column justify-content-center align-items-center">
 
     <div class="login-logo">
-        <a target="_blank" rel="noopener noreferrer" 
-           href="https://appseed.us/product/adminlte/flask/">Flask <b>Admin</b>LTE</a>
+      <img src="{{ url_for('static', filename='assets/img/hackinsdn.png') }}" alt="HackInSDN Logo" class="brand-image" style="opacity: .8">
     </div>
 
-    <!-- /.login-logo -->
-    <div class="card">
-
-      <div class="card-body login-card-body">
-
-        <h5 class="login-box-msg">
-          Error 404 - Page not found
-        </h5>
-        <p class="login-box-msg">
-          Please contact support - <a href="/" class="text-center">Home</a>
-        </p>
-
-        <br />
-        <div class="text-center">
-            &copy; ColorLib 
-            <a target="_blank" rel="noopener noreferrer"
-               href="https://appseed.us/product/adminlte/flask/"><b>Admin</b>LTE</a> 
-            - coded by <a target="_blank" rel="noopener noreferrer" href="https://appseed.us">AppSeed</a>.
+    <div class="card shadow-lg p-4 text-center">
+        <div class="error-icon">
+            <div class="question-mark">?</div>
         </div>
-
-      </div>
-      <!-- /.login-card-body -->
+        <h2 class="display-1 text-primary font-weight-bold">404</h2>
+        <h3 class="h4 text-dark">Page Not Found</h3>
+        <p class="text-muted" style="max-width: 40rem;">
+            The page you are looking for might have been removed, had its name changed, 
+            or is temporarily unavailable. Please check the URL for any mistakes.
+        </p>
+        <div class="d-flex justify-content-center flex-wrap mt-3">
+            <a href="{{ url_for('authentication_blueprint.login')}}" class="btn btn-primary m-2">Return to Home</a>
+            <a href="javascript:history.back()" class="btn btn-secondary m-2">Go Back</a>
+        </div>
     </div>
 
   </div>

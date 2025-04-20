@@ -43,10 +43,14 @@ def index():
 @login_required
 @check_user_category(["admin", "teacher", "student"])
 def running_labs():
-
     filter_group = request.args.get("filter_group", "")
+    filter_members = {}
     if filter_group.isdigit():
         filter_group = int(filter_group)
+        group = Groups.query.get(filter_group)
+        if not group or group.is_deleted:
+            return render_template("pages/error.html", title="Error getting running labs", msg="Group not found")
+        filter_members = group.members_dict
 
     registered_labs = {}
     allowed_groups_by_lab = {}
@@ -59,12 +63,23 @@ def running_labs():
         registered_user = {user.id: user for user in Users.query.filter_by(is_deleted=False).all()}
 
     current_user_groups = {}
-    for group in current_user.member_of_groups:
-        current_user_groups[group.id] = group
+    current_user_priv_groups = {}
+    if current_user.category == "admin":
+        for group in Groups.query.filter(
+            Groups.is_deleted==False, Groups.organization.isnot("SYSTEM")
+        ).all():
+            current_user_groups[group.id] = group
+    else:
+        for group in current_user.member_of_groups:
+            if group.organization == "SYSTEM":
+                continue
+            current_user_groups[group.id] = group
     for group in current_user.assistant_of_groups:
         current_user_groups[group.id] = group
+        current_user_priv_groups[group.id] = group
     for group in current_user.owner_of_groups:
         current_user_groups[group.id] = group
+        current_user_priv_groups[group.id] = group
 
     lab_instances = LabInstances.query.filter_by(is_deleted=False)
     if not filter_group:
@@ -72,22 +87,18 @@ def running_labs():
 
     labs = []
     for li in lab_instances.all():
-        show_labinst = False
-        current_app.logger.info(f"filter lab_instances {filter_group=} {current_user_groups=} {allowed_groups_by_lab[li.lab_id]=}")
-        if filter_group == "all":
-            if current_user.category == "admin":
-                show_labinst = True
-            else:
-                for group_id in current_user_groups:
-                    if group_id in allowed_groups_by_lab[li.lab_id]:
-                        show_labinst = True
-        elif filter_group:
-            if filter_group in allowed_groups_by_lab[li.lab_id]:
-                show_labinst = True
+        is_allowed = False
+        # check if user has permission to see the lab
+        if current_user.category == "admin" or li.user_id == current_user.id:
+            is_allowed = True
         else:
-            if li.user_id == current_user.id:
-                show_labinst = True
-        if not show_labinst:
+            for group_id in current_user_priv_groups:
+                if group_id in allowed_groups_by_lab[li.lab_id]:
+                    is_allowed = True
+                    break
+        if not is_allowed:
+            continue
+        if filter_group != "all" and filter_group and li.user_id not in filter_members:
             continue
 
         user = registered_user.get(li.user_id)
@@ -499,6 +510,10 @@ def edit_group(group_id):
             current_app.logger.warn(f"Failed to process group_members {user_id=}: user not found")
             continue
         if user.id not in current_members:
+            current_app.logger.info(
+                f"Adding member to group: group={group.groupname}"
+                f" user={user} author={current_user}"
+            )
             group.members.append(user)
             has_changes = True
         else:
@@ -506,6 +521,10 @@ def edit_group(group_id):
     for user in current_members.values():
         has_changes = True
         group.members.remove(user)
+        current_app.logger.info(
+            f"Removing member to group: group={group.groupname}"
+            f" user={user} author={current_user}"
+        )
 
     # assistants
     current_assistants = group.assistants_dict
@@ -517,12 +536,20 @@ def edit_group(group_id):
             continue
         if user.id not in current_assistants:
             group.assistants.append(user)
+            current_app.logger.info(
+                f"Adding assistant to group: group={group.groupname}"
+                f" user={user} author={current_user}"
+            )
             has_changes = True
         else:
             current_assistants.pop(user.id)
     for user in current_assistants.values():
         has_changes = True
         group.assistants.remove(user)
+        current_app.logger.info(
+            f"Removing assistant to group: group={group.groupname}"
+            f" user={user} author={current_user}"
+        )
 
     # owners
     current_owners = group.owners_dict
@@ -534,13 +561,20 @@ def edit_group(group_id):
             continue
         if user.id not in current_owners:
             group.owners.append(user)
+            current_app.logger.info(
+                f"Adding owner to group: group={group.groupname}"
+                f" user={user} author={current_user}"
+            )
             has_changes = True
         else:
             current_owners.pop(user.id)
     for user in current_owners.values():
         has_changes = True
-        current_app.logger.info(f"remove user {user}")
         group.owners.remove(user)
+        current_app.logger.info(
+            f"Removing owner to group: group={group.groupname}"
+            f" user={user} author={current_user}"
+        )
 
     if not has_changes:
         return render_template(
