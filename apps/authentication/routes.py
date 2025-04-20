@@ -24,7 +24,7 @@ from datetime import timedelta
 from sqlalchemy import or_
 import secrets
 
-from apps.authentication.util import verify_pass, hash_pass
+from apps.authentication.util import verify_pass
 
 
 def _check_pre_approved(user):
@@ -272,7 +272,7 @@ def reset_password():
                 "--\n\n"
                 f"You're receiving this email because of your account on Dashboard HackInSDN."
             ),
-            html=render_template('mail/confirmation_token.html', confirmation_token=confirmation_token),
+            html=render_template('mail/reset_password.html', confirmation_token=confirmation_token),
         )
         mail.send(msg)
 
@@ -288,8 +288,7 @@ def confirm_reset_password():
     confirmation_token = session.get('confirmation_token')
 
     if not confirmation_token or not session.get('user') or not session.get('datetime') or session.get('try') == None:
-        db.session.add(LoginLogging(ipaddr=get_remote_addr(), login=session.get('user'), auth_provider="local", success=False, message="Invalid session parameters"))
-        db.session.commit()
+        app.logger.info(f"Invalid password reset request ipaddr={get_remote_addr()} login={session.get('user')} auth_provider=local")
         return redirect(url_for('authentication_blueprint.reset_password'))
     
    
@@ -297,23 +296,20 @@ def confirm_reset_password():
         user = Users.query.filter_by(email=session.get('user')).first()
         created_at = session.get('datetime')
 
+        now = utcnow()
+        if now - created_at > timedelta(minutes=5):
+            return render_template('pages/confirm_reset_password.html', msg='Token expired, please <a href=/reset-password>click here</a> to reset your password again', success=False, form=form)
+
         if session.get('try') > 3:
-            db.session.add(LoginLogging(ipaddr=get_remote_addr(), login=session.get('user'), auth_provider="local", success=False, message="Too many tries"))
-            db.session.commit()
+            app.logger.info(f"Too many tries on password reset ipaddr={get_remote_addr()} login={session.get('user')} auth_provider=local")
             session.pop('confirmation_token')
             session.pop('user')
             session.pop('datetime')
             session.pop('try')
             return render_template('pages/confirm_reset_password.html', msg='Too many tries, please <a href=/reset-password>click here</a> to reset your password again', success=False, form=form)
             
-     
-        now = utcnow()
-        if now - created_at > timedelta(minutes=5):
-            return render_template('pages/confirm_reset_password.html', msg='Token expired, please <a href=/reset-password>click here</a> to reset your password again', success=False, form=form)
-
         if request.form['confirmation_token'] != confirmation_token:
-            db.session.add(LoginLogging(ipaddr=get_remote_addr(), login=session.get('user'), auth_provider="local", success=False, message="Invalid token"))
-            db.session.commit()
+            app.logger.info(f"Invalid token ipaddr={get_remote_addr()} login={session.get('user')} auth_provider=local")
             # Increment try
             session['try'] += 1
             return render_template('pages/confirm_reset_password.html', msg='Invalid token', success=False, form=form)
@@ -323,8 +319,7 @@ def confirm_reset_password():
         session.pop('datetime')
         session.pop('try')
 
-        user.password = hash_pass(request.form['password'])
-        db.session.add(user)
+        user.set_password(request.form['password'])
         db.session.commit()
 
         return redirect(url_for('authentication_blueprint.login'))
