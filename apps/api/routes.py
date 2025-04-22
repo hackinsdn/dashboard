@@ -5,7 +5,7 @@ import json
 from apps import db, cache
 from apps.api import blueprint
 from apps.controllers import k8s
-from apps.home.models import Labs, LabInstances, LabCategories, LabAnswers, UserLikes, UserFeedbacks
+from apps.home.models import Labs, LabInstances, LabAnswers, UserLikes, UserFeedbacks
 from apps.authentication.models import Users, Groups, DeletedGroupUsers
 from flask import request, current_app
 from flask_login import login_required, current_user
@@ -300,9 +300,6 @@ def feedback():
         data = request.get_json()
         stars = data.get("stars")
         comment = data.get("comment", "")
-
-        if not stars:
-            return jsonify({"status": "fail", "result": "Stars rating is required"}), 400
         
         if UserLikes.query.filter_by(user_id=current_user.id).first():
             return jsonify({"status": "fail", "result": "Like already given"}), 400
