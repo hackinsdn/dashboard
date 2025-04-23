@@ -361,6 +361,45 @@
                 </div>
               </div>
               <!-- Message End -->
+              <div class="add-feedback"></div>
+              <!-- Footer with See All Messages Link -->
+              <a href="#" class="dropdown-item dropdown-footer" data-toggle="modal" data-target="#modal-feedback">Add Feedback</a>
+
+              <!-- Modal de Feedback -->
+              <div class="modal fade" id="modal-feedback">
+                <div class="modal-dialog">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h4 class="modal-title">Rating</h4>
+                      <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                      </button>
+                    </div>
+                    <div class="modal-body">
+                      <div class="form-group">
+                        <label for="rating">Rating:</label>
+                        <div id="stars" class="star-rating">
+                          <i class="far fa-star" data-index="1"></i>
+                          <i class="far fa-star" data-index="2"></i>
+                          <i class="far fa-star" data-index="3"></i>
+                          <i class="far fa-star" data-index="4"></i>
+                          <i class="far fa-star" data-index="5"></i>
+                        </div>
+                        <input type="hidden" id="star-item-id" />
+                      </div>
+                      <div class="form-group">
+                        <label for="comment">Comment (Optional):</label>
+                        <textarea class="form-control" id="comment" rows="3" placeholder="Leave your comment..."></textarea>
+                      </div>
+                    </div>
+                    <div class="modal-footer justify-content-between">
+                      <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                      <button type="button" class="btn btn-primary" id="submit-star">Submit</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- Message End -->
               <div class="dropdown-divider"></div>
 
               <!-- Footer with See All Messages Link -->
@@ -575,4 +614,76 @@
   <!-- PAGE SCRIPTS -->
   <script src="/static/assets/js/pages/dashboard2.js"></script>
 
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const stars = document.querySelectorAll("#stars i");
+        const commentInput = document.getElementById("comment");
+        const submitButton = document.getElementById("submit-star");
+        let selectedRating = 0;
+        let hasRated = false;
+
+        stars.forEach(star => {
+            star.addEventListener("mouseover", function () {
+                const index = parseInt(this.getAttribute("data-index"));
+                highlightStars(index);
+            });
+
+            star.addEventListener("click", function () {
+                selectedRating = parseInt(this.getAttribute("data-index"));
+            });
+        });
+
+        document.getElementById("stars").addEventListener("mouseleave", function () {
+            highlightStars(selectedRating);
+        });
+
+        function highlightStars(count) {
+            stars.forEach(star => {
+                const index = parseInt(star.getAttribute("data-index"));
+                star.classList.toggle("fas", index <= count);
+                star.classList.toggle("far", index > count);
+            });
+        }
+
+        submitButton.addEventListener("click", function () {
+            if (selectedRating === 0) {
+                alert("Please select a rating before submitting.");
+                return;
+            }
+
+            const comment = commentInput.value.trim();
+            const ratingData = {
+                rating: selectedRating,
+                comment: comment,
+            };
+
+            submitButton.disabled = true;
+
+            fetch('/api/feedback', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(ratingData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "ok") {
+                    alert("Rating submitted successfully!");
+                    hasRated = true;
+                    submitButton.disabled = true;
+                    $('#modal-feedback').modal('hide');
+                } else {
+                    alert(data.result); // ← Simples e direto
+                    submitButton.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                alert("An error occurred while submitting your feedback.");
+                submitButton.disabled = false;
+            });
+        });
+    });
+</script>
 {% endblock javascripts %}

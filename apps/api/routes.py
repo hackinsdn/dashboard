@@ -5,10 +5,12 @@ import json
 from apps import db, cache
 from apps.api import blueprint
 from apps.controllers import k8s
-from apps.home.models import Labs, LabInstances, LabAnswers
+from apps.home.models import Labs, LabInstances, LabAnswers, UserLikes, UserFeedbacks
 from apps.authentication.models import Users, Groups, DeletedGroupUsers
 from flask import request, current_app
 from flask_login import login_required, current_user
+from flask import jsonify
+from sqlalchemy.sql import func
 
 @blueprint.route('/pods/<lab_id>', methods=["GET"])
 @login_required
@@ -289,3 +291,38 @@ def join_group(group_id):
         return {"status": "fail", "result": "Failed to join group"}, 400
 
     return {"status": "ok", "result": "Joint group successfully! Click on 'Reload profile' to update your authorization."}, 200
+
+@blueprint.route('/feedback', methods=["POST"])
+@login_required
+def feedback():
+    try:
+        data = request.get_json()
+        stars = data.get("rating")
+        comment = data.get("comment", "")
+
+        existing_feedback = UserFeedbacks.query.filter_by(user_id=current_user.id).first()
+        if existing_feedback:
+            return jsonify({"status": "fail", "result": "Feedback already given!"}), 400
+
+        new_feedback = UserFeedbacks(
+            user_id=current_user.id,
+            stars=stars,
+            comment=comment
+        )
+        db.session.add(new_feedback)
+
+        total_feedbacks = UserFeedbacks.query.count()
+        average_stars = db.session.query(func.avg(UserFeedbacks.stars)).scalar() or 0
+
+        db.session.commit()
+
+        return jsonify({
+            "status": "ok",
+            "result": "Feedback given successfully",
+            "total_feedbacks": total_feedbacks,
+            "average_stars": round(average_stars, 2),
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"status": "error", "result": str(e)}), 500
