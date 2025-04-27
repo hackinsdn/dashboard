@@ -326,3 +326,23 @@ def feedback():
     except Exception as e:
         db.session.rollback()
         return jsonify({"status": "error", "result": str(e)}), 500
+
+@blueprint.route('/like', methods=['POST'])
+@login_required
+def like():
+    already_liked = UserLikes.query.filter_by(user_id=current_user.id).first()
+    
+    if not already_liked:
+        new_like = UserLikes(user_id=current_user.id)
+        db.session.add(new_like)
+        db.session.commit()
+        like_count = UserLikes.query.count()
+        return jsonify({
+            "status": "ok",
+            "likes": like_count
+        }), 200
+    
+    return jsonify({
+        "status": "exists", 
+        "likes": UserLikes.query.count()
+    }), 200

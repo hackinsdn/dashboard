@@ -96,11 +96,12 @@
           <!-- /.col -->
           <div class="col-12 col-sm-6 col-md-3">
             <div class="info-box mb-3">
-              <span class="info-box-icon bg-success elevation-1"><i class="fas fa-thumbs-up"></i></span>
-
+              <span id="like-button" class="info-box-icon bg-success elevation-1" style="cursor:pointer;">
+                <i class="fas fa-thumbs-up"></i>
+              </span>
               <div class="info-box-content">
                 <span class="info-box-text">Likes</span>
-                <span class="info-box-number">{{stats['likes']}}</span>
+                <span class="info-box-number" id="like-count">{{stats['likes']}}</span>
               </div>
               <!-- /.info-box-content -->
             </div>
@@ -619,24 +620,29 @@
         const stars = document.querySelectorAll("#stars i");
         const commentInput = document.getElementById("comment");
         const submitButton = document.getElementById("submit-star");
+        const likeBtn = document.getElementById("like-button");
+        const likeCount = document.getElementById("like-count");
+    
         let selectedRating = 0;
         let hasRated = false;
-
+        let userLiked = likeBtn.dataset.userLiked === "true";
+    
+        // ------------------------ STARS ------------------------
         stars.forEach(star => {
             star.addEventListener("mouseover", function () {
                 const index = parseInt(this.getAttribute("data-index"));
                 highlightStars(index);
             });
-
+    
             star.addEventListener("click", function () {
                 selectedRating = parseInt(this.getAttribute("data-index"));
             });
         });
-
+    
         document.getElementById("stars").addEventListener("mouseleave", function () {
             highlightStars(selectedRating);
         });
-
+    
         function highlightStars(count) {
             stars.forEach(star => {
                 const index = parseInt(star.getAttribute("data-index"));
@@ -644,21 +650,22 @@
                 star.classList.toggle("far", index > count);
             });
         }
-
+    
+        // ------------------------ SUBMIT FEEDBACK ------------------------
         submitButton.addEventListener("click", function () {
             if (selectedRating === 0) {
                 alert("Please select a rating before submitting.");
                 return;
             }
-
+    
             const comment = commentInput.value.trim();
             const ratingData = {
                 rating: selectedRating,
                 comment: comment,
             };
-
+    
             submitButton.disabled = true;
-
+    
             fetch('/api/feedback', {
                 method: 'POST',
                 headers: {
@@ -674,7 +681,7 @@
                     submitButton.disabled = true;
                     $('#modal-feedback').modal('hide');
                 } else {
-                    alert(data.result); // ← Simples e direto
+                    alert(data.result);
                     submitButton.disabled = false;
                 }
             })
@@ -684,6 +691,55 @@
                 submitButton.disabled = false;
             });
         });
+    
+        // ------------------------ LIKE BUTTON  ------------------------
+        likeBtn.addEventListener("click", function () {
+            if (userLiked) {
+                alert("You have already liked this page.");
+                return;
+            }
+    
+            fetch("/api/like", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status !== "ok") {
+                    alert("You have already liked this page.");
+                    return;
+                }
+    
+                likeCount.innerText = +likeCount.innerText + 1;
+                userLiked = true;
+    
+                likeBtn.style.transition = "transform 0.3s ease";
+                likeBtn.style.transform = "translateY(-10px)";
+                setTimeout(() => {
+                    likeBtn.style.transform = "translateY(0)";
+                }, 300);
+
+                for (let i = 0; i < 5; i++) {
+                    const b = document.createElement("div");
+                    b.textContent = "✨";
+                    Object.assign(b.style, {
+                        position: "fixed",
+                        left: likeBtn.getBoundingClientRect().left + 10 + i * 10 + "px",
+                        top: likeBtn.getBoundingClientRect().top - 10 + "px",
+                        fontSize: "18px",
+                        opacity: 1,
+                        transition: "all 0.8s ease",
+                        zIndex: 1000
+                    });
+                    document.body.appendChild(b);
+                    setTimeout(() => {
+                        b.style.transform = "translateY(-40px)";
+                        b.style.opacity = 0;
+                    }, 10);
+                    setTimeout(() => b.remove(), 700);
+                }
+            });
+        });
     });
-</script>
+    </script>    
 {% endblock javascripts %}
