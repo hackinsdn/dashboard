@@ -160,13 +160,15 @@ class UserLikes(db.Model):
         return f'<UserLikes User {self.user_id}>'
 
 
-class UserFeedbacks(db.Model):
+class UserFeedbacks(db.Model, AuditMixin):
     __tablename__ = 'user_feedbacks'
     id = db.Column(db.Integer, primary_key = True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     comment = db.Column(db.String, nullable=True)
     stars = db.Column(db.Integer, nullable=False)
     hide = db.Column(db.Boolean, default=False, nullable=False)
+    
+    user = db.relationship('Users', backref='feedbacks', foreign_keys=[user_id])
 
     def __repr__(self):
         return f'<UserFeedbacks User {self.user_id}, Stars {self.stars}>'

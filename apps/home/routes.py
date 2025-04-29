@@ -9,7 +9,7 @@ import re
 from apps import db, cache
 from apps.home import blueprint
 from apps.controllers import k8s
-from apps.home.models import Labs, LabInstances, LabCategories, LabAnswers, LabAnswerSheet, HomeLogging, UserLikes
+from apps.home.models import Labs, LabInstances, LabCategories, LabAnswers, LabAnswerSheet, HomeLogging, UserLikes, UserFeedbacks
 from apps.authentication.models import Users, Groups
 from flask import render_template, request, current_app, redirect, url_for, session
 from flask_login import login_required, current_user
@@ -17,6 +17,7 @@ from jinja2 import TemplateNotFound
 from apps.audit_mixin import get_remote_addr, check_user_category
 from apps.authentication.forms import GroupForm
 from apps.utils import update_running_labs_stats
+from datetime import timedelta
 
 
 @blueprint.before_request
@@ -30,6 +31,10 @@ def index():
     
     likes_count = UserLikes.query.count()
     user_liked = UserLikes.query.filter_by(user_id=current_user.id).first() is not None
+    feedbacks = UserFeedbacks.query.order_by(UserFeedbacks.created_at.desc()).all()
+    for feedback in feedbacks:
+        local_time = feedback.created_at - timedelta(hours=3)
+        feedback.created_at_formatted = local_time.strftime("%d/%m/%Y %H:%M")
 
     stats = {
         "lab_instances": 23,
@@ -40,7 +45,7 @@ def index():
         "cpu_usage": 15,
         "cpu_capacity": 2304,
     }
-    return render_template('pages/index.html', stats=stats, user_liked=user_liked)
+    return render_template('pages/index.html', stats=stats, user_liked=user_liked, feedbacks=feedbacks)
 
 
 @blueprint.route('/running/')
