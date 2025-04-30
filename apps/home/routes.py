@@ -26,13 +26,13 @@ def get_info_before_request():
 @blueprint.route('/index')
 @login_required
 @check_user_category(["admin", "teacher", "student"])
+@cache.cached(timeout=300)
 def index():
-    stats = cache.get('k8s_stats')
-    if not stats: 
-        lab_instances = LabInstances.query.filter_by(is_deleted=False).count()
-        users = Users.query.filter_by(is_deleted=False).count()
-        labs = Labs.query.count()
-        
+    lab_instances = LabInstances.query.filter_by(is_deleted=False).count()
+    users = Users.query.filter_by(is_deleted=False).count()
+    labs = Labs.query.count()
+
+    try:
         k8s.update_nodes()
         total_cpu_capacity = 0
         total_cpu_usage = 0
@@ -68,22 +68,28 @@ def index():
                 pods_capacity = int(node.status.capacity.get("pods", 0))
                 total_pods += pods_capacity
 
-        stats = {
-            "lab_instances": lab_instances,
-            "registered_labs": labs,
-            "likes": 23,
-            "users": users,
-            "lab_inst_period_report": "1 Jul, 2014 - 23 Nov, 2014",
-            "cpu_usage": total_cpu_usage,
-            "cpu_capacity": total_cpu_capacity,
-            "memory_usage": total_memory_usage,
-            "memory_capacity": total_memory_capacity,
-            "storage_usage": total_storage_usage,
-            "storage_capacity": total_storage_capacity,
-            "total_pods": total_pods,
-            "total_nodes": total_nodes,
-        }
-        cache.set('k8s_stats', stats)
+    except Exception as e:
+        current_app.logger.error(f"Failed to retrieve Kubernetes data: {e}")
+        total_cpu_capacity = total_cpu_usage = 0
+        total_memory_capacity = total_memory_usage = 0
+        total_storage_capacity = total_storage_usage = 0
+        total_pods = total_nodes = 0
+
+    stats = {
+        "lab_instances": lab_instances,
+        "registered_labs": labs,
+        "likes": 23,
+        "users": users,
+        "lab_inst_period_report": "1 Jul, 2014 - 23 Nov, 2014",
+        "cpu_usage": total_cpu_usage,
+        "cpu_capacity": total_cpu_capacity,
+        "memory_usage": total_memory_usage,
+        "memory_capacity": total_memory_capacity,
+        "storage_usage": total_storage_usage,
+        "storage_capacity": total_storage_capacity,
+        "total_pods": total_pods,
+        "total_nodes": total_nodes,
+    }
 
     return render_template('pages/index.html', stats=stats, segment='index')
 
