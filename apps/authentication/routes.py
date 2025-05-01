@@ -23,6 +23,7 @@ import uuid
 from datetime import timedelta
 from sqlalchemy import or_
 import secrets
+from apps import cache
 
 from apps.authentication.util import verify_pass
 
@@ -245,86 +246,70 @@ def resend_code():
 
 @blueprint.route('/reset-password', methods=['GET', 'POST'])
 def reset_password():
+    msg = ""
     form = ResetPasswordForm(request.form)
+    if not form.validate_on_submit():
+        if form.errors:
+            msg = f"Errors validating form: {form.errors}"
+        return render_template('pages/reset_password.html', form=form, msg=msg)
 
-    if 'identifier' in request.form:
-        identifier = request.form['identifier']
-        user = Users.query.filter(or_(Users.email == identifier, Users.username == identifier)).first()
-        if not user:
-            return redirect(url_for('authentication_blueprint.confirm_reset_password'))
+    msg = "If the user provided is valid, you will receive an e-mail with password reset link."
+    identifier = form.identifier.data
+    user = Users.query.filter(or_(Users.email == identifier, Users.username == identifier)).first()
+    if not user or user.is_deleted:
+        return render_template('pages/reset_password.html', form=form, msg=msg)
   
-        # Send email
-        confirmation_token = secrets.token_hex(8)
-        session['confirmation_token'] = confirmation_token
-        session['user'] = user.email
-        session['datetime'] = utcnow()
-        session['try'] = 0	
+    confirmation_token = secrets.token_urlsafe(64)
+    confirmation_url = app_config.BASE_URL + url_for("authentication_blueprint.confirm_reset_password", token=confirmation_token)
 
-        msg = Message(
-            subject="HackInSDN - Reset your password",
-            sender=app.config['MAIL_USERNAME'],
-            recipients=[user.email],
-            body=(
-                "Help us protect your account\n\n"
-                "Before you reset your password, we need to verify your identity. Enter the following code on the sign-up page.\n\n"
-                f"{confirmation_token}\n\n"
-                "If you have not recently tried to sign up into HackInSDN, you can ignore this e-mail.\n\n"
-                "--\n\n"
-                f"You're receiving this email because of your account on Dashboard HackInSDN."
-            ),
-            html=render_template('mail/reset_password.html', confirmation_token=confirmation_token),
-        )
-        mail.send(msg)
+    cache.set(f"resetpw-{confirmation_token}", user.id, timeout=3600)
+    
+    mail_msg = Message(
+        subject="HackInSDN - Reset your password",
+        sender=app.config['MAIL_USERNAME'],
+        recipients=[user.email],
+        body=(
+            "Help us protect your account\n\n"
+            "Your password can be reset by clicking the button below. If you did not request a new password, please ignore this email.\n\n"
+            f"{confirmation_url}\n\n"
+            "--\n\n"
+            f"You are receiving this email because of your account on Dashboard HackInSDN."
+        ),
+        html=render_template('mail/reset_password.html', confirmation_url=confirmation_url),
+    )
+    mail.send(mail_msg)
 
-        return redirect(url_for('authentication_blueprint.confirm_reset_password'))
+    return render_template('pages/reset_password.html', form=form, msg=msg)
 
-    else:
-        return render_template('pages/reset_password.html', form=form )
-
-@blueprint.route('/confirm-reset-password', methods=['GET', 'POST'])
-def confirm_reset_password():
+@blueprint.route('/confirm-reset-password/<token>', methods=['GET', 'POST'])
+def confirm_reset_password(token):
+    msg = ""
     form = ResetPasswordConfirmForm(request.form)
+    resetpw_user = cache.get(f"resetpw-{token}")
+    if not resetpw_user:
+        app.logger.info(f"Invalid password reset request ipaddr={get_remote_addr()} token={token}")
+        msg = "Invalid or expired token! You need to request a new <a href='{url_for('authentication_blueprint.reset_password')}'>Password Reset</a>"
+        return render_template('pages/confirm_reset_password.html', form=None, msg=msg)
 
-    confirmation_token = session.get('confirmation_token')
+    if not form.validate_on_submit():
+        if form.errors:
+            msg = f"Errors validating form: {form.errors}"
+        return render_template('pages/confirm_reset_password.html', form=form, msg=msg)
 
-    if not confirmation_token or not session.get('user') or not session.get('datetime') or session.get('try') == None:
-        app.logger.info(f"Invalid password reset request ipaddr={get_remote_addr()} login={session.get('user')} auth_provider=local")
-        return redirect(url_for('authentication_blueprint.reset_password'))
-    
-   
-    if 'confirm' in request.form:
-        user = Users.query.filter_by(email=session.get('user')).first()
-        created_at = session.get('datetime')
+    cache.delete(f"resetpw-{token}")
 
-        now = utcnow()
-        if now - created_at > timedelta(minutes=5):
-            return render_template('pages/confirm_reset_password.html', msg='Token expired, please <a href=/reset-password>click here</a> to reset your password again', success=False, form=form)
+    user = Users.query.get(resetpw_user)
+    if not user or user.is_deleted:
+        app.logger.info(f"Invalid password reset request ipaddr={get_remote_addr()} user={resetpw_user}")
+        msg = "Invalid password reset request! You need to request a new <a href='{url_for('authentication_blueprint.reset_password')}'>Password Reset</a>"
+        return render_template('pages/confirm_reset_password.html', form=None, msg=msg)
 
-        if session.get('try') > 3:
-            app.logger.info(f"Too many tries on password reset ipaddr={get_remote_addr()} login={session.get('user')} auth_provider=local")
-            session.pop('confirmation_token')
-            session.pop('user')
-            session.pop('datetime')
-            session.pop('try')
-            return render_template('pages/confirm_reset_password.html', msg='Too many tries, please <a href=/reset-password>click here</a> to reset your password again', success=False, form=form)
-            
-        if request.form['confirmation_token'] != confirmation_token:
-            app.logger.info(f"Invalid token ipaddr={get_remote_addr()} login={session.get('user')} auth_provider=local")
-            # Increment try
-            session['try'] += 1
-            return render_template('pages/confirm_reset_password.html', msg='Invalid token', success=False, form=form)
+    user.set_password(form.password.data)
+    db.session.commit()
 
-        session.pop('confirmation_token')
-        session.pop('user')
-        session.pop('datetime')
-        session.pop('try')
-
-        user.set_password(request.form['password'])
-        db.session.commit()
-
-        return redirect(url_for('authentication_blueprint.login'))
-    
-    return render_template('pages/confirm_reset_password.html', form=form)
+    app.logger.info(f"Successful password reset ipaddr={get_remote_addr()} login={user.username} auth_provider=local")
+    msg = f"Password changed successfully! Now you can <a href='{url_for('authentication_blueprint.login')}'>click to Login</a>"
+    return render_template('pages/confirm_reset_password.html', form=form, msg=msg)
 
 @blueprint.route('/logout')
 @login_required
