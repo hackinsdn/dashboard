@@ -657,6 +657,8 @@ def list_lab_answers():
         lab_answer_sheet = LabAnswerSheet.query.filter_by(lab_id=filter_lab_id).first()
         if lab_answer_sheet:
             answer_sheet = lab_answer_sheet.answers_dict
+        else:
+            return render_template("pages/lab_answers_list.html", lab_answers=[], labs=labs, groups=groups, filter_lab=filter_lab_id, filter_group=filter_group_id, msg_fail="No Lab Answer Sheet available. Please create the Answer Sheet first.")
 
     users = {user.id: user for user in Users.query.filter_by(is_deleted=False).all()}
     lab_query = LabAnswers.query
@@ -683,6 +685,7 @@ def list_lab_answers():
         lab_answers.append({
             "id": lab_answer.id,
             "lab_title": lab.title,
+            "lab_id": lab.id,
             "user": f"{user.name} ({user.email or 'NO-EMAIL'})",
             "answers": lab_answer.answers_table,
             "score": score,
