@@ -748,6 +748,16 @@ def add_answer_sheet():
     return render_template("pages/lab_answers_sheet.html", labs=labs, lab_id=lab_id, answers=answers, msg_ok="Lab answer sheet saved!")
 
 
+@blueprint.route('/feedback_view', methods=["GET"])
+@login_required
+def feedback_view():
+    feedbacks = UserFeedbacks.query.all()
+    for feedback in feedbacks:
+        local_time = feedback.created_at - timedelta(hours=3)
+        feedback.created_at_formatted = local_time.strftime("%d/%m/%Y %H:%M")
+
+    return render_template('pages/feedback_view.html', feedbacks=feedbacks)
+
 @blueprint.route('/gallery', methods=["GET"])
 @login_required
 def view_gallery():

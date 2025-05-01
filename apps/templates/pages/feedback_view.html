@@ -1,0 +1,88 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Home {% endblock %} 
+
+<!-- Element injected in the BODY element -->
+{% block body_class %} sidebar-mini layout-navbar-fixed {% endblock body_class %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}
+
+  <!-- Google Font: Source Sans Pro -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
+  <!-- overlayScrollbars -->
+  <link rel="stylesheet" href="/static/assets/plugins/overlayScrollbars/css/OverlayScrollbars.min.css">
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="/static/assets/plugins/leaflet/leaflet.css">
+  <!-- Theme style -->
+  <link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
+
+{% endblock stylesheets %}
+
+{% block content %}  
+<div class="content-wrapper">
+  <!-- Page Header -->
+  <div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h1 class="m-0 text-dark"><i class="fas fa-comments mr-2"></i>Feedbacks</h1>
+        </div>
+        <div class="col-sm-6">
+          <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a href="/">Home</a></li>
+            <li class="breadcrumb-item active">Feedbacks</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Feedbacks -->
+  <section class="content">
+    <div class="container-fluid">
+      <div class="row justify-content-center">
+        <div class="col-md-10">
+          <div class="card card-outline card-primary shadow">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fas fa-star-half-alt mr-1"></i> User Feedbacks</h3>
+            </div>
+
+            <div class="card-body">
+              {% if feedbacks %}
+                {% for feedback in feedbacks %}
+                  <div class="media mb-4 p-3 rounded bg-light shadow-sm">
+                    <div class="media-body">
+                      <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h5 class="mb-0 text-primary font-weight-bold">
+                          <i class="fas fa-user-circle mr-1"></i>{{ feedback.user.given_name }} {{ feedback.user.family_name }}
+                        </h5>
+                        <div class="text-warning">
+                          {% for i in range(feedback.stars) %}
+                            <i class="fas fa-star"></i>
+                          {% endfor %}
+                          {% for i in range(5 - feedback.stars) %}
+                            <i class="far fa-star"></i>
+                          {% endfor %}
+                        </div>
+                      </div>
+                      <p class="mb-2 text-dark"><i class="fas fa-quote-left mr-2 text-muted"></i>{{ feedback.comment }}</p>
+                      <p class="text-muted mb-0 small">
+                        <i class="far fa-clock mr-1"></i>{{ feedback.created_at_formatted }}
+                      </p>
+                    </div>
+                  </div>
+                {% endfor %}
+              {% else %}
+                <p class="text-center text-muted">No feedbacks available yet.</p>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}
