@@ -9,7 +9,7 @@ import re
 from apps import db, cache
 from apps.home import blueprint
 from apps.controllers import k8s
-from apps.home.models import Labs, LabInstances, LabCategories, LabAnswers, LabAnswerSheet, HomeLogging, UserLikes, UserFeedbacks
+from apps.home.models import Labs, LabInstances, LabCategories, LabAnswers, LabAnswerSheet, HomeLogging, UserLikes
 from apps.authentication.models import Users, Groups
 from flask import render_template, request, current_app, redirect, url_for, session
 from flask_login import login_required, current_user
@@ -17,7 +17,6 @@ from jinja2 import TemplateNotFound
 from apps.audit_mixin import get_remote_addr, check_user_category
 from apps.authentication.forms import GroupForm
 from apps.utils import update_running_labs_stats
-from sqlalchemy.sql import func
 
 
 @blueprint.before_request
@@ -28,25 +27,16 @@ def get_info_before_request():
 @login_required
 @check_user_category(["admin", "teacher", "student"])
 def index():
-    review_count = db.session.query(UserFeedbacks).count()
-   
-    if review_count > 0:
-        valid_feedbacks = UserFeedbacks.query.filter(UserFeedbacks.stars.isnot(None)).all()
-
-        if valid_feedbacks:
-            average_stars = db.session.query(func.avg(UserFeedbacks.stars)).scalar() or 0
-        else:
-            average_stars = 0
-    else:
-        average_stars = 0
-
-    likes = UserLikes.query.count()
+    user_likes = cache.get("user_likes")
+    if user_likes is None:
+        user_likes = UserLikes.query.count()
+        cache.set("user_likes", user_likes)
 
     stats = {
         "lab_instances": 23,
         "registered_labs": 57,
-        "average_stars": round(average_stars, 2),
-        "likes":likes,
+        "likes": user_likes,
+        "has_liked": UserLikes.query.get(current_user.id),
         "users": 38,
         "lab_inst_period_report": "1 Jul, 2014 - 23 Nov, 2014",
         "cpu_usage": 15,

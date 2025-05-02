@@ -160,18 +160,6 @@ class UserLikes(db.Model):
         return f'<UserLikes User {self.user_id}>'
 
 
-class UserFeedbacks(db.Model):
-    __tablename__ = 'user_feedbacks'
-    id = db.Column(db.Integer, primary_key = True)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
-    comment = db.Column(db.String, nullable=True)
-    stars = db.Column(db.Integer, nullable=False)
-    hide = db.Column(db.Boolean, default=False, nullable=False)
-
-    def __repr__(self):
-        return f'<UserFeedbacks User {self.user_id}, Stars {self.stars}>'
-
-
 @event.listens_for(Labs, 'after_insert')
 @event.listens_for(LabInstances, 'after_insert')
 def logging_added(mapper, connection, target):
