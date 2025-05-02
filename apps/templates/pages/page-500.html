@@ -21,92 +21,90 @@
 
 {% block content %}
   <style>
-    :root {
-            --primary-color: #00b0e6;
-            --secondary-color: #444444;
-            --error-color: #e74c3c;
-        }
+:root {
+    --primary-color: #00b0e6;
+    --secondary-color: #444444;
+    --error-color: #e74c3c;
+}
 
-        .error-icon {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 20px;
-            position: relative;
-        }
+.error-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 20px;
+    position: relative;
+}
 
-        .server {
-            width: 60px;
-            height: 80px;
-            background-color: var(--secondary-color);
-            border-radius: 5px;
-            position: relative;
-            margin: 0 auto;
-        }
+.server {
+    width: 60px;
+    height: 80px;
+    background-color: var(--secondary-color);
+    border-radius: 5px;
+    position: relative;
+    margin: 0 auto;
+}
 
-        .server::before, .server::after {
-            content: "";
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background-color: var(--primary-color);
-            animation: blink 2s infinite alternate;
-        }
+.server::before, .server::after {
+    content: "";
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    animation: blink 2s infinite alternate;
+}
 
-        .server::before {
-            top: 15px;
-            left: 10px;
-            animation-delay: 0.5s;
-        }
+.server::before {
+    top: 15px;
+    left: 10px;
+    animation-delay: 0.5s;
+}
 
-        .server::after {
-            top: 15px;
-            right: 10px;
-        }
+.server::after {
+    top: 15px;
+    right: 10px;
+}
 
-        .lightning {
-            position: absolute;
-            top: -20px;
-            right: -10px;
-            color: var(--error-color);
-            font-size: 30px;
-            transform: rotate(20deg);
-            animation: flash 3s infinite;
-        }
+.lightning {
+    position: absolute;
+    top: -20px;
+    right: -10px;
+    color: var(--error-color);
+    font-size: 30px;
+    transform: rotate(20deg);
+    animation: flash 3s infinite;
+}
 
-        @keyframes blink {
-            0%, 40% {
-                opacity: 1;
-            }
-            50%, 90% {
-                opacity: 0.3;
-            }
-            100% {
-                opacity: 1;
-            }
-        }
+@keyframes blink {
+    0%, 40% {
+        opacity: 1;
+    }
+    50%, 90% {
+        opacity: 0.3;
+    }
+    100% {
+        opacity: 1;
+    }
+}
 
-        @keyframes flash {
-            0%, 50%, 100% {
-                opacity: 0;
-            }
-            55%, 65% {
-                opacity: 1;
-            }
-        }
+@keyframes flash {
+    0%, 50%, 100% {
+        opacity: 0;
+    }
+    55%, 65% {
+        opacity: 1;
+    }
+}
 
-        /* Responsiveness */
-        @media (max-width: 768px) {
-            
-            .action-buttons {
-                flex-direction: column;
-                gap: 10px;
-            }
-            
-            .btn {
-                width: 100%;
-            }
-        }
+/* Responsiveness */
+@media (max-width: 768px) {
+    .action-buttons {
+        flex-direction: column;
+        gap: 10px;
+    }
+    .btn {
+        width: 100%;
+    }
+}
   </style>
 
   <div class="container text-center d-flex flex-column justify-content-center align-items-center">

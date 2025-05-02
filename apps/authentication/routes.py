@@ -16,12 +16,15 @@ from apps import db, login_manager, oauth, mail
 from apps.config import app_config
 from apps.audit_mixin import get_remote_addr, utcnow
 from apps.authentication import blueprint
-from apps.authentication.forms import LoginForm, CreateAccountForm, ConfirmAccountForm
+from apps.authentication.forms import LoginForm, CreateAccountForm, ConfirmAccountForm, ResetPasswordForm, ResetPasswordConfirmForm
 from apps.authentication.models import Users, Groups, LoginLogging
 from flask_mail import Message
 import uuid
 from datetime import timedelta
 from sqlalchemy import or_
+import secrets
+from apps import cache
+
 from apps.authentication.util import verify_pass
 
 
@@ -240,6 +243,73 @@ def resend_code():
     mail.send(msg)
 
     return redirect(url_for('authentication_blueprint.confirm_page'))
+
+@blueprint.route('/reset-password', methods=['GET', 'POST'])
+def reset_password():
+    msg = ""
+    form = ResetPasswordForm(request.form)
+    if not form.validate_on_submit():
+        if form.errors:
+            msg = f"Errors validating form: {form.errors}"
+        return render_template('pages/reset_password.html', form=form, msg=msg)
+
+    msg = "If the user provided is valid, you will receive an e-mail with password reset link."
+    identifier = form.identifier.data
+    user = Users.query.filter(or_(Users.email == identifier, Users.username == identifier)).first()
+    if not user or user.is_deleted:
+        return render_template('pages/reset_password.html', form=form, msg=msg)
+  
+    confirmation_token = secrets.token_urlsafe(64)
+    confirmation_url = app_config.BASE_URL + url_for("authentication_blueprint.confirm_reset_password", token=confirmation_token)
+
+    cache.set(f"resetpw-{confirmation_token}", user.id, timeout=3600)
+    
+    mail_msg = Message(
+        subject="HackInSDN - Reset your password",
+        sender=app.config['MAIL_USERNAME'],
+        recipients=[user.email],
+        body=(
+            "Help us protect your account\n\n"
+            "Your password can be reset by clicking the button below. If you did not request a new password, please ignore this email.\n\n"
+            f"{confirmation_url}\n\n"
+            "--\n\n"
+            f"You are receiving this email because of your account on Dashboard HackInSDN."
+        ),
+        html=render_template('mail/reset_password.html', confirmation_url=confirmation_url),
+    )
+    mail.send(mail_msg)
+
+    return render_template('pages/reset_password.html', form=form, msg=msg)
+
+@blueprint.route('/confirm-reset-password/<token>', methods=['GET', 'POST'])
+def confirm_reset_password(token):
+    msg = ""
+    form = ResetPasswordConfirmForm(request.form)
+    resetpw_user = cache.get(f"resetpw-{token}")
+    if not resetpw_user:
+        app.logger.info(f"Invalid password reset request ipaddr={get_remote_addr()} token={token}")
+        msg = "Invalid or expired token! You need to request a new <a href='{url_for('authentication_blueprint.reset_password')}'>Password Reset</a>"
+        return render_template('pages/confirm_reset_password.html', form=None, msg=msg)
+
+    if not form.validate_on_submit():
+        if form.errors:
+            msg = f"Errors validating form: {form.errors}"
+        return render_template('pages/confirm_reset_password.html', form=form, msg=msg)
+
+    cache.delete(f"resetpw-{token}")
+
+    user = Users.query.get(resetpw_user)
+    if not user or user.is_deleted:
+        app.logger.info(f"Invalid password reset request ipaddr={get_remote_addr()} user={resetpw_user}")
+        msg = "Invalid password reset request! You need to request a new <a href='{url_for('authentication_blueprint.reset_password')}'>Password Reset</a>"
+        return render_template('pages/confirm_reset_password.html', form=None, msg=msg)
+
+    user.set_password(form.password.data)
+    db.session.commit()
+
+    app.logger.info(f"Successful password reset ipaddr={get_remote_addr()} login={user.username} auth_provider=local")
+    msg = f"Password changed successfully! Now you can <a href='{url_for('authentication_blueprint.login')}'>click to Login</a>"
+    return render_template('pages/confirm_reset_password.html', form=form, msg=msg)
 
 @blueprint.route('/logout')
 @login_required
