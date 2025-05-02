@@ -152,6 +152,13 @@ class HomeLogging(db.Model):
         return '<HomeLogging %s %s %s>' % (self.ip_address,
                                             self.action, self.datetime)
 
+class UserLikes(db.Model):
+    __tablename__ = 'user_likes'
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), primary_key = True, nullable=False)
+
+    def __repr__(self):
+        return f'<UserLikes User {self.user_id}>'
+
 
 @event.listens_for(Labs, 'after_insert')
 @event.listens_for(LabInstances, 'after_insert')

@@ -5,7 +5,7 @@ import json
 from apps import db, cache
 from apps.api import blueprint
 from apps.controllers import k8s
-from apps.home.models import Labs, LabInstances, LabAnswers
+from apps.home.models import Labs, LabInstances, LabAnswers, UserLikes
 from apps.authentication.models import Users, Groups, DeletedGroupUsers
 from flask import request, current_app
 from flask_login import login_required, current_user
@@ -289,3 +289,36 @@ def join_group(group_id):
         return {"status": "fail", "result": "Failed to join group"}, 400
 
     return {"status": "ok", "result": "Joint group successfully! Click on 'Reload profile' to update your authorization."}, 200
+
+
+@blueprint.route('/user_like', methods=["POST"])
+@login_required
+def add_user_like():
+    counter = cache.get("user_likes") or UserLikes.query.count()
+    user_like = UserLikes.query.get(current_user.id)
+    if user_like:
+        return {"status": "ok", "result": counter}, 200
+    user_like = UserLikes(user_id=current_user.id)
+    db.session.add(user_like)
+    try:
+        db.session.commit()
+    except Exception as exc:
+        current_app.logger.error(f"Failed to add user like: {exc}")
+        return {"status": "fail", "result": "Failed to add user like"}, 400
+    cache.set("user_likes", counter+1)
+    return {"status": "ok", "result": counter+1}, 200
+
+
+@blueprint.route('/user_like', methods=["DELETE"])
+@login_required
+def del_user_like():
+    db.session.query(UserLikes).filter(UserLikes.user_id == current_user.id).delete()
+    try:
+        db.session.commit()
+    except Exception as exc:
+        current_app.logger.error(f"Failed to delete user like: {exc}")
+        return {"status": "fail", "result": "Failed to delete user like"}, 400
+    counter = cache.get("user_likes") or UserLikes.query.count()
+    counter = max(counter-1, 0)
+    cache.set("user_likes", counter)
+    return {"status": "ok", "result": counter}, 200
