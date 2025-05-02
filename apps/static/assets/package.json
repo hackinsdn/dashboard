@@ -95,6 +95,7 @@
         "sweetalert2": "^10.16.9",
         "tempusdominus-bootstrap-4": "^5.39.0",
         "toastr": "^2.1.4",
+	"@mojs/core": "^1.7.1",
         "uplot": "^1.6.15"
     }
 }

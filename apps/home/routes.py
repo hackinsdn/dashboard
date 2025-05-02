@@ -9,7 +9,7 @@ import re
 from apps import db, cache
 from apps.home import blueprint
 from apps.controllers import k8s
-from apps.home.models import Labs, LabInstances, LabCategories, LabAnswers, LabAnswerSheet, HomeLogging
+from apps.home.models import Labs, LabInstances, LabCategories, LabAnswers, LabAnswerSheet, HomeLogging, UserLikes
 from apps.authentication.models import Users, Groups
 from flask import render_template, request, current_app, redirect, url_for, session
 from flask_login import login_required, current_user
@@ -27,16 +27,23 @@ def get_info_before_request():
 @login_required
 @check_user_category(["admin", "teacher", "student"])
 def index():
+    user_likes = cache.get("user_likes")
+    if user_likes is None:
+        user_likes = UserLikes.query.count()
+        cache.set("user_likes", user_likes)
+
     stats = {
         "lab_instances": 23,
         "registered_labs": 57,
-        "likes": 23,
+        "likes": user_likes,
+        "has_liked": UserLikes.query.get(current_user.id),
         "users": 38,
         "lab_inst_period_report": "1 Jul, 2014 - 23 Nov, 2014",
         "cpu_usage": 15,
         "cpu_capacity": 2304,
     }
-    return render_template('pages/index.html', stats=stats, segment='index')
+
+    return render_template('pages/index.html', stats=stats)
 
 
 @blueprint.route('/running/')
