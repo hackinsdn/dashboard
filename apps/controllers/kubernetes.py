@@ -492,3 +492,52 @@ class K8sController():
                 "longitude": RNP_TESTBED_NODES.get(name, {}).get("lng", 0.0),
             })
         return result
+    
+    def get_statistics(self):
+        """Get statistics of the cluster."""
+        self.update_nodes()
+        total_cpu_capacity = 0
+        total_cpu_usage = 0
+        total_memory_capacity = 0
+        total_memory_usage = 0
+        total_storage_capacity = 0
+        total_storage_usage = 0
+        total_pods = 0
+        total_nodes = len(self.ready_nodes)
+
+        for node_name in self.ready_nodes:
+            node = self.nodes.get(node_name)
+            if node:
+                # CPU
+                cpu_capacity = int(node.status.capacity.get("cpu", 0))
+                total_cpu_capacity += cpu_capacity
+                cpu_usage = int(node.status.allocatable.get("cpu", 0))
+                total_cpu_usage += cpu_usage
+
+                # Memory
+                memory_capacity = int(node.status.capacity.get("memory", "0").rstrip("Ki")) // (1024*1024)
+                total_memory_capacity += memory_capacity
+                memory_usage = int(node.status.allocatable.get("memory", "0").rstrip("Ki")) // (1024*1024)
+                total_memory_usage += memory_usage
+
+                # Storage
+                storage_capacity = int(node.status.capacity.get("ephemeral-storage", "0").rstrip("Ki")) // (1024*1024)
+                total_storage_capacity += storage_capacity
+                storage_usage = int(node.status.allocatable.get("ephemeral-storage", "0").rstrip("Ki")) // (1024*1024)
+                total_storage_usage += storage_usage
+
+                # Pods
+                pods_capacity = int(node.status.capacity.get("pods", 0))
+                total_pods += pods_capacity
+
+        return {
+            "total_cpu_capacity": total_cpu_capacity,
+            "total_cpu_usage": total_cpu_usage,
+            "total_memory_capacity": total_memory_capacity,
+            "total_memory_usage": total_memory_usage,
+            "total_storage_capacity": total_storage_capacity,
+            "total_storage_usage": total_storage_usage,
+            "total_pods": total_pods,
+            "total_nodes": total_nodes,
+        }
+        

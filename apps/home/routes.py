@@ -26,54 +26,17 @@ def get_info_before_request():
 @blueprint.route('/index')
 @login_required
 @check_user_category(["admin", "teacher", "student"])
-@cache.cached(timeout=300)
+@cache.cached()
 def index():
     lab_instances = LabInstances.query.filter_by(is_deleted=False).count()
     users = Users.query.filter_by(is_deleted=False).count()
     labs = Labs.query.count()
+    stats_data = {}
 
     try:
-        k8s.update_nodes()
-        total_cpu_capacity = 0
-        total_cpu_usage = 0
-        total_memory_capacity = 0
-        total_memory_usage = 0
-        total_storage_capacity = 0
-        total_storage_usage = 0
-        total_pods = 0
-        total_nodes = len(k8s.ready_nodes)
-
-        for node_name in k8s.ready_nodes:
-            node = k8s.nodes.get(node_name)
-            if node:
-                # CPU
-                cpu_capacity = int(node.status.capacity.get("cpu", 0))
-                total_cpu_capacity += cpu_capacity
-                cpu_usage = int(node.status.allocatable.get("cpu", 0))
-                total_cpu_usage += cpu_usage
-
-                # Memory
-                memory_capacity = int(node.status.capacity.get("memory", "0").rstrip("Ki")) // (1024*1024)
-                total_memory_capacity += memory_capacity
-                memory_usage = int(node.status.allocatable.get("memory", "0").rstrip("Ki")) // (1024*1024)
-                total_memory_usage += memory_usage
-
-                # Storage
-                storage_capacity = int(node.status.capacity.get("ephemeral-storage", "0").rstrip("Ki")) // (1024*1024)
-                total_storage_capacity += storage_capacity
-                storage_usage = int(node.status.allocatable.get("ephemeral-storage", "0").rstrip("Ki")) // (1024*1024)
-                total_storage_usage += storage_usage
-
-                # Pods
-                pods_capacity = int(node.status.capacity.get("pods", 0))
-                total_pods += pods_capacity
-
+        stats_data = k8s.get_statistics()
     except Exception as e:
         current_app.logger.error(f"Failed to retrieve Kubernetes data: {e}")
-        total_cpu_capacity = total_cpu_usage = 0
-        total_memory_capacity = total_memory_usage = 0
-        total_storage_capacity = total_storage_usage = 0
-        total_pods = total_nodes = 0
 
     stats = {
         "lab_instances": lab_instances,
@@ -81,14 +44,14 @@ def index():
         "likes": 23,
         "users": users,
         "lab_inst_period_report": "1 Jul, 2014 - 23 Nov, 2014",
-        "cpu_usage": total_cpu_usage,
-        "cpu_capacity": total_cpu_capacity,
-        "memory_usage": total_memory_usage,
-        "memory_capacity": total_memory_capacity,
-        "storage_usage": total_storage_usage,
-        "storage_capacity": total_storage_capacity,
-        "total_pods": total_pods,
-        "total_nodes": total_nodes,
+        "cpu_usage": stats_data.get("total_cpu_capacity", 0),
+        "cpu_capacity": stats_data.get("total_cpu_usage", 0),
+        "memory_usage": stats_data.get("total_memory_capacity", 0),
+        "memory_capacity": stats_data.get("total_memory_usage", 0),
+        "storage_usage": stats_data.get("total_storage_usage", 0),
+        "storage_capacity": stats_data.get("total_storage_capacity", 0),
+        "total_pods": stats_data.get("total_pods", 0),
+        "total_nodes": stats_data.get("total_nodes", 0),
     }
 
     return render_template('pages/index.html', stats=stats, segment='index')
