@@ -163,6 +163,13 @@ def register():
 
         # else we can create the user
         user = Users(**request.form)
+        
+        form_data = request.form.to_dict()
+        form_data["issuer"] = "LOCAL"
+        
+        user = Users(**form_data)
+        db.session.add(user)
+        db.session.commit()
 
         confirmation_token = str(uuid.uuid4().int)[:6]
         session['confirmation_token'] = confirmation_token
