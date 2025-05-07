@@ -26,35 +26,33 @@ def get_info_before_request():
 @blueprint.route('/index')
 @login_required
 @check_user_category(["admin", "teacher", "student"])
-@cache.cached()
 def index():
     user_likes = cache.get("user_likes")
     if user_likes is None:
         user_likes = UserLikes.query.count()
         cache.set("user_likes", user_likes)
 
-    lab_instances = LabInstances.query.filter_by(is_deleted=False).count()
-    users = Users.query.filter_by(is_deleted=False).count()
-    labs = Labs.query.count()
-    stats_data = {}
-
-    try:
-        stats_data = k8s.get_statistics()
-    except Exception as e:
-        current_app.logger.error(f"Failed to retrieve Kubernetes data: {e}")
+    stats_data = cache.get("stats_data")
+    if stats_data is None:
+        try:
+            stats_data = k8s.get_statistics()
+        except Exception as e:
+            stats_data = {}
+            current_app.logger.error(f"Failed to retrieve Kubernetes data: {e}")
+        stats_data["lab_instances"] = LabInstances.query.filter_by(is_deleted=False).count()
+        stats_data["users"] = Users.query.filter_by(is_deleted=False).count()
+        stats_data["labs"] = Labs.query.count()
+        cache.set("stats_data", stats_data)
 
     stats = {
-        "lab_instances": lab_instances,
-        "registered_labs": labs,
+        "lab_instances": stats_data.get("lab_instances", 0),
+        "registered_labs": stats_data.get("labs", 0),
         "likes": user_likes,
         "has_liked": UserLikes.query.get(current_user.id),
-        "users": users,
+        "users": stats_data.get("users", 0),
         "lab_inst_period_report": "1 Jul, 2014 - 23 Nov, 2014",
-        "cpu_usage": stats_data.get("total_cpu_capacity", 0),
-        "cpu_capacity": stats_data.get("total_cpu_usage", 0),
-        "memory_usage": stats_data.get("total_memory_capacity", 0),
-        "memory_capacity": stats_data.get("total_memory_usage", 0),
-        "storage_usage": stats_data.get("total_storage_usage", 0),
+        "cpu_capacity": stats_data.get("total_cpu_capacity", 0),
+        "memory_capacity": stats_data.get("total_memory_capacity", 0),
         "storage_capacity": stats_data.get("total_storage_capacity", 0),
         "total_pods": stats_data.get("total_pods", 0),
         "total_nodes": stats_data.get("total_nodes", 0),

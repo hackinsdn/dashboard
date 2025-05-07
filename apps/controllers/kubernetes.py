@@ -14,7 +14,7 @@ import random
 
 from kubernetes import config, client
 from kubernetes.stream import stream
-from kubernetes.utils import create_from_yaml, duration
+from kubernetes.utils import create_from_yaml, duration, parse_quantity
 
 from flask import current_app
 from flask_login import current_user
@@ -493,51 +493,71 @@ class K8sController():
             })
         return result
     
+    def humanbytes(self, decimal):
+        """Return the given bytes as a human friendly KB, MB, GB, or TB string."""
+        B = float(decimal)
+        KB = float(1024)
+        MB = float(KB ** 2)
+        GB = float(KB ** 3)
+        TB = float(KB ** 4)
+        PB = float(KB ** 5)
+        EB = float(KB ** 6)
+
+        if B < KB:
+            return '{0} {1}'.format(B,'Bytes' if 0 == B > 1 else 'Byte')
+        elif KB <= B < MB:
+            return '{0:.2f} KB'.format(B / KB)
+        elif MB <= B < GB:
+            return '{0:.2f} MB'.format(B / MB)
+        elif GB <= B < TB:
+            return '{0:.2f} GB'.format(B / GB)
+        elif TB <= B < PB:
+            return '{0:.2f} TB'.format(B / TB)
+        elif PB <= B < EB:
+            return '{0:.2f} PB'.format(B / PB)
+        elif EB <= B:
+            return '{0:.2f} EB'.format(B / EB)
+
     def get_statistics(self):
         """Get statistics of the cluster."""
         self.update_nodes()
         total_cpu_capacity = 0
-        total_cpu_usage = 0
         total_memory_capacity = 0
-        total_memory_usage = 0
         total_storage_capacity = 0
-        total_storage_usage = 0
         total_pods = 0
         total_nodes = len(self.ready_nodes)
 
         for node_name in self.ready_nodes:
             node = self.nodes.get(node_name)
-            if node:
-                # CPU
-                cpu_capacity = int(node.status.capacity.get("cpu", 0))
-                total_cpu_capacity += cpu_capacity
-                cpu_usage = int(node.status.allocatable.get("cpu", 0))
-                total_cpu_usage += cpu_usage
+            if not node:
+                continue
 
-                # Memory
-                memory_capacity = int(node.status.capacity.get("memory", "0").rstrip("Ki")) // (1024*1024)
-                total_memory_capacity += memory_capacity
-                memory_usage = int(node.status.allocatable.get("memory", "0").rstrip("Ki")) // (1024*1024)
-                total_memory_usage += memory_usage
+            # CPU
+            cpu_capacity = int(node.status.capacity.get("cpu", 0))
+            total_cpu_capacity += cpu_capacity
 
-                # Storage
-                storage_capacity = int(node.status.capacity.get("ephemeral-storage", "0").rstrip("Ki")) // (1024*1024)
-                total_storage_capacity += storage_capacity
-                storage_usage = int(node.status.allocatable.get("ephemeral-storage", "0").rstrip("Ki")) // (1024*1024)
-                total_storage_usage += storage_usage
+            # Memory
+            try:
+                memory_capacity = parse_quantity(node.status.capacity.get("memory", "0"))
+            except:
+                memory_capacity = 0
+            total_memory_capacity += memory_capacity
 
-                # Pods
-                pods_capacity = int(node.status.capacity.get("pods", 0))
-                total_pods += pods_capacity
+            # Storage
+            try:
+                storage_capacity = parse_quantity(node.status.capacity.get("ephemeral-storage", "0"))
+            except:
+                storage_capacity = 0
+            total_storage_capacity += storage_capacity
+
+            # Pods
+            pods_capacity = int(node.status.capacity.get("pods", 0))
+            total_pods += pods_capacity
 
         return {
             "total_cpu_capacity": total_cpu_capacity,
-            "total_cpu_usage": total_cpu_usage,
-            "total_memory_capacity": total_memory_capacity,
-            "total_memory_usage": total_memory_usage,
-            "total_storage_capacity": total_storage_capacity,
-            "total_storage_usage": total_storage_usage,
+            "total_memory_capacity": self.humanbytes(total_memory_capacity),
+            "total_storage_capacity": self.humanbytes(total_storage_capacity),
             "total_pods": total_pods,
             "total_nodes": total_nodes,
         }
-        
