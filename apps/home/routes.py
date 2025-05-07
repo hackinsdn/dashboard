@@ -778,3 +778,8 @@ def view_documentation():
 @login_required
 def view_contact():
     return render_template("pages/contact.html")
+
+@blueprint.route("/finished-lab-infos", methods=["GET"])
+@login_required
+def view_finished_lab_infos():
+    return render_template("pages/finished_lab_infos.html")

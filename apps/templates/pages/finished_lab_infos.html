@@ -1,0 +1,179 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Lab Completed {% endblock %}
+
+{% block body_class %} sidebar-mini layout-navbar-fixed {% endblock body_class %}
+
+{% block stylesheets %}
+  <!-- Google Font: Source Sans Pro -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
+  <!-- icheck bootstrap -->
+  <link rel="stylesheet" href="/static/assets/plugins/icheck-bootstrap/icheck-bootstrap.min.css">
+  <!-- Theme style -->
+  <link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
+  <style>
+    .success-icon {
+      font-size: 5rem;
+      color: #28a745;
+      margin-bottom: 1rem;
+    }
+    .success-card {
+      max-width: 700px;
+      margin: 0 auto;
+      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+      border-radius: 10px;
+    }
+    .success-actions {
+      margin-top: 2rem;
+    }
+    .success-message {
+      font-size: 1.2rem;
+      margin-bottom: 1.5rem;
+    }
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background-color: #f2d74e;
+      opacity: 0;
+      animation: confetti 5s ease-in-out infinite;
+    }
+    @keyframes confetti {
+      0% {transform: translateY(0) rotate(0deg); opacity: 1;}
+      100% {transform: translateY(100vh) rotate(360deg); opacity: 0;}
+    }
+  </style>
+{% endblock stylesheets %}
+
+{% block content %}
+  <!-- Content Wrapper. Contains page content -->
+  <div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+      <div class="container-fluid">
+        <div class="row mb-2">
+          <div class="col-sm-6">
+            <h1>Lab Completed</h1>
+          </div>
+          <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+              <li class="breadcrumb-item"><a href="{{url_for('home_blueprint.index')}}">Home</a></li>
+              <li class="breadcrumb-item"><a href="#">Labs</a></li>
+              <li class="breadcrumb-item active">Lab Completed</li>
+            </ol>
+          </div>
+        </div>
+      </div><!-- /.container-fluid -->
+    </section>
+
+    <!-- Main content -->
+    <section class="content">
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-12">
+            <div class="card success-card">
+              <div class="card-body text-center py-5">
+                <div id="confetti-container"></div>
+                <i class="fas fa-check-circle success-icon"></i>
+                <h2 class="mb-4">Congratulations!</h2>
+                <p class="success-message">
+                  <strong>You have successfully completed the laboratory!</strong>
+                </p>
+                <p class="success-message">
+                  Your answers have been successfully saved in the system.
+                </p>
+                <p class="text-muted">
+                  You can execute this laboratory again as many times as you want.
+                </p>
+                
+                <div class="success-actions">
+                  <button type="button" class="btn btn-primary btn-lg mr-2" id="retry-lab">
+                    <i class="fas fa-redo"></i> Execute Again
+                  </button>
+                  <button type="button" class="btn btn-outline-secondary btn-lg" id="view-answers">
+                    <i class="fas fa-eye"></i> View Answers
+                  </button>
+                </div>
+                
+                <div class="mt-4">
+                  <a href="{{url_for('home_blueprint.index')}}" class="text-muted">
+                    <i class="fas fa-arrow-left mr-1"></i> Back to Home
+                  </a>
+                </div>
+              </div>
+              <div class="card-footer bg-light">
+                <div class="d-flex row justify-content-around">
+                  <div class="col-md-4 text-center border-right">
+                    <h4 id="score-value">95%</h4>
+                    <small class="text-muted">Score</small>
+                  </div>
+                  <div class="col-md-4 text-center">
+                    <h4 id="completion-date">12/05/2023</h4>
+                    <small class="text-muted">Completion Date</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+  
+{% endblock content %}
+
+{% block javascripts %}
+  <!-- REQUIRED SCRIPTS -->
+  <!-- jQuery -->
+  <script src="/static/assets/plugins/jquery/jquery.min.js"></script>
+
+  <!-- Bootstrap -->
+  <script src="/static/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+  <!-- overlayScrollbars -->
+  <script src="/static/assets/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js"></script>
+
+  <!-- AdminLTE App -->
+  <script src="/static/assets/js/adminlte.js"></script>
+  
+  <script>
+    $(document).ready(function() {
+      // Create confetti effect
+      const confettiContainer = document.getElementById('confetti-container');
+      const colors = ['#f2d74e', '#95c3de', '#ff9a91', '#f2b2bd', '#a3d977'];
+      
+      for (let i = 0; i < 50; i++) {
+        const confetti = document.createElement('div');
+        confetti.classList.add('confetti');
+        confetti.style.left = Math.random() * 100 + '%';
+        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        confetti.style.width = Math.random() * 10 + 5 + 'px';
+        confetti.style.height = Math.random() * 10 + 5 + 'px';
+        confetti.style.animationDelay = Math.random() * 5 + 's';
+        confetti.style.animationDuration = Math.random() * 3 + 2 + 's';
+        confettiContainer.appendChild(confetti);
+      }
+      
+      // Button to execute again
+      $('#retry-lab').click(function() {
+        // Redirect to the laboratory page
+        window.location.href = '/labs/execute/{{lab_id}}';
+      });
+      
+      
+      // Update dynamic data (simulation)
+      function updateLabData() {
+        // Here you can replace with real data from the backend
+        const score = "95%";
+        const completionDate = new Date().toLocaleDateString();
+        
+        $('#score-value').text(score);
+        $('#completion-date').text(completionDate);
+      }
+      
+      updateLabData();
+    });
+  </script>
+{% endblock javascripts %}
