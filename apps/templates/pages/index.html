@@ -300,23 +300,17 @@
           </div>
           <!-- /.col -->
         <!-- Right col -->
-        <!-- Comments Section -->
+        <!-- Users Feedback Section -->
         <div class="col-md-4">
           <div class="card">
             <!-- Card Header -->
-            <div class="card-header">
-              <h3 class="card-title">Comments</h3>
-              <!-- Card Tools (Minimize and Close) -->
-              <div class="card-tools">
-                <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                  <i class="fas fa-minus"></i>
-                </button>
-                <button type="button" class="btn btn-tool" data-card-widget="remove">
-                  <i class="fas fa-times"></i>
-                </button>
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <h3 class="card-title mb-0">Users Feedback</h3>
+              <div class="ml-auto">
+                <a href="#" class="btn btn-sm btn-outline-primary mr-2" data-toggle="modal" data-target="#modal-feedback">Add Feedback</a>
+                <a href="{{ url_for('home_blueprint.feedback_view') }}" class="btn btn-sm btn-outline-secondary">See All</a>
               </div>
             </div>
-            
             <!-- Card Body (Messages) -->
             <div class="card-body">
               <!-- Message Start -->
@@ -327,7 +321,11 @@
                     <div class="media-body">
                       <div class="mb-0 d-flex justify-content-between align-items-center" style="font-size: 0.9rem; font-weight: bold;">
                         <span style="font-weight: bold;">
+                        {% if (feedback.user.given_name == None and feedback.user.family_name == None) %}
+                          {{ feedback.user.username }}
+                        {% else %}
                           {{ feedback.user.given_name }} {{ feedback.user.family_name }}
+                        {% endif %}
                         </span>
                         <span class="text-warning" style="font-size: 0.8rem; font-weight: bold;">
                           {% for i in range(feedback.stars) %}
@@ -353,10 +351,6 @@
                 </div>
                 {% endfor %}
               </div>
-              <!-- Message End -->
-              <div class="add-feedback"></div>
-              <!-- Footer with See All Messages Link -->
-              <a href="#" class="dropdown-item dropdown-footer" data-toggle="modal" data-target="#modal-feedback">Add Feedback</a>
 
               <!-- Modal de Feedback -->
               <div class="modal fade" id="modal-feedback">
@@ -392,12 +386,6 @@
                   </div>
                 </div>
               </div>
-              <!-- Message End -->
-              <div class="dropdown-divider"></div>
-
-              <!-- Footer with See All Messages Link -->
-              <a href="{{ url_for('home_blueprint.feedback_view') }}" class="dropdown-item dropdown-footer">See All</a>
-            </div>
             <!-- /.card-body -->
           </div>
           <!-- /.card -->
@@ -505,15 +493,6 @@
             <div class="card">
               <div class="card-header">
                 <h3 class="card-title">Lab categories and usage</h3>
-
-                <div class="card-tools">
-                  <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                    <i class="fas fa-minus"></i>
-                  </button>
-                  <button type="button" class="btn btn-tool" data-card-widget="remove">
-                    <i class="fas fa-times"></i>
-                  </button>
-                </div>
               </div>
               <!-- /.card-header -->
               <div class="card-body">
