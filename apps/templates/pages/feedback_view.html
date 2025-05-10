@@ -57,8 +57,11 @@
                     <div class="media-body">
                       <div class="d-flex justify-content-between align-items-center mb-2">
                         <h5 class="mb-0 text-primary font-weight-bold">
-                          <i class="fas fa-user-circle mr-1"></i>{{ feedback.user.given_name }} {{ feedback.user.family_name }}
-                        </h5>
+                          {% if feedback.user and feedback.user.given_name and feedback.user.family_name %}
+                            {{ feedback.user.given_name }} {{ feedback.user.family_name }}
+                          {% elif feedback.user %}
+                            {{ feedback.user.username }}
+                          {% endif %}                        </h5>
                         <div class="text-warning">
                           {% for i in range(feedback.stars) %}
                             <i class="fas fa-star"></i>
