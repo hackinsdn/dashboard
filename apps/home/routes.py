@@ -29,24 +29,43 @@ def get_info_before_request():
 @login_required
 @check_user_category(["admin", "teacher", "student"])
 def index():
-    
-    likes_count = UserLikes.query.count()
-    user_liked = UserLikes.query.filter_by(user_id=current_user.id).first() is not None
+    user_likes = cache.get("user_likes")
+    if user_likes is None:
+        user_likes = UserLikes.query.count()
+        cache.set("user_likes", user_likes)
+
     feedbacks = UserFeedbacks.query.order_by(UserFeedbacks.created_at.desc()).all()
     for feedback in feedbacks:
         local_time = feedback.created_at - timedelta(hours=3)
         feedback.created_at_formatted = local_time.strftime("%d/%m/%Y %H:%M")
 
+    stats_data = cache.get("stats_data")
+    if stats_data is None:
+        try:
+            stats_data = k8s.get_statistics()
+        except Exception as e:
+            stats_data = {}
+            current_app.logger.error(f"Failed to retrieve Kubernetes data: {e}")
+        stats_data["lab_instances"] = LabInstances.query.filter_by(is_deleted=False).count()
+        stats_data["users"] = Users.query.filter_by(is_deleted=False).count()
+        stats_data["labs"] = Labs.query.count()
+        cache.set("stats_data", stats_data)
+
     stats = {
-        "lab_instances": 23,
-        "registered_labs": 57,
-        "likes": likes_count,
-        "users": 38,
+        "lab_instances": stats_data.get("lab_instances", 0),
+        "registered_labs": stats_data.get("labs", 0),
+        "likes": user_likes,
+        "has_liked": UserLikes.query.get(current_user.id),
+        "users": stats_data.get("users", 0),
         "lab_inst_period_report": "1 Jul, 2014 - 23 Nov, 2014",
-        "cpu_usage": 15,
-        "cpu_capacity": 2304,
+        "cpu_capacity": stats_data.get("total_cpu_capacity", 0),
+        "memory_capacity": stats_data.get("total_memory_capacity", 0),
+        "storage_capacity": stats_data.get("total_storage_capacity", 0),
+        "total_pods": stats_data.get("total_pods", 0),
+        "total_nodes": stats_data.get("total_nodes", 0),
     }
-    return render_template('pages/index.html', stats=stats, user_liked=user_liked, feedbacks=feedbacks)
+
+    return render_template('pages/index.html', stats=stats, feedbacks=feedbacks)
 
 
 @blueprint.route('/running/')

@@ -18,6 +18,7 @@
   <link rel="stylesheet" href="/static/assets/plugins/leaflet/leaflet.css">
   <!-- Theme style -->
   <link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
+  <link rel="stylesheet" href="/static/assets/css/custom.css">
 
 {% endblock stylesheets %}
 
@@ -96,12 +97,11 @@
           <!-- /.col -->
           <div class="col-12 col-sm-6 col-md-3">
             <div class="info-box mb-3">
-              <span id="like-button" class="info-box-icon bg-success elevation-1" style="cursor:pointer;">
-                <i class="fas fa-thumbs-up"></i>
-              </span>
+              <button id="thumbsUpButton" type="button" class="info-box-icon {{"bg-success" if stats['has_liked'] else "bg-secondary"}} elevation-1 icobutton icobutton--thumbs-up"><i class="fas fa-thumbs-up"></i></button>
+
               <div class="info-box-content">
                 <span class="info-box-text">Likes</span>
-                <span class="info-box-number" id="like-count">{{stats['likes']}}</span>
+                <span class="info-box-number" id="user-likes">{{stats['likes']}}</span>
               </div>
               <!-- /.info-box-content -->
             </div>
@@ -140,18 +140,18 @@
                       <span class="info-box-icon"><i class="fas fa-microchip"></i></span>
 
                       <div class="info-box-content">
-                        <span class="info-box-text">Available CPU</span>
-                        <span class="info-box-number">380</span>
+                        <span class="info-box-text">Available CPUs</span>
+                        <span class="info-box-number">{{stats['cpu_capacity']}}</span>
                       </div>
                       <!-- /.info-box-content -->
                     </div>
                     <!-- /.info-box -->
                     <div class="info-box mb-3 bg-success">
-                      <span class="info-box-icon"><i class="far fa-memory"></i></span>
+                      <span class="info-box-icon"><i class="fas fa-memory"></i></span>
 
                       <div class="info-box-content">
                         <span class="info-box-text">Available Memory</span>
-                        <span class="info-box-number">92,050 GB</span>
+                        <span class="info-box-number">{{stats['memory_capacity']}}</span>
                       </div>
                       <!-- /.info-box-content -->
                     </div>
@@ -160,8 +160,8 @@
                       <span class="info-box-icon"><i class="fas fa-database"></i></span>
 
                       <div class="info-box-content">
-                        <span class="info-box-text">Storage</span>
-                        <span class="info-box-number">114,381 GB</span>
+                        <span class="info-box-text">Storage capacity</span>
+                        <span class="info-box-number">{{stats['storage_capacity']}}</span>
                       </div>
                       <!-- /.info-box-content -->
                     </div>
@@ -171,7 +171,7 @@
 
                       <div class="info-box-content">
                         <span class="info-box-text">Pods</span>
-                        <span class="info-box-number">23 / 12,000</span>
+                        <span class="info-box-number">{{stats['total_pods']}}</span>
                       </div>
                       <!-- /.info-box-content -->
                     </div>
@@ -181,7 +181,7 @@
 
                       <div class="info-box-content">
                         <span class="info-box-text">Nodes</span>
-                        <span class="info-box-number">9 / 11</span>
+                        <span class="info-box-number">{{stats['total_nodes']}}</span>
                       </div>
                       <!-- /.info-box-content -->
                     </div>
@@ -546,9 +546,142 @@
   <script src="/static/assets/plugins/leaflet/Brasil.min.js"></script>
   <!-- ChartJS -->
   <script src="/static/assets/plugins/chart.js/Chart.min.js"></script>
+  <!-- Motion JS -->
+  <script src="/static/assets/plugins/mojs/mojs.js"></script>
 
   <!-- PAGE SCRIPTS -->
   <script src="/static/assets/js/pages/dashboard2.js"></script>
+  <script type="text/javascript">
+    function isIOSSafari() {
+        var userAgent;
+        userAgent = window.navigator.userAgent;
+        return userAgent.match(/iPad/i) || userAgent.match(/iPhone/i);
+    };
+    function isTouch() {
+        var isIETouch;
+        isIETouch = navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0;
+        return [].indexOf.call(window, 'ontouchstart') >= 0 || isIETouch;
+    };
+    function extend(a, b) {
+        for (var key in b) {
+            if (b.hasOwnProperty(key)) {
+                a[key] = b[key];
+            }
+        }
+        return a;
+    }
+    $(function () {
+      var isIOS = isIOSSafari();
+      var clickHandler = isIOS || isTouch() ? 'touchstart' : 'click';
+      function AnimateIcon(el, options) {
+          this.el = el;
+          this.options = extend({}, this.options);
+          extend(this.options, options);
+
+          this.checked = {{"true" if stats['has_liked'] else "false"}};
+          this.timeline = new mojs.Timeline();
+
+          for (var i = 0, len = this.options.tweens.length; i < len; ++i) {
+              this.timeline.add(this.options.tweens[i]);
+          }
+          var self = this;
+          this.el.addEventListener(clickHandler, function() {
+              if (self.checked) {
+                  self.options.onUnCheck();
+              } else {
+                  self.options.onCheck();
+                  self.timeline.replay();
+              }
+              self.checked = !self.checked;
+          });
+      }
+      AnimateIcon.prototype.options = {
+        tweens : [
+          new mojs.Burst({})
+        ],
+        onCheck: function(){return false;},
+        onUnCheck: function(){ return false;}
+      };
+      var thumbsUpButton = document.querySelector('#thumbsUpButton');
+      new AnimateIcon(thumbsUpButton, {
+        tweens: [
+          new mojs.Burst({
+            parent: thumbsUpButton,
+            radius: {30:90},
+            count: 6,
+            children:{
+             fill: '#28a745',
+              opacity: 0.6,
+              radius: 15,
+              duration: 1700,
+              easing: mojs.easing.bezier(0.1, 1, 0.3, 1)
+            }
+          }),
+          new mojs.Shape({
+            parent: thumbsUpButton,
+            type: 'circle',
+            radius: {0: 60},
+            fill: 'transparent',
+            stroke: '#28a745',
+            strokeWidth: {20:0},
+            opacity: 0.6,
+            duration:700,
+            easing: mojs.easing.sin.out
+          }),
+          new mojs.Tween({
+            duration: 1200,
+            onUpdate: function(progress){
+             if(progress > 0.3){
+               var elasticOutProgress = mojs.easing.elastic.out(1.43*progress-0.43);
+               thumbsUpButton.style.WebkitTransform = thumbsUpButton.style.transform = 'scale3d(' + elasticOutProgress + ',' + elasticOutProgress + ',1)';
+             }
+              else{
+                thumbsUpButton.style.WebkiteTransform = thumbsUpButton.style.transform = 'scale3d(0,0,1)';
+              }
+            }
+          }),
+        ],
+        onCheck:function(){
+	  //thumbsUpButton.classList.remove("bg-secondary");
+	  //thumbsUpButton.classList.add("bg-success");
+          var request = $.ajax({
+            url: '/api/user_like',
+            type: "POST",
+            dataType: "json",
+            contentType: "application/json",
+          });
+          request.done(function(data) {
+	    thumbsUpButton.classList.remove("bg-secondary");
+	    thumbsUpButton.classList.add("bg-success");
+            $("#user-likes").html( data.result );
+          });
+          request.fail(function(xhr) {
+            sessionStorage.setItem('msgFail', xhr.responseText);
+            location.reload();
+          });
+        },
+        onUnCheck:function(){
+	  //thumbsUpButton.classList.remove("bg-success");
+	  //thumbsUpButton.classList.add("bg-secondary");
+          var request = $.ajax({
+            url: '/api/user_like',
+            type: "DELETE",
+            dataType: "json",
+            contentType: "application/json",
+          });
+          request.done(function(data) {
+	    thumbsUpButton.classList.remove("bg-success");
+	    thumbsUpButton.classList.add("bg-secondary");
+            $("#user-likes").html( data.result );
+          });
+          request.fail(function(xhr) {
+            sessionStorage.setItem('msgFail', xhr.responseText);
+            location.reload();
+          });
+        }
+      });
+    });
+  </script>
 
   <script>
     document.addEventListener("DOMContentLoaded", function () {

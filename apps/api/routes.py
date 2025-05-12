@@ -293,6 +293,7 @@ def join_group(group_id):
 
     return {"status": "ok", "result": "Joint group successfully! Click on 'Reload profile' to update your authorization."}, 200
 
+  
 @blueprint.route('/feedback', methods=["POST"])
 @login_required
 def feedback():
@@ -343,6 +344,7 @@ def feedback():
         db.session.rollback()
         return jsonify({"status": "error", "result": str(e)}), 500
 
+
 @blueprint.route('/feedback/recent', methods=["GET"])
 def recent_feedback():
     try:
@@ -378,22 +380,34 @@ def recent_feedback():
         return jsonify({"status": "error", "result": str(e)}), 500
 
 
-@blueprint.route('/like', methods=['POST'])
+@blueprint.route('/user_like', methods=["POST"])
 @login_required
-def like():
-    already_liked = UserLikes.query.filter_by(user_id=current_user.id).first()
-    
-    if not already_liked:
-        new_like = UserLikes(user_id=current_user.id)
-        db.session.add(new_like)
+def add_user_like():
+    counter = cache.get("user_likes") or UserLikes.query.count()
+    user_like = UserLikes.query.get(current_user.id)
+    if user_like:
+        return {"status": "ok", "result": counter}, 200
+    user_like = UserLikes(user_id=current_user.id)
+    db.session.add(user_like)
+    try:
         db.session.commit()
-        like_count = UserLikes.query.count()
-        return jsonify({
-            "status": "ok",
-            "likes": like_count
-        }), 200
-    
-    return jsonify({
-        "status": "exists", 
-        "likes": UserLikes.query.count()
-    }), 200
+    except Exception as exc:
+        current_app.logger.error(f"Failed to add user like: {exc}")
+        return {"status": "fail", "result": "Failed to add user like"}, 400
+    cache.set("user_likes", counter+1)
+    return {"status": "ok", "result": counter+1}, 200
+
+
+@blueprint.route('/user_like', methods=["DELETE"])
+@login_required
+def del_user_like():
+    db.session.query(UserLikes).filter(UserLikes.user_id == current_user.id).delete()
+    try:
+        db.session.commit()
+    except Exception as exc:
+        current_app.logger.error(f"Failed to delete user like: {exc}")
+        return {"status": "fail", "result": "Failed to delete user like"}, 400
+    counter = cache.get("user_likes") or UserLikes.query.count()
+    counter = max(counter-1, 0)
+    cache.set("user_likes", counter)
+    return {"status": "ok", "result": counter}, 200
