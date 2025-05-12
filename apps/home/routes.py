@@ -18,6 +18,7 @@ from apps.audit_mixin import get_remote_addr, check_user_category
 from apps.authentication.forms import GroupForm
 from apps.utils import update_running_labs_stats
 from datetime import timedelta
+from sqlalchemy import desc
 
 
 @blueprint.before_request
@@ -747,11 +748,10 @@ def add_answer_sheet():
 
     return render_template("pages/lab_answers_sheet.html", labs=labs, lab_id=lab_id, answers=answers, msg_ok="Lab answer sheet saved!")
 
-
 @blueprint.route('/feedback_view', methods=["GET"])
 @login_required
 def feedback_view():
-    feedbacks = UserFeedbacks.query.all()
+    feedbacks = UserFeedbacks.query.order_by(desc(UserFeedbacks.created_at)).all()
     for feedback in feedbacks:
         local_time = feedback.created_at - timedelta(hours=3)
         feedback.created_at_formatted = local_time.strftime("%d/%m/%Y %H:%M")

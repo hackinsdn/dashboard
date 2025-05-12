@@ -312,46 +312,9 @@
               </div>
             </div>
             <!-- Card Body (Messages) -->
-            <div class="card-body">
-              <!-- Message Start -->
-              <div class="card-body">
-                {% for feedback in feedbacks[:3] %}
-                <div class="comments mb-3">
-                  <div class="media">
-                    <div class="media-body">
-                      <div class="mb-0 d-flex justify-content-between align-items-center" style="font-size: 0.9rem; font-weight: bold;">
-                        <span style="font-weight: bold;">
-                        {% if (feedback.user.given_name == None and feedback.user.family_name == None) %}
-                          {{ feedback.user.username }}
-                        {% else %}
-                          {{ feedback.user.given_name }} {{ feedback.user.family_name }}
-                        {% endif %}
-                        </span>
-                        <span class="text-warning" style="font-size: 0.8rem; font-weight: bold;">
-                          {% for i in range(feedback.stars) %}
-                            <i class="fas fa-star"></i>
-                          {% endfor %}
-                        </span>
-                      </div>                      
-          
-                      <div class="feedback-container" data-feedback-id="{{ feedback.id }}">
-                        <p class="text-sm feedback-text mb-1" style="max-height: 80px; overflow: hidden;">
-                          {{ feedback.comment }}
-                        </p>
-                        <a href="{{ url_for('home_blueprint.feedback_view') }}" class="btn btn-link p-0 text-info expand-btn" style="display: none;">
-                          <small>Ver mais</small>
-                        </a>
-                      </div>
-                      
-                      <p class="text-sm text-muted mb-0">
-                        <i class="far fa-clock mr-1"></i> {{ feedback.created_at_formatted }}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                {% endfor %}
-              </div>
-
+            <div class="card-body" id="feedback-list">
+            </div>
+            
               <!-- Modal de Feedback -->
               <div class="modal fade" id="modal-feedback">
                 <div class="modal-dialog">
@@ -374,6 +337,7 @@
                         </div>
                         <input type="hidden" id="star-item-id" />
                       </div>
+                      <div id="feedback-message" class="form-group"></div>
                       <div class="form-group">
                         <label for="comment">Comment (Optional):</label>
                         <textarea class="form-control" id="comment" rows="3" placeholder="Leave your comment..."></textarea>
@@ -593,10 +557,26 @@
         const submitButton = document.getElementById("submit-star");
         const likeBtn = document.getElementById("like-button");
         const likeCount = document.getElementById("like-count");
-    
+
         let selectedRating = 0;
         let hasRated = false;
         let userLiked = likeBtn.dataset.userLiked === "true";
+
+        fetch('api/feedback/recent', {
+          method: 'GET',
+          headers: {
+              'Content-Type': 'application/json',
+          },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === "ok") {
+                updateFeedbackList(data.recent_feedbacks);
+            } 
+        })
+        .catch(error => {
+          console.error('Erro:', error);
+        });
 
         document.querySelectorAll('.feedback-text').forEach(textElement => {
           const container = textElement.closest('.feedback-container');
@@ -630,7 +610,7 @@
                 star.classList.toggle("far", index > count);
             });
         }
-    
+
         // ------------------------ SUBMIT FEEDBACK ------------------------
         submitButton.addEventListener("click", function () {
             if (selectedRating === 0) {
@@ -660,6 +640,9 @@
                     hasRated = true;
                     submitButton.disabled = true;
                     $('#modal-feedback').modal('hide');
+
+                    updateFeedbackList(data.recent_feedbacks);
+
                 } else {
                     alert(data.result);
                     submitButton.disabled = false;
@@ -671,7 +654,47 @@
                 submitButton.disabled = false;
             });
         });
-    
+
+        function updateFeedbackList(recentFeedbacks) {
+            const feedbackList = document.getElementById('feedback-list');
+            feedbackList.innerHTML = '';
+
+            recentFeedbacks.forEach(fb => {
+            let user = '';
+
+            if (fb.user) {
+                const given = fb.user.given_name;
+                const family = fb.user.family_name;
+                const username = fb.user.username
+
+                if (!given || !family || given.trim() === '' || family.trim() === '') {
+                    user = username && username.trim() !== '' ? username : '';
+                } else {
+                    user = `${given.trim()} ${family.trim()}`;
+                }
+
+              }
+                const stars = '★'.repeat(fb.stars);
+                const comment = fb.comment;
+                const created_at = fb.created_at;
+
+                feedbackList.innerHTML += `
+                    <div class="comments mb-3">
+                        <div class="media">
+                            <div class="media-body">
+                                <div class="mb-0 d-flex justify-content-between align-items-center" style="font-size: 0.9rem; font-weight: bold;">
+                                    <span style="font-weight: bold;">${user}</span>
+                                    <span class="text-warning" style="font-size: 0.8rem; font-weight: bold;">${stars}</span>
+                                </div>
+                                <p class="mt-1" style="font-size: 0.85rem;">${comment}</p>
+                                <p class="mt-1" style="font-size: 0.85rem;">${created_at}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
         // ------------------------ LIKE BUTTON  ------------------------
         likeBtn.addEventListener("click", function () {
             if (userLiked) {

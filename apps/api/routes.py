@@ -11,6 +11,7 @@ from flask import request, current_app
 from flask_login import login_required, current_user
 from flask import jsonify
 from sqlalchemy.sql import func
+from datetime import timedelta
 
 @blueprint.route('/pods/<lab_id>', methods=["GET"])
 @login_required
@@ -310,22 +311,72 @@ def feedback():
             comment=comment
         )
         db.session.add(new_feedback)
+        db.session.commit()
 
         total_feedbacks = UserFeedbacks.query.count()
         average_stars = db.session.query(func.avg(UserFeedbacks.stars)).scalar() or 0
 
-        db.session.commit()
+        recent_feedbacks = UserFeedbacks.query.order_by(UserFeedbacks.id.desc()).limit(3).all()
+        recent_feedback_list = [{"user_id": fb.user_id, "stars": fb.stars, "comment": fb.comment} for fb in recent_feedbacks]
+
+        recent_feedback_list = [{
+            "user_id": fb.user_id,
+            "stars": fb.stars,
+            "comment": fb.comment,
+            "created_at": (fb.created_at - timedelta(hours=3)).strftime('%d/%m/%Y %H:%M'),
+            "user": {
+                "username": fb.user.username if fb.user else None,
+                "given_name": fb.user.given_name if fb.user else None,
+                "family_name": fb.user.family_name if fb.user else None
+            }
+        } for fb in recent_feedbacks]
 
         return jsonify({
             "status": "ok",
             "result": "Feedback given successfully",
             "total_feedbacks": total_feedbacks,
             "average_stars": round(average_stars, 2),
+            "recent_feedbacks": recent_feedback_list
         }), 200
 
     except Exception as e:
         db.session.rollback()
         return jsonify({"status": "error", "result": str(e)}), 500
+
+@blueprint.route('/feedback/recent', methods=["GET"])
+def recent_feedback():
+    try:
+        total_feedbacks = UserFeedbacks.query.count()
+        average_stars = db.session.query(func.avg(UserFeedbacks.stars)).scalar() or 0
+        recent_feedbacks = UserFeedbacks.query.order_by(UserFeedbacks.id.desc()).limit(3).all()
+
+        recent_feedback_list = []
+        for fb in recent_feedbacks:
+            user_data = {
+                "username": fb.user.username if fb.user and fb.user.username else None,
+                "given_name": fb.user.given_name if fb.user and fb.user.given_name else None,
+                "family_name": fb.user.family_name if fb.user and fb.user.family_name else None,
+
+            }
+            created_at = (fb.created_at - timedelta(hours=3)).strftime('%d/%m/%Y %H:%M')
+
+            recent_feedback_list.append({
+                "user": user_data,
+                "stars": fb.stars,
+                "comment": fb.comment,
+                "created_at": created_at
+            })
+
+        return jsonify({
+            "status": "ok",
+            "recent_feedbacks": recent_feedback_list,
+            "total_feedbacks": total_feedbacks,
+            "average_stars": round(average_stars, 2)
+        }), 200
+
+    except Exception as e:
+        return jsonify({"status": "error", "result": str(e)}), 500
+
 
 @blueprint.route('/like', methods=['POST'])
 @login_required
