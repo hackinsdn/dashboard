@@ -688,12 +688,9 @@
         const stars = document.querySelectorAll("#stars i");
         const commentInput = document.getElementById("comment");
         const submitButton = document.getElementById("submit-star");
-        const likeBtn = document.getElementById("like-button");
-        const likeCount = document.getElementById("like-count");
 
         let selectedRating = 0;
         let hasRated = false;
-        let userLiked = likeBtn.dataset.userLiked === "true";
 
         fetch('api/feedback/recent', {
           method: 'GET',
@@ -827,55 +824,6 @@
                 `;
             });
         }
-
-        // ------------------------ LIKE BUTTON  ------------------------
-        likeBtn.addEventListener("click", function () {
-            if (userLiked) {
-                alert("You have already liked this page.");
-                return;
-            }
-    
-            fetch("/api/like", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.status !== "ok") {
-                    alert("You have already liked this page.");
-                    return;
-                }
-    
-                likeCount.innerText = +likeCount.innerText + 1;
-                userLiked = true;
-    
-                likeBtn.style.transition = "transform 0.3s ease";
-                likeBtn.style.transform = "translateY(-10px)";
-                setTimeout(() => {
-                    likeBtn.style.transform = "translateY(0)";
-                }, 300);
-
-                for (let i = 0; i < 5; i++) {
-                    const b = document.createElement("div");
-                    b.textContent = "✨";
-                    Object.assign(b.style, {
-                        position: "fixed",
-                        left: likeBtn.getBoundingClientRect().left + 10 + i * 10 + "px",
-                        top: likeBtn.getBoundingClientRect().top - 10 + "px",
-                        fontSize: "18px",
-                        opacity: 1,
-                        transition: "all 0.8s ease",
-                        zIndex: 1000
-                    });
-                    document.body.appendChild(b);
-                    setTimeout(() => {
-                        b.style.transform = "translateY(-40px)";
-                        b.style.opacity = 0;
-                    }, 10);
-                    setTimeout(() => b.remove(), 700);
-                }
-            });
-        });
     });
     </script>
 {% endblock javascripts %}
