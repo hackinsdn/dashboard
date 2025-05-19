@@ -197,7 +197,7 @@
 
         <!-- Main row -->
         <div class="row">
-          <div class="col-md-12">
+          <div class="col-md-8">
             <div class="card">
               <div class="card-header">
                 <h5 class="card-title">Lab Usage Report</h5>
@@ -297,6 +297,64 @@
               <!-- /.card-footer -->
             </div>
             <!-- /.card -->
+          </div>
+          <!-- /.col -->
+        <!-- Right col -->
+        <!-- Users Feedback Section -->
+        <div class="col-md-4">
+          <div class="card">
+            <!-- Card Header -->
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <h3 class="card-title mb-0">Users Feedback</h3>
+              <div class="ml-auto">
+                <a href="#" id="view-add-feedback" class="btn btn-sm btn-outline-primary mr-2" data-toggle="modal" data-target="#modal-feedback">{{ "View" if user_feedback else "Add"}} Feedback</a>
+                <a href="{{ url_for('home_blueprint.feedback_view') }}" class="btn btn-sm btn-outline-secondary">See All</a>
+              </div>
+            </div>
+            <!-- Card Body (Messages) -->
+            <div class="card-body" id="feedback-list">
+            </div>
+            
+              <!-- Modal de Feedback -->
+              <div class="modal fade" id="modal-feedback">
+                <div class="modal-dialog">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h4 class="modal-title">Rating</h4>
+                      <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                      </button>
+                    </div>
+                    <div class="modal-body">
+                      <div class="form-group">
+                        <label for="rating">Rating:</label>
+                        <div id="stars" class="star-rating">
+                          <i class="far fa-star" data-index="1"></i>
+                          <i class="far fa-star" data-index="2"></i>
+                          <i class="far fa-star" data-index="3"></i>
+                          <i class="far fa-star" data-index="4"></i>
+                          <i class="far fa-star" data-index="5"></i>
+                        </div>
+                        <input type="hidden" id="star-item-id" />
+                      </div>
+                      <div id="feedback-message" class="form-group"></div>
+                      <div class="form-group">
+                        <label for="comment">Comment (Optional):</label>
+                        <textarea class="form-control" id="comment" rows="3" placeholder="Leave your comment...">{{ user_feedback.comment|default('', true) }}</textarea>
+                      </div>
+                    </div>
+                    <div class="modal-footer justify-content-between">
+                      <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+		      <button type="button" class="btn btn-primary" id="submit-star" {{"disabled" if user_feedback else ""}}>Submit</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            <!-- /.card-body -->
+          </div>
+          <!-- /.card -->
+        </div>
+        <!-- /.Right col -->
           </div>
           <!-- /.col -->
         </div>
@@ -399,15 +457,6 @@
             <div class="card">
               <div class="card-header">
                 <h3 class="card-title">Lab categories and usage</h3>
-
-                <div class="card-tools">
-                  <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                    <i class="fas fa-minus"></i>
-                  </button>
-                  <button type="button" class="btn btn-tool" data-card-widget="remove">
-                    <i class="fas fa-times"></i>
-                  </button>
-                </div>
               </div>
               <!-- /.card-header -->
               <div class="card-body">
@@ -634,4 +683,145 @@
     });
   </script>
 
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const stars = document.querySelectorAll("#stars i");
+        const commentInput = document.getElementById("comment");
+        const submitButton = document.getElementById("submit-star");
+
+        let selectedRating = 0;
+        let hasRated = false;
+
+        fetch('api/feedback', {
+          method: 'GET',
+          headers: {
+              'Content-Type': 'application/json',
+          },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === "ok") {
+                updateFeedbackList(data.recent_feedbacks);
+            } 
+        })
+        .catch(error => {
+          console.error('Erro:', error);
+        });
+
+        document.querySelectorAll('.feedback-text').forEach(textElement => {
+          const container = textElement.closest('.feedback-container');
+          const button = container.querySelector('.expand-btn');
+          
+          if (textElement.scrollHeight > textElement.clientHeight) {
+            button.style.display = 'inline-block';
+          }
+        });
+
+        // ------------------------ STARS ------------------------
+        highlightStars({{user_feedback.stars|default(0, true)}});
+        stars.forEach(star => {
+            star.addEventListener("mouseover", function () {
+                const index = parseInt(this.getAttribute("data-index"));
+                highlightStars(index);
+            });
+    
+            star.addEventListener("click", function () {
+                selectedRating = parseInt(this.getAttribute("data-index"));
+            });
+        });
+    
+        document.getElementById("stars").addEventListener("mouseleave", function () {
+            highlightStars(selectedRating);
+        });
+    
+        function highlightStars(count) {
+            stars.forEach(star => {
+                const index = parseInt(star.getAttribute("data-index"));
+                star.classList.toggle("fas", index <= count);
+                star.classList.toggle("far", index > count);
+            });
+        }
+
+        // ------------------------ SUBMIT FEEDBACK ------------------------
+        submitButton.addEventListener("click", function () {
+            if (selectedRating === 0) {
+                alert("Please select a rating before submitting.");
+                return;
+            }
+    
+            const comment = commentInput.value.trim();
+            const ratingData = {
+                rating: selectedRating,
+                comment: comment,
+            };
+    
+            submitButton.disabled = true;
+    
+            fetch('/api/feedback', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(ratingData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "ok") {
+                    $(document).Toasts('create', {
+                      class: 'bg-success',
+                      title: 'Sucess',
+                      autohide: true,
+                      delay: 4000,
+                      body: "Rating submitted successfully!",
+                    });
+                    hasRated = true;
+                    submitButton.disabled = true;
+                    $('#modal-feedback').modal('hide');
+                    $('#view-add-feedback').html('View Feedback');
+
+                    updateFeedbackList(data.recent_feedbacks);
+
+                } else {
+                    alert(data.result);
+                    submitButton.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                alert("An error occurred while submitting your feedback.");
+                submitButton.disabled = false;
+            });
+        });
+
+        function truncate(str, n){
+          return (str.length > n) ? str.slice(0, n-1) + '&hellip;' : str;
+        };
+
+        function updateFeedbackList(recentFeedbacks) {
+            const feedbackList = document.getElementById('feedback-list');
+            feedbackList.innerHTML = '';
+
+            recentFeedbacks.forEach(fb => {
+                let user = fb.user;
+                const stars = '★'.repeat(fb.stars);
+                const comment = truncate(fb.comment, 80);
+                const created_at = new Date(fb.created_at);
+
+                feedbackList.innerHTML += `
+                    <div class="comments mb-3">
+                        <div class="media rounded bg-light shadow-sm">
+                            <div class="media-body">
+			        <p class="mt-1"><i class="fas fa-quote-left mr-2 text-muted"></i><em>${comment}</em></p>
+                                <div class="mb-0 d-flex justify-content-between align-items-center">
+				    <span><b>${user}</b> (${created_at.toLocaleString()})</span>
+                                    <span class="text-warning">${stars}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+    });
+    </script>
 {% endblock javascripts %}

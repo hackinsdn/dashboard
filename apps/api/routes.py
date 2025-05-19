@@ -5,7 +5,7 @@ import json
 from apps import db, cache
 from apps.api import blueprint
 from apps.controllers import k8s
-from apps.home.models import Labs, LabInstances, LabAnswers, UserLikes
+from apps.home.models import Labs, LabInstances, LabAnswers, UserLikes, UserFeedbacks
 from apps.authentication.models import Users, Groups, DeletedGroupUsers
 from flask import request, current_app
 from flask_login import login_required, current_user
@@ -289,6 +289,56 @@ def join_group(group_id):
         return {"status": "fail", "result": "Failed to join group"}, 400
 
     return {"status": "ok", "result": "Joint group successfully! Click on 'Reload profile' to update your authorization."}, 200
+
+  
+@blueprint.route('/feedback', methods=["POST", "GET"])
+@login_required
+def feedback():
+    if current_user.category == "user":
+        return {"status": "fail", "result": "Unauthorized access"}, 401
+
+    user_feedbacks = cache.get("user_feedbacks")
+    if user_feedbacks is None:
+        user_feedbacks = UserFeedbacks.query.filter_by(is_hidden=False).order_by(UserFeedbacks.created_at.desc()).limit(5).all()
+        user_feedbacks = [fb.as_dict() for fb in user_feedbacks]
+        cache.set("user_feedbacks", user_feedbacks)
+
+    if request.method == "GET":
+        return {"status": "ok", "recent_feedbacks": user_feedbacks}, 200
+
+    data = request.get_json()
+    stars = data.get("rating")
+    comment = data.get("comment", "")
+
+    if not stars:
+        return {"status": "fail", "result": "Stars mandatory"}, 400
+
+    existing_feedback = UserFeedbacks.query.filter_by(user_id=current_user.id).first()
+    if existing_feedback:
+        return {"status": "fail", "result": "Feedback already given!"}, 400
+
+    try:
+        new_feedback = UserFeedbacks(
+            user_id=current_user.id,
+            stars=stars,
+            comment=comment
+        )
+        db.session.add(new_feedback)
+        db.session.commit()
+    except Exception as exc:
+        current_app.logger.error(f"Failed to save user feedback for {current_user.id}: {exc}")
+        return {"status": "fail", "result": "Failed to save user feedback"}, 400
+
+    user_feedbacks.insert(0, new_feedback.as_dict())
+    if len(user_feedbacks) > 5:
+        user_feedbacks.pop(-1)
+    cache.set("user_feedbacks", user_feedbacks)
+
+    return {
+        "status": "ok",
+        "result": "Feedback given successfully",
+        "recent_feedbacks": user_feedbacks,
+    }, 200
 
 
 @blueprint.route('/user_like', methods=["POST"])
