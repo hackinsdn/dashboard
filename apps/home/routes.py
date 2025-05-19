@@ -9,7 +9,7 @@ import re
 from apps import db, cache
 from apps.home import blueprint
 from apps.controllers import k8s
-from apps.home.models import Labs, LabInstances, LabCategories, LabAnswers, LabAnswerSheet, HomeLogging
+from apps.home.models import Labs, LabInstances, LabCategories, LabAnswers, LabAnswerSheet, HomeLogging, UserLikes, UserFeedbacks
 from apps.authentication.models import Users, Groups
 from flask import render_template, request, current_app, redirect, url_for, session
 from flask_login import login_required, current_user
@@ -17,6 +17,7 @@ from jinja2 import TemplateNotFound
 from apps.audit_mixin import get_remote_addr, check_user_category
 from apps.authentication.forms import GroupForm
 from apps.utils import update_running_labs_stats
+from sqlalchemy import desc
 
 
 @blueprint.before_request
@@ -27,16 +28,40 @@ def get_info_before_request():
 @login_required
 @check_user_category(["admin", "teacher", "student"])
 def index():
+    user_likes = cache.get("user_likes")
+    if user_likes is None:
+        user_likes = UserLikes.query.count()
+        cache.set("user_likes", user_likes)
+
+    stats_data = cache.get("stats_data")
+    if stats_data is None:
+        try:
+            stats_data = k8s.get_statistics()
+        except Exception as e:
+            stats_data = {}
+            current_app.logger.error(f"Failed to retrieve Kubernetes data: {e}")
+        stats_data["lab_instances"] = LabInstances.query.filter_by(is_deleted=False).count()
+        stats_data["users"] = Users.query.filter_by(is_deleted=False).count()
+        stats_data["labs"] = Labs.query.count()
+        cache.set("stats_data", stats_data)
+
     stats = {
-        "lab_instances": 23,
-        "registered_labs": 57,
-        "likes": 23,
-        "users": 38,
+        "lab_instances": stats_data.get("lab_instances", 0),
+        "registered_labs": stats_data.get("labs", 0),
+        "likes": user_likes,
+        "has_liked": UserLikes.query.get(current_user.id),
+        "users": stats_data.get("users", 0),
         "lab_inst_period_report": "1 Jul, 2014 - 23 Nov, 2014",
-        "cpu_usage": 15,
-        "cpu_capacity": 2304,
+        "cpu_capacity": stats_data.get("total_cpu_capacity", 0),
+        "memory_capacity": stats_data.get("total_memory_capacity", 0),
+        "storage_capacity": stats_data.get("total_storage_capacity", 0),
+        "total_pods": stats_data.get("total_pods", 0),
+        "total_nodes": stats_data.get("total_nodes", 0),
     }
-    return render_template('pages/index.html', stats=stats, segment='index')
+
+    user_feedback = UserFeedbacks.query.filter_by(user_id=current_user.id).first()
+
+    return render_template('pages/index.html', stats=stats, user_feedback=user_feedback)
 
 
 @blueprint.route('/running/')
@@ -741,6 +766,11 @@ def add_answer_sheet():
 
     return render_template("pages/lab_answers_sheet.html", labs=labs, lab_id=lab_id, answers=answers, msg_ok="Lab answer sheet saved!")
 
+@blueprint.route('/feedback_view', methods=["GET"])
+@login_required
+def feedback_view():
+    feedbacks = UserFeedbacks.query.filter_by(is_hidden=False).order_by(UserFeedbacks.created_at.desc()).all()
+    return render_template('pages/feedback_view.html', feedbacks=feedbacks)
 
 @blueprint.route('/gallery', methods=["GET"])
 @login_required

@@ -18,6 +18,7 @@
   <link rel="stylesheet" href="/static/assets/plugins/leaflet/leaflet.css">
   <!-- Theme style -->
   <link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
+  <link rel="stylesheet" href="/static/assets/css/custom.css">
 
 {% endblock stylesheets %}
 
@@ -96,11 +97,11 @@
           <!-- /.col -->
           <div class="col-12 col-sm-6 col-md-3">
             <div class="info-box mb-3">
-              <span class="info-box-icon bg-success elevation-1"><i class="fas fa-thumbs-up"></i></span>
+              <button id="thumbsUpButton" type="button" class="info-box-icon {{"bg-success" if stats['has_liked'] else "bg-secondary"}} elevation-1 icobutton icobutton--thumbs-up"><i class="fas fa-thumbs-up"></i></button>
 
               <div class="info-box-content">
                 <span class="info-box-text">Likes</span>
-                <span class="info-box-number">{{stats['likes']}}</span>
+                <span class="info-box-number" id="user-likes">{{stats['likes']}}</span>
               </div>
               <!-- /.info-box-content -->
             </div>
@@ -139,18 +140,18 @@
                       <span class="info-box-icon"><i class="fas fa-microchip"></i></span>
 
                       <div class="info-box-content">
-                        <span class="info-box-text">Available CPU</span>
-                        <span class="info-box-number">380</span>
+                        <span class="info-box-text">Available CPUs</span>
+                        <span class="info-box-number">{{stats['cpu_capacity']}}</span>
                       </div>
                       <!-- /.info-box-content -->
                     </div>
                     <!-- /.info-box -->
                     <div class="info-box mb-3 bg-success">
-                      <span class="info-box-icon"><i class="far fa-memory"></i></span>
+                      <span class="info-box-icon"><i class="fas fa-memory"></i></span>
 
                       <div class="info-box-content">
                         <span class="info-box-text">Available Memory</span>
-                        <span class="info-box-number">92,050 GB</span>
+                        <span class="info-box-number">{{stats['memory_capacity']}}</span>
                       </div>
                       <!-- /.info-box-content -->
                     </div>
@@ -159,8 +160,8 @@
                       <span class="info-box-icon"><i class="fas fa-database"></i></span>
 
                       <div class="info-box-content">
-                        <span class="info-box-text">Storage</span>
-                        <span class="info-box-number">114,381 GB</span>
+                        <span class="info-box-text">Storage capacity</span>
+                        <span class="info-box-number">{{stats['storage_capacity']}}</span>
                       </div>
                       <!-- /.info-box-content -->
                     </div>
@@ -170,7 +171,7 @@
 
                       <div class="info-box-content">
                         <span class="info-box-text">Pods</span>
-                        <span class="info-box-number">23 / 12,000</span>
+                        <span class="info-box-number">{{stats['total_pods']}}</span>
                       </div>
                       <!-- /.info-box-content -->
                     </div>
@@ -180,7 +181,7 @@
 
                       <div class="info-box-content">
                         <span class="info-box-text">Nodes</span>
-                        <span class="info-box-number">9 / 11</span>
+                        <span class="info-box-number">{{stats['total_nodes']}}</span>
                       </div>
                       <!-- /.info-box-content -->
                     </div>
@@ -196,7 +197,7 @@
 
         <!-- Main row -->
         <div class="row">
-          <div class="col-md-12">
+          <div class="col-md-8">
             <div class="card">
               <div class="card-header">
                 <h5 class="card-title">Lab Usage Report</h5>
@@ -296,6 +297,64 @@
               <!-- /.card-footer -->
             </div>
             <!-- /.card -->
+          </div>
+          <!-- /.col -->
+        <!-- Right col -->
+        <!-- Users Feedback Section -->
+        <div class="col-md-4">
+          <div class="card">
+            <!-- Card Header -->
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <h3 class="card-title mb-0">Users Feedback</h3>
+              <div class="ml-auto">
+                <a href="#" id="view-add-feedback" class="btn btn-sm btn-outline-primary mr-2" data-toggle="modal" data-target="#modal-feedback">{{ "View" if user_feedback else "Add"}} Feedback</a>
+                <a href="{{ url_for('home_blueprint.feedback_view') }}" class="btn btn-sm btn-outline-secondary">See All</a>
+              </div>
+            </div>
+            <!-- Card Body (Messages) -->
+            <div class="card-body" id="feedback-list">
+            </div>
+            
+              <!-- Modal de Feedback -->
+              <div class="modal fade" id="modal-feedback">
+                <div class="modal-dialog">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h4 class="modal-title">Rating</h4>
+                      <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                      </button>
+                    </div>
+                    <div class="modal-body">
+                      <div class="form-group">
+                        <label for="rating">Rating:</label>
+                        <div id="stars" class="star-rating">
+                          <i class="far fa-star" data-index="1"></i>
+                          <i class="far fa-star" data-index="2"></i>
+                          <i class="far fa-star" data-index="3"></i>
+                          <i class="far fa-star" data-index="4"></i>
+                          <i class="far fa-star" data-index="5"></i>
+                        </div>
+                        <input type="hidden" id="star-item-id" />
+                      </div>
+                      <div id="feedback-message" class="form-group"></div>
+                      <div class="form-group">
+                        <label for="comment">Comment (Optional):</label>
+                        <textarea class="form-control" id="comment" rows="3" placeholder="Leave your comment...">{{ user_feedback.comment|default('', true) }}</textarea>
+                      </div>
+                    </div>
+                    <div class="modal-footer justify-content-between">
+                      <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+		      <button type="button" class="btn btn-primary" id="submit-star" {{"disabled" if user_feedback else ""}}>Submit</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            <!-- /.card-body -->
+          </div>
+          <!-- /.card -->
+        </div>
+        <!-- /.Right col -->
           </div>
           <!-- /.col -->
         </div>
@@ -398,15 +457,6 @@
             <div class="card">
               <div class="card-header">
                 <h3 class="card-title">Lab categories and usage</h3>
-
-                <div class="card-tools">
-                  <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                    <i class="fas fa-minus"></i>
-                  </button>
-                  <button type="button" class="btn btn-tool" data-card-widget="remove">
-                    <i class="fas fa-times"></i>
-                  </button>
-                </div>
               </div>
               <!-- /.card-header -->
               <div class="card-body">
@@ -496,8 +546,282 @@
   <script src="/static/assets/plugins/leaflet/Brasil.min.js"></script>
   <!-- ChartJS -->
   <script src="/static/assets/plugins/chart.js/Chart.min.js"></script>
+  <!-- Motion JS -->
+  <script src="/static/assets/plugins/mojs/mojs.js"></script>
 
   <!-- PAGE SCRIPTS -->
   <script src="/static/assets/js/pages/dashboard2.js"></script>
+  <script type="text/javascript">
+    function isIOSSafari() {
+        var userAgent;
+        userAgent = window.navigator.userAgent;
+        return userAgent.match(/iPad/i) || userAgent.match(/iPhone/i);
+    };
+    function isTouch() {
+        var isIETouch;
+        isIETouch = navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0;
+        return [].indexOf.call(window, 'ontouchstart') >= 0 || isIETouch;
+    };
+    function extend(a, b) {
+        for (var key in b) {
+            if (b.hasOwnProperty(key)) {
+                a[key] = b[key];
+            }
+        }
+        return a;
+    }
+    $(function () {
+      var isIOS = isIOSSafari();
+      var clickHandler = isIOS || isTouch() ? 'touchstart' : 'click';
+      function AnimateIcon(el, options) {
+          this.el = el;
+          this.options = extend({}, this.options);
+          extend(this.options, options);
 
+          this.checked = {{"true" if stats['has_liked'] else "false"}};
+          this.timeline = new mojs.Timeline();
+
+          for (var i = 0, len = this.options.tweens.length; i < len; ++i) {
+              this.timeline.add(this.options.tweens[i]);
+          }
+          var self = this;
+          this.el.addEventListener(clickHandler, function() {
+              if (self.checked) {
+                  self.options.onUnCheck();
+              } else {
+                  self.options.onCheck();
+                  self.timeline.replay();
+              }
+              self.checked = !self.checked;
+          });
+      }
+      AnimateIcon.prototype.options = {
+        tweens : [
+          new mojs.Burst({})
+        ],
+        onCheck: function(){return false;},
+        onUnCheck: function(){ return false;}
+      };
+      var thumbsUpButton = document.querySelector('#thumbsUpButton');
+      new AnimateIcon(thumbsUpButton, {
+        tweens: [
+          new mojs.Burst({
+            parent: thumbsUpButton,
+            radius: {30:90},
+            count: 6,
+            children:{
+             fill: '#28a745',
+              opacity: 0.6,
+              radius: 15,
+              duration: 1700,
+              easing: mojs.easing.bezier(0.1, 1, 0.3, 1)
+            }
+          }),
+          new mojs.Shape({
+            parent: thumbsUpButton,
+            type: 'circle',
+            radius: {0: 60},
+            fill: 'transparent',
+            stroke: '#28a745',
+            strokeWidth: {20:0},
+            opacity: 0.6,
+            duration:700,
+            easing: mojs.easing.sin.out
+          }),
+          new mojs.Tween({
+            duration: 1200,
+            onUpdate: function(progress){
+             if(progress > 0.3){
+               var elasticOutProgress = mojs.easing.elastic.out(1.43*progress-0.43);
+               thumbsUpButton.style.WebkitTransform = thumbsUpButton.style.transform = 'scale3d(' + elasticOutProgress + ',' + elasticOutProgress + ',1)';
+             }
+              else{
+                thumbsUpButton.style.WebkiteTransform = thumbsUpButton.style.transform = 'scale3d(0,0,1)';
+              }
+            }
+          }),
+        ],
+        onCheck:function(){
+	  //thumbsUpButton.classList.remove("bg-secondary");
+	  //thumbsUpButton.classList.add("bg-success");
+          var request = $.ajax({
+            url: '/api/user_like',
+            type: "POST",
+            dataType: "json",
+            contentType: "application/json",
+          });
+          request.done(function(data) {
+	    thumbsUpButton.classList.remove("bg-secondary");
+	    thumbsUpButton.classList.add("bg-success");
+            $("#user-likes").html( data.result );
+          });
+          request.fail(function(xhr) {
+            sessionStorage.setItem('msgFail', xhr.responseText);
+            location.reload();
+          });
+        },
+        onUnCheck:function(){
+	  //thumbsUpButton.classList.remove("bg-success");
+	  //thumbsUpButton.classList.add("bg-secondary");
+          var request = $.ajax({
+            url: '/api/user_like',
+            type: "DELETE",
+            dataType: "json",
+            contentType: "application/json",
+          });
+          request.done(function(data) {
+	    thumbsUpButton.classList.remove("bg-success");
+	    thumbsUpButton.classList.add("bg-secondary");
+            $("#user-likes").html( data.result );
+          });
+          request.fail(function(xhr) {
+            sessionStorage.setItem('msgFail', xhr.responseText);
+            location.reload();
+          });
+        }
+      });
+    });
+  </script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const stars = document.querySelectorAll("#stars i");
+        const commentInput = document.getElementById("comment");
+        const submitButton = document.getElementById("submit-star");
+
+        let selectedRating = 0;
+        let hasRated = false;
+
+        fetch('api/feedback', {
+          method: 'GET',
+          headers: {
+              'Content-Type': 'application/json',
+          },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === "ok") {
+                updateFeedbackList(data.recent_feedbacks);
+            } 
+        })
+        .catch(error => {
+          console.error('Erro:', error);
+        });
+
+        document.querySelectorAll('.feedback-text').forEach(textElement => {
+          const container = textElement.closest('.feedback-container');
+          const button = container.querySelector('.expand-btn');
+          
+          if (textElement.scrollHeight > textElement.clientHeight) {
+            button.style.display = 'inline-block';
+          }
+        });
+
+        // ------------------------ STARS ------------------------
+        highlightStars({{user_feedback.stars|default(0, true)}});
+        stars.forEach(star => {
+            star.addEventListener("mouseover", function () {
+                const index = parseInt(this.getAttribute("data-index"));
+                highlightStars(index);
+            });
+    
+            star.addEventListener("click", function () {
+                selectedRating = parseInt(this.getAttribute("data-index"));
+            });
+        });
+    
+        document.getElementById("stars").addEventListener("mouseleave", function () {
+            highlightStars(selectedRating);
+        });
+    
+        function highlightStars(count) {
+            stars.forEach(star => {
+                const index = parseInt(star.getAttribute("data-index"));
+                star.classList.toggle("fas", index <= count);
+                star.classList.toggle("far", index > count);
+            });
+        }
+
+        // ------------------------ SUBMIT FEEDBACK ------------------------
+        submitButton.addEventListener("click", function () {
+            if (selectedRating === 0) {
+                alert("Please select a rating before submitting.");
+                return;
+            }
+    
+            const comment = commentInput.value.trim();
+            const ratingData = {
+                rating: selectedRating,
+                comment: comment,
+            };
+    
+            submitButton.disabled = true;
+    
+            fetch('/api/feedback', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(ratingData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "ok") {
+                    $(document).Toasts('create', {
+                      class: 'bg-success',
+                      title: 'Sucess',
+                      autohide: true,
+                      delay: 4000,
+                      body: "Rating submitted successfully!",
+                    });
+                    hasRated = true;
+                    submitButton.disabled = true;
+                    $('#modal-feedback').modal('hide');
+                    $('#view-add-feedback').html('View Feedback');
+
+                    updateFeedbackList(data.recent_feedbacks);
+
+                } else {
+                    alert(data.result);
+                    submitButton.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                alert("An error occurred while submitting your feedback.");
+                submitButton.disabled = false;
+            });
+        });
+
+        function truncate(str, n){
+          return (str.length > n) ? str.slice(0, n-1) + '&hellip;' : str;
+        };
+
+        function updateFeedbackList(recentFeedbacks) {
+            const feedbackList = document.getElementById('feedback-list');
+            feedbackList.innerHTML = '';
+
+            recentFeedbacks.forEach(fb => {
+                let user = fb.user;
+                const stars = '★'.repeat(fb.stars);
+                const comment = truncate(fb.comment, 80);
+                const created_at = new Date(fb.created_at);
+
+                feedbackList.innerHTML += `
+                    <div class="comments mb-3">
+                        <div class="media rounded bg-light shadow-sm">
+                            <div class="media-body">
+			        <p class="mt-1"><i class="fas fa-quote-left mr-2 text-muted"></i><em>${comment}</em></p>
+                                <div class="mb-0 d-flex justify-content-between align-items-center">
+				    <span><b>${user}</b> (${created_at.toLocaleString()})</span>
+                                    <span class="text-warning">${stars}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+    });
+    </script>
 {% endblock javascripts %}

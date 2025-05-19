@@ -5,7 +5,7 @@ Copyright (c) 2019 - present AppSeed.us
 
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, DateField
-from wtforms.validators import Email, DataRequired, Optional
+from wtforms.validators import Email, DataRequired, Optional, Length, EqualTo
 
 # login and registration
 
@@ -45,3 +45,26 @@ class ConfirmAccountForm(FlaskForm):
     confirmation_token = StringField('Confirmation Token',
                                     id='confirmation_token',
                                     validators=[DataRequired()])
+    
+class ResetPasswordForm(FlaskForm):
+    identifier = StringField('Identifier',
+                      id='identifier',
+                      validators=[DataRequired()])
+
+class ResetPasswordConfirmForm(FlaskForm):
+    password = PasswordField(
+        'Password',
+        id='pwd_reset',
+        validators=[
+            DataRequired(),
+            Length(min=8),
+            EqualTo('password_confirm', message='Passwords must match'),
+        ],
+    )
+    password_confirm = PasswordField(
+        'Password confirm',
+        validators=[
+            DataRequired(),
+            Length(min=8),
+        ],
+    )
