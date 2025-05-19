@@ -170,7 +170,8 @@ def register():
 
         confirmation_token = str(uuid.uuid4().int)[:6]
         session['confirmation_token'] = confirmation_token
-        session['user'] = request.form
+        session['user'] = request.form.to_dict()
+        session['user']['issuer'] = "LOCAL"
         session['datetime'] = utcnow()
 
         # Send email

@@ -78,7 +78,7 @@
                 <!-- /.form-group -->
                 <div class="form-group">
                   <label>E-mail</label>
-                  <input name="email" type="text" class="form-control" value="{{user.email}}" {{'disabled' if user.id != current_user.id and current_user.category != 'admin' else ''}}/>
+                  <input name="email" type="text" class="form-control" value="{{user.email|default('', true)}}" {{'disabled' if user.id != current_user.id and current_user.category != 'admin' else ''}}/>
                 </div>
                 <!-- /.form-group -->
                 <div class="form-group">
@@ -113,6 +113,12 @@
                 </div>
               </div>
               <div class="col-md-6">
+                <!-- /.form-group -->
+                <div class="form-group">
+                  <label>Issuer</label>
+                  <input type="text" class="form-control" value="{{user.issuer|default('LOCAL', true)}}" disabled/>
+                </div>
+                <!-- /.form-group -->
                 <div class="form-group">
                   <label>Member of groups:</label>
                   <select name="member_of_groups" multiple class="form-control" disabled>
