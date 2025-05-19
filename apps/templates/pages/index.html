@@ -307,7 +307,7 @@
             <div class="card-header d-flex justify-content-between align-items-center">
               <h3 class="card-title mb-0">Users Feedback</h3>
               <div class="ml-auto">
-                <a href="#" class="btn btn-sm btn-outline-primary mr-2" data-toggle="modal" data-target="#modal-feedback">Add Feedback</a>
+                <a href="#" id="view-add-feedback" class="btn btn-sm btn-outline-primary mr-2" data-toggle="modal" data-target="#modal-feedback">{{ "View" if user_feedback else "Add"}} Feedback</a>
                 <a href="{{ url_for('home_blueprint.feedback_view') }}" class="btn btn-sm btn-outline-secondary">See All</a>
               </div>
             </div>
@@ -340,12 +340,12 @@
                       <div id="feedback-message" class="form-group"></div>
                       <div class="form-group">
                         <label for="comment">Comment (Optional):</label>
-                        <textarea class="form-control" id="comment" rows="3" placeholder="Leave your comment..."></textarea>
+                        <textarea class="form-control" id="comment" rows="3" placeholder="Leave your comment...">{{ user_feedback.comment|default('', true) }}</textarea>
                       </div>
                     </div>
                     <div class="modal-footer justify-content-between">
                       <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                      <button type="button" class="btn btn-primary" id="submit-star">Submit</button>
+		      <button type="button" class="btn btn-primary" id="submit-star" {{"disabled" if user_feedback else ""}}>Submit</button>
                     </div>
                   </div>
                 </div>
@@ -692,7 +692,7 @@
         let selectedRating = 0;
         let hasRated = false;
 
-        fetch('api/feedback/recent', {
+        fetch('api/feedback', {
           method: 'GET',
           headers: {
               'Content-Type': 'application/json',
@@ -718,6 +718,7 @@
         });
 
         // ------------------------ STARS ------------------------
+        highlightStars({{user_feedback.stars|default(0, true)}});
         stars.forEach(star => {
             star.addEventListener("mouseover", function () {
                 const index = parseInt(this.getAttribute("data-index"));
@@ -766,10 +767,17 @@
             .then(response => response.json())
             .then(data => {
                 if (data.status === "ok") {
-                    alert("Rating submitted successfully!");
+                    $(document).Toasts('create', {
+                      class: 'bg-success',
+                      title: 'Sucess',
+                      autohide: true,
+                      delay: 4000,
+                      body: "Rating submitted successfully!",
+                    });
                     hasRated = true;
                     submitButton.disabled = true;
                     $('#modal-feedback').modal('hide');
+                    $('#view-add-feedback').html('View Feedback');
 
                     updateFeedbackList(data.recent_feedbacks);
 
@@ -785,39 +793,29 @@
             });
         });
 
+        function truncate(str, n){
+          return (str.length > n) ? str.slice(0, n-1) + '&hellip;' : str;
+        };
+
         function updateFeedbackList(recentFeedbacks) {
             const feedbackList = document.getElementById('feedback-list');
             feedbackList.innerHTML = '';
 
             recentFeedbacks.forEach(fb => {
-            let user = '';
-
-            if (fb.user) {
-                const given = fb.user.given_name;
-                const family = fb.user.family_name;
-                const username = fb.user.username
-
-                if (!given || !family || given.trim() === '' || family.trim() === '') {
-                    user = username && username.trim() !== '' ? username : '';
-                } else {
-                    user = `${given.trim()} ${family.trim()}`;
-                }
-
-              }
+                let user = fb.user;
                 const stars = '★'.repeat(fb.stars);
-                const comment = fb.comment;
-                const created_at = fb.created_at;
+                const comment = truncate(fb.comment, 80);
+                const created_at = new Date(fb.created_at);
 
                 feedbackList.innerHTML += `
                     <div class="comments mb-3">
-                        <div class="media">
+                        <div class="media rounded bg-light shadow-sm">
                             <div class="media-body">
-                                <div class="mb-0 d-flex justify-content-between align-items-center" style="font-size: 0.9rem; font-weight: bold;">
-                                    <span style="font-weight: bold;">${user}</span>
-                                    <span class="text-warning" style="font-size: 0.8rem; font-weight: bold;">${stars}</span>
+			        <p class="mt-1"><i class="fas fa-quote-left mr-2 text-muted"></i><em>${comment}</em></p>
+                                <div class="mb-0 d-flex justify-content-between align-items-center">
+				    <span><b>${user}</b> (${created_at.toLocaleString()})</span>
+                                    <span class="text-warning">${stars}</span>
                                 </div>
-                                <p class="mt-1" style="font-size: 0.85rem;">${comment}</p>
-                                <p class="mt-1" style="font-size: 0.85rem;">${created_at}</p>
                             </div>
                         </div>
                     </div>

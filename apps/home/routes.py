@@ -34,11 +34,6 @@ def index():
         user_likes = UserLikes.query.count()
         cache.set("user_likes", user_likes)
 
-    feedbacks = UserFeedbacks.query.order_by(UserFeedbacks.created_at.desc()).all()
-    for feedback in feedbacks:
-        local_time = feedback.created_at - timedelta(hours=3)
-        feedback.created_at_formatted = local_time.strftime("%d/%m/%Y %H:%M")
-
     stats_data = cache.get("stats_data")
     if stats_data is None:
         try:
@@ -65,7 +60,9 @@ def index():
         "total_nodes": stats_data.get("total_nodes", 0),
     }
 
-    return render_template('pages/index.html', stats=stats, feedbacks=feedbacks)
+    user_feedback = UserFeedbacks.query.filter_by(user_id=current_user.id).first()
+
+    return render_template('pages/index.html', stats=stats, user_feedback=user_feedback)
 
 
 @blueprint.route('/running/')
@@ -770,11 +767,7 @@ def add_answer_sheet():
 @blueprint.route('/feedback_view', methods=["GET"])
 @login_required
 def feedback_view():
-    feedbacks = UserFeedbacks.query.order_by(desc(UserFeedbacks.created_at)).all()
-    for feedback in feedbacks:
-        local_time = feedback.created_at - timedelta(hours=3)
-        feedback.created_at_formatted = local_time.strftime("%d/%m/%Y %H:%M")
-
+    feedbacks = UserFeedbacks.query.filter_by(is_hidden=False).order_by(UserFeedbacks.created_at.desc()).all()
     return render_template('pages/feedback_view.html', feedbacks=feedbacks)
 
 @blueprint.route('/gallery', methods=["GET"])

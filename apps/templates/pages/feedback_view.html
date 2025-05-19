@@ -56,12 +56,7 @@
                   <div class="media mb-4 p-3 rounded bg-light shadow-sm">
                     <div class="media-body">
                       <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h5 class="mb-0 text-primary font-weight-bold">
-                          {% if feedback.user and feedback.user.given_name and feedback.user.family_name %}
-                            {{ feedback.user.given_name }} {{ feedback.user.family_name }}
-                          {% elif feedback.user %}
-                            {{ feedback.user.username }}
-                          {% endif %}                        </h5>
+			<h5 class="mb-0 text-primary font-weight-bold">{{ feedback.user.name }}</h5>
                         <div class="text-warning">
                           {% for i in range(feedback.stars) %}
                             <i class="fas fa-star"></i>
@@ -73,7 +68,7 @@
                       </div>
                       <p class="mb-2 text-dark"><i class="fas fa-quote-left mr-2 text-muted"></i>{{ feedback.comment }}</p>
                       <p class="text-muted mb-0 small">
-                        <i class="far fa-clock mr-1"></i>{{ feedback.created_at_formatted }}
+                        <i class="far fa-clock mr-1"></i><span class="fmt-date-time">{{ feedback.created_at_str }}</span>
                       </p>
                     </div>
                   </div>
@@ -88,4 +83,22 @@
     </div>
   </section>
 </div>
-{% endblock %}
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+  <!-- jQuery -->
+  <script src="/static/assets/plugins/jquery/jquery.min.js"></script>
+  <!-- Bootstrap 4 -->
+  <script src="/static/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <!-- Page Script -->
+  <script>
+    $(function () {
+      $(".fmt-date-time").each(function(){
+        var field = $(this);
+	var dt = new Date(field.html());
+	field.html(dt.toLocaleString());
+      });
+    })
+  </script>
+{% endblock javascripts %}
