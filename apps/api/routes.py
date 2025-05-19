@@ -2,10 +2,11 @@
 """HackInSDN"""
 
 import json
+import re
 from apps import db, cache
 from apps.api import blueprint
 from apps.controllers import k8s
-from apps.home.models import Labs, LabInstances, LabAnswers, UserLikes, UserFeedbacks
+from apps.home.models import Labs, LabInstances, LabAnswers, LabAnswerSheet, UserLikes, UserFeedbacks
 from apps.authentication.models import Users, Groups, DeletedGroupUsers
 from flask import request, current_app
 from flask_login import login_required, current_user
@@ -289,6 +290,46 @@ def join_group(group_id):
         return {"status": "fail", "result": "Failed to join group"}, 400
 
     return {"status": "ok", "result": "Joint group successfully! Click on 'Reload profile' to update your authorization."}, 200
+
+@blueprint.route('/lab_answers/check/<lab_id>/<int:answer_id>')
+@login_required
+def check_lab_answer(lab_id, answer_id):
+    if current_user.category not in ["admin", "teacher"]:
+        return {"status": "fail", "result": "Unauthorized access"}, 401
+
+    lab = Labs.query.get(lab_id)
+    if not lab:
+        return {"status": "fail", "result": "Invalid or Unauthorized access to lab"}, 401
+
+    mygroups = current_user.privileged_group_ids
+    for group in lab.allowed_groups:
+        if group.id in mygroups:
+            break
+    else:
+        return {"status": "fail", "result": "Invalid or Unauthorized access to lab"}, 401
+
+    lab_answer = LabAnswers.query.get(answer_id)
+    if not lab_answer:
+        return {"status": "fail", "result": "Invalid or Unauthorized access to lab answer"}, 401
+
+    lab_answer_sheet = LabAnswerSheet.query.filter_by(lab_id=lab_id).first()
+    if not lab_answer_sheet:
+        return {"status": "fail", "result": "No Lab Answer Sheet available. Please create the Answer Sheet first."}, 400
+
+    answer_sheet = lab_answer_sheet.answers_dict
+
+    answers = lab_answer.answers_dict
+    total, correct = 0, 0
+    for question, expected_answer in answer_sheet.items():
+        total += 1
+        try:
+            if re.match(fr"^{expected_answer}$", answers.get(question)):
+                correct += 1
+        except:
+            continue
+    score = "%.2f" % (100*correct/total) if total > 0 else "--"
+
+    return {"status": "ok", "result": score}, 200
 
   
 @blueprint.route('/feedback', methods=["POST", "GET"])
