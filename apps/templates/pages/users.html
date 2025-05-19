@@ -69,6 +69,7 @@
                     <th>Full name</th>
                     <th>E-mail</th>
                     <th>Category</th>
+                    <th>Issuer</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -83,8 +84,9 @@
                   </td>
             	  <td>{{ user.username }}</td>
                   <td>{{ user.name }}</td>
-                  <td>{{ user.email }}</td>
+                  <td>{{ user.email|default('', true) }}</td>
                   <td>{{ user.category }}</td>
+                  <td>{{ user.issuer|default('LOCAL', true) }}</td>
                   <td><a href="{{url_for('home_blueprint.edit_user', user_id=user.id)}}" class="btn btn-outline-dark" role="button" aria-pressed="true"><i class="fa fa-pen"></i> Edit</a></td>
                 </tr>
                 {% endfor %}
@@ -199,6 +201,7 @@
           { name: 'name' },
           { name: 'email' },
           { name: 'category' },
+          { name: 'issuer' },
           {
             orderable: false,
             name: 'actions',

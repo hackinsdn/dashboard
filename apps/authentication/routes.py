@@ -161,12 +161,17 @@ def register():
                                    success=False,
                                    form=create_account_form)
 
-        # else we can create the user
-        user = Users(**request.form)
+        # else: send confirmation e-mail if configured or create user
+        if not app.config['MAIL_SERVER']:
+            user = Users(**request.form, issuer="LOCAL")
+            db.session.add(user)
+            db.session.commit()
+            return redirect(url_for('authentication_blueprint.login'))
 
         confirmation_token = str(uuid.uuid4().int)[:6]
         session['confirmation_token'] = confirmation_token
-        session['user'] = request.form
+        session['user'] = request.form.to_dict()
+        session['user']['issuer'] = "LOCAL"
         session['datetime'] = utcnow()
 
         # Send email
