@@ -9,9 +9,6 @@ from apps.home.models import Labs, LabInstances, LabAnswers, UserLikes, UserFeed
 from apps.authentication.models import Users, Groups, DeletedGroupUsers
 from flask import request, current_app
 from flask_login import login_required, current_user
-from flask import jsonify
-from sqlalchemy.sql import func
-from datetime import timedelta
 
 @blueprint.route('/pods/<lab_id>', methods=["GET"])
 @login_required

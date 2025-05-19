@@ -17,7 +17,6 @@ from jinja2 import TemplateNotFound
 from apps.audit_mixin import get_remote_addr, check_user_category
 from apps.authentication.forms import GroupForm
 from apps.utils import update_running_labs_stats
-from datetime import timedelta
 from sqlalchemy import desc
 
 
