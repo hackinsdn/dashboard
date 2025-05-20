@@ -59,7 +59,6 @@
               <p>
                 Labs
                 <i class="fas fa-angle-left right"></i>
-                <span class="right badge badge-danger">New</span>
               </p>
             </a>
             <ul class="nav nav-treeview">
@@ -109,6 +108,36 @@
                 Users
               </p>
             </a>
+          </li>
+          <li class="nav-item has-treeview {% if request.url_rule.endpoint.startswith('k8s_blueprint') %} menu-open {% endif %}">
+            <a href="#" class="nav-link {% if request.url_rule.endpoint.startswith('k8s_blueprint') %} active {% endif %}">
+              <i class="nav-icon far fa-dharmachakra"></i>
+              <p>
+                Kubernetes
+                <i class="fas fa-angle-left right"></i>
+                <span class="right badge badge-danger">New</span>
+              </p>
+            </a>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="{{url_for('k8s_blueprint.list_pods')}}" class="nav-link {% if request.url_rule.endpoint == 'k8s_blueprint.list_pods' %} active {% endif %}">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Pods</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{url_for('k8s_blueprint.list_deployments')}}" class="nav-link {% if request.url_rule.endpoint == 'k8s_blueprint.list_deployments' %} active {% endif %}">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Deployments</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{url_for('k8s_blueprint.list_services')}}" class="nav-link {% if request.url_rule.endpoint == 'k8s_blueprint.list_services' %} active {% endif %}">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Services</p>
+                </a>
+              </li>
+            </ul>
           </li>
           {% endif %}
           <li class="nav-header">MORE INFO</li>

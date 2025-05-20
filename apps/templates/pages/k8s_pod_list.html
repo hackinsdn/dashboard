@@ -1,0 +1,364 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Kubernetes Pods {% endblock %}
+
+<!-- Element injected in the BODY element -->
+{% block body_class %} sidebar-mini layout-navbar-fixed {% endblock body_class %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}
+
+  <!-- Google Font: Source Sans Pro -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
+  <!-- DataTables -->
+  <link rel="stylesheet" href="/static/assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
+  <link rel="stylesheet" href="/static/assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css">
+  <!-- icheck bootstrap -->
+  <link rel="stylesheet" href="/static/assets/plugins/icheck-bootstrap/icheck-bootstrap.min.css">
+  <!-- Theme style -->
+  <link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
+{% endblock stylesheets %}
+
+{% block content %}
+
+  <!-- Content Wrapper. Contains page content -->
+  <div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+      <div class="container-fluid">
+        <div class="row mb-2">
+          <div class="col-sm-6">
+            <h1>Kubernetes Pods</h1>
+          </div>
+          <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+              <li class="breadcrumb-item"><a href="/index">Home</a></li>
+              <li class="breadcrumb-item">Kubernetes</li>
+              <li class="breadcrumb-item active">Pods</li>
+            </ol>
+          </div>
+        </div>
+      </div><!-- /.container-fluid -->
+    </section>
+
+    <!-- Main content -->
+    <section class="content">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Kubernetes Pods</h3>
+              <div class="float-right">
+                <button type="button" title="Select all Pods" class="btn btn-default btn-sm checkbox-toggle"><i class="far fa-square"></i></button>
+                <button type="button" title="Delete selected Pods" class="btn btn-default btn-sm" data-toggle="modal" data-target="#modal-delete-pods">
+                  <i class="far fa-trash-alt"></i>
+                </button>
+                <button type="button" title="Approve selected users" class="btn btn-default btn-sm" data-toggle="modal" data-target="#modal-approve-users">
+                  <i class="fas fa-user-check"></i>
+                </button>
+              </div>
+            </div>
+            <!-- /.card-header -->
+            <div class="card-body user-items">
+              <table id="tablePods" class="table table-striped display">
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th>Name</th>
+                    <th>Ready</th>
+                    <th>Status</th>
+                    <th>Age</th>
+                    <th>IP</th>
+                    <th>Node</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for item in pods %}
+                <tr id="{{item['uid']}}">
+                  <td>
+                    <div class="icheck-primary">
+                      <input type="checkbox" value="" id="checkbox-{{item['uid']}}">
+                      <label for="checkbox-{{item['uid']}}"></label>
+                    </div>
+                  </td>
+                  <td>{{ item['name'] }}</td>
+                  <td>{{ item['containers_ready']}}/{{item['containers_total']}}</td>
+                  <td>{{ item['phase'] }}</td>
+                  <td>{{ item['age'] }}</td>
+                  <td>{{ item['pod_ip'] }}</td>
+                  <td>{{ item['node_name'] }}</td>
+                  <td>
+                    <button type="button" title="Show pod yaml" class="btn btn-outline-dark button-show-pod" data-toggle="modal" data-target="#modal-show-pod-yaml" data-podyaml="<p>Pod information in YAML format:</p> <pre>{{ item['more'] }}</pre>">
+                      <i class="fas fa-eye"></i> YAML
+                    </button>
+                  </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+              </table>
+              <!-- /.table -->
+            </div>
+            <!-- /.card-body -->
+            <div class="card-footer p-0">
+              <div class="mailbox-controls">
+                <!-- Check all button -->
+                <button type="button" title="Select all users" class="btn btn-default btn-sm checkbox-toggle"><i class="far fa-square"></i></button>
+                <button type="button" title="Delete selected users" class="btn btn-default btn-sm" data-toggle="modal" data-target="#modal-delete-pods">
+                  <i class="far fa-trash-alt"></i>
+                </button>
+                <button type="button" title="Approve selected users" class="btn btn-default btn-sm" data-toggle="modal" data-target="#modal-approve-users">
+                  <i class="fas fa-user-check"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          <!-- /.card -->
+        </div>
+        <!-- /.col -->
+      </div>
+      <!-- /.row -->
+
+      <div class="modal fade" id="modal-delete-pods">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">Confirm User removal</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <p>Are you sure you want to remove the selected Users?</p>
+              <ul id="modal-delete-items"></ul>
+            </div>
+            <div class="modal-footer justify-content-between">
+              <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+              <button type="button" class="btn btn-danger" id="delete-users">Delete Users</button>
+            </div>
+          </div>
+          <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+      </div>
+      <!-- /.modal -->
+      <div class="modal fade" id="modal-approve-users">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">Confirm Approve Users</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <p>Are you sure you want to approve the selected Users? Approved users have access to run Labs.</p>
+              <ul id="modal-approve-users-items"></ul>
+            </div>
+            <div class="modal-footer justify-content-between">
+              <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+              <button type="button" class="btn btn-danger" id="approve-users">Approve Users</button>
+            </div>
+          </div>
+          <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+      </div>
+      <!-- /.modal -->
+      <div class="modal fade" id="modal-show-pod-yaml">
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">Show Pod YAML</h4>
+              <button type="button" class="close button-clear-answer" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <div id="podyaml"></div>
+            </div>
+            <div class="modal-footer justify-content-between">
+              <button type="button" class="btn btn-default button-clear-answer" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+          <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+      </div>
+      <!-- /.modal -->
+
+    </section>
+    <!-- /.content -->
+  </div>
+  <!-- /.content-wrapper -->
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+  <!-- jQuery -->
+  <script src="/static/assets/plugins/jquery/jquery.min.js"></script>
+  <!-- Bootstrap 4 -->
+  <script src="/static/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <!-- DataTables -->
+  <script src="/static/assets/plugins/datatables/jquery.dataTables.min.js"></script>
+  <script src="/static/assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
+  <script src="/static/assets/plugins/datatables-responsive/js/dataTables.responsive.min.js"></script>
+  <script src="/static/assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js"></script>
+  <!-- AdminLTE App -->
+  <script src="/static/assets/js/adminlte.min.js"></script>
+  <!-- Page Script -->
+  <script>
+    $(function () {
+      // config DataTable
+      var table = $("#tablePods").DataTable({
+        responsive: true,
+        autoWidth: false,
+        language: {
+          emptyTable: 'No Pod running',
+        },
+        columns: [
+          {
+            orderable: false,
+            name: 'select',
+          },
+          { name: 'name' },
+          { name: 'ready' },
+          { name: 'status' },
+          { name: 'age' },
+          { name: 'ip' },
+          { name: 'node' },
+          {
+            orderable: false,
+            name: 'actions',
+          },
+        ],
+        order: [[1, 'asc']]
+      });
+      if ( sessionStorage.getItem('msgSuccess') ) {
+        $(document).Toasts('create', {
+          class: 'bg-success',
+          title: 'Sucess',
+          body: sessionStorage.getItem('msgSuccess')
+        });
+        sessionStorage.removeItem('msgSuccess');
+      }
+      if ( sessionStorage.getItem('msgFail') ) {
+        $(document).Toasts('create', {
+          class: 'bg-danger',
+          title: 'Failure',
+          body: sessionStorage.getItem('msgFail')
+        });
+        sessionStorage.removeItem('msgFail');
+      }
+      //Enable check and uncheck all functionality
+      $('#delete-users').click(function () {
+        var rows = $('#tableUsers tr').filter(':has(:checkbox:checked)');
+        $("#delete-users").html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Deleting ' + table.rows(rows).data().length + ' row(s)...');
+        $("#delete-users").prop('disabled', true);
+        var items = [];
+        table.rows(rows).each( function ( index ) {
+          var row = table.row( index );
+          items.push(row.id());
+        });
+        var delete_url = '/api/users/bulk';
+        if (items.length === 1) {
+          delete_url = '/api/users/' + items[0];
+        }
+        var request = $.ajax({
+          url: delete_url,
+          type: "DELETE",
+          dataType: "json",
+          data: JSON.stringify(items),
+          contentType: "application/json",
+        });
+        request.done(function(data) {
+          sessionStorage.setItem('msgSuccess', data.result);
+          location.reload();
+        });
+        request.fail(function(xhr) {
+          sessionStorage.setItem('msgFail', xhr.responseText);
+          location.reload();
+        });
+      });
+      $('#approve-users').click(function () {
+        var rows = $('#tableUsers tr').filter(':has(:checkbox:checked)');
+        $("#approve-users").html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Aproving ' + table.rows(rows).data().length + ' row(s)...');
+        $("#approve-users").prop('disabled', true);
+        var items = [];
+        rows.each( function ( index, row ) {
+          items.push(row.id);
+        });
+        var request = $.ajax({
+          url: '/api/users/bulk-approve',
+          type: "POST",
+          dataType: "json",
+          data: JSON.stringify(items),
+          contentType: "application/json",
+        });
+        request.done(function(data) {
+          sessionStorage.setItem('msgSuccess', data.result);
+          location.reload();
+        });
+        request.fail(function(xhr) {
+          sessionStorage.setItem('msgFail', xhr.responseText);
+          location.reload();
+        });
+      });
+      $('#modal-delete-pods').on('show.bs.modal', function (e) {
+        var rows = $('#tablePods tr').filter(':has(:checkbox:checked)');
+        var data = table.rows(rows).data();
+        var items = $("#modal-delete-items");
+        items.empty();
+        $("#delete-pods").prop('disabled', false);
+        if (data.length === 0) {
+          items.append("<li>No Pod selected!</li>");
+          $("#delete-pods").prop('disabled', true);
+          return;
+        }
+        data.each(function (value, index) {
+          items.append(`<li>${value[2]} - ${value[3]}</li>`);
+        });
+      });
+      $('#modal-approve-users').on('show.bs.modal', function (e) {
+        var rows = $('#tableUsers tr').filter(':has(:checkbox:checked)');
+        var data = table.rows(rows).data();
+        var items = $("#modal-approve-users-items");
+        items.empty();
+        $("#approve-users").prop('disabled', false);
+        if (data.length === 0) {
+          items.append("<li>No user selected!</li>");
+          $("#approve-users").prop('disabled', true);
+          return;
+        }
+        data.each(function (value, index) {
+          items.append(`<li>${value[2]} - ${value[3]}</li>`);
+        });
+      });
+      //Enable check and uncheck all functionality
+      $('.checkbox-toggle').click(function () {
+        var clicks = $(this).data('clicks')
+        if (clicks) {
+          //Uncheck all checkboxes
+          $('.user-items input[type=\'checkbox\']').prop('checked', false)
+          $('.checkbox-toggle .far.fa-check-square').removeClass('fa-check-square').addClass('fa-square')
+        } else {
+          //Check all checkboxes
+          $('.user-items input[type=\'checkbox\']').prop('checked', true)
+          $('.checkbox-toggle .far.fa-square').removeClass('fa-square').addClass('fa-check-square')
+        }
+        $(this).data('clicks', !clicks)
+      });
+      $( "#modal-show-pod-yaml" ).on('show.bs.modal', function(event){
+        var podYaml = $(event.relatedTarget).data('podyaml');
+        $("#podyaml").html( podYaml );
+      });
+    })
+  </script>
+  <!-- AdminLTE for demo purposes -->
+  <script src="/static/assets/js/demo.js"></script>
+
+{% endblock javascripts %}

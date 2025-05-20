@@ -21,6 +21,7 @@ from flask_login import current_user
 from collections import defaultdict
 
 from apps.config import app_config
+from apps.utils import format_duration
 
 RNP_TESTBED_NODES = {
     "ids-go": {"lat": -16.67990, "lng": -49.2550},
@@ -74,6 +75,77 @@ class K8sController():
             if port_name.startswith(app):
                 return app + "://"
         return "http://"
+
+    def list_pods(self):
+        now = datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0)
+        pods = self.v1_api.list_namespaced_pod(
+            namespace=self.namespace
+        )
+        response = []
+        for pod in pods.items:
+            statuses = [
+                status.ready for status in pod.status.container_statuses
+            ]
+            containers = [
+                container.name for container in pod.spec.containers
+            ]
+            response.append({
+                "containers_total": len(statuses),
+                "containers_ready": sum(statuses),
+                "created": pod.metadata.creation_timestamp,
+                "age": format_duration(now - pod.metadata.creation_timestamp),
+                "name": pod.metadata.name,
+                "uid": pod.metadata.uid,
+                "node_name": pod.spec.node_name,
+                "pod_ip": pod.status.pod_ip,
+                "containers": containers,
+                "phase": pod.status.phase,
+                "more": yaml.dump(pod.to_dict()),
+            })
+        return response
+
+    def list_deployments(self):
+        now = datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0)
+        deployments = self.apps_v1_api.list_namespaced_deployment(
+            namespace=self.namespace
+        )
+        response = []
+        for dep in deployments.items:
+            containers = [
+                container.name for container in dep.spec.template.spec.containers
+            ]
+            response.append({
+                "containers_total": dep.status.replicas,
+                "containers_ready": dep.status.ready_replicas or 0,
+                "created": dep.metadata.creation_timestamp,
+                "age": format_duration(now - dep.metadata.creation_timestamp),
+                "name": dep.metadata.name,
+                "uid": dep.metadata.uid,
+                "containers": ",".join(containers),
+                "more": yaml.dump(dep.to_dict()),
+            })
+        return response
+
+    def list_services(self):
+        now = datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0)
+        services = self.v1_api.list_namespaced_service(
+            namespace=self.namespace
+        )
+        response = []
+        for srv in services.items:
+            ports = [
+                f"{port.target_port}:{port.node_port}/{port.protocol}"
+                for port in srv.spec.ports
+            ]
+            response.append({
+                "age": format_duration(now - srv.metadata.creation_timestamp),
+                "name": srv.metadata.name,
+                "uid": srv.metadata.uid,
+                "ports": " ".join(ports),
+                "type": srv.spec.type,
+                "more": yaml.dump(srv.to_dict()),
+            })
+        return response
 
     def get_labs_by_user(self, f_user_uid, f_lab_id=None):
         if not self.v1_api:
