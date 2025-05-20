@@ -253,7 +253,6 @@ word-break: break-all;
           contentType: "application/json",
         });
         request.done(function(data) {
-          sessionStorage.setItem('msgSuccess', data.result);
           location.href = "{{url_for('home_blueprint.view_finished_lab_infos', lab_id=lab['lab_id'])}}";
         });
         request.fail(function(xhr) {
