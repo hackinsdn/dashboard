@@ -247,11 +247,15 @@ flask --app run.py db current
 flask --app run.py db stamp 1.0
 ```
 
-5. Finally, you can run the migration to upgrade your database:
+5. Upgrade your code, typically with a `git pull` or `git checkout tags/2.0.1`
+
+*Note*: if you are releasing a new version you can create a migration with `flask --app run.py db migrate --rev-id 2.0.1 -m update1`
+
+6. Finally, you can run the migration to upgrade your database:
 ```
 flask --app run.py db upgrade
 ```
-6. Set up some environment variables for email sending:
+7. Set up some environment variables for email sending:
 ```
 export MAIL_SERVER=xxxx
 export MAIL_PORT=xxxx
