@@ -263,12 +263,12 @@ def reset_password():
     user = Users.query.filter(or_(Users.email == identifier, Users.username == identifier)).first()
     if not user or user.is_deleted:
         return render_template('pages/reset_password.html', form=form, msg=msg)
-  
+
     confirmation_token = secrets.token_urlsafe(64)
     confirmation_url = app_config.BASE_URL + url_for("authentication_blueprint.confirm_reset_password", token=confirmation_token)
 
     cache.set(f"resetpw-{confirmation_token}", user.id, timeout=3600)
-    
+
     mail_msg = Message(
         subject="HackInSDN - Reset your password",
         sender=app.config['MAIL_USERNAME'],

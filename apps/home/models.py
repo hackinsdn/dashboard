@@ -167,7 +167,7 @@ class UserFeedbacks(db.Model, AuditMixin):
     comment = db.Column(db.String, nullable=True)
     stars = db.Column(db.Integer, nullable=False)
     is_hidden = db.Column(db.Boolean, default=False, nullable=False)
-    
+
     user = db.relationship('Users', backref='feedbacks', foreign_keys=[user_id])
 
     @property

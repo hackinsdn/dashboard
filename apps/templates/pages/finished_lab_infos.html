@@ -87,7 +87,7 @@
                 <p class="text-muted">
                   You can execute this laboratory again as many times as you want.
                 </p>
-                
+
                 <div class="success-actions">
                   <a href="{{url_for('home_blueprint.view_labs', lab_id=lab_id)}}" type="button" class="btn btn-primary btn-lg mr-2" id="retry-lab">
                     <i class="fas fa-redo"></i> Execute Again
@@ -97,7 +97,7 @@
                     <i class="fas fa-eye"></i> View Answers
                   </button> -->
                 </div>
-                
+
                 <div class="mt-4">
                   <a href="{{url_for('home_blueprint.index')}}" class="text-muted">
                     <i class="fas fa-arrow-left mr-1"></i> Back to Home
@@ -123,7 +123,7 @@
       </div>
     </section>
   </div>
-  
+
 {% endblock content %}
 
 {% block javascripts %}
@@ -139,13 +139,13 @@
 
   <!-- AdminLTE App -->
   <script src="/static/assets/js/adminlte.js"></script>
-  
+
   <script>
     $(document).ready(function() {
       // Create confetti effect
       const confettiContainer = document.getElementById('confetti-container');
       const colors = ['#f2d74e', '#95c3de', '#ff9a91', '#f2b2bd', '#a3d977'];
-      
+
       for (let i = 0; i < 50; i++) {
         const confetti = document.createElement('div');
         confetti.classList.add('confetti');
@@ -157,24 +157,24 @@
         confetti.style.animationDuration = Math.random() * 3 + 2 + 's';
         confettiContainer.appendChild(confetti);
       }
-      
+
       // Button to execute again
       $('#retry-lab').click(function() {
         // Redirect to the laboratory page
         window.location.href = '/labs/execute/{{lab_id}}';
       });
-      
-      
+
+
       // Update dynamic data (simulation)
       function updateLabData() {
         // Here you can replace with real data from the backend
         const score = "95%";
         const completionDate = new Date().toLocaleDateString();
-        
+
         $('#score-value').text(score);
         $('#completion-date').text(completionDate);
       }
-      
+
       updateLabData();
     });
   </script>

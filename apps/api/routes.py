@@ -331,7 +331,7 @@ def check_lab_answer(lab_id, answer_id):
 
     return {"status": "ok", "result": score}, 200
 
-  
+
 @blueprint.route('/feedback', methods=["POST", "GET"])
 @login_required
 def feedback():

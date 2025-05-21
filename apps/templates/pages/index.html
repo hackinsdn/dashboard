@@ -1,9 +1,9 @@
 {% extends "layouts/base.html" %}
 
-{% block title %} Home {% endblock %} 
+{% block title %} Home {% endblock %}
 
 <!-- Element injected in the BODY element -->
-{% block body_class %} sidebar-mini layout-navbar-fixed {% endblock body_class %} 
+{% block body_class %} sidebar-mini layout-navbar-fixed {% endblock body_class %}
 
 <!-- Specific Page CSS goes HERE  -->
 {% block stylesheets %}
@@ -22,7 +22,7 @@
 
 {% endblock stylesheets %}
 
-{% block content %}  
+{% block content %}
 
   <!-- Content Wrapper. Contains page content -->
   <div class="content-wrapper">
@@ -314,7 +314,7 @@
             <!-- Card Body (Messages) -->
             <div class="card-body" id="feedback-list">
             </div>
-            
+
               <!-- Modal de Feedback -->
               <div class="modal fade" id="modal-feedback">
                 <div class="modal-dialog">
@@ -488,7 +488,7 @@
                   <li class="nav-item">
                     <a href="#" class="nav-link">
                       UFBA students
-                      <span class="float-right text-danger">231 
+                      <span class="float-right text-danger">231
                         (<i class="fas fa-arrow-down text-sm"></i> 12%)
                       </span>
                     </a>
@@ -496,7 +496,7 @@
                   <li class="nav-item">
                     <a href="#" class="nav-link">
                       IFBA students
-                      <span class="float-right text-success">56 
+                      <span class="float-right text-success">56
                         (<i class="fas fa-arrow-up text-sm"></i> 4%)
                       </span>
                     </a>
@@ -702,7 +702,7 @@
         .then(data => {
             if (data.status === "ok") {
                 updateFeedbackList(data.recent_feedbacks);
-            } 
+            }
         })
         .catch(error => {
           console.error('Erro:', error);
@@ -711,7 +711,7 @@
         document.querySelectorAll('.feedback-text').forEach(textElement => {
           const container = textElement.closest('.feedback-container');
           const button = container.querySelector('.expand-btn');
-          
+
           if (textElement.scrollHeight > textElement.clientHeight) {
             button.style.display = 'inline-block';
           }
@@ -724,16 +724,16 @@
                 const index = parseInt(this.getAttribute("data-index"));
                 highlightStars(index);
             });
-    
+
             star.addEventListener("click", function () {
                 selectedRating = parseInt(this.getAttribute("data-index"));
             });
         });
-    
+
         document.getElementById("stars").addEventListener("mouseleave", function () {
             highlightStars(selectedRating);
         });
-    
+
         function highlightStars(count) {
             stars.forEach(star => {
                 const index = parseInt(star.getAttribute("data-index"));
@@ -748,15 +748,15 @@
                 alert("Please select a rating before submitting.");
                 return;
             }
-    
+
             const comment = commentInput.value.trim();
             const ratingData = {
                 rating: selectedRating,
                 comment: comment,
             };
-    
+
             submitButton.disabled = true;
-    
+
             fetch('/api/feedback', {
                 method: 'POST',
                 headers: {

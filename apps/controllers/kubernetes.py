@@ -564,7 +564,7 @@ class K8sController():
                 "longitude": RNP_TESTBED_NODES.get(name, {}).get("lng", 0.0),
             })
         return result
-    
+
     def humanbytes(self, decimal):
         """Return the given bytes as a human friendly KB, MB, GB, or TB string."""
         B = float(decimal)
