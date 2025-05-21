@@ -40,7 +40,7 @@ def index():
         except Exception as e:
             stats_data = {}
             current_app.logger.error(f"Failed to retrieve Kubernetes data: {e}")
-        stats_data["lab_instances"] = LabInstances.query.filter_by(is_deleted=False).count()
+        stats_data["lab_instances"] = LabInstances.query.filter_by(is_deleted=True).count()
         stats_data["users"] = Users.query.filter_by(is_deleted=False).count()
         stats_data["labs"] = Labs.query.count()
         cache.set("stats_data", stats_data)
