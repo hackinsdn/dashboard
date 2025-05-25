@@ -76,13 +76,19 @@
                   <div style="color: gray">
                     <p>{{ feedback.comment }}</p>
                     {% if feedback.is_hidden %}
-                      <em>(Hidden Comment)</em>
-                    {% else %}
-                      <form action="{{ url_for('home_blueprint.hide_feedback') }}" method="POST" style="display:inline;">
-                        <input type="hidden" name="feedback_id" value="{{ feedback.id }}">
-                        <button type="submit" class="btn btn-warning btn-sm">Hide</button>
-                      </form>
-                    {% endif %}
+                    <em>(Hidden Comment)</em>
+                    <form action="{{ url_for('home_blueprint.hide_feedback') }}" method="POST" style="display:inline;">
+                      <input type="hidden" name="feedback_id" value="{{ feedback.id }}">
+                      <input type="hidden" name="action" value="unhide">
+                      <button type="submit" class="btn btn-warning btn-sm">Unhide</button>
+                    </form>
+                  {% else %}
+                    <form action="{{ url_for('home_blueprint.hide_feedback') }}" method="POST" style="display:inline;">
+                      <input type="hidden" name="feedback_id" value="{{ feedback.id }}">
+                      <input type="hidden" name="action" value="hide">
+                      <button type="submit" class="btn btn-warning btn-sm">Hide</button>
+                    </form>
+                  {% endif %}
                   </div>
                 {% else %}
                   {% if not feedback.is_hidden %}

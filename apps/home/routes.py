@@ -771,12 +771,16 @@ def add_answer_sheet():
 def hide_feedback():
     data = request.get_json() if request.is_json else request.form
     feedback_id = data.get("feedback_id")
-    if not feedback_id:
-        return {"status": "fail", "result": "Missing feedback_id"}, 400
+    action = data.get("action")
+    if not feedback_id or action not in ["hide", "unhide"]:
+        return {"status": "fail", "result": "Missing feedback_id or invalid action"}, 400
 
     feedback = UserFeedbacks.query.get_or_404(feedback_id)
     if current_user.category in ["admin"] or feedback.user_id == current_user.id:
-        feedback.is_hidden = True
+        if action == "hide":
+            feedback.is_hidden = True
+        else:
+            feedback.is_hidden = False
         db.session.commit()
         cache.delete("user_feedbacks")
         return redirect(request.referrer or url_for('home_blueprint.feedback_view'))
