@@ -766,10 +766,30 @@ def add_answer_sheet():
 
     return render_template("pages/lab_answers_sheet.html", labs=labs, lab_id=lab_id, answers=answers, msg_ok="Lab answer sheet saved!")
 
+@blueprint.route('/feedback/hide', methods=["POST"])
+@login_required
+def hide_feedback():
+    data = request.get_json() if request.is_json else request.form
+    feedback_id = data.get("feedback_id")
+    if not feedback_id:
+        return {"status": "fail", "result": "Missing feedback_id"}, 400
+
+    feedback = UserFeedbacks.query.get_or_404(feedback_id)
+    if current_user.category in ["admin"] or feedback.user_id == current_user.id:
+        feedback.is_hidden = True
+        db.session.commit()
+        cache.delete("user_feedbacks")
+        return redirect(request.referrer or url_for('home_blueprint.feedback_view'))
+    return {"status": "fail", "result": "Unauthorized to hide this feedback"}, 403
+
 @blueprint.route('/feedback_view', methods=["GET"])
 @login_required
 def feedback_view():
-    feedbacks = UserFeedbacks.query.filter_by(is_hidden=False).order_by(UserFeedbacks.created_at.desc()).all()
+    if current_user.category == "admin":
+        feedbacks = UserFeedbacks.query.order_by(UserFeedbacks.created_at.desc()).all()
+    else:
+        feedbacks = UserFeedbacks.query.filter_by(is_hidden=False).order_by(UserFeedbacks.created_at.desc()).all()
+
     return render_template('pages/feedback_view.html', feedbacks=feedbacks)
 
 @blueprint.route('/gallery', methods=["GET"])
