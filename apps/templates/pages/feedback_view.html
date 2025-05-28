@@ -74,7 +74,6 @@
                   </div>
                 {% if current_user.category == "admin" %}
                   <div style="color: gray">
-                    <p>{{ feedback.comment }}</p>
                     {% if feedback.is_hidden %}
                     <em>(Hidden Comment)</em>
                     <form action="{{ url_for('home_blueprint.hide_feedback') }}" method="POST" style="display:inline;">
@@ -92,7 +91,6 @@
                   </div>
                 {% else %}
                   {% if not feedback.is_hidden %}
-                    <p>{{ feedback.comment }}</p>
                   {% endif %}
                 {% endif %}
                 {% endfor %}
