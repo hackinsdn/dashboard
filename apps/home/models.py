@@ -74,12 +74,14 @@ class LabInstances(db.Model, AuditMixin):
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     lab_id = db.Column(db.String(36), db.ForeignKey("labs.id"))
     is_deleted = db.Column(db.Boolean, default=False)
+    scheduling = db.Column(db.String(36), nullable=False)
 
-    def __init__(self, id, user, lab, k8s_resources):
+    def __init__(self, id, user, lab, k8s_resources, scheduling):
         self.id = id
         self.user_id = user.id
         self.lab_id = lab.id
         self.k8s_resources = k8s_resources
+        self.scheduling = scheduling
 
     @property
     def k8s_resources(self):
