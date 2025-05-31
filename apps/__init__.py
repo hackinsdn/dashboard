@@ -83,7 +83,7 @@ def create_app(config):
     configure_oauth(app)
     configure_log(app)
 
-    from scripts import notify_users_lab_is_about_to_expire
-    notify_users_lab_is_about_to_expire.start_scheduler(app)
-    
+    from scripts import lab_schedule
+    lab_schedule.start_scheduler(app)
+
     return app

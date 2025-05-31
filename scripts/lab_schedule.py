@@ -5,6 +5,8 @@ from apps.home.models import LabInstances, Labs
 from apps.authentication.models import Users
 from apps.audit_mixin import utcnow
 from flask import render_template
+from apps import db 
+from apps.controllers import k8s
 
 def parse_end_time(scheduling):
     try:
@@ -45,7 +47,29 @@ def alert_labs(app):
                         )
                         mail.send(msg)
 
+def delete_expired_labs(app):
+    with app.app_context():
+        now = utcnow().replace(tzinfo=None)
+        lab_instances = LabInstances.query.filter(LabInstances.is_deleted == False).all()
+        for lab_instance in lab_instances:
+            end_time = parse_end_time(lab_instance.scheduling)
+            if end_time and end_time < now:
+                try:
+                    k8s.delete_resources_by_name(lab_instance.k8s_resources)
+                    lab_instance.is_deleted = True
+                    db.session.commit()
+                except Exception as exc:
+                    print(f"Error deleting resources for lab {lab_instance.id}: {exc}")
+                    return
+
+
 def start_scheduler(app):
     scheduler = BackgroundScheduler()
-    scheduler.add_job(lambda: alert_labs(app), id='cron', hour=0, minute=0) # Run daily at midnight
+    try:
+        scheduler.add_job(lambda: alert_labs(app), trigger="cron", hour=0, minute=0) # Run daily at midnight
+        scheduler.add_job(lambda: delete_expired_labs(app), trigger="cron", hour=1, minute=0) # Run daily at 00:30
+    except Exception as e:
+        print(f"Error starting scheduler: {e}")
+        return
+
     scheduler.start()
