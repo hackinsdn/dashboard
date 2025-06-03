@@ -776,7 +776,7 @@ def hide_feedback():
         return {"status": "fail", "result": "Missing feedback_id or invalid action"}, 400
 
     feedback = UserFeedbacks.query.get_or_404(feedback_id)
-    if current_user.category in ["admin"] or feedback.user_id == current_user.id:
+    if current_user.category in ["admin"]:
         if action == "hide":
             feedback.is_hidden = True
         else:
