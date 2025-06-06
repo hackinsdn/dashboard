@@ -767,16 +767,17 @@ def add_answer_sheet():
     return render_template("pages/lab_answers_sheet.html", labs=labs, lab_id=lab_id, answers=answers, msg_ok="Lab answer sheet saved!")
 
 @blueprint.route('/feedback/hide', methods=["POST"])
+@check_user_category(["admin", "teacher", "student"])
 @login_required
 def hide_feedback():
     data = request.get_json() if request.is_json else request.form
     feedback_id = data.get("feedback_id")
     action = data.get("action")
     if not feedback_id or action not in ["hide", "unhide"]:
-        return {"status": "fail", "result": "Missing feedback_id or invalid action"}, 400
+        return redirect(url_for('home_blueprint.feedback_view', msg='Missing feedback ID or invalid action', category='danger'))
 
     feedback = UserFeedbacks.query.get_or_404(feedback_id)
-    if current_user.category in ["admin"]:
+    if current_user.category == "admin":
         if action == "hide":
             feedback.is_hidden = True
         else:
