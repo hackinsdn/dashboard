@@ -323,6 +323,7 @@ def view_lab_instance(lab_id):
         "user": f"{owner.name} ({owner.email or 'NO-EMAIL'})",
         "user_id": owner.id,
         "resources": [],
+        "expires_at": lab_instance.scheduling.split(' - ')[1],
     }
     created = None
     for pod in running_labs[(lab_instance.lab_id, owner.uid)]:
