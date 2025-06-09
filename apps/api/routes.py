@@ -10,6 +10,7 @@ from apps.home.models import Labs, LabInstances, LabAnswers, LabAnswerSheet, Use
 from apps.authentication.models import Users, Groups, DeletedGroupUsers
 from flask import request, current_app
 from flask_login import login_required, current_user
+from datetime import timedelta, datetime
 
 @blueprint.route('/pods/<lab_id>', methods=["GET"])
 @login_required
@@ -413,3 +414,36 @@ def del_user_like():
     counter = max(counter-1, 0)
     cache.set("user_likes", counter)
     return {"status": "ok", "result": counter}, 200
+
+@blueprint.route('/lab/<lab_id>/extend', methods=["POST"])
+@login_required
+def extend_lab(lab_id):
+
+    lab_instance = LabInstances.query.get(lab_id)
+    if not lab_instance:
+        return {"status": "fail", "result": "Lab instance not found"}, 404
+
+    if current_user.category != "admin" and lab_instance.user_id != current_user.id:
+        return {"status": "fail", "result": "Unauthorized access to this lab"}, 401
+
+    content = request.get_json(silent=True)
+    if not content or 'extend_hours' not in content:
+        return {"status": "fail", "result": "Invalid content"}, 400
+
+    extend_hours = content['extend_hours']
+    if not isinstance(extend_hours, int) or extend_hours <= 0:
+        return {"status": "fail", "result": "Invalid extend hours"}, 400
+
+    # Logic to extend the lab instance scheduling
+    try:
+        start_str, end_str = lab_instance.scheduling.split(' - ')
+        end_dt = datetime.strptime(end_str, "%d/%m/%Y %H:%M")
+        end_dt += timedelta(hours=extend_hours)
+        new_end_str = end_dt.strftime("%d/%m/%Y %H:%M")
+        lab_instance.scheduling = f"{start_str} - {new_end_str}"
+    except Exception as exc:
+        return {"status": "fail", "result": f"Error updating scheduling: {exc}"}, 400
+
+    db.session.commit()
+
+    return {"status": "ok", "result": f"Lab extended by {extend_hours} hours"}, 200

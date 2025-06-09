@@ -82,4 +82,8 @@ def create_app(config):
     #configure_database(app)
     configure_oauth(app)
     configure_log(app)
+
+    from scripts import lab_schedule
+    lab_schedule.start_scheduler(app)
+
     return app
