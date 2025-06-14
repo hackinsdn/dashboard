@@ -1,0 +1,260 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Running Labs {% endblock %} 
+
+<!-- Element injected in the BODY element -->
+{% block body_class %} sidebar-mini layout-navbar-fixed {% endblock body_class %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}
+
+  <!-- Google Font: Source Sans Pro -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
+  <!-- DataTables -->
+  <link rel="stylesheet" href="/static/assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
+  <link rel="stylesheet" href="/static/assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css">
+  <!-- icheck bootstrap -->
+  <link rel="stylesheet" href="/static/assets/plugins/icheck-bootstrap/icheck-bootstrap.min.css">
+  <!-- Theme style -->
+  <link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
+  <style type="text/css">
+  </style>
+{% endblock stylesheets %}
+
+{% block content %}  
+
+  <!-- Content Wrapper. Contains page content -->
+  <div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+      <div class="container-fluid">
+        <div class="row mb-2">
+          <div class="col-sm-6">
+            <h1>Running Labs</h1>
+          </div>
+          <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+              <li class="breadcrumb-item"><a href="/index">Home</a></li>
+              <li class="breadcrumb-item active">Running Labs</li>
+            </ol>
+          </div>
+        </div>
+      </div><!-- /.container-fluid -->
+    </section>
+
+    <!-- Main content -->
+    <section class="content">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Finished Labs</h3>
+              <div class="row">
+                <!-- left column -->
+                <div class="col-md-6">
+                  <form>
+                    <div class="form-group row">
+                      <div class="col-md-4">
+                        <label>Filter by group:</label>
+                      </div>
+                      <div class="col-md-8">
+                        <select name="filter_group" class="form-control" onchange="this.form.submit()">
+                          <option value="">My own labs</option>
+                          <option value="all" {{'selected' if filter_group == 'all' else ''}}>All labs</option>
+                          {% for group_id in groups %}
+                          <option value="{{group_id}}" {{'selected' if filter_group == group_id else ''}}>{{groups[group_id].groupname}}</option>
+                          {% endfor %}
+                        </select>
+	              </div>
+                    </div>
+                  </form>
+                  <!--./form-->
+                </div>
+                <!--/.col (left) -->
+                <!-- right column -->
+                <div class="col-md-6">
+                </div>
+                <!--/.col (right) -->
+              </div>
+	      <!-- /.row -->
+            </div>
+            <!-- /.card-header -->
+            <div class="card-body table-responsive lab-items">
+              <table id="tableLabs" class="table table-striped display">
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th>User</th>
+                    <th>Lab title</th>
+                    <th>Created</th>
+                    <th>Finished</th>
+                    <th>Finish reason</th>
+                  </tr>
+                </thead>
+                <tbody>
+            	{% for lab in labs %}
+                <tr id="{{lab['lab_instance_id']}}">
+                  <td>
+                    <div class="icheck-primary">
+                      <input type="checkbox" value="" id="checkbox-{{lab['lab_instance_id']}}">
+                      <label for="checkbox-{{lab['lab_instance_id']}}"></label>
+                    </div>
+                  </td>
+            	  <td>{{ lab['user'] }}</td>
+                  <td>{{lab['title']}}</td>
+                  <td>{{lab['created']}}</td>
+                  <td>{{lab['finished']}}</td>
+                  <td>{{lab['finish_reason']}}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+              </table>
+              <!-- /.table -->
+            </div>
+            <!-- /.card-body -->
+            <div class="card-footer p-0">
+              <div class="mailbox-controls">
+                <!-- Check all button -->
+                <button type="button" class="btn btn-default btn-sm checkbox-toggle">
+                  <i class="far fa-square"></i>
+                </button>
+                <button type="button" class="btn btn-default btn-sm" data-toggle="modal" data-target="#modal-default">
+                  <i class="far fa-trash-alt"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          <!-- /.card -->
+        </div>
+        <!-- /.col -->
+      </div>
+      <!-- /.row -->
+
+    </section>
+    <!-- /.content -->
+  </div>
+  <!-- /.content-wrapper -->
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+  <!-- jQuery -->
+  <script src="/static/assets/plugins/jquery/jquery.min.js"></script>
+  <!-- Bootstrap 4 -->
+  <script src="/static/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <!-- DataTables -->
+  <script src="/static/assets/plugins/datatables/jquery.dataTables.min.js"></script>
+  <script src="/static/assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
+  <script src="/static/assets/plugins/datatables-responsive/js/dataTables.responsive.min.js"></script>
+  <script src="/static/assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js"></script>
+  <!-- AdminLTE App -->
+  <script src="/static/assets/js/adminlte.min.js"></script>
+  <!-- Page Script -->
+  <script>
+    $(function () {
+      // config DataTable
+      var table = $("#tableLabs").DataTable({
+        responsive: false,
+        autoWidth: false,
+        language: {
+          emptyTable: 'No running labs',
+        },
+        columns: [
+          {
+            orderable: false,
+            name: 'select',
+          },
+          { name: 'user' },
+          { name: 'lab' },
+          { name: 'created' },
+          {
+            orderable: false,
+          },
+        ],
+        order: [[2, 'asc']]
+      });
+      if ( sessionStorage.getItem('msgSuccess') ) {
+        $(document).Toasts('create', {
+          class: 'bg-success',
+          title: 'Sucess',
+          body: sessionStorage.getItem('msgSuccess')
+        });
+        sessionStorage.removeItem('msgSuccess');
+      }
+      if ( sessionStorage.getItem('msgFail') ) {
+        $(document).Toasts('create', {
+          class: 'bg-danger',
+          title: 'Failure',
+          body: sessionStorage.getItem('msgFail')
+        });
+        sessionStorage.removeItem('msgFail');
+      }
+      //Enable check and uncheck all functionality
+      $('#delete-labs').click(function () {
+        var rows = $('#tableLabs tr').filter(':has(:checkbox:checked)');
+        $("#delete-labs").html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Deleting ' + table.rows(rows).data().length + ' row(s)...');
+        $("#delete-labs").prop('disabled', true);
+        var items = [];
+        table.rows(rows).each( function ( index ) {
+          var row = table.row( index );
+          items.push(row.id());
+        });
+        var delete_url = '/api/labs';
+        if (items.length === 1) {
+          delete_url = '/api/lab/' + items[0];
+        }
+        var request = $.ajax({
+          url: delete_url,
+          type: "DELETE",
+          dataType: "json",
+          data: JSON.stringify(items),
+          contentType: "application/json",
+        });
+        request.done(function(data) {
+          sessionStorage.setItem('msgSuccess', data.result);
+          location.reload();
+        });
+        request.fail(function(xhr) {
+          sessionStorage.setItem('msgFail', xhr.responseText);
+          location.reload();
+        });
+      });
+      $('#modal-default').on('show.bs.modal', function (e) {
+        var rows = $('#tableLabs tr').filter(':has(:checkbox:checked)');
+        var data = table.rows(rows).data();
+        var items = $("#modal-default-items");
+        items.empty();
+        $("#delete-labs").prop('disabled', false);
+        if (data.length === 0) {
+          items.append("<li>No lab selected!</li>");
+          $("#delete-labs").prop('disabled', true);
+          return;
+        }
+        data.each(function (value, index) {
+          items.append(`<li>${value[2]} - ${value[3]}</li>`);
+        });
+      })
+      //Enable check and uncheck all functionality
+      $('.checkbox-toggle').click(function () {
+        var clicks = $(this).data('clicks')
+        if (clicks) {
+          //Uncheck all checkboxes
+          $('.lab-items input[type=\'checkbox\']').prop('checked', false)
+          $('.checkbox-toggle .far.fa-check-square').removeClass('fa-check-square').addClass('fa-square')
+        } else {
+          //Check all checkboxes
+          $('.lab-items input[type=\'checkbox\']').prop('checked', true)
+          $('.checkbox-toggle .far.fa-square').removeClass('fa-square').addClass('fa-check-square')
+        }
+        $(this).data('clicks', !clicks)
+      })
+    })
+  </script>
+  <!-- AdminLTE for demo purposes -->
+  <script src="/static/assets/js/demo.js"></script>
+
+{% endblock javascripts %}
