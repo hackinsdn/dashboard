@@ -164,6 +164,8 @@ def run_lab(lab_id):
 
     pod_hash = uuid.uuid4().hex[:14]
 
+    lab_schedule = request.form.get("lab_schedule", "")
+
     status, msg = k8s.create_lab(lab_id, lab.manifest, user_uid=current_user.uid, pod_hash=pod_hash)
 
     if status:
@@ -175,7 +177,7 @@ def run_lab(lab_id):
                     "name": resource.metadata.name,
                     "uid": resource.metadata.uid,
                 })
-        lab_inst = LabInstances(pod_hash, current_user, lab, k8s_resources)
+        lab_inst = LabInstances(pod_hash, current_user, lab, k8s_resources, scheduling=lab_schedule)
         db.session.add(lab_inst)
 
         create_lab_log = HomeLogging(ipaddr=get_remote_addr(), action="create_lab", success=True, lab_id=lab.id, user_id=current_user.id)
@@ -321,6 +323,7 @@ def view_lab_instance(lab_id):
         "user": f"{owner.name} ({owner.email or 'NO-EMAIL'})",
         "user_id": owner.id,
         "resources": [],
+        "expires_at": lab_instance.scheduling.split(' - ')[1],
     }
     created = None
     for pod in running_labs[(lab_instance.lab_id, owner.uid)]:

@@ -66,8 +66,9 @@ word-break: break-all;
       <div class="row sticky-top">
         <div class="col-md-12">
           <div class="card card-dark">
-            <div class="card-header">
+            <div class="card-header d-flex justify-content-between">
               <h3 class="card-title">Lab title: {{lab['title']}} / Lab owner: {{lab['user']}}</h3>
+              <h4 class="card-title" id="lab-expiration" data-expires-at="{{lab['expires_at']}}">Expires at: {{lab['expires_at']}}</h4>
             </div>
             <!-- /.card-header -->
             <div class="card-body">
@@ -126,11 +127,24 @@ word-break: break-all;
             <!-- /.card-body -->
             <div class="card-footer">
               <button type="button" class="btn btn-outline-dark"  data-toggle="modal" data-target="#modal-finish-lab">
-                <i class="far fa-check"></i>  Finish Lab
+                <i class="fas fa-check"></i>  Finish Lab
               </button>
               <button type="button" class="btn btn-outline-dark save-answers">
                 <i class="far fa-save"></i> Save Answers
               </button>
+              <div class="dropdown d-inline-block">
+                <button type="button" class="btn btn-outline-dark dropdown-toggle" data-toggle="dropdown">
+                  <i class="fas fa-clock"></i> Extend Lab Expiration
+                </button>
+                <div class="dropdown-menu">
+                  <a class="dropdown-item disabled" href="#"> Select a time to extend the lab expiration</a>
+                  <div class="dropdown-divider"></div>
+                  <a class="dropdown-item" onclick="extendLabExpiration(1);">1 hour</a>
+                  <a class="dropdown-item" onclick="extendLabExpiration(24);">24 hours</a>
+                  <a class="dropdown-item" onclick="extendLabExpiration(48);">48 hours</a>
+                  <a class="dropdown-item" onclick="extendLabExpiration(168);">1 week</a>
+                </div>
+              </div>
             </div>
           </div>
           <!-- /.card -->
@@ -176,7 +190,7 @@ word-break: break-all;
             <!-- /.card-body -->
             <div class="card-footer">
               <button type="button" class="btn btn-outline-dark"  data-toggle="modal" data-target="#modal-finish-lab">
-                <i class="far fa-check"></i>  Finish Lab
+                <i class="fas fa-check"></i>  Finish Lab
               </button>
               <button type="button" class="btn btn-outline-dark save-answers">
                 <i class="far fa-save"></i> Save Answers
@@ -352,6 +366,32 @@ word-break: break-all;
         });
       });
     })
+    // Extends lab expiration
+    function extendLabExpiration(hours) {
+      var request = $.ajax({
+        url:  "/api/lab/{{lab['lab_instance_id']}}/extend",
+        type: "POST",
+        dataType: "json",
+        contentType: "application/json",
+        data: JSON.stringify({ extend_hours: hours })
+      });
+      request.done(function(data) {
+        $(document).Toasts('create', {
+          class: 'bg-success',
+          title: 'Success',
+          autohide: true,
+          delay: 4000,
+          body: data.result
+        });
+      });
+      request.fail(function(xhr) {
+        $(document).Toasts('create', {
+          class: 'bg-danger',
+          title: 'Failure to extend Lab',
+          body: xhr.responseText
+        });
+      });
+    }
   </script>
   <!-- AdminLTE for demo purposes -->
   <script src="/static/assets/js/demo.js"></script>
