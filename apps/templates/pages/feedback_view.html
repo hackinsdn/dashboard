@@ -56,7 +56,7 @@
                   <div class="media mb-4 p-3 rounded bg-light shadow-sm">
                     <div class="media-body">
                       <div class="d-flex justify-content-between align-items-center mb-2">
-			<h5 class="mb-0 text-primary font-weight-bold">{{ feedback.user.name }}</h5>
+                        <h5 class="mb-0 text-primary font-weight-bold">{{ feedback.user.name }}</h5>
                         <div class="text-warning">
                           {% for i in range(feedback.stars) %}
                             <i class="fas fa-star"></i>
@@ -67,32 +67,28 @@
                         </div>
                       </div>
                       <p class="mb-2 text-dark"><i class="fas fa-quote-left mr-2 text-muted"></i>{{ feedback.comment }}</p>
+                      {% if current_user.category == "admin" %}
+                      <div class="float-right">
+                        {% if feedback.is_hidden %}
+                        <form action="{{ url_for('home_blueprint.hide_feedback') }}" method="POST" class="d-inline">
+                          <input type="hidden" name="feedback_id" value="{{ feedback.id }}">
+                          <input type="hidden" name="action" value="unhide">
+                          <button type="submit" class="btn btn-info btn-sm">Unhide</button>
+                        </form>
+                        {% else %}
+                        <form action="{{ url_for('home_blueprint.hide_feedback') }}" method="POST" class="d-inline">
+                          <input type="hidden" name="feedback_id" value="{{ feedback.id }}">
+                          <input type="hidden" name="action" value="hide">
+                          <button type="submit" class="btn btn-warning btn-sm">Hide</button>
+                        </form>
+                        {% endif %}
+                      </div>
+                      {% endif %}
                       <p class="text-muted mb-0 small">
                         <i class="far fa-clock mr-1"></i><span class="fmt-date-time">{{ feedback.created_at_str }}</span>
                       </p>
                     </div>
                   </div>
-                {% if current_user.category == "admin" %}
-                  <div class="text-muted">
-                    {% if feedback.is_hidden %}
-                    <em>(Hidden Comment)</em>
-                    <form action="{{ url_for('home_blueprint.hide_feedback') }}" method="POST" class="d-inline">
-                      <input type="hidden" name="feedback_id" value="{{ feedback.id }}">
-                      <input type="hidden" name="action" value="unhide">
-                      <button type="submit" class="btn btn-warning btn-sm">Unhide</button>
-                    </form>
-                  {% else %}
-                    <form action="{{ url_for('home_blueprint.hide_feedback') }}" method="POST" class="d-inline">
-                      <input type="hidden" name="feedback_id" value="{{ feedback.id }}">
-                      <input type="hidden" name="action" value="hide">
-                      <button type="submit" class="btn btn-warning btn-sm">Hide</button>
-                    </form>
-                  {% endif %}
-                  </div>
-                {% else %}
-                  {% if not feedback.is_hidden %}
-                  {% endif %}
-                {% endif %}
                 {% endfor %}
               {% else %}
                 <p class="text-center text-muted">No feedbacks available yet.</p>
