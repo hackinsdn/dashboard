@@ -766,10 +766,36 @@ def add_answer_sheet():
 
     return render_template("pages/lab_answers_sheet.html", labs=labs, lab_id=lab_id, answers=answers, msg_ok="Lab answer sheet saved!")
 
+@blueprint.route('/feedback/hide', methods=["POST"])
+@login_required
+@check_user_category(["admin"])
+def hide_feedback():
+    feedback_id = request.form.get("feedback_id")
+    action = request.form.get("action")
+    if not feedback_id or action not in ["hide", "unhide"]:
+        return redirect(url_for('home_blueprint.feedback_view'))
+
+    feedback = UserFeedbacks.query.get(feedback_id)
+    if not feedback:
+        return redirect(url_for('home_blueprint.feedback_view'))
+
+    if action == "hide":
+        feedback.is_hidden = True
+    else:
+        feedback.is_hidden = False
+    db.session.commit()
+    cache.delete("user_feedbacks")
+    return redirect(request.referrer or url_for('home_blueprint.feedback_view'))
+
+
 @blueprint.route('/feedback_view', methods=["GET"])
 @login_required
 def feedback_view():
-    feedbacks = UserFeedbacks.query.filter_by(is_hidden=False).order_by(UserFeedbacks.created_at.desc()).all()
+    if current_user.category == "admin":
+        feedbacks = UserFeedbacks.query.order_by(UserFeedbacks.created_at.desc()).all()
+    else:
+        feedbacks = UserFeedbacks.query.filter_by(is_hidden=False).order_by(UserFeedbacks.created_at.desc()).all()
+
     return render_template('pages/feedback_view.html', feedbacks=feedbacks)
 
 @blueprint.route('/gallery', methods=["GET"])
