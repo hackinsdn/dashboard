@@ -30,8 +30,10 @@ body {margin: 0 !important; background-color: #e9ecef; padding: 0; text-align: c
 <table border="0" cellpadding="0" cellspacing="0" class="content" style="width: 100%; border-collapse: separate; border-spacing: 0;">
 <tbody>
 <div style="color: #1F1F1F; line-height: 1.25em; max-width: 400px; margin: 0 auto;" align="center">
-<h3>Your Lab is About to Expire</h3>
-<p style="font-size: 0.9em;">Hello {{user.username}},Your lab "{{lab.title}}" is scheduled to expire on {{end_time.strftime('%d/%m/%Y %H:%M')}}</p>
+<h3>Your lab is about to expire</h3>
+<p style="font-size: 0.9em;">Hello {{user.username}}, your lab "{{lab.title}}" is scheduled to expire on</p>
+<p style="font-size: 0.9em;">{{end_time}}</p>
+<p style="font-size: 0.9em;">You can extend your lab execution and continue to use it! Visit the web interface to update your lab.</p>
 <p style="font-size: 0.75em;">Please make sure to save any important data before the expiration time</p>
 <p style="font-size: 0.75em;">Best regards, HackInSDN Team</p>
 </div>

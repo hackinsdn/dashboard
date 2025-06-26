@@ -36,6 +36,15 @@ white-space: pre-wrap;
 word-break: break-all;
 }
 .btn-sml { font-size: 0.8em; padding-top: 0; padding-bottom: 0; }
+.blink {
+  animation: blinker 1s step-start infinite;
+}
+
+@keyframes blinker {
+  50% {
+    opacity: 0;
+  }
+}
   </style>
 {% endblock stylesheets %}
 
@@ -66,9 +75,11 @@ word-break: break-all;
       <div class="row sticky-top">
         <div class="col-md-12">
           <div class="card card-dark">
-            <div class="card-header d-flex justify-content-between">
+            <div class="card-header">
               <h3 class="card-title">Lab title: {{lab['title']}} / Lab owner: {{lab['user']}}</h3>
-              <h4 class="card-title" id="lab-expiration" data-expires-at="{{lab['expires_at']}}">Expires at: {{lab['expires_at']}}</h4>
+	      <div class="card-tools">
+                <span id="lab-expiration" data-expires-at="{{lab['expires_at']|default('', true)}}">Expires at: {{lab['expires_at']|default('Never', true)}}</span>
+              </div>
             </div>
             <!-- /.card-header -->
             <div class="card-body">
@@ -132,6 +143,7 @@ word-break: break-all;
               <button type="button" class="btn btn-outline-dark save-answers">
                 <i class="far fa-save"></i> Save Answers
               </button>
+              {% if lab['expires_at'] %}
               <div class="dropdown d-inline-block">
                 <button type="button" class="btn btn-outline-dark dropdown-toggle" data-toggle="dropdown">
                   <i class="fas fa-clock"></i> Extend Lab Expiration
@@ -139,12 +151,12 @@ word-break: break-all;
                 <div class="dropdown-menu">
                   <a class="dropdown-item disabled" href="#"> Select a time to extend the lab expiration</a>
                   <div class="dropdown-divider"></div>
-                  <a class="dropdown-item" onclick="extendLabExpiration(1);">1 hour</a>
-                  <a class="dropdown-item" onclick="extendLabExpiration(24);">24 hours</a>
-                  <a class="dropdown-item" onclick="extendLabExpiration(48);">48 hours</a>
-                  <a class="dropdown-item" onclick="extendLabExpiration(168);">1 week</a>
+                  <a class="dropdown-item" onclick="extendLabExpiration(24);">+ 1 day</a>
+                  <a class="dropdown-item" onclick="extendLabExpiration(168);">+ 1 week</a>
+                  <a class="dropdown-item" onclick="extendLabExpiration(720);">+ 1 month</a>
                 </div>
               </div>
+              {% endif %}
             </div>
           </div>
           <!-- /.card -->
@@ -227,6 +239,16 @@ word-break: break-all;
   <!-- Page Script -->
   <script>
     $(function () {
+      var labExp = $('#lab-expiration');
+      if (labExp.attr('data-expires-at')) {
+        var expiresAt = new Date(labExp.attr('data-expires-at'));
+	var today = new Date();
+        var labExpHtml = 'Expires at: ' + expiresAt.toLocaleString();
+        if (expiresAt < today) {
+          labExpHtml += ' <span class="right badge badge-danger blink">Expired!</span>';
+        }
+        labExp.html(labExpHtml);
+      }
       // Copy button on pre.code
       function setTooltip(btn, message) {
         $(btn).tooltip('hide').attr('data-original-title', message).tooltip('show');
@@ -381,8 +403,10 @@ word-break: break-all;
           title: 'Success',
           autohide: true,
           delay: 4000,
-          body: data.result
+          body: 'Lab duration/expiration extended successfully'
         });
+        var labExp = $('#lab-expiration');
+        labExp.html('Expires at: ' + new Date(data.result).toLocaleString());
       });
       request.fail(function(xhr) {
         $(document).Toasts('create', {
