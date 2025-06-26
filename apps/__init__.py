@@ -39,7 +39,7 @@ def register_extensions(app):
 
 
 def register_blueprints(app):
-    for module_name in ('authentication', 'home', 'api', 'k8s'):
+    for module_name in ('authentication', 'home', 'api', 'k8s', 'cli'):
         module = import_module('apps.{}.routes'.format(module_name))
         app.register_blueprint(module.blueprint)
 
@@ -82,4 +82,5 @@ def create_app(config):
     #configure_database(app)
     configure_oauth(app)
     configure_log(app)
+
     return app

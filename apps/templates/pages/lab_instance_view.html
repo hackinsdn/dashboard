@@ -36,6 +36,15 @@ white-space: pre-wrap;
 word-break: break-all;
 }
 .btn-sml { font-size: 0.8em; padding-top: 0; padding-bottom: 0; }
+.blink {
+  animation: blinker 1s step-start infinite;
+}
+
+@keyframes blinker {
+  50% {
+    opacity: 0;
+  }
+}
   </style>
 {% endblock stylesheets %}
 
@@ -68,6 +77,9 @@ word-break: break-all;
           <div class="card card-dark">
             <div class="card-header">
               <h3 class="card-title">Lab title: {{lab['title']}} / Lab owner: {{lab['user']}}</h3>
+	      <div class="card-tools">
+                <span id="lab-expiration" data-expires-at="{{lab['expires_at']|default('', true)}}">Expires at: {{lab['expires_at']|default('Never', true)}}</span>
+              </div>
             </div>
             <!-- /.card-header -->
             <div class="card-body">
@@ -126,11 +138,25 @@ word-break: break-all;
             <!-- /.card-body -->
             <div class="card-footer">
               <button type="button" class="btn btn-outline-dark"  data-toggle="modal" data-target="#modal-finish-lab">
-                <i class="far fa-check"></i>  Finish Lab
+                <i class="fas fa-check"></i>  Finish Lab
               </button>
               <button type="button" class="btn btn-outline-dark save-answers">
                 <i class="far fa-save"></i> Save Answers
               </button>
+              {% if lab['expires_at'] %}
+              <div class="dropdown d-inline-block">
+                <button type="button" class="btn btn-outline-dark dropdown-toggle" data-toggle="dropdown">
+                  <i class="fas fa-clock"></i> Extend Lab Expiration
+                </button>
+                <div class="dropdown-menu">
+                  <a class="dropdown-item disabled" href="#"> Select a time to extend the lab expiration</a>
+                  <div class="dropdown-divider"></div>
+                  <a class="dropdown-item" onclick="extendLabExpiration(24);">+ 1 day</a>
+                  <a class="dropdown-item" onclick="extendLabExpiration(168);">+ 1 week</a>
+                  <a class="dropdown-item" onclick="extendLabExpiration(720);">+ 1 month</a>
+                </div>
+              </div>
+              {% endif %}
             </div>
           </div>
           <!-- /.card -->
@@ -176,7 +202,7 @@ word-break: break-all;
             <!-- /.card-body -->
             <div class="card-footer">
               <button type="button" class="btn btn-outline-dark"  data-toggle="modal" data-target="#modal-finish-lab">
-                <i class="far fa-check"></i>  Finish Lab
+                <i class="fas fa-check"></i>  Finish Lab
               </button>
               <button type="button" class="btn btn-outline-dark save-answers">
                 <i class="far fa-save"></i> Save Answers
@@ -213,6 +239,16 @@ word-break: break-all;
   <!-- Page Script -->
   <script>
     $(function () {
+      var labExp = $('#lab-expiration');
+      if (labExp.attr('data-expires-at')) {
+        var expiresAt = new Date(labExp.attr('data-expires-at'));
+	var today = new Date();
+        var labExpHtml = 'Expires at: ' + expiresAt.toLocaleString();
+        if (expiresAt < today) {
+          labExpHtml += ' <span class="right badge badge-danger blink">Expired!</span>';
+        }
+        labExp.html(labExpHtml);
+      }
       // Copy button on pre.code
       function setTooltip(btn, message) {
         $(btn).tooltip('hide').attr('data-original-title', message).tooltip('show');
@@ -352,6 +388,34 @@ word-break: break-all;
         });
       });
     })
+    // Extends lab expiration
+    function extendLabExpiration(hours) {
+      var request = $.ajax({
+        url:  "/api/lab/{{lab['lab_instance_id']}}/extend",
+        type: "POST",
+        dataType: "json",
+        contentType: "application/json",
+        data: JSON.stringify({ extend_hours: hours })
+      });
+      request.done(function(data) {
+        $(document).Toasts('create', {
+          class: 'bg-success',
+          title: 'Success',
+          autohide: true,
+          delay: 4000,
+          body: 'Lab duration/expiration extended successfully'
+        });
+        var labExp = $('#lab-expiration');
+        labExp.html('Expires at: ' + new Date(data.result).toLocaleString());
+      });
+      request.fail(function(xhr) {
+        $(document).Toasts('create', {
+          class: 'bg-danger',
+          title: 'Failure to extend Lab',
+          body: xhr.responseText
+        });
+      });
+    }
   </script>
   <!-- AdminLTE for demo purposes -->
   <script src="/static/assets/js/demo.js"></script>
