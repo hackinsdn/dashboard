@@ -88,6 +88,12 @@
                 </a>
               </li>
               {% endif %}
+              <li class="nav-item">
+                <a href="{{url_for('home_blueprint.view_finished_labs')}}" class="nav-link {% if request.url_rule.endpoint == 'home_blueprint.view_finished_labs' %} active {% endif %}">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Finished Labs</p>
+                </a>
+              </li>
             </ul>
           </li>
           <li class="nav-item">
