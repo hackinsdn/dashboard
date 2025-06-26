@@ -20,7 +20,6 @@ kubernetes
 markdown2
 flask_mail
 Flask-Caching
-APScheduler
 
 # flask_mysqldb
 # psycopg2-binary

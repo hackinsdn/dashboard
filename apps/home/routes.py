@@ -5,6 +5,7 @@ Copyright (c) 2019 - present AppSeed.us
 import traceback
 import uuid
 import re
+from collections import OrderedDict
 
 from apps import db, cache
 from apps.home import blueprint
@@ -16,7 +17,7 @@ from flask_login import login_required, current_user
 from jinja2 import TemplateNotFound
 from apps.audit_mixin import get_remote_addr, check_user_category
 from apps.authentication.forms import GroupForm
-from apps.utils import update_running_labs_stats
+from apps.utils import update_running_labs_stats, parse_lab_expiration, datetime_from_ts
 from sqlalchemy import desc
 
 
@@ -159,12 +160,26 @@ def run_lab(lab_id):
     if already_running:
         return redirect(url_for('home_blueprint.view_lab_instance', lab_id=already_running.id))
 
+    # XXX: we could have different expirations per user category here
+    lab_expirations = OrderedDict([
+        ("4", "4 hours"),
+        ("24", "1 day"),
+        ("168", "1 week"),
+        ("720", "1 month"),
+    ])
+    if current_user.category == "admin":
+        lab_expirations["0"] = "Never expires"
+
     if request.method == "GET":
-        return render_template("pages/run_lab.html", lab=lab)
+        return render_template("pages/run_lab.html", lab=lab, lab_expirations=lab_expirations)
 
     pod_hash = uuid.uuid4().hex[:14]
 
-    lab_schedule = request.form.get("lab_schedule", "")
+    lab_expiration = request.form.get("lab_expiration")
+    if not lab_expiration or lab_expiration not in lab_expirations:
+        return render_template("pages/run_lab.html", lab=lab, msg_fail="Invalid lab duration/expiration, please choose one of the values provided.")
+
+    expiration_ts = parse_lab_expiration(lab_expiration)
 
     status, msg = k8s.create_lab(lab_id, lab.manifest, user_uid=current_user.uid, pod_hash=pod_hash)
 
@@ -177,7 +192,7 @@ def run_lab(lab_id):
                     "name": resource.metadata.name,
                     "uid": resource.metadata.uid,
                 })
-        lab_inst = LabInstances(pod_hash, current_user, lab, k8s_resources, scheduling=lab_schedule)
+        lab_inst = LabInstances(pod_hash, current_user, lab, k8s_resources, expiration_ts=expiration_ts)
         db.session.add(lab_inst)
 
         create_lab_log = HomeLogging(ipaddr=get_remote_addr(), action="create_lab", success=True, lab_id=lab.id, user_id=current_user.id)
@@ -323,7 +338,7 @@ def view_lab_instance(lab_id):
         "user": f"{owner.name} ({owner.email or 'NO-EMAIL'})",
         "user_id": owner.id,
         "resources": [],
-        "expires_at": lab_instance.scheduling.split(' - ')[1],
+        "expires_at": datetime_from_ts(lab_instance.expiration_ts),
     }
     created = None
     for pod in running_labs[(lab_instance.lab_id, owner.uid)]:
@@ -769,6 +784,28 @@ def add_answer_sheet():
 
     return render_template("pages/lab_answers_sheet.html", labs=labs, lab_id=lab_id, answers=answers, msg_ok="Lab answer sheet saved!")
 
+@blueprint.route('/feedback/hide', methods=["POST"])
+@login_required
+@check_user_category(["admin"])
+def hide_feedback():
+    feedback_id = request.form.get("feedback_id")
+    action = request.form.get("action")
+    if not feedback_id or action not in ["hide", "unhide"]:
+        return redirect(url_for('home_blueprint.feedback_view'))
+
+    feedback = UserFeedbacks.query.get(feedback_id)
+    if not feedback:
+        return redirect(url_for('home_blueprint.feedback_view'))
+
+    if action == "hide":
+        feedback.is_hidden = True
+    else:
+        feedback.is_hidden = False
+    db.session.commit()
+    cache.delete("user_feedbacks")
+    return redirect(request.referrer or url_for('home_blueprint.feedback_view'))
+
+
 @blueprint.route('/finished_labs', methods=["GET"])
 @login_required
 @check_user_category(["admin", "teacher", "student"])
@@ -851,7 +888,11 @@ def view_finished_labs():
 @blueprint.route('/feedback_view', methods=["GET"])
 @login_required
 def feedback_view():
-    feedbacks = UserFeedbacks.query.filter_by(is_hidden=False).order_by(UserFeedbacks.created_at.desc()).all()
+    if current_user.category == "admin":
+        feedbacks = UserFeedbacks.query.order_by(UserFeedbacks.created_at.desc()).all()
+    else:
+        feedbacks = UserFeedbacks.query.filter_by(is_hidden=False).order_by(UserFeedbacks.created_at.desc()).all()
+
     return render_template('pages/feedback_view.html', feedbacks=feedbacks)
 
 @blueprint.route('/gallery', methods=["GET"])

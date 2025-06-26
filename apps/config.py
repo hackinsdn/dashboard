@@ -93,6 +93,13 @@ class Config(object):
     # Analytics measurement
     GTAG = os.getenv("GTAG", "")
 
+    # Lab Scheduler Manager: takes care of notifying users about lab instances
+    # running for long time and beyond their expiration date, as well as removing
+    # expired labs
+    ENABLE_LAB_SCHED_MANAGER = os.getenv("ENABLE_LAB_SCHED_MANAGER", "True") == "True"
+    LAB_EXPIRATION_WARN_SEC = 48*60*60
+    LAB_EXPIRATION_TOLERANACE_SEC = 48*60*60
+
 class ProductionConfig(Config):
     DEBUG = False
 

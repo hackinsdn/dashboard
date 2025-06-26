@@ -11,6 +11,7 @@ from apps.authentication.models import Users, Groups, DeletedGroupUsers
 from flask import request, current_app
 from flask_login import login_required, current_user
 from datetime import timedelta, datetime
+from apps.utils import datetime_from_ts, parse_lab_expiration
 
 @blueprint.route('/pods/<lab_id>', methods=["GET"])
 @login_required
@@ -71,7 +72,9 @@ def delete_lab(lab_id):
         current_app.logger.error(f"Failed to delete resources: {exc}")
         return {"status": "fail", "result": "Failed to delete resources"}, 400
 
+    who = "owner" if lab.user_id == current_user.id else "admin"
     lab.is_deleted = True
+    lab.finish_reason = "Finished by the " + who
     db.session.commit()
 
     running_labs = LabInstances.query.filter_by(is_deleted=False, user_id=current_user.id).count()
@@ -431,19 +434,25 @@ def extend_lab(lab_id):
         return {"status": "fail", "result": "Invalid content"}, 400
 
     extend_hours = content['extend_hours']
-    if not isinstance(extend_hours, int) or extend_hours <= 0:
+    if not isinstance(extend_hours, int) or extend_hours <= 0 or extend_hours > 720:
         return {"status": "fail", "result": "Invalid extend hours"}, 400
 
     # Logic to extend the lab instance scheduling
     try:
-        start_str, end_str = lab_instance.scheduling.split(' - ')
-        end_dt = datetime.strptime(end_str, "%d/%m/%Y %H:%M")
-        end_dt += timedelta(hours=extend_hours)
-        new_end_str = end_dt.strftime("%d/%m/%Y %H:%M")
-        lab_instance.scheduling = f"{start_str} - {new_end_str}"
+        expiration_ts = parse_lab_expiration(extend_hours)
+        new_expiration = datetime_from_ts(expiration_ts)
+        lab_instance.expiration_ts = expiration_ts
+        db.session.commit()
     except Exception as exc:
-        return {"status": "fail", "result": f"Error updating scheduling: {exc}"}, 400
+        current_app.logger.error(
+            "Failed to extend lab duration/expiration "
+            f"{lab_id=} {current_user.id=} {extend_hours=}: {exc}"
+        )
+        return {"status": "fail", "result": f"Failed updating lab duration, please contact the administrator."}, 400
 
-    db.session.commit()
+    current_app.logger.error(
+        "Lab duration/expiration extended successfully: "
+            f"{lab_id=} {current_user.id=} {new_expiration=}"
+    )
 
-    return {"status": "ok", "result": f"Lab extended by {extend_hours} hours"}, 200
+    return {"status": "ok", "result": new_expiration}, 200

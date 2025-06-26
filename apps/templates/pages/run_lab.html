@@ -32,6 +32,13 @@
         <div class="row mb-2">
           <div class="col-sm-6">
             <h1>Run Lab</h1>
+            {% if msg_fail %}
+            <div class="alert alert-danger alert-dismissible">
+              <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+              <h5><i class="icon fas fa-ban"></i> Fail to execute the lab!</h5>
+              {{msg_fail}}
+            </div>
+            {% endif %}
           </div>
           <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
@@ -102,6 +109,13 @@
             <div class="row">
               <div class="col-12 col-sm-6">
                 <div class="form-group">
+                  <label>Lab Duration/Expiration</label>
+                  <select name="lab_expiration" class="form-control" required>
+                    {% for exp_sec in lab_expirations %}
+                    <option value="{{exp_sec}}">{{lab_expirations[exp_sec]}}</option>
+                    {% endfor %}
+                  </select>
+	          <!--
                   <label>Date and time range (use your local timezone):</label>
                   <div class="input-group">
                     <div class="input-group-prepend">
@@ -109,6 +123,7 @@
                     </div>
                     <input type="text" class="form-control float-right" id="reservationtime" name="lab_schedule">
                   </div>
+		  -->
                   <!-- /.input group -->
                 </div>
                 <!-- /.form group -->
@@ -156,53 +171,53 @@
   <!-- Page script -->
   <script>
     $(function () {
-      //Initialize Select2 Elements
-      $('.select2').select2()
+      ////Initialize Select2 Elements
+      //$('.select2').select2()
 
-      //Initialize Select2 Elements
-      $('.select2bs4').select2({
-        theme: 'bootstrap4'
-      })
+      ////Initialize Select2 Elements
+      //$('.select2bs4').select2({
+      //  theme: 'bootstrap4'
+      //})
 
-      //Date range picker
-      $('#reservationdate').datetimepicker({
-          format: 'L'
-      });
-      //Date range picker
-      $('#reservation').daterangepicker()
-      //Date range picker with time picker
-      $('#reservationtime').daterangepicker({
-        timePicker: true,
-        timePickerIncrement: 30,
-        startDate: moment(),
-        endDate: moment().add(1, 'days'),
-        locale: {
-          format: 'DD/MM/YYYY HH:mm'
-        }
-      })
-      //Date range as a button
-      $('#daterange-btn').daterangepicker(
-        {
-          ranges   : {
-            'Today'       : [moment(), moment()],
-            'Yesterday'   : [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
-            'Last 7 Days' : [moment().subtract(6, 'days'), moment()],
-            'Last 30 Days': [moment().subtract(29, 'days'), moment()],
-            'This Month'  : [moment().startOf('month'), moment().endOf('month')],
-            'Last Month'  : [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
-          },
-          startDate: moment().subtract(29, 'days'),
-          endDate  : moment()
-        },
-        function (start, end) {
-          $('#reportrange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'))
-        }
-      )
+      ////Date range picker
+      //$('#reservationdate').datetimepicker({
+      //    format: 'L'
+      //});
+      ////Date range picker
+      //$('#reservation').daterangepicker()
+      ////Date range picker with time picker
+      //$('#reservationtime').daterangepicker({
+      //  timePicker: true,
+      //  timePickerIncrement: 30,
+      //  startDate: moment(),
+      //  endDate: moment().add(1, 'days'),
+      //  locale: {
+      //    format: 'YYYY-MM-DD HH:mm Z'
+      //  }
+      //})
+      ////Date range as a button
+      //$('#daterange-btn').daterangepicker(
+      //  {
+      //    ranges   : {
+      //      'Today'       : [moment(), moment()],
+      //      'Yesterday'   : [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+      //      'Last 7 Days' : [moment().subtract(6, 'days'), moment()],
+      //      'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+      //      'This Month'  : [moment().startOf('month'), moment().endOf('month')],
+      //      'Last Month'  : [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+      //    },
+      //    startDate: moment().subtract(29, 'days'),
+      //    endDate  : moment()
+      //  },
+      //  function (start, end) {
+      //    $('#reportrange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'))
+      //  }
+      //)
 
-      //Timepicker
-      $('#timepicker').datetimepicker({
-        format: 'LT'
-      })
+      ////Timepicker
+      //$('#timepicker').datetimepicker({
+      //  format: 'LT'
+      //})
     })
   </script>
 

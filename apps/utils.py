@@ -11,6 +11,10 @@ from apps import cache
 from apps.home.models import LabInstances
 
 
+def utcnow():
+    return datetime.datetime.now(datetime.timezone.utc)
+
+
 def update_running_labs_stats():
     """Update statistics on running labs and make them available on Flask 'g' variable,
     so that it can be easily accessed from Jinja template"""
@@ -71,3 +75,18 @@ def format_duration(delta: datetime.timedelta) -> str:
         output.append(f"{secs}s")
 
     return "".join(output)
+
+
+def parse_lab_expiration(expiration):
+    if expiration == "0":
+        return None
+    exp_date = utcnow() + datetime.timedelta(hours=int(expiration))
+    return int(exp_date.timestamp())
+
+
+def datetime_from_ts(timestamp):
+    try:
+        dt = datetime.datetime.fromtimestamp(timestamp, tz=datetime.timezone.utc)
+        return dt.isoformat()
+    except:
+        return None
