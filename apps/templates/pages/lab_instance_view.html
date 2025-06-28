@@ -72,17 +72,17 @@ word-break: break-all;
 
     <!-- Main content -->
     <section class="content">
-      <div class="row sticky-top">
+      <div class="row" id="lab-card-row">
         <div class="col-md-12">
           <div class="card card-dark">
-            <div class="card-header">
+            <div class="card-header" id="lab-header">
               <h3 class="card-title">Lab title: {{lab['title']}} / Lab owner: {{lab['user']}}</h3>
 	      <div class="card-tools">
                 <span id="lab-expiration" data-expires-at="{{lab['expires_at']|default('', true)}}">Expires at: {{lab['expires_at']|default('Never', true)}}</span>
               </div>
             </div>
             <!-- /.card-header -->
-            <div class="card-body">
+            <div class="card-body" id="card-body-lab">
               <div class="table-responsive" style="max-height: 130px;">
                 <table id="tableLabsResource" class="table table-hover">
                   <thead>
@@ -157,6 +157,9 @@ word-break: break-all;
                 </div>
               </div>
               {% endif %}
+              <button type="button" class="btn btn-outline-dark" id="pin-header" title="Pin header to top">
+                <i class="fas fa-thumbtack"></i> Pin Header
+              </button>
             </div>
           </div>
           <!-- /.card -->
@@ -239,6 +242,30 @@ word-break: break-all;
   <!-- Page Script -->
   <script>
     $(function () {
+      var isPinned = false;
+      
+      $('#pin-header').click(function() {
+        var labCardRow = $('#lab-card-row');
+        var pinButton = $(this);
+        var pinIcon = pinButton.find('i');
+        
+        if (!isPinned) {
+          labCardRow.addClass('sticky-top');
+          labCardRow.css('z-index', '1030');
+          pinIcon.addClass('text-warning fa-rotate-45');
+          pinButton.html('<i class="fas fa-thumbtack text-warning fa-rotate-45"></i> Unpin Header');
+          pinButton.attr('title', 'Unpin header');
+          isPinned = true;
+        } else {
+          labCardRow.removeClass('sticky-top');
+          labCardRow.css('z-index', '');
+          pinIcon.removeClass('text-warning fa-rotate-45');
+          pinButton.html('<i class="fas fa-thumbtack"></i> Pin Header');
+          pinButton.attr('title', 'Pin header to top');
+          isPinned = false;
+        }
+      });
+      
       var labExp = $('#lab-expiration');
       if (labExp.attr('data-expires-at')) {
         var expiresAt = new Date(labExp.attr('data-expires-at'));
