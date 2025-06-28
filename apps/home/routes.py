@@ -391,7 +391,14 @@ def edit_lab(lab_id):
 
     lab.title = request.form["lab_title"]
     lab.description = request.form["lab_description"]
-    lab.category_id = int(request.form["lab_category"]) if request.form.get("lab_category") else None
+    
+    selected_category_ids = request.form.getlist('lab_category')
+    if selected_category_ids:
+        lab.categories.clear()
+        selected_categories = LabCategories.query.filter(LabCategories.id.in_(selected_category_ids)).all()
+        for category in selected_categories:
+            lab.categories.append(category)
+    
     lab.set_extended_desc(request.form["lab_extended_desc"])
     lab.set_lab_guide_md(request.form["lab_guide"])
     lab.manifest = request.form["lab_manifest"]
@@ -399,8 +406,8 @@ def edit_lab(lab_id):
     selected_group_ids = request.form.getlist('lab_allowed_groups')
     lab.allowed_groups = Groups.query.filter(Groups.id.in_(selected_group_ids), Groups.is_deleted==False).all()
 
-    if lab.category_id not in lab_categories:
-        return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, msg_fail="Invalid Lab Category", segment="/labs/edit", groups=groups, allowed_groups=lab.allowed_groups)
+    if not lab.categories:
+        return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, msg_fail="Please select at least one category", segment="/labs/edit", groups=groups, allowed_groups=lab.allowed_groups)
     
     try:
         db.session.add(lab)
