@@ -806,6 +806,85 @@ def hide_feedback():
     return redirect(request.referrer or url_for('home_blueprint.feedback_view'))
 
 
+@blueprint.route('/finished_labs', methods=["GET"])
+@login_required
+@check_user_category(["admin", "teacher", "student"])
+def view_finished_labs():
+    filter_group = request.args.get("filter_group", "")
+    filter_members = {}
+    if filter_group.isdigit():
+        filter_group = int(filter_group)
+        group = Groups.query.get(filter_group)
+        if not group or group.is_deleted:
+            return render_template("pages/error.html", title="Error getting finished labs", msg="Group not found")
+        filter_members = group.members_dict
+
+    registered_labs = {}
+    allowed_groups_by_lab = {}
+    for lab in Labs.query.all():
+        registered_labs[lab.id] = lab.title
+        allowed_groups_by_lab[lab.id] = {group.id: group for group in lab.allowed_groups}
+
+    registered_user = {current_user.id: current_user}
+    if filter_group:
+        registered_user = {user.id: user for user in Users.query.filter_by(is_deleted=False).all()}
+
+    current_user_groups = {}
+    current_user_priv_groups = {}
+    if current_user.category == "admin":
+        for group in Groups.query.filter(
+            Groups.is_deleted==False, Groups.organization.isnot("SYSTEM")
+        ).all():
+            current_user_groups[group.id] = group
+    else:
+        for group in current_user.member_of_groups:
+            if group.organization == "SYSTEM":
+                continue
+            current_user_groups[group.id] = group
+    for group in current_user.assistant_of_groups:
+        current_user_groups[group.id] = group
+        current_user_priv_groups[group.id] = group
+    for group in current_user.owner_of_groups:
+        current_user_groups[group.id] = group
+        current_user_priv_groups[group.id] = group
+
+    lab_instances = LabInstances.query.filter_by(is_deleted=True)
+    if not filter_group:
+        lab_instances = lab_instances.filter_by(user_id=current_user.id)
+
+    labs = []
+    for li in lab_instances.order_by(desc(LabInstances.created_at)).all():
+        is_allowed = False
+        # check if user has permission to see the lab
+        if current_user.category == "admin" or li.user_id == current_user.id:
+            is_allowed = True
+        else:
+            for group_id in current_user_priv_groups:
+                if group_id in allowed_groups_by_lab[li.lab_id]:
+                    is_allowed = True
+                    break
+        if not is_allowed:
+            continue
+        if filter_group != "all" and filter_group and li.user_id not in filter_members:
+            continue
+        user = registered_user.get(li.user_id)
+        if not user:
+            current_app.logger.warning(
+                "Inconsistency found on finished lab: owner user not found on database"
+                f" {li.user_id=} instance={li.id} lab={li.lab_id}"
+            )
+            continue
+        labs.append({
+            "title": registered_labs.get(li.lab_id, f"Unknow Lab {li.lab_id}"),
+            "lab_id": li.lab_id,
+            "lab_instance_id": li.id,
+            "user": f"{user.name} ({user.email or 'NO-EMAIL'})",
+            "created": li.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            "finished": li.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
+            "finish_reason": li.finish_reason or "--",
+        })
+    return render_template("pages/finished_labs.html", segment="/finished_labs", labs=labs, groups=current_user_groups, filter_group=filter_group)
+
 @blueprint.route('/feedback_view', methods=["GET"])
 @login_required
 def feedback_view():

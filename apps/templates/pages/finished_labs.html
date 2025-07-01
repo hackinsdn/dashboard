@@ -1,6 +1,6 @@
 {% extends "layouts/base.html" %}
 
-{% block title %} Running Labs {% endblock %} 
+{% block title %} Finished Labs {% endblock %} 
 
 <!-- Element injected in the BODY element -->
 {% block body_class %} sidebar-mini layout-navbar-fixed {% endblock body_class %} 
@@ -32,12 +32,12 @@
       <div class="container-fluid">
         <div class="row mb-2">
           <div class="col-sm-6">
-            <h1>Running Labs</h1>
+            <h1>Finished Labs</h1>
           </div>
           <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
               <li class="breadcrumb-item"><a href="/index">Home</a></li>
-              <li class="breadcrumb-item active">Running Labs</li>
+              <li class="breadcrumb-item active">Finished Labs</li>
             </ol>
           </div>
         </div>
@@ -50,13 +50,7 @@
         <div class="col-md-12">
           <div class="card">
             <div class="card-header">
-              <h3 class="card-title">Running labs</h3>
-              <div class="float-right">
-                <button type="button" class="btn btn-default btn-sm checkbox-toggle"><i class="far fa-square"></i></button>
-                <button type="button" class="btn btn-default btn-sm" data-toggle="modal" data-target="#modal-default">
-                  <i class="far fa-trash-alt"></i>
-                </button>
-              </div>
+              <h3 class="card-title">Finished Labs</h3>
               <div class="row">
                 <!-- left column -->
                 <div class="col-md-6">
@@ -94,8 +88,9 @@
                     <th></th>
                     <th>User</th>
                     <th>Lab title</th>
-                    <th>Created (UTC)</th>
-                    <th>Actions</th>
+                    <th>Created At (UTC)</th>
+                    <th>Finished At (UTC)</th>
+                    <th>Finish reason</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -107,12 +102,11 @@
                       <label for="checkbox-{{lab['lab_instance_id']}}"></label>
                     </div>
                   </td>
-            	  <td>{{ lab['user'] }}</td>
+                  <td>{{lab['user']}}</td>
                   <td>{{lab['title']}}</td>
                   <td>{{lab['created']}}</td>
-                  <td>
-                    <a class="btn btn-default" href="{{url_for('home_blueprint.view_lab_instance', lab_id=lab['lab_instance_id'])}}"><i class="fas fa-eye"></i> View</a>
-                  </td>
+                  <td>{{lab['finished']}}</td>
+                  <td>{{lab['finish_reason']}}</td>
                 </tr>
                 {% endfor %}
                 </tbody>
@@ -126,9 +120,11 @@
                 <button type="button" class="btn btn-default btn-sm checkbox-toggle">
                   <i class="far fa-square"></i>
                 </button>
+		<!--
                 <button type="button" class="btn btn-default btn-sm" data-toggle="modal" data-target="#modal-default">
                   <i class="far fa-trash-alt"></i>
                 </button>
+		-->
               </div>
             </div>
           </div>
@@ -137,30 +133,6 @@
         <!-- /.col -->
       </div>
       <!-- /.row -->
-
-      <div class="modal fade" id="modal-default">
-        <div class="modal-dialog">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h4 class="modal-title">Confirm Lab removal</h4>
-              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-              </button>
-            </div>
-            <div class="modal-body">
-              <p>Are you sure you want to remove the selected Labs?</p>
-              <ul id="modal-default-items"></ul>
-            </div>
-            <div class="modal-footer justify-content-between">
-              <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-              <button type="button" class="btn btn-danger" id="delete-labs">Delete Labs</button>
-            </div>
-          </div>
-          <!-- /.modal-content -->
-        </div>
-        <!-- /.modal-dialog -->
-      </div>
-      <!-- /.modal -->
 
     </section>
     <!-- /.content -->
@@ -191,7 +163,7 @@
         responsive: false,
         autoWidth: false,
         language: {
-          emptyTable: 'No running labs',
+          emptyTable: 'No finished labs',
         },
         columns: [
           {
@@ -201,10 +173,8 @@
           { name: 'user' },
           { name: 'lab' },
           { name: 'created' },
-          {
-            orderable: false,
-            name: 'actions',
-          },
+          { name: 'finished' },
+          { name: 'reason' },
         ],
         order: [[2, 'asc']]
       });
