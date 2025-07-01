@@ -88,8 +88,8 @@
                     <th></th>
                     <th>User</th>
                     <th>Lab title</th>
-                    <th>Created At</th>
-                    <th>Finished At</th>
+                    <th>Created At (UTC)</th>
+                    <th>Finished At (UTC)</th>
                     <th>Finish reason</th>
                   </tr>
                 </thead>
@@ -102,7 +102,7 @@
                       <label for="checkbox-{{lab['lab_instance_id']}}"></label>
                     </div>
                   </td>
-            	  <td>{{ lab['user'] }}</td>
+                  <td>{{lab['user']}}</td>
                   <td>{{lab['title']}}</td>
                   <td>{{lab['created']}}</td>
                   <td>{{lab['finished']}}</td>
@@ -120,9 +120,11 @@
                 <button type="button" class="btn btn-default btn-sm checkbox-toggle">
                   <i class="far fa-square"></i>
                 </button>
+		<!--
                 <button type="button" class="btn btn-default btn-sm" data-toggle="modal" data-target="#modal-default">
                   <i class="far fa-trash-alt"></i>
                 </button>
+		-->
               </div>
             </div>
           </div>
@@ -171,9 +173,8 @@
           { name: 'user' },
           { name: 'lab' },
           { name: 'created' },
-          {
-            orderable: false,
-          },
+          { name: 'finished' },
+          { name: 'reason' },
         ],
         order: [[2, 'asc']]
       });

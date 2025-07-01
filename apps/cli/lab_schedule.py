@@ -65,7 +65,7 @@ def run_delete_expired_labs(app):
         try:
             k8s.delete_resources_by_name(lab_instance.k8s_resources)
             lab_instance.is_deleted = True
-            lab_instance.finish_reason = "lab expired"
+            lab_instance.finish_reason = "Lab Expired"
             db.session.commit()
         except Exception as exc:
             app.logger.error(f"Error deleting resources for lab {lab_instance.id}: {exc}")

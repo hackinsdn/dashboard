@@ -880,7 +880,7 @@ def view_finished_labs():
             "lab_instance_id": li.id,
             "user": f"{user.name} ({user.email or 'NO-EMAIL'})",
             "created": li.created_at.strftime('%Y-%m-%d %H:%M:%S'),
-            "finished": li.scheduling if li.scheduling else "--",
+            "finished": li.updated_at.strftime('%Y-%m-%d %H:%M:%S'),
             "finish_reason": li.finish_reason or "--",
         })
     return render_template("pages/finished_labs.html", segment="/finished_labs", labs=labs, groups=current_user_groups, filter_group=filter_group)
