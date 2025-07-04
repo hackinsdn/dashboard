@@ -26,6 +26,11 @@ lab_groups = db.Table('lab_groups',
     db.Column('group_id', db.Integer, db.ForeignKey('groups.id'), primary_key=True)
 )
 
+lab_categories = db.Table('lab_categories_association',
+    db.Column('lab_id', db.String(40), db.ForeignKey('labs.id'), primary_key=True),
+    db.Column('category_id', db.Integer, db.ForeignKey('lab_categories.id'), primary_key=True)
+)
+
 
 class LabCategories(db.Model):
     __tablename__ = 'lab_categories'
@@ -38,12 +43,13 @@ class Labs(db.Model, AuditMixin):
     id = db.Column(db.String(40), primary_key=True, default=generate_uuid)
     title = db.Column(db.String(255))
     description = db.Column(db.String)
-    category_id = db.Column(db.Integer, db.ForeignKey("lab_categories.id"), nullable=False)
     extended_desc = db.Column(db.LargeBinary)
     lab_guide_md = db.Column(db.LargeBinary)
     lab_guide_html = db.Column(db.LargeBinary)
     goals = db.Column(db.Text)
     manifest = db.Column(db.Text)
+    categories = db.relationship('LabCategories', secondary=lab_categories, lazy='subquery',
+                                backref=db.backref('labs', lazy=True))
     allowed_groups = db.relationship('Groups', secondary=lab_groups, lazy='subquery',
                                      backref=db.backref('labs', lazy=True))
 
@@ -65,6 +71,7 @@ class Labs(db.Model, AuditMixin):
     @property
     def lab_guide_md_str(self):
         return self.lab_guide_md.decode()
+
 
 class LabInstances(db.Model, AuditMixin):
     __tablename__ = 'lab_instances'

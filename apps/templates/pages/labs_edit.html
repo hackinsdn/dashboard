@@ -34,6 +34,11 @@
     line-height: inherit;
     padding: 0.5rem 1rem;
 }
+
+.select2-container--default .select2-selection--multiple .select2-selection__choice {
+    border: none !important;
+    background: transparent !important;
+}
   </style>
 
 {% endblock stylesheets %}
@@ -97,13 +102,13 @@
                     <input name="lab_description" type="text" class="form-control" placeholder="Max 255 characters" value="{{lab.description|default('', true)}}">
                   </div>
                   <div class="form-group">
-                    <label>Lab category</label>
-                    <select name="lab_category" class="form-control" required>
-                      <option value="" disabled>--</option>
+                    <label>Lab categories</label>
+                    <select name="lab_categories" class="form-control select2" multiple="multiple" data-placeholder="Select one or more categories" style="width: 100%;">
                       {% for cat_id in lab_categories %}
-                      <option {{'selected' if lab.category_id == cat_id else ""}} value="{{cat_id}}">{{lab_categories[cat_id].category}}</option>
+                      <option value="{{cat_id}}" data-color="{{lab_categories[cat_id].color_cls}}" {{'selected' if lab_categories[cat_id] in lab.categories else ""}}>{{lab_categories[cat_id].category}}</option>
                       {% endfor %}
                     </select>
+                    <small class="form-text text-muted">Select one or more categories</small>
                   </div>
                 </div>
                 <!-- /.card-body -->
@@ -465,6 +470,50 @@
       editorLabGuide.setSize("100%", 600);
       //Initialize Select2 Elements
       $('.select2').select2();
+      
+      $('select[name="lab_categories"]').select2({
+        placeholder: 'Select one or more categories',
+        allowClear: false,
+        closeOnSelect: false,
+        templateResult: function(option) {
+          if (!option.id) {
+            return option.text;
+          }
+          
+          var $option = $(option.element);
+          var colorClass = $option.data('color') || 'secondary';
+          
+          return $(
+            '<span class="badge badge-' + colorClass + ' mr-2" style="font-size: 0.9em;">' + 
+            option.text + 
+            '</span>'
+          );
+        },
+        templateSelection: function(option) {
+          if (!option.id) {
+            return option.text;
+          }
+          
+          var $option = $(option.element);
+          var colorClass = $option.data('color') || 'secondary';
+          
+          return $(
+            '<span class="badge badge-' + colorClass + '" style="font-size: 0.8em; margin: 1px;">' + 
+            option.text + 
+            '</span>'
+          );
+        }
+      });
+      
+      $('form').submit(function(e) {
+        var selectedCategories = $('select[name="lab_categories"]').val();
+        if (!selectedCategories || selectedCategories.length === 0) {
+          e.preventDefault();
+          alert('Por favor, selecione pelo menos uma categoria para o lab.');
+          return false;
+        }
+      });
+      
       $('#add-text-input-labguide').click(function () {
         var doc = editorLabGuide.getDoc();
         var cursor = doc.getCursor();
