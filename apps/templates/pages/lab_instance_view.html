@@ -45,6 +45,30 @@ word-break: break-all;
     opacity: 0;
   }
 }
+.table td, .table th {
+    padding:.5em;
+}
+#tableLabsResource {
+  margin-bottom:0;
+}
+#card-body-lab {
+  padding-top:.25em;
+  padding-bottom:.25em;
+}
+.fa-rotate-45 {
+    -webkit-transform: rotate(-45deg);
+    transform:rotate(-45deg)
+}
+.mh-130 {
+  max-height: 130px;
+}
+.sticky-top { top: 60px; }
+.text.single-line {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 70%;
+}
   </style>
 {% endblock stylesheets %}
 
@@ -72,18 +96,27 @@ word-break: break-all;
 
     <!-- Main content -->
     <section class="content">
-      <div class="row sticky-top">
+      <div class="row" id="lab-card-row">
         <div class="col-md-12">
           <div class="card card-dark">
-            <div class="card-header">
-              <h3 class="card-title">Lab title: {{lab['title']}} / Lab owner: {{lab['user']}}</h3>
+            <div class="card-header" id="lab-header">
+              <h3 class="card-title text single-line">Lab title: {{lab['title']}} / Lab owner: {{lab['user']}}</h3>
 	      <div class="card-tools">
-                <span id="lab-expiration" data-expires-at="{{lab['expires_at']|default('', true)}}">Expires at: {{lab['expires_at']|default('Never', true)}}</span>
+                <span id="lab-expiration" class="pr-3" data-expires-at="{{lab['expires_at']|default('', true)}}">Expires at: {{lab['expires_at']|default('Never', true)}}</span>
+                  <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
+                    <i class="fas fa-minus"></i>
+                  </button>
+                  <button type="button" class="btn btn-tool" data-card-widget="remove" title="Remove">
+                    <i class="fas fa-times"></i>
+                  </button>
+                  <button type="button" class="btn btn-tool" id="pin-header" title="Pin header to top">
+                    <i class="fas fa-thumbtack"></i>
+                  </button>
               </div>
             </div>
             <!-- /.card-header -->
-            <div class="card-body">
-              <div class="table-responsive" style="max-height: 130px;">
+            <div class="card-body" id="card-body-lab">
+              <div class="table-responsive">
                 <table id="tableLabsResource" class="table table-hover">
                   <thead>
                   <tr>
@@ -116,14 +149,14 @@ word-break: break-all;
                         {%     set link_name = link %}
                         {%     set link_href = url_for('home_blueprint.xterm', lab_id=lab['lab_instance_id'], kind=resource['kind'], pod=resource['name'], container=link)  %}
                         {%   endif %}
-                        <a class="btn btn-outline-dark mx-2" href="{{link_href}}" target="_blank" role="button"><i class="fas fa-{{link_icon}}"></i> {{link_name}}</a>
+                        <a class="btn btn-outline-dark mr-1 btn-terminal" href="{{link_href}}" target="_blank" role="button"><i class="fas fa-{{link_icon}}"></i> {{link_name}}</a>
                         {% endfor %}
                       </div>
                     </td>
                     <td>
                       <div class="d-flex flex-nowrap">
                         {% for service in resource['services'] %}
-                        <a class="btn btn-outline-dark mx-2" href="{{service[1]}}" target="_blank" role="button"><i class="fas fa-globe"></i> {{service[0]}}</a>
+                        <a class="btn btn-outline-dark mr-1 btn-service" href="{{service[1]}}" target="_blank" role="button"><i class="fas fa-globe"></i> {{service[0]}}</a>
                         {% endfor %}
                       </div>
                     </td>
@@ -136,17 +169,14 @@ word-break: break-all;
             </div>
             <!-- /.card-body -->
             <!-- /.card-body -->
-            <div class="card-footer">
-              <button type="button" class="btn btn-outline-dark"  data-toggle="modal" data-target="#modal-finish-lab">
-                <i class="fas fa-check"></i>  Finish Lab
-              </button>
-              <button type="button" class="btn btn-outline-dark save-answers">
-                <i class="far fa-save"></i> Save Answers
+            <div class="card-footer" id="card-footer-resources">
+              <button type="button" class="btn btn-outline-dark save-answers"  data-toggle="modal" data-target="#modal-finish-lab">
+                <i class="fas fa-check"></i>  Save &amp; Finish Lab
               </button>
               {% if lab['expires_at'] %}
               <div class="dropdown d-inline-block">
                 <button type="button" class="btn btn-outline-dark dropdown-toggle" data-toggle="dropdown">
-                  <i class="fas fa-clock"></i> Extend Lab Expiration
+                  <i class="fas fa-clock"></i> Extend Lab
                 </button>
                 <div class="dropdown-menu">
                   <a class="dropdown-item disabled" href="#"> Select a time to extend the lab expiration</a>
@@ -239,6 +269,47 @@ word-break: break-all;
   <!-- Page Script -->
   <script>
     $(function () {
+      var isPinned = false;
+      
+      $('#pin-header').click(function() {
+        var labCardRow = $('#lab-card-row');
+        var tableResponsive = $('.table-responsive');
+        var pinButton = $(this);
+        var pinIcon = pinButton.find('i');
+        
+        if (!isPinned) {
+          labCardRow.addClass('sticky-top');
+          labCardRow.css('z-index', '1030');
+          //tableResponsive.addClass('mh-130');
+          tableResponsive.addClass('d-none');
+          $('.btn-terminal').each(function(index, element) {
+            $(element).clone().appendTo('#card-footer-resources');
+	  });
+          $('.btn-service').each(function(index, element) {
+            $(element).clone().appendTo('#card-footer-resources');
+	  });
+          pinIcon.addClass('text-warning fa-rotate-45');
+          //pinButton.html('<i class="fas fa-thumbtack text-warning fa-rotate-45"></i> Unpin Header');
+          pinButton.attr('title', 'Unpin header');
+          isPinned = true;
+        } else {
+          labCardRow.removeClass('sticky-top');
+          labCardRow.css('z-index', '');
+          //tableResponsive.removeClass('mh-130');
+          tableResponsive.removeClass('d-none');
+          $('#card-footer-resources .btn-terminal').each(function(index, element) {
+            $(element).remove();
+          });
+          $('#card-footer-resources .btn-service').each(function(index, element) {
+            $(element).remove();
+          });
+          pinIcon.removeClass('text-warning fa-rotate-45');
+          //pinButton.html('<i class="fas fa-thumbtack"></i> Pin Header');
+          pinButton.attr('title', 'Pin header to top');
+          isPinned = false;
+        }
+      });
+      
       var labExp = $('#lab-expiration');
       if (labExp.attr('data-expires-at')) {
         var expiresAt = new Date(labExp.attr('data-expires-at'));
@@ -326,7 +397,7 @@ word-break: break-all;
             class: 'bg-success',
             title: 'Sucess',
             autohide: true,
-            delay: 4000,
+            delay: 2000,
             body: data.result
           });
         });
@@ -346,7 +417,7 @@ word-break: break-all;
       $("#lab-guide input, #lab-guide textarea, #lab-guide select").on('input propertychange change', function() {
           clearTimeout(timeoutSave);
           timeoutSave = setTimeout(function() {
-              saveAnswers(false);
+              saveAnswers(true);
           }, 1000);
       });
       // load answers
