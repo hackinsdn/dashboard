@@ -54,21 +54,13 @@
           <div class="col-12">
             {% for lab in labs %}
             <!-- card begin -->
-            {% set primary_category = lab.categories[0] if lab.categories else None %}
             {% set category_classes = [] %}
             {% for cat in lab.categories %}
               {% set _ = category_classes.append("category-" ~ cat.id) %}
             {% endfor %}
-            <div class="card card-{{primary_category.color_cls if primary_category else 'light'}} filter {{category_classes|join(' ')}}">
+            <div class="card card-dark filter {{category_classes|join(' ')}}">
               <div class="card-header">
                 <h2 class="card-title">{{lab.title}}</h2>
-                {% if lab.categories|length > 0 %}
-                <div class="float-right">
-                  {% for category in lab.categories %}
-                    <span class="badge badge-{{category.color_cls}} mr-1">{{category.category}}</span>
-                  {% endfor %}
-                </div>
-                {% endif %}
                 <div class="card-tools">
                   <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
                     <i class="fas fa-minus"></i>
@@ -79,6 +71,13 @@
                 </div>
               </div>
               <div class="card-body">
+                {% if lab.categories|length > 0 %}
+                <div class="float-left w-100 pb-2">
+                  {% for category in lab.categories %}
+                    <span class="badge badge-{{category.color_cls}} mr-1">{{category.category}}</span>
+                  {% endfor %}
+                </div>
+                {% endif %}
                 {{lab.extended_desc_str|safe}}
               </div>
               <!-- /.card-body -->

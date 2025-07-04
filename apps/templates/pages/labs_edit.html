@@ -36,38 +36,8 @@
 }
 
 .select2-container--default .select2-selection--multiple .select2-selection__choice {
-    padding: 2px 8px;
-    margin: 2px;
-    border-radius: 3px;
     border: none !important;
     background: transparent !important;
-}
-
-.select2-container--default .select2-results__option {
-    padding: 8px;
-}
-
-.select2-results__option .badge {
-    display: inline-block;
-    padding: 0.25em 0.6em;
-    font-size: 0.75em;
-    font-weight: 700;
-    line-height: 1;
-    text-align: center;
-    white-space: nowrap;
-    vertical-align: baseline;
-    border-radius: 0.25rem;
-}
-
-.select2-selection__choice .badge {
-    margin: 0;
-    padding: 0.2em 0.5em;
-}
-
-.select2-container--default .select2-selection--multiple .select2-selection__choice:has(.badge) {
-    padding: 1px !important;
-    background: transparent !important;
-    border: none !important;
 }
   </style>
 
@@ -133,12 +103,12 @@
                   </div>
                   <div class="form-group">
                     <label>Lab categories</label>
-                    <select name="lab_category" class="form-control select2" multiple="multiple" data-placeholder="Selecione uma ou mais categorias" style="width: 100%;">
+                    <select name="lab_categories" class="form-control select2" multiple="multiple" data-placeholder="Select one or more categories" style="width: 100%;">
                       {% for cat_id in lab_categories %}
                       <option value="{{cat_id}}" data-color="{{lab_categories[cat_id].color_cls}}" {{'selected' if lab_categories[cat_id] in lab.categories else ""}}>{{lab_categories[cat_id].category}}</option>
                       {% endfor %}
                     </select>
-                    <small class="form-text text-muted">Selecione uma ou mais categorias no dropdown</small>
+                    <small class="form-text text-muted">Select one or more categories</small>
                   </div>
                 </div>
                 <!-- /.card-body -->
@@ -501,8 +471,8 @@
       //Initialize Select2 Elements
       $('.select2').select2();
       
-      $('select[name="lab_category"]').select2({
-        placeholder: 'Selecione uma ou mais categorias',
+      $('select[name="lab_categories"]').select2({
+        placeholder: 'Select one or more categories',
         allowClear: false,
         closeOnSelect: false,
         templateResult: function(option) {
@@ -536,7 +506,7 @@
       });
       
       $('form').submit(function(e) {
-        var selectedCategories = $('select[name="lab_category"]').val();
+        var selectedCategories = $('select[name="lab_categories"]').val();
         if (!selectedCategories || selectedCategories.length === 0) {
           e.preventDefault();
           alert('Por favor, selecione pelo menos uma categoria para o lab.');

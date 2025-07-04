@@ -71,28 +71,7 @@ class Labs(db.Model, AuditMixin):
     @property
     def lab_guide_md_str(self):
         return self.lab_guide_md.decode()
-    
-    def add_category(self, category):
-        if category not in self.categories:
-            self.categories.append(category)
-    
-    def remove_category(self, category):
-        if category in self.categories:
-            self.categories.remove(category)
-    
-    def has_category(self, category):
-        return category in self.categories
-    
-    def get_category_names(self):
-        return [category.category for category in self.categories]
-    
-    def get_category_colors(self):
-        return [category.color_cls for category in self.categories]
-    
-    @property
-    def categories_str(self):
-        return ", ".join(self.get_category_names())
-    
+
 
 class LabInstances(db.Model, AuditMixin):
     __tablename__ = 'lab_instances'
