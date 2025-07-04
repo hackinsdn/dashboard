@@ -428,7 +428,7 @@ def edit_lab(lab_id):
     db.session.commit()
 
     if status:
-        return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, msg_ok=msg, segment="/labs/edit", groups=groups, allowed_groups=lab.allowed_groups)
+        return redirect(url_for('home_blueprint.view_labs', lab_id=lab.id))
     else:
         return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, msg_fail=msg, segment="/labs/edit", groups=groups, allowed_groups=lab.allowed_groups)
 
