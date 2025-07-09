@@ -51,14 +51,14 @@
     <section class="content">
       <div class="container-fluid">
         <div class="row">
-          <div class="col-12">
-            {% for lab in labs %}
-            <!-- card begin -->
-            {% set category_classes = [] %}
-            {% for cat in lab.categories %}
-              {% set _ = category_classes.append("category-" ~ cat.id) %}
-            {% endfor %}
-            <div class="card card-dark filter {{category_classes|join(' ')}}">
+          {% for lab in labs %}
+          <!-- card begin -->
+          {% set category_classes = [] %}
+          {% for cat in lab.categories %}
+            {% set _ = category_classes.append("category-" ~ cat.id) %}
+          {% endfor %}
+          <div class="col-lg-6 ">
+            <div class="card card-dark filter {{category_classes|join(' ')}} mh-100">
               <div class="card-header">
                 <h2 class="card-title">{{lab.title}}</h2>
                 <div class="card-tools">
@@ -70,7 +70,7 @@
                   </button>
                 </div>
               </div>
-              <div class="card-body">
+              <div class="card-body overflow-hidden" style="max-height: 250px;">
                 {% if lab.categories|length > 0 %}
                 <div class="float-left w-100 pb-2">
                   {% for category in lab.categories %}
@@ -81,7 +81,7 @@
                 {{lab.extended_desc_str|safe}}
               </div>
               <!-- /.card-body -->
-              <div class="card-footer">
+              <div class="card-footer mt-auto">
                 {% if lab.id in running_labs %}
                 {%   set route = 'home_blueprint.view_lab_instance' %}
                 {%   set lab_id = running_labs[lab.id] %}
@@ -100,10 +100,8 @@
               <!-- /.card-footer-->
             </div>
             <!-- /.card end -->
-            {% endfor %}
-            </div>
-            <!-- /.card end -->
           </div>
+          {% endfor %}
         </div>
       </div>
     </section>
