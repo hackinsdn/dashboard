@@ -100,6 +100,10 @@ class Config(object):
     LAB_EXPIRATION_WARN_SEC = 48*60*60
     LAB_EXPIRATION_TOLERANACE_SEC = 48*60*60
 
+    #Testbed infos
+    TESTBED_TITLE = os.getenv("TESTBED_TITLE", "HackInSDN Testbed")
+
+
 class ProductionConfig(Config):
     DEBUG = False
 

@@ -60,9 +60,13 @@ def index():
         "total_nodes": stats_data.get("total_nodes", 0),
     }
 
+    testbed_infos = {
+        "title": current_app.config["TESTBED_TITLE"],
+    }
+
     user_feedback = UserFeedbacks.query.filter_by(user_id=current_user.id).first()
 
-    return render_template('pages/index.html', stats=stats, user_feedback=user_feedback)
+    return render_template('pages/index.html', stats=stats, user_feedback=user_feedback, testbed_infos=testbed_infos)
 
 
 @blueprint.route('/running/')
