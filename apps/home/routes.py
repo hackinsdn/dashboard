@@ -12,7 +12,7 @@ from apps.home import blueprint
 from apps.controllers import k8s
 from apps.home.models import Labs, LabInstances, LabCategories, LabAnswers, LabAnswerSheet, HomeLogging, UserLikes, UserFeedbacks
 from apps.authentication.models import Users, Groups
-from flask import render_template, request, current_app, redirect, url_for, session
+from flask import json, render_template, request, current_app, redirect, url_for, session
 from flask_login import login_required, current_user
 from jinja2 import TemplateNotFound
 from apps.audit_mixin import get_remote_addr, check_user_category
@@ -64,9 +64,18 @@ def index():
         "title": current_app.config["TESTBED_TITLE"],
     }
 
+    map_config = {
+        'center': {
+            'lat': current_app.config['MAP_CENTER_LAT'],
+            'lng': current_app.config['MAP_CENTER_LNG']
+        },
+        'zoom': current_app.config['MAP_ZOOM_LEVEL'],
+        'points': json.loads(current_app.config['MAP_POINTS'])
+    }
+
     user_feedback = UserFeedbacks.query.filter_by(user_id=current_user.id).first()
 
-    return render_template('pages/index.html', stats=stats, user_feedback=user_feedback, testbed_infos=testbed_infos)
+    return render_template('pages/index.html', stats=stats, user_feedback=user_feedback, testbed_infos=testbed_infos, map_config=map_config)
 
 
 @blueprint.route('/running/')

@@ -128,7 +128,10 @@
                     <div class="d-md-flex">
                       <div class="p-1 flex-fill" style="overflow: hidden">
                         <!-- Map will be created here -->
-                        <div id="map" style="height: 500px">
+                        <div id="map" style="height: 500px" 
+                            data-center-lat="{{ map_config.center.lat }}"
+                            data-center-lng="{{ map_config.center.lng }}"
+                            data-zoom="{{ map_config.zoom }}">
                         </div>
                       </div>
                     </div><!-- /.d-md-flex -->
@@ -681,6 +684,12 @@
         }
       });
     });
+  </script>
+
+  <script>
+    window.mapConfig = {
+      points: {{ map_config.points | safe }}
+    };
   </script>
 
   <script>

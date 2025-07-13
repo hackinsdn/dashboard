@@ -16,3 +16,9 @@ export MAIL_USERNAME=xxxx
 export MAIL_SENDTO=xxxx
 export MAIL_PASSWORD=xxxx
 
+export MAP_CENTER_LAT=xxxx
+export MAP_CENTER_LNG=xxxx
+export MAP_ZOOM_LEVEL=xxxx
+
+# Pontos do mapa (formato JSON)
+export MAP_POINTS=xxxx
