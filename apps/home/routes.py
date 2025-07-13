@@ -467,7 +467,8 @@ def view_labs(lab_id=None):
     
     labs = labs.all()
     running_labs = {lab.lab_id: lab.id for lab in LabInstances.query.filter_by(user_id=current_user.id, is_deleted=False).all()}
-    return render_template("pages/labs_view.html", labs=labs, lab_categories=lab_categories, running_labs=running_labs, segment="/labs/view")
+    completed_labs = {lab.lab_id for lab in LabInstances.query.filter_by(user_id=current_user.id, is_deleted=True).filter(LabInstances.finish_reason.isnot(None)).all()}
+    return render_template("pages/labs_view.html", labs=labs, lab_categories=lab_categories, running_labs=running_labs, completed_labs=completed_labs, segment="/labs/view")
 
 
 @blueprint.route('/groups/list')

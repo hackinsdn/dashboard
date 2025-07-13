@@ -37,12 +37,31 @@
             </ol>
           </div>
         </div>
-        <div class="row">
-          {% for cat_id in lab_categories %}
-          <button class="btn btn-{{lab_categories[cat_id].color_cls}} mx-2 filter-button" data-filter="category-{{cat_id}}">
-            {{lab_categories[cat_id].category}}
-          </button>
-          {% endfor %}
+        <div class="filter-section">
+          <div class="row mb-3">
+            <div class="col-12">
+              <h5><i class="fas fa-tags"></i> Filter by Category:</h5>
+              {% for cat_id in lab_categories %}
+              <button class="btn btn-{{lab_categories[cat_id].color_cls}} mx-2 filter-button{% if loop.first %} active-underline{% endif %}" data-filter="category-{{cat_id}}">
+                {{lab_categories[cat_id].category}}
+              </button>
+              {% endfor %}
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-12">
+              <h5><i class="fas fa-filter"></i> Filter by Status:</h5>
+              <button class="btn btn-secondary mx-2 status-filter-button active-underline" data-filter="all">
+                <i class="fas fa-list"></i> All Labs
+              </button>
+              <button class="btn btn-success mx-2 status-filter-button" data-filter="completed">
+                <i class="fas fa-check-circle"></i> Completed
+              </button>
+              <button class="btn btn-info mx-2 status-filter-button" data-filter="not-completed">
+                <i class="fas fa-clock"></i> Not Completed
+              </button>
+            </div>
+          </div>
         </div>
       </div><!-- /.container-fluid -->
     </section>
@@ -58,9 +77,15 @@
             {% for cat in lab.categories %}
               {% set _ = category_classes.append("category-" ~ cat.id) %}
             {% endfor %}
-            <div class="card card-dark filter {{category_classes|join(' ')}}">
+            <div class="card card-dark filter {{category_classes|join(' ')}} {% if lab.id in completed_labs %}lab-completed{% else %}lab-not-completed{% endif %}">
               <div class="card-header">
-                <h2 class="card-title">{{lab.title}}</h2>
+                <h2 class="card-title">
+                  {{lab.title}}
+                  {% if lab.id in completed_labs %}
+                    <i class="fas fa-check-circle text-success ml-2" title="Lab Completed"></i>
+                    <small class="text-success ml-1">Completed</small>
+                  {% endif %}
+                </h2>
                 <div class="card-tools">
                   <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
                     <i class="fas fa-minus"></i>
@@ -76,6 +101,13 @@
                   {% for category in lab.categories %}
                     <span class="badge badge-{{category.color_cls}} mr-1">{{category.category}}</span>
                   {% endfor %}
+                  {% if lab.id in completed_labs %}
+                    <span class="badge badge-success mr-1"><i class="fas fa-check"></i> Completed</span>
+                  {% endif %}
+                </div>
+                {% elif lab.id in completed_labs %}
+                <div class="float-left w-100 pb-2">
+                  <span class="badge badge-success mr-1"><i class="fas fa-check"></i> Completed</span>
                 </div>
                 {% endif %}
                 {{lab.extended_desc_str|safe}}
@@ -127,20 +159,51 @@
   <script>
     $(function () {
       $(".filter-button").click(function(){
-        $('.filter-button,.active-underline').removeClass('active-underline');
+        $('.filter-button').removeClass('active-underline');
         $(this).addClass("active-underline");
         var value = $(this).attr('data-filter');
-        // category-1 == all
-        if (value == "category-1")
-        {
-          $('.filter').show('1000');
+        
+        $('.filter').removeClass('category-visible');
+        $('.filter').filter('.' + value).addClass('category-visible');
+        if (value == "category-1") {
+          $('.filter').addClass('category-visible');
         }
-        else
-        {
-          $(".filter").not('.'+value).hide('3000');
-          $('.filter').filter('.'+value).show('3000');
-        }
+        
+        applyFilters();
       });
+
+      $(".status-filter-button").click(function(){
+        $('.status-filter-button').removeClass('active-underline');
+        $(this).addClass("active-underline");
+        var value = $(this).attr('data-filter');
+
+        if (value == "all") {
+          $('.filter').addClass('status-visible');
+        } else if (value == "completed") {
+          $(".filter").removeClass('status-visible');
+          $('.filter.lab-completed').addClass('status-visible');
+        } else if (value == "not-completed") {
+          $(".filter").removeClass('status-visible');
+          $('.filter.lab-not-completed').addClass('status-visible');
+        }
+
+        applyFilters();
+      });
+
+      function applyFilters() {
+        var categoryActive = $('.filter-button.active-underline').attr('data-filter');
+        var statusActive = $('.status-filter-button.active-underline').attr('data-filter');
+        
+        $('.filter').hide();
+        
+        if (statusActive == "all") {
+          $('.filter.category-visible').show('1000');
+        } else {
+          $('.filter.category-visible.status-visible').show('1000');
+        }
+      }
+
+      $('.filter').addClass('category-visible status-visible');
     });
   </script>
 
