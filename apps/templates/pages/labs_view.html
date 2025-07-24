@@ -72,6 +72,9 @@
         <div class="row">
           <div class="col-12">
             {% for lab in labs %}
+            {% set is_running = user_lab_instances | selectattr('lab_id', 'equalto', lab.id) | selectattr('is_deleted', 'equalto', False) | list | length > 0 %}
+            {% set is_completed = user_lab_instances | selectattr('lab_id', 'equalto', lab.id) | selectattr('is_deleted', 'equalto', True) | selectattr('finish_reason') | list | length > 0 %}
+
             <!-- card begin -->
             {% set category_classes = [] %}
             {% for cat in lab.categories %}
@@ -81,10 +84,6 @@
               <div class="card-header">
                 <h2 class="card-title">
                   {{lab.title}}
-                  {% if lab.id in completed_labs %}
-                    <i class="fas fa-check-circle text-success ml-2" title="Lab Completed"></i>
-                    <small class="text-success ml-1">Completed</small>
-                  {% endif %}
                 </h2>
                 <div class="card-tools">
                   <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
@@ -101,11 +100,11 @@
                   {% for category in lab.categories %}
                     <span class="badge badge-{{category.color_cls}} mr-1">{{category.category}}</span>
                   {% endfor %}
-                  {% if lab.id in completed_labs %}
+                  {% if is_completed %}
                     <span class="badge badge-success mr-1"><i class="fas fa-check"></i> Completed</span>
                   {% endif %}
                 </div>
-                {% elif lab.id in completed_labs %}
+                {% elif is_completed %}
                 <div class="float-left w-100 pb-2">
                   <span class="badge badge-success mr-1"><i class="fas fa-check"></i> Completed</span>
                 </div>
@@ -114,9 +113,9 @@
               </div>
               <!-- /.card-body -->
               <div class="card-footer">
-                {% if lab.id in running_labs %}
+                {% if is_running %}
                 {%   set route = 'home_blueprint.view_lab_instance' %}
-                {%   set lab_id = running_labs[lab.id] %}
+                {%   set lab_id = lab.id %}
                 {%   set link_text = 'Resume Lab' %}
                 {% else %}
                 {%   set route = 'home_blueprint.run_lab' %}
