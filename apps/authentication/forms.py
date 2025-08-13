@@ -5,7 +5,7 @@ Copyright (c) 2019 - present AppSeed.us
 
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, DateField
-from wtforms.validators import Email, DataRequired, Optional, Length, EqualTo
+from wtforms.validators import Email, DataRequired, Optional, Length, EqualTo, Regexp
 
 # login and registration
 
@@ -20,9 +20,21 @@ class LoginForm(FlaskForm):
 
 
 class CreateAccountForm(FlaskForm):
-    username = StringField('Username',
-                         id='username_create',
-                         validators=[DataRequired()])
+    username = StringField(
+        'Username',
+        id='username_create',
+        # Trim leading/trailing spaces before validating
+        filters=[lambda x: x.strip() if isinstance(x, str) else x],
+        validators=[
+            DataRequired(),
+            Length(min=3, max=20),
+            # Issue baseline: allow only A–Z a–z 0–9 and hyphen (-)
+            Regexp(
+                r'^[A-Za-z0-9-]+$',
+                message='Use only letters, numbers, and hyphen (-).'
+            ),
+        ],
+    )
     email = StringField('Email',
                       id='email_create',
                       validators=[DataRequired(), Email()])
