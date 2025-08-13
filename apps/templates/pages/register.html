@@ -77,30 +77,34 @@
         <div class="row">
           <div class="col-8">
             <div class="icheck-primary">
-              <input type="checkbox" id="agreeTerms" name="terms" value="agree">
+              {{ form.terms() }}
               <label for="agreeTerms">
                 I agree to the <a href="#">terms</a>
               </label>
             </div>
           </div>
-          <!-- /.col -->
           <div class="col-4">
             <button type="submit" name="register" class="btn btn-primary btn-block">Register</button>
           </div>
-          <!-- /.col -->
         </div>
-      </form>
-
-      <br />
-      <div class="text-center">
-        Have an account? <a href="{{ url_for('authentication_blueprint.login') }}" class="text-center">Login</a>
-        <br />
-        <br />
-      </div>
-
+        {% if form.terms.errors %}
+        <div class="text-danger small mt-1">
+          {{ form.terms.errors[0] }}
+        </div>
+        {% endif %}
     </div>
-    <!-- /.form-box -->
-  </div><!-- /.card -->
+    </form>
+
+    <br />
+    <div class="text-center">
+      Have an account? <a href="{{ url_for('authentication_blueprint.login') }}" class="text-center">Login</a>
+      <br />
+      <br />
+    </div>
+
+  </div>
+  <!-- /.form-box -->
+</div><!-- /.card -->
 </div>
 
 {% endblock content %}
