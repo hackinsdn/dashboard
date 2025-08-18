@@ -3,7 +3,7 @@
 Copyright (c) 2019 - present AppSeed.us
 """
 
-import apps.events
+import apps.events  # noqa: F401
 from flask import Blueprint
 
 blueprint = Blueprint(
