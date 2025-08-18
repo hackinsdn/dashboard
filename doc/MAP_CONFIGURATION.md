@@ -10,13 +10,53 @@ Map configurations are defined through environment variables in the `.env` file:
 
 ```bash
 # Map configurations
-export MAP_CENTER_LAT=-12.9714      # Map center latitude
-export MAP_CENTER_LNG=-38.5014      # Map center longitude
-export MAP_ZOOM_LEVEL=10            # Initial zoom level (1-19)
+export MAP_GEOJSON_JS="globe.js"    # GeoJSON javascript file (see below)
+export MAP_CENTER_LAT=0             # Map center latitude
+export MAP_CENTER_LNG=0             # Map center longitude
+export MAP_ZOOM_LEVEL=1             # Initial zoom level (1-19)
 
 # Map points (JSON format)
 export MAP_POINTS='[...]'           # JSON array with points to be displayed
 ```
+
+## Map GeoJSON
+
+GeoJSON is an open standard format for encoding various geographic data structures using JSON (JavaScript Object Notation). It represents simple geographical features, along with their non-spatial attributes. Leaflet GeoJSON refers to the use of the GeoJSON data format within the Leaflet JavaScript library for creating interactive web maps.
+
+In order to load GeoJSON according to the configuration in apps/config.py, you will need first to download geojson data, then convert it to JS and then change the configuration.
+
+we provide the script convert-geojson-js.py to help on the conversion. Here is an example for Brazilian states:
+```
+git clone https://github.com/giuliano-macedo/geodata-br-states /tmp/geodata-br-states
+for file in $(ls -1 /tmp/geodata-br-states/geojson/br_states); do jsfile=$(echo $file | sed s/json/js/g); python3 scripts/leaflet-geojson-js/convert-geojson-js.py /tmp/geodata-br-states/geojson/br_states/$file apps/static/assets/plugins/leaflet/geojson/$jsfile; done
+```
+
+Then you just need to change the `apps/config.py`:
+```
+    MAP_GEOJSON_JS = "Brasil.min.js"
+```
+
+You can also modify your .env file with the proper configs.
+
+Here is an example for Brazilian states (using .env file):
+```
+export MAP_GEOJSON_JS="Brasil.min.js"
+export MAP_CENTER_LAT="-15.13"
+export MAP_CENTER_LNG="-53.19"
+export MAP_ZOOM_LEVEL="4"
+```
+
+Another example for Bahia (Brazilian state):
+```
+export MAP_GEOJSON_JS="br_ba.js"
+export MAP_CENTER_LAT="-13.57"
+export MAP_CENTER_LNG="-41.50"
+export MAP_ZOOM_LEVEL="6"
+```
+
+You can download geojson maps from this project: https://geojson-maps.kyd.au
+
+Or you can search for other projects that have geojson data for you location.
 
 ## Map Points Configuration
 

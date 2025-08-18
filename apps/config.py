@@ -1,5 +1,6 @@
 # -*- encoding: utf-8 -*-
 import os, random, string
+import json
 from dotenv import load_dotenv
 
 
@@ -104,10 +105,11 @@ class Config(object):
     TESTBED_TITLE = os.getenv("TESTBED_TITLE", "HackInSDN Testbed")
 
     # Map configuration
-    MAP_CENTER_LAT = float(os.getenv('MAP_CENTER_LAT', -12.9714))
-    MAP_CENTER_LNG = float(os.getenv('MAP_CENTER_LNG', -38.5014))
-    MAP_ZOOM_LEVEL = int(os.getenv('MAP_ZOOM_LEVEL', 10))
-    MAP_POINTS = os.getenv('MAP_POINTS', '[]')
+    MAP_GEOJSON_JS = os.getenv("MAP_GEOJSON_JS", "globe.js")
+    MAP_CENTER_LAT = float(os.getenv('MAP_CENTER_LAT', "0"))
+    MAP_CENTER_LNG = float(os.getenv('MAP_CENTER_LNG', "0"))
+    MAP_ZOOM_LEVEL = int(os.getenv('MAP_ZOOM_LEVEL', "1"))
+    MAP_POINTS = json.loads(os.getenv('MAP_POINTS', '[]'))
 
 
 class ProductionConfig(Config):

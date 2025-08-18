@@ -170,7 +170,7 @@ $(function () {
         });
       }
     } catch (error) {
-      console.error('Erro ao carregar pontos do mapa:', error);
+      console.error('Error loading map points:', error);
     }
     
     if (typeof statesData !== 'undefined') {
