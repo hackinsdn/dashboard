@@ -60,9 +60,22 @@ def index():
         "total_nodes": stats_data.get("total_nodes", 0),
     }
 
+    testbed_infos = {
+        "title": current_app.config["TESTBED_TITLE"],
+    }
+
+    map_config = {
+        'center': {
+            'lat': current_app.config['MAP_CENTER_LAT'],
+            'lng': current_app.config['MAP_CENTER_LNG']
+        },
+        'zoom': current_app.config['MAP_ZOOM_LEVEL'],
+        'points': current_app.config['MAP_POINTS'],
+    }
+
     user_feedback = UserFeedbacks.query.filter_by(user_id=current_user.id).first()
 
-    return render_template('pages/index.html', stats=stats, user_feedback=user_feedback)
+    return render_template('pages/index.html', stats=stats, user_feedback=user_feedback, testbed_infos=testbed_infos, map_config=map_config)
 
 
 @blueprint.route('/running/')

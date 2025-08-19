@@ -118,7 +118,7 @@
             <!-- MAP & BOX PANE -->
             <div class="card">
               <div class="card-header">
-                <h3 class="card-title">RNP Testbed</h3>
+                <h3 class="card-title">{{testbed_infos.title}}</h3>
               </div>
               <!-- /.card-header -->
               <div class="card-body p-0">
@@ -128,7 +128,10 @@
                     <div class="d-md-flex">
                       <div class="p-1 flex-fill" style="overflow: hidden">
                         <!-- Map will be created here -->
-                        <div id="map" style="height: 500px">
+                        <div id="map" style="height: 500px" 
+                            data-center-lat="{{ map_config.center.lat }}"
+                            data-center-lng="{{ map_config.center.lng }}"
+                            data-zoom="{{ map_config.zoom }}">
                         </div>
                       </div>
                     </div><!-- /.d-md-flex -->
@@ -543,7 +546,7 @@
   <!-- PAGE PLUGINS -->
   <!-- Leaflet -->
   <script src="/static/assets/plugins/leaflet/leaflet.js"></script>
-  <script src="/static/assets/plugins/leaflet/Brasil.min.js"></script>
+  <script src="/static/assets/plugins/leaflet/geojson/{{config.MAP_GEOJSON_JS}}"></script>
   <!-- ChartJS -->
   <script src="/static/assets/plugins/chart.js/Chart.min.js"></script>
   <!-- Motion JS -->
@@ -681,6 +684,12 @@
         }
       });
     });
+  </script>
+
+  <script>
+    window.mapConfig = {
+      points: {{ map_config.points | safe }}
+    };
   </script>
 
   <script>
