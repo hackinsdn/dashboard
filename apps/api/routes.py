@@ -194,6 +194,28 @@ def save_lab_answers(lab_inst_id):
 
     return {"status": "ok", "result": "Answers saved successfully"}, 200
 
+@blueprint.route('/lab_answers/correct/<lab_inst_id>', methods=["POST"])
+def correct_lab_answer(lab_inst_id):
+    if current_user.category == "user":
+        return {}, 404
+
+    lab_inst = LabInstances.query.get(lab_inst_id)
+    if not lab_inst:
+        return {"status": "fail", "result": "Lab instance not found"}, 404
+
+    lab_answers = LabAnswers.query.filter_by(lab_id=lab_inst_id, user_id=current_user.id).first()
+    if not lab_answers:
+        return {"status": "fail", "result": "Lab answers not found"}, 404
+    
+    data = request.json
+    
+    lab_answers.comments = json.dumps(data.get('comments', {}))
+    lab_answers.grades = json.dumps(data.get('grades', {}))
+    
+    db.session.commit()
+    
+    return {"status": "ok", "result": "Answers saved successfully"}, 200
+
 @blueprint.route('/users/<int:user_id>', methods=["DELETE"])
 @login_required
 def delete_user(user_id):
