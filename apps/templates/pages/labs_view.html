@@ -62,7 +62,7 @@
               </button>
             </div>
           </div>
-        </div>
+	</div><!-- /.filter-secion -->
       </div><!-- /.container-fluid -->
     </section>
 
@@ -71,8 +71,8 @@
       <div class="container-fluid">
         <div class="row">
           {% for lab in labs %}
-            {% set is_running = user_lab_instances | selectattr('lab_id', 'equalto', lab.id) | selectattr('is_deleted', 'equalto', False) | list | length > 0 %}
-            {% set is_completed = user_lab_instances | selectattr('lab_id', 'equalto', lab.id) | selectattr('is_deleted', 'equalto', True) | selectattr('finish_reason') | list | length > 0 %}
+            {% set is_running = lab.id in user_labs_status and user_labs_status[lab.id]["is_running"] %}
+            {% set is_completed = lab.id in user_labs_status and user_labs_status[lab.id]["is_completed"] %}
 
           <!-- card begin -->
           {% set category_classes = [] %}
@@ -80,7 +80,7 @@
             {% set _ = category_classes.append("category-" ~ cat.id) %}
           {% endfor %}
           <div class="col-lg-6 ">
-            <div class="card card-dark filter {{category_classes|join(' ')}} {% if lab.id in completed_labs %}lab-completed{% else %}lab-not-completed{% endif %} mh-100">
+            <div class="card card-dark filter {{category_classes|join(' ')}} {% if is_completed %}lab-completed{% else %}lab-not-completed{% endif %} mh-100">
               <div class="card-header">
                 <h2 class="card-title">
                   {{lab.title}}
