@@ -190,13 +190,13 @@
         rules: {
           username: {
             required: true,
-            pattern: /^[a-zA-Z0-9-]+$/,
-            maxlength: 30,
+            pattern: /^[a-zA-Z0-9_.-]+$/,
+            maxlength: 20,
           },
         },
         messages: {
           username: {
-            pattern: "Invalid format. Allowed: a-z, A-Z, 0-9 or -",
+            pattern: "Invalid character. Allowed letters, numbers, dot (.), underscore (_) or hyphen (-)",
           },
         },
         errorElement: 'span',
