@@ -136,16 +136,22 @@ def callback():
 
     return redirect(url_for('authentication_blueprint.route_default'))
 
-
 @blueprint.route('/register', methods=['GET', 'POST'])
 def register():
     create_account_form = CreateAccountForm(request.form)
-    if 'register' in request.form:
 
-        username = request.form['username']
-        email = request.form['email']
+    if request.method == 'POST':
+        if not create_account_form.validate_on_submit():
+            msg = "Failed to validate form."
+            if create_account_form.errors:
+                msg += f" Errors: {create_account_form.errors}"
+            return render_template('pages/register.html', form=create_account_form, msg=msg)
 
-        # Check usename exists
+        username = create_account_form.username.data
+        email = create_account_form.email.data
+        password = create_account_form.password.data
+
+        # Check username exists
         user = Users.query.filter_by(username=username).first()
         if user:
             return render_template('pages/register.html',
@@ -163,15 +169,14 @@ def register():
 
         # else: send confirmation e-mail if configured or create user
         if not app.config['MAIL_SERVER']:
-            user = Users(**request.form, issuer="LOCAL")
+            user = Users(username=username, email=email, password=password, issuer="LOCAL")
             db.session.add(user)
             db.session.commit()
             return redirect(url_for('authentication_blueprint.login'))
 
         confirmation_token = str(uuid.uuid4().int)[:6]
         session['confirmation_token'] = confirmation_token
-        session['user'] = request.form.to_dict()
-        session['user']['issuer'] = "LOCAL"
+        session['user'] = dict(username=username, email=email, password=password, issuer="LOCAL")
         session['datetime'] = utcnow()
 
         # Send email
