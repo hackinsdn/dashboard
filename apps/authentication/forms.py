@@ -4,7 +4,7 @@ Copyright (c) 2019 - present AppSeed.us
 """
 
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, DateField
+from wtforms import StringField, PasswordField, DateField, BooleanField
 from wtforms.validators import Email, DataRequired, Optional, Length, EqualTo, Regexp
 
 # login and registration
@@ -42,6 +42,12 @@ class CreateAccountForm(FlaskForm):
                              id='pwd_create',
                              validators=[DataRequired()])
 
+# Terms and conditions
+    terms = BooleanField(
+        'I agree to the terms',
+        id='agreeTerms',
+        validators=[DataRequired(message='You must agree to the terms.')]
+    )
 
 class GroupForm(FlaskForm):
     groupname = StringField('Group Name', 
