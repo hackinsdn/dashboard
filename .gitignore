@@ -34,3 +34,4 @@ apps/static/assets/yarn.lock
 apps/static/assets/.temp
 
 *.pem
+kube-config.yaml

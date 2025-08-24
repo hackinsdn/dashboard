@@ -66,7 +66,11 @@ To run Dashboard with Docker you can leverage the pre-build image available in h
 docker run -d --name dashboard1 -p 8080:8080 -v $PWD/kube-config.yaml:/etc/kube-config.yaml -e INIT_SCRIPT=/app/dbinit.py -e DEBUG=True -e KUBECONFIG=/etc/kube-config.yaml -e K8S_NAMESPACE=hackinsdn -e BASE_URL=http://192.168.64.17:8080 -e SECRET_KEY=xxxxx -e OAUTH_CLIENT_ID=APP-xxxyyyzzz -e OAUTH_CLIENT_SECRET=xxx-yyy-zzz-www-aaaa -e OAUTH_DOMAIN=orcid.org hackinsdn/dashboard:latest
 ```
 
-Some options used above are described as follows:
+Some options used above are described in the CONFIGURATION section.
+
+## Configuration
+
+Here are some options you can use to configure Dashboard HackInSDN:
 
 - `KUBECONFIG`: filename containing kubernetes config file to connect to the cluster (if you followed the documentation on [setup single-node kubernetes cluster in a VM](./install-k8s-vm.md), you should have a file named `kube-config-ns-admin@hackinsdn.yaml`)
 
@@ -85,6 +89,8 @@ Some options used above are described as follows:
 - `OAUTH_CLIENT_ID`: Oauth2 client ID
 
 - `OAUTH_CLIENT_SECRET`: Oauth2 client secret
+
+- MAP Settings: see [MAP SETTINGS][./MAP_CONFIGURATION.md]
 
 ## Installation step-by-step
 

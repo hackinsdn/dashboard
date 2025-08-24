@@ -1,5 +1,6 @@
 # -*- encoding: utf-8 -*-
 import os, random, string
+import json
 from dotenv import load_dotenv
 
 
@@ -99,6 +100,17 @@ class Config(object):
     ENABLE_LAB_SCHED_MANAGER = os.getenv("ENABLE_LAB_SCHED_MANAGER", "True") == "True"
     LAB_EXPIRATION_WARN_SEC = 48*60*60
     LAB_EXPIRATION_TOLERANACE_SEC = 48*60*60
+
+    #Testbed infos
+    TESTBED_TITLE = os.getenv("TESTBED_TITLE", "HackInSDN Testbed")
+
+    # Map configuration
+    MAP_GEOJSON_JS = os.getenv("MAP_GEOJSON_JS", "globe.js")
+    MAP_CENTER_LAT = float(os.getenv('MAP_CENTER_LAT', "0"))
+    MAP_CENTER_LNG = float(os.getenv('MAP_CENTER_LNG', "0"))
+    MAP_ZOOM_LEVEL = int(os.getenv('MAP_ZOOM_LEVEL', "1"))
+    MAP_POINTS = json.loads(os.getenv('MAP_POINTS', '[]'))
+
 
 class ProductionConfig(Config):
     DEBUG = False
