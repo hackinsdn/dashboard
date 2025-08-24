@@ -25,7 +25,7 @@
 
   <div class="login-logo">
     <a target="_blank" rel="noopener noreferrer" href="https://hackinsdn.github.io/">
-      <img src="{{ url_for('static', filename='assets/img/hackinsdn.png') }}" alt="HackInSDN">
+      <img src="{{ url_for('static', filename='assets/img/hackinsdn.png') }}" alt="HackInSDN" />
     </a>
   </div>
 
@@ -87,25 +87,18 @@
             <button type="submit" name="register" class="btn btn-primary btn-block">Register</button>
           </div>
         </div>
-        {% if form.terms.errors %}
-        <div class="text-danger small mt-1">
-          {{ form.terms.errors[0] }}
-        </div>
-        {% endif %}
-    </div>
-    </form>
+      </form>
 
-    <br />
-    <div class="text-center">
-      Have an account? <a href="{{ url_for('authentication_blueprint.login') }}" class="text-center">Login</a>
       <br />
-      <br />
-    </div>
+      <div class="text-center">
+        Have an account? <a href="{{ url_for('authentication_blueprint.login') }}" class="text-center">Login</a>
+        <br />
+        <br />
+      </div>
 
-  </div>
-  <!-- /.form-box -->
-</div><!-- /.card -->
-</div>
+    </div><!-- /.card-body -->
+  </div><!-- /.card -->
+</div><!-- /.register-box -->
 
 {% endblock content %}
 
