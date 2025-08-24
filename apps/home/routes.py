@@ -479,8 +479,14 @@ def view_labs(lab_id=None):
         labs = labs.filter(Labs.id == lab_id)
     
     labs = labs.all()
-    running_labs = {lab.lab_id: lab.id for lab in LabInstances.query.filter_by(user_id=current_user.id, is_deleted=False).all()}
-    return render_template("pages/labs_view.html", labs=labs, lab_categories=lab_categories, running_labs=running_labs, segment="/labs/view")
+    user_labs_status = {}
+    for lab in LabInstances.query.filter_by(user_id=current_user.id).all():
+        user_labs_status.setdefault(lab.lab_id, {"is_running": False, "is_completed": False})
+        if not lab.is_deleted:
+            user_labs_status[lab.lab_id]["is_running"] = True
+        if lab.is_deleted and lab.finish_reason is not None:
+            user_labs_status[lab.lab_id]["is_completed"] = True
+    return render_template("pages/labs_view.html", labs=labs, lab_categories=lab_categories, user_labs_status=user_labs_status, segment="/labs/view")
 
 
 @blueprint.route('/groups/list')

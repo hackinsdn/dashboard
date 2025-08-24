@@ -37,13 +37,32 @@
             </ol>
           </div>
         </div>
-        <div class="row">
-          {% for cat_id in lab_categories %}
-          <button class="btn btn-{{lab_categories[cat_id].color_cls}} mx-2 filter-button" data-filter="category-{{cat_id}}">
-            {{lab_categories[cat_id].category}}
-          </button>
-          {% endfor %}
-        </div>
+        <div class="filter-section">
+          <div class="row mb-3">
+            <div class="col-12">
+              <h5><i class="fas fa-tags"></i> Filter by Category:</h5>
+              {% for cat_id in lab_categories %}
+              <button class="btn btn-{{lab_categories[cat_id].color_cls}} mx-2 filter-button{% if loop.first %} active-underline{% endif %}" data-filter="category-{{cat_id}}">
+                {{lab_categories[cat_id].category}}
+              </button>
+              {% endfor %}
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-12">
+              <h5><i class="fas fa-filter"></i> Filter by Status:</h5>
+              <button class="btn btn-secondary mx-2 status-filter-button active-underline" data-filter="all">
+                <i class="fas fa-list"></i> All Labs
+              </button>
+              <button class="btn btn-success mx-2 status-filter-button" data-filter="completed">
+                <i class="fas fa-check-circle"></i> Completed
+              </button>
+              <button class="btn btn-info mx-2 status-filter-button" data-filter="not-completed">
+                <i class="fas fa-clock"></i> Not Completed
+              </button>
+            </div>
+          </div>
+	</div><!-- /.filter-secion -->
       </div><!-- /.container-fluid -->
     </section>
 
@@ -52,15 +71,20 @@
       <div class="container-fluid">
         <div class="row">
           {% for lab in labs %}
+            {% set is_running = lab.id in user_labs_status and user_labs_status[lab.id]["is_running"] %}
+            {% set is_completed = lab.id in user_labs_status and user_labs_status[lab.id]["is_completed"] %}
+
           <!-- card begin -->
           {% set category_classes = [] %}
           {% for cat in lab.categories %}
             {% set _ = category_classes.append("category-" ~ cat.id) %}
           {% endfor %}
           <div class="col-lg-6 ">
-            <div class="card card-dark filter {{category_classes|join(' ')}} mh-100">
+            <div class="card card-dark filter {{category_classes|join(' ')}} {% if is_completed %}lab-completed{% else %}lab-not-completed{% endif %} mh-100">
               <div class="card-header">
-                <h2 class="card-title">{{lab.title}}</h2>
+                <h2 class="card-title">
+                  {{lab.title}}
+                </h2>
                 <div class="card-tools">
                   <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
                     <i class="fas fa-minus"></i>
@@ -76,15 +100,22 @@
                   {% for category in lab.categories %}
                     <span class="badge badge-{{category.color_cls}} mr-1">{{category.category}}</span>
                   {% endfor %}
+                  {% if is_completed %}
+                    <span class="badge badge-success mr-1"><i class="fas fa-check"></i> Completed</span>
+                  {% endif %}
+                </div>
+                {% elif is_completed %}
+                <div class="float-left w-100 pb-2">
+                  <span class="badge badge-success mr-1"><i class="fas fa-check"></i> Completed</span>
                 </div>
                 {% endif %}
                 {{lab.extended_desc_str|safe}}
               </div>
               <!-- /.card-body -->
               <div class="card-footer mt-auto">
-                {% if lab.id in running_labs %}
+                {% if is_running %}
                 {%   set route = 'home_blueprint.view_lab_instance' %}
-                {%   set lab_id = running_labs[lab.id] %}
+                {%   set lab_id = lab.id %}
                 {%   set link_text = 'Resume Lab' %}
                 {% else %}
                 {%   set route = 'home_blueprint.run_lab' %}
@@ -125,20 +156,50 @@
   <script>
     $(function () {
       $(".filter-button").click(function(){
-        $('.filter-button,.active-underline').removeClass('active-underline');
+        $('.filter-button').removeClass('active-underline');
         $(this).addClass("active-underline");
         var value = $(this).attr('data-filter');
-        // category-1 == all
-        if (value == "category-1")
-        {
-          $('.filter').show('1000');
+        
+        $('.filter').removeClass('category-visible');
+        $('.filter').filter('.' + value).addClass('category-visible');
+        if (value == "category-1") {
+          $('.filter').addClass('category-visible');
         }
-        else
-        {
-          $(".filter").not('.'+value).hide('3000');
-          $('.filter').filter('.'+value).show('3000');
-        }
+        
+        applyFilters();
       });
+
+      $(".status-filter-button").click(function(){
+        $('.status-filter-button').removeClass('active-underline');
+        $(this).addClass("active-underline");
+        var value = $(this).attr('data-filter');
+
+        if (value == "all") {
+          $('.filter').addClass('status-visible');
+        } else if (value == "completed") {
+          $(".filter").removeClass('status-visible');
+          $('.filter.lab-completed').addClass('status-visible');
+        } else if (value == "not-completed") {
+          $(".filter").removeClass('status-visible');
+          $('.filter.lab-not-completed').addClass('status-visible');
+        }
+
+        applyFilters();
+      });
+
+      function applyFilters() {
+        var statusActive = $('.status-filter-button.active-underline').attr('data-filter');
+        
+        $('.filter').hide();
+        
+        if (statusActive == "all") {
+          $('.filter.category-visible').show('1000');
+        } else {
+          $('.filter.category-visible.status-visible').show('1000');
+        }
+      }
+
+      $('.filter').addClass('category-visible status-visible');
     });
   </script>
 
