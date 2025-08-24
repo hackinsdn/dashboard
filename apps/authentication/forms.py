@@ -28,10 +28,10 @@ class CreateAccountForm(FlaskForm):
         validators=[
             DataRequired(),
             Length(min=3, max=20),
-            # Issue baseline: allow only A–Z a–z 0–9 and hyphen (-)
+            # Issue baseline: allow only A–Z a–z 0–9 underscore(_) dot(.) and hyphen (-)
             Regexp(
-                r'^[A-Za-z0-9-]+$',
-                message='Use only letters, numbers, and hyphen (-).'
+                r'^[A-Za-z0-9_.-]+$',
+                message='Invalid character. Use letters, numbers, dot (.), underscore (_) or hyphen (-).'
             ),
         ],
     )

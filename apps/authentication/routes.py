@@ -142,15 +142,10 @@ def register():
 
     if request.method == 'POST':
         if not create_account_form.validate_on_submit():
-            top_msg = None
-            if create_account_form.username.errors:
-                top_msg = create_account_form.username.errors[0]
-            else:
-                for errs in create_account_form.errors.values():
-                    if errs:
-                        top_msg = errs[0]
-                        break
-            return render_template('pages/register.html', form=create_account_form, msg=top_msg)
+            msg = "Failed to validate form."
+            if create_account_form.errors:
+                msg += f" Errors: {create_account_form.errors}"
+            return render_template('pages/register.html', form=create_account_form, msg=msg)
 
         username = create_account_form.username.data
         email = create_account_form.email.data
@@ -205,7 +200,7 @@ def register():
 
     else:
         return render_template('pages/register.html', form=create_account_form)
-    
+
 @blueprint.route('/confirm', methods=['GET', 'POST'])
 def confirm_page():
     form = ConfirmAccountForm(request.form)
