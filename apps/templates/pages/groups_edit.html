@@ -95,6 +95,7 @@
                         <label>Access Token</label>
 		        <p>Access token is a method of allowing <i>self enrolment/auto join</i> to a group. Users will be asked to supply the access token to be authorized as a member of the group.</p>
                         <input name="accesstoken" type="text" class="form-control" value="{{ group.accesstoken|default("", true) }}"/>
+                        <button type="button" class="btn btn-secondary mt-2" onclick="generateAccessToken()">Generate Random Token</button>
                       </div>
                       <!-- /.form-group -->
                       <!-- /.form-group -->
@@ -251,6 +252,11 @@ user2@ufxpto.edu.br"
           format: 'L'
       });
     })
+    // Function to generate a random Access Token
+    function generateAccessToken() {
+      var token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+      document.getElementById('accesstoken').value = token.match(/.{1,6}/g).join("-");;
+    }
   </script>
 
 {% endblock javascripts %}
