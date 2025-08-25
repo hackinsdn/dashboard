@@ -114,6 +114,8 @@ class LabAnswers(db.Model, AuditMixin):
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     lab_id = db.Column(db.String(36), db.ForeignKey("labs.id"))
     answers = db.Column(db.String)
+    comments = db.Column(db.String)
+    grades = db.Column(db.String)
 
     @property
     def answers_dict(self):
@@ -124,13 +126,31 @@ class LabAnswers(db.Model, AuditMixin):
 
     @property
     def answers_table(self):
-        data = self.answers_dict
+        answers = self.answers_dict
+        comments = self.comments_dict
+        grades = self.grades_dict
         output = "<table class='table table-bordered'>"
-        output += "<tr><th>Question</th><th>Answer</th></tr>"
-        for k, v in data.items():
-            output += f"<tr><td><b>{k}</b></td><td>{v}</td></tr>"
+        output += "<tr><th>Question</th><th>Answer</th><th>Comment</th><th>Grade</th><th>Actions</th></tr>"
+        for answerName, answerValue in answers.items():
+            comment = comments.get(answerName, "")
+            grade = grades.get(answerName, "")
+            output += f"<tr><td><b>{answerName}</b></td><td>{answerValue}</td><td>{comment}</td><td>{grade}</td><td></td></tr>"
         output += "</table>"
         return output
+    
+    @property
+    def comments_dict(self):
+        try:
+            return json.loads(self.comments) if self.comments else {}
+        except:
+            return {}
+
+    @property
+    def grades_dict(self):
+        try:
+            return json.loads(self.grades) if self.grades else {}
+        except:
+            return {}
 
 
 class LabAnswerSheet(db.Model, AuditMixin):
