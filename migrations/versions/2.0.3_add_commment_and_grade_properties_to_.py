@@ -1,6 +1,6 @@
 """Add commment and grade  properties to LabAnswers
 
-Revision ID: 44c2fedea345
+Revision ID: 2.0.3
 Revises: 2.0.2
 Create Date: 2025-08-18 17:32:46.121707
 
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '44c2fedea345'
+revision = '2.0.3'
 down_revision = '2.0.2'
 branch_labels = None
 depends_on = None

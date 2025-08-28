@@ -129,13 +129,34 @@ class LabAnswers(db.Model, AuditMixin):
         answers = self.answers_dict
         comments = self.comments_dict
         grades = self.grades_dict
-        output = "<table class='table table-bordered'>"
-        output += "<tr><th>Question</th><th>Answer</th><th>Comment</th><th>Grade</th><th>Actions</th></tr>"
-        for answerName, answerValue in answers.items():
-            comment = comments.get(answerName, "")
-            grade = grades.get(answerName, "")
-            output += f"<tr><td><b>{answerName}</b></td><td>{answerValue}</td><td>{comment}</td><td>{grade}</td><td></td></tr>"
+        
+        output = "<form id='bulk-comments-form' method='post'>"
+        output += "<table class='table table-bordered'>"
+        output += "<tr><th>Question</th><th>Answer</th><th>Comment</th><th>Grade</th></tr>"
+        for answer_name, answer_value in answers.items():
+            comment = comments.get(answer_name, {}) if comments else {}
+            grade = grades.get(answer_name, {}) if grades else {}
+
+            comment_value = comment.get("comment", "") if comment else ""
+            grade_value = grade.get("grade", "") if (grade or grade == 0) else ""
+
+            output += f"""
+            <tr>
+                <td><b>{answer_name}</b></td>
+                <td>{answer_value}</td>
+                <input type="hidden" name="name[]" value="{answer_name}">
+                <input type="hidden" name="user[]" value="{self.user_id}">
+                <td>
+                    <textarea name="comment[]" class="form-control" placeholder="Comentário">{comment_value}</textarea>
+                </td>
+                <td>
+                    <input type="number" min="0" max="100" name="grade[]" class="form-control" placeholder="Nota" value="{grade_value}">
+                </td>
+            </tr>
+            """
         output += "</table>"
+        output += "<div id='bulk-comment-result' class='mt-2'></div>"
+        output += "</form>"
         return output
     
     @property

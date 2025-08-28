@@ -194,24 +194,26 @@ def save_lab_answers(lab_inst_id):
 
     return {"status": "ok", "result": "Answers saved successfully"}, 200
 
-@blueprint.route('/lab_answers/correct/<lab_inst_id>', methods=["POST"])
-def correct_lab_answer(lab_inst_id):
-    if current_user.category == "user":
-        return {}, 404
+@blueprint.route('/lab_answers/correct/<int:answer_id>', methods=["PUT"])
+@login_required
+def correct_lab_answer(answer_id):
+    if current_user.category == "user" or current_user.category == "student":
+        return {}, 401
 
-    lab_inst = LabInstances.query.get(lab_inst_id)
-    if not lab_inst:
-        return {"status": "fail", "result": "Lab instance not found"}, 404
-
-    lab_answers = LabAnswers.query.filter_by(lab_id=lab_inst_id, user_id=current_user.id).first()
+    lab_answers = LabAnswers.query.filter_by(id=answer_id).first()
     if not lab_answers:
         return {"status": "fail", "result": "Lab answers not found"}, 404
     
     data = request.json
-    
+
+    for k, v in data.get('grades', {}).items():
+        grade_value = v.get('grade')
+        if (not isinstance(grade_value, (int, float))) or (grade_value < 0 or grade_value > 100):
+            return {"status": "fail", "result": f"Invalid grade for question {k}"}, 400
+
     lab_answers.comments = json.dumps(data.get('comments', {}))
     lab_answers.grades = json.dumps(data.get('grades', {}))
-    
+
     db.session.commit()
     
     return {"status": "ok", "result": "Answers saved successfully"}, 200
@@ -327,12 +329,12 @@ def check_lab_answer(lab_id, answer_id):
     if not lab:
         return {"status": "fail", "result": "Invalid or Unauthorized access to lab"}, 401
 
-    mygroups = current_user.privileged_group_ids
-    for group in lab.allowed_groups:
-        if group.id in mygroups:
-            break
-    else:
-        return {"status": "fail", "result": "Invalid or Unauthorized access to lab"}, 401
+    # mygroups = current_user.privileged_group_ids
+    # for group in lab.allowed_groups:
+    #     if group.id in mygroups:
+    #         break
+    # else:
+    #     return {"status": "fail", "result": "Invalid or Unauthorized access to lab"}, 401
 
     lab_answer = LabAnswers.query.get(answer_id)
     if not lab_answer:
@@ -345,14 +347,20 @@ def check_lab_answer(lab_id, answer_id):
     answer_sheet = lab_answer_sheet.answers_dict
 
     answers = lab_answer.answers_dict
+    grades = lab_answer.grades_dict
     total, correct = 0, 0
     for question, expected_answer in answer_sheet.items():
         total += 1
-        try:
-            if re.match(fr"^{expected_answer}$", answers.get(question)):
-                correct += 1
-        except:
-            continue
+        grade = grades.get(question, "") if grades else ""
+        grade_value = grade.get("grade", "") if (grade or grade == 0) else ""
+        if (grade_value or grade_value == 0):
+            correct += float(grade_value) / 100
+        else: 
+            try:
+                if re.match(fr"^{expected_answer}$", answers.get(question)):
+                    correct += 1
+            except:
+                continue
     score = "%.2f" % (100*correct/total) if total > 0 else "--"
 
     return {"status": "ok", "result": score}, 200
