@@ -42,6 +42,8 @@ def register_blueprints(app):
     for module_name in ('authentication', 'home', 'api', 'k8s', 'cli'):
         module = import_module('apps.{}.routes'.format(module_name))
         app.register_blueprint(module.blueprint)
+    # Load socketio endpoints
+    import_module("apps.events")
 
 
 def configure_database(app):
