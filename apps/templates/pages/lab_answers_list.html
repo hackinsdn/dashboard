@@ -139,7 +139,7 @@
       </div>
       <!-- /.row -->
       <div class="modal fade" id="modal-show-answer">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-xl">
           <div class="modal-content">
             <div class="modal-header">
               <h4 class="modal-title">Show Lab Answer</h4>
@@ -155,7 +155,10 @@
             </div>
             <div class="modal-footer justify-content-between">
               <button type="button" class="btn btn-default button-clear-answer" data-dismiss="modal">Cancel</button>
-              <button type="button" class="btn btn-primary" id="check-lab-answer">Check if correct</button>
+              <div class="text-right">
+                <button type="button" class="btn btn-primary" id="check-lab-answer">Check if correct</button>
+                <button type="button" class="btn btn-primary" id="submit-answer-correction">Save comments and grades</button>
+              </div>
             </div>
           </div>
           <!-- /.modal-content -->
@@ -254,6 +257,49 @@
       });
       $( ".button-clear-answer" ).on('click', function(){
         $("#lab-answers-table").html("");
+      });
+      $("#submit-answer-correction").on('click', function(e) {
+        e.preventDefault();
+
+        var $form = $("#bulk-comments-form");
+
+        var answer_id = $("#lab-answer-id").val();
+
+        var comments = {};
+        var grades = {};
+
+        var names = $form.find('input[name="name[]"]').map(function(){ return $(this).val(); }).get();
+        var users = $form.find('input[name="user[]"]').map(function(){ return $(this).val(); }).get();
+
+        var comment_texts = $form.find('textarea[name="comment[]"]').map(function(){ return $(this).val(); }).get();
+        var grade_values = $form.find('input[name="grade[]"]').map(function(){ return $(this).val(); }).get();
+
+        for (var i = 0; i < names.length; i++) {
+          comments[names[i]] = {
+            comment: comment_texts[i],
+            user: users[i]
+          };
+          grades[names[i]] = {
+            user: users[i],
+            grade: parseFloat(grade_values[i])
+          };
+        }
+
+        $.ajax({
+          url: '/api/lab_answers/correct/' + answer_id,
+          type: 'PUT',
+          contentType: 'application/json',
+          data: JSON.stringify({
+            comments: comments,
+            grades: grades
+          }),
+          success: function(response) {
+            $('#check-lab-answer-result').html('<p class="text-success">Comments saved!</p>');
+          },
+          error: function(xhr) {
+            $('#check-lab-answer-result').html('<p class="text-danger">Error saving comments.</p>');
+          }
+        });
       });
     });
   </script>
