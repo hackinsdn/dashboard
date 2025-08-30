@@ -12,6 +12,7 @@
   <!-- DataTables -->
   <link rel="stylesheet" href="/static/assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
   <link rel="stylesheet" href="/static/assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css">
+  <link rel="stylesheet" type="text/css" href="/static/assets/plugins/datatables/css/datatables.min.css"/>
   <!-- icheck bootstrap -->
   <link rel="stylesheet" href="/static/assets/plugins/icheck-bootstrap/icheck-bootstrap.min.css">
   <!-- Theme style -->
@@ -180,9 +181,7 @@
   <script src="/static/assets/plugins/datatables/jquery.dataTables.js"></script>
   <script src="/static/assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
   <script src="/static/assets/plugins/datatables/datatables.min.js"></script>
-  <script src="/static/assets/plugins/datatables-responsive/js/dataTables.responsive.min.js"></script>
   <script src="/static/assets/plugins/datatables/dataTables.buttons.min.js"></script>
-  <script src="/static/assets/plugins/datatables/buttons.html5.min.js"></script>
   <script src="/static/assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js"></script>
 
   <!-- overlayScrollbars -->
@@ -234,14 +233,16 @@
     $(function () {
       // config DataTable
       var table = $("#tableLabAnswers").DataTable({
+
         layout: {
             topStart: {
+              pageLength: true,
               buttons: [
                 {
                   extend: 'csv',
                   text: 'CSV',
-                  className: 'btn btn-outline-dark mx-2',
-                  exportOptions: {
+                  className: 'btn btn-outline-dark ms-2',
+                    exportOptions: {
                     columns: [0, 1, 2, 3],
                     orthogonal: 'export',
                     format: {
@@ -263,9 +264,8 @@
                   }
                 }
               ]
-            }
-                
-        },     
+            },
+        },    
         responsive: true,
         autoWidth: false,
         language: {
