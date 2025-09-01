@@ -448,6 +448,23 @@
     $(function () {
       $('#lab-editor').summernote({
         height: 500,
+        maximumImageFileSize: 358400,
+        callbacks: {
+          onImageUpload: function(files) {
+            const maxImageSize = 358400; // 350 KB
+            const file = files[0];
+            if (file.size > maxImageSize) {
+              alert('The image is too large! The maximum allowed size is 350 KB.');
+              return false;
+            }
+            const reader = new FileReader();
+            reader.onload = function(e) {
+              const base64Image = e.target.result;
+              $('#lab-editor').summernote('insertImage', base64Image);
+            };
+            reader.readAsDataURL(file);
+          }
+        }
       });
       bsCustomFileInput.init();
       //Bootstrap Duallistbox
