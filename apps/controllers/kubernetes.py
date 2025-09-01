@@ -15,6 +15,9 @@ import random
 from kubernetes import config, client
 from kubernetes.stream import stream
 from kubernetes.utils import create_from_yaml, duration, parse_quantity
+from kubernetes.utils.create_from_yaml import create_from_dict
+from kubernetes import client as k8s_client 
+from types import SimpleNamespace
 
 from flask import current_app
 from flask_login import current_user
@@ -420,18 +423,98 @@ class K8sController():
         if dry_run:
             return True, "OK"
 
+        created = []  
         try:
-            results = create_from_yaml(
-                self.k8s_client, namespace=self.namespace, yaml_objects=yaml_docs
-            )
+            for doc in yaml_docs:
+                kind = doc.get("kind")
+                metadata = doc.get("metadata", {}) or {}
+                name = metadata.get("name")
+                if not kind or not name:
+                    raise ValueError(f"Manifest missing kind/name: {doc}")
+
+                create_from_dict(
+                    self.k8s_client,
+                    data=doc,
+                    namespace=self.namespace,
+                )
+
+                created.append({"kind": kind, "name": name})
+
+            created_objs = []
+            for res in created:
+                created_objs.append(
+                    SimpleNamespace(
+                        kind=res["kind"],
+                        metadata=SimpleNamespace(name=res["name"])
+                    )
+                )
+            return True, created_objs
+
         except Exception as exc:
             msg = f"Failed to create resources on Kubernentes: {exc}"
             err = traceback.format_exc().replace("\n", ", ")
             current_app.logger.error(msg + " -- " + err)
+            current_app.logger.error(f"created_so_far={created}")
             current_app.logger.error(f"yaml_docs={yaml_docs}")
-            return False, msg
 
-        return True, results
+            for res in reversed(created):
+                try:
+                    ok = False
+                    if res["kind"] == "Pod":
+                        ok = self.delete_pod_by_name(res)
+                    elif res["kind"] == "Service":
+                        ok = self.delete_service_by_name(res)
+                    elif res["kind"] == "Deployment":
+                        ok = self.delete_deployment_by_name(res)
+                    elif res["kind"] == "ConfigMap":
+                        ok = self.delete_config_map_by_name(res)
+                    else:
+                        current_app.logger.warning(f"Rollback: unsupported kind {res}")
+                        continue
+
+                    if ok:
+                        gone = self._wait_gone(res["kind"], res["name"], timeout=10)
+                        if not gone:
+                            current_app.logger.warning(
+                                f"Rollback: {res['kind']}/{res['name']} ainda não sumiu após timeout"
+                            )
+                except Exception as dexc:
+                    current_app.logger.warning(f"Rollback failed for {res}: {dexc}")
+
+            try:
+                label_selector = f"app=hackinsdn-dashboard,lab_id={lab_id},user_uid={user_uid}"
+
+                for srv in self.v1_api.list_namespaced_service(
+                    self.namespace, label_selector=label_selector
+                ).items:
+                    try:
+                        self.delete_service_by_name({"name": srv.metadata.name})
+                        self._wait_gone("Service", srv.metadata.name, timeout=10)
+                    except Exception as dexc:
+                        current_app.logger.warning(f"Sweep Service {srv.metadata.name}: {dexc}")
+
+                for dep in self.apps_v1_api.list_namespaced_deployment(
+                    self.namespace, label_selector=label_selector
+                ).items:
+                    try:
+                        self.delete_deployment_by_name({"name": dep.metadata.name})
+                        self._wait_gone("Deployment", dep.metadata.name, timeout=10)
+                    except Exception as dexc:
+                        current_app.logger.warning(f"Sweep Deployment {dep.metadata.name}: {dexc}")
+
+                for cfg in self.v1_api.list_namespaced_config_map(
+                    self.namespace, label_selector=label_selector
+                ).items:
+                    try:
+                        self.delete_config_map_by_name({"name": cfg.metadata.name})
+                        self._wait_gone("ConfigMap", cfg.metadata.name, timeout=10)
+                    except Exception as dexc:
+                        current_app.logger.warning(f"Sweep ConfigMap {cfg.metadata.name}: {dexc}")
+
+            except Exception as sweep_exc:
+                current_app.logger.warning(f"Rollback sweep-by-label falhou: {sweep_exc}")
+
+            return False, msg
 
     def validate_token(self, token):
         """Check if this token is authorized to access the API."""
@@ -496,46 +579,50 @@ class K8sController():
     def delete_pod_by_name(self, pod):
         """Delete pod by its name."""
         try:
-            res = self.v1_api.delete_namespaced_pod(
-                name=pod["name"], namespace=self.namespace
+            body = k8s_client.V1DeleteOptions(propagation_policy="Foreground")
+            self.v1_api.delete_namespaced_pod(
+                name=pod["name"], namespace=self.namespace, body=body
             )
+            return True
         except Exception as exc:
             current_app.logger.warning(f"Failed to delete pod {pod['name']} {exc}")
             return False
-        return True
 
     def delete_deployment_by_name(self, deployment):
         """Delete deployment by its name."""
         try:
-            res = self.apps_v1_api.delete_namespaced_deployment(
-                name=deployment["name"], namespace=self.namespace
+            body = k8s_client.V1DeleteOptions(propagation_policy="Foreground")
+            self.apps_v1_api.delete_namespaced_deployment(
+                name=deployment["name"], namespace=self.namespace, body=body
             )
+            return True
         except Exception as exc:
             current_app.logger.warning(f"Failed to delete deployment {deployment['name']} {exc}")
             return False
-        return True
 
     def delete_service_by_name(self, service):
         """Delete service by its name."""
         try:
-            res = self.v1_api.delete_namespaced_service(
-                name=service["name"], namespace=self.namespace
+            body = k8s_client.V1DeleteOptions(propagation_policy="Foreground")
+            self.v1_api.delete_namespaced_service(
+                name=service["name"], namespace=self.namespace, body=body
             )
+            return True
         except Exception as exc:
             current_app.logger.warning(f"Failed to delete service {service['name']} {exc}")
             return False
-        return True
 
     def delete_config_map_by_name(self, config_map):
         """Delete config_map by its name."""
         try:
-            res = self.v1_api.delete_namespaced_config_map(
-                name=config_map["name"], namespace=self.namespace
+            body = k8s_client.V1DeleteOptions(propagation_policy="Foreground")
+            self.v1_api.delete_namespaced_config_map(
+                name=config_map["name"], namespace=self.namespace, body=body
             )
+            return True
         except Exception as exc:
-            current_app.logger.warning(f"Failed to delete service {config_map['name']} {exc}")
+            current_app.logger.warning(f"Failed to delete config_map {config_map['name']} {exc}")
             return False
-        return True
 
     def delete_resources_by_name(self, resources):
         """Delete resources by their name and kind."""
@@ -552,6 +639,26 @@ class K8sController():
             else:
                 results.append(False)
         return results
+
+    def _wait_gone(self, kind, name, timeout=10):
+        """Espera até o recurso não existir mais (APIServer) ou estourar timeout (segundos)."""
+        start = time.time()
+        while time.time() - start < timeout:
+            try:
+                if kind == "Deployment":
+                    self.apps_v1_api.read_namespaced_deployment(name=name, namespace=self.namespace)
+                elif kind == "Service":
+                    self.v1_api.read_namespaced_service(name=name, namespace=self.namespace)
+                elif kind == "ConfigMap":
+                    self.v1_api.read_namespaced_config_map(name=name, namespace=self.namespace)
+                elif kind == "Pod":
+                    self.v1_api.read_namespaced_pod(name=name, namespace=self.namespace)
+                else:
+                    return True  
+                time.sleep(0.5)
+            except Exception:
+                return True
+        return False
 
     def get_nodes(self):
         result = []

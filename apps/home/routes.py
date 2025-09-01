@@ -193,34 +193,94 @@ def run_lab(lab_id):
         return render_template("pages/run_lab.html", lab=lab, msg_fail="Invalid lab duration/expiration, please choose one of the values provided.")
 
     expiration_ts = parse_lab_expiration(lab_expiration)
+    manifest = lab.manifest         
+    allowed_nodes = None             
+    
+    status, msg = k8s.create_lab(
+        lab_id=lab.id,
+        manifest=manifest,
+        dry_run=False,
+        user_uid=current_user.uid,
+        pod_hash=pod_hash,
+        allowed_nodes=allowed_nodes,
+    )
 
-    status, msg = k8s.create_lab(lab_id, lab.manifest, user_uid=current_user.uid, pod_hash=pod_hash)
+    if not status:
+        err_text = str(msg)
+        current_app.logger.error(
+            f"Run lab failed (lab_id={lab.id}, user={current_user.id}): {err_text}"
+        )
 
-    if status:
-        k8s_resources = []
-        for result in msg:
-            for resource in result:
-                k8s_resources.append({
-                    "kind": resource.kind,
-                    "name": resource.metadata.name,
-                    "uid": resource.metadata.uid,
-                })
-        lab_inst = LabInstances(pod_hash, current_user, lab, k8s_resources, expiration_ts=expiration_ts)
-        db.session.add(lab_inst)
-
-        create_lab_log = HomeLogging(ipaddr=get_remote_addr(), action="create_lab", success=True, lab_id=lab.id, user_id=current_user.id)
+        create_lab_log = HomeLogging(
+            ipaddr=get_remote_addr(),
+            action="create_lab",
+            success=False,
+            lab_id=lab.id,
+            user_id=current_user.id
+        )
         db.session.add(create_lab_log)
         db.session.commit()
 
-        running_labs = LabInstances.query.filter_by(is_deleted=False, user_id=current_user.id).count()
-        cache.set(f"running_labs-{current_user.id}", running_labs)
+        return render_template(
+            "pages/run_lab.html",
+            lab=lab,
+            lab_expirations=lab_expirations,
+            msg_fail=f"Oops! Error Running Labs\n{err_text}",
+        )
 
-        return render_template("pages/run_lab_status.html", resources=k8s_resources, lab_instance_id=pod_hash)
-    else:
-        create_lab_log_error = HomeLogging(ipaddr=get_remote_addr(), action="create_lab", success=False, lab_id=lab.id, user_id=current_user.id)
-        db.session.add(create_lab_log_error)
-        db.session.commit()
-        return render_template("pages/error.html", title="Error Running Labs", msg=msg)
+    resources_basic = []  
+    if isinstance(msg, list):
+        for item in msg:
+            iterable = item if isinstance(item, list) else [item]
+            for r in iterable:
+                kind = getattr(r, "kind", None)
+                meta = getattr(r, "metadata", None)
+                name = getattr(meta, "name", None) if meta is not None else None
+
+                if kind is None and isinstance(r, dict):
+                    kind = r.get("kind")
+                    name = (r.get("metadata") or {}).get("name") or r.get("name")
+
+                if kind and name:
+                    resources_basic.append({"kind": kind, "name": name})
+    elif isinstance(msg, dict):
+        kind = msg.get("kind")
+        name = (msg.get("metadata") or {}).get("name") or msg.get("name")
+        if kind and name:
+            resources_basic.append({"kind": kind, "name": name})
+
+    try:
+        details = k8s.get_resources_by_name(resources_basic)
+    except Exception as exc:
+        current_app.logger.error(f"Failed to fetch created resources: {exc}")
+        details = []
+
+    k8s_resources = []
+    for d in details:
+        meta = d.get("metadata") or {}
+        k8s_resources.append({
+            "kind": d.get("kind") or "unknown",
+            "name": meta.get("name") or d.get("name"),
+            "uid": meta.get("uid") or d.get("uid"),
+        })
+
+    lab_inst = LabInstances(pod_hash, current_user, lab, k8s_resources, expiration_ts=expiration_ts)
+    db.session.add(lab_inst)
+
+    create_lab_log = HomeLogging(
+        ipaddr=get_remote_addr(),
+        action="create_lab",
+        success=True,
+        lab_id=lab.id,
+        user_id=current_user.id
+    )
+    db.session.add(create_lab_log)
+    db.session.commit()
+
+    running_labs = LabInstances.query.filter_by(is_deleted=False, user_id=current_user.id).count()
+    cache.set(f"running_labs-{current_user.id}", running_labs)
+
+    return render_template("pages/run_lab_status.html", resources=k8s_resources, lab_instance_id=pod_hash)
 
 @blueprint.route('/lab_status/<lab_id>', methods=["GET"])
 @login_required
