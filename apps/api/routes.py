@@ -329,12 +329,12 @@ def check_lab_answer(lab_id, answer_id):
     if not lab:
         return {"status": "fail", "result": "Invalid or Unauthorized access to lab"}, 401
 
-    # mygroups = current_user.privileged_group_ids
-    # for group in lab.allowed_groups:
-    #     if group.id in mygroups:
-    #         break
-    # else:
-    #     return {"status": "fail", "result": "Invalid or Unauthorized access to lab"}, 401
+    mygroups = current_user.privileged_group_ids
+    for group in lab.allowed_groups:
+        if group.id in mygroups:
+            break
+    else:
+        return {"status": "fail", "result": "Invalid or Unauthorized access to lab"}, 401
 
     lab_answer = LabAnswers.query.get(answer_id)
     if not lab_answer:

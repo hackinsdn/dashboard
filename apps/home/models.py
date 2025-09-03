@@ -162,14 +162,14 @@ class LabAnswers(db.Model, AuditMixin):
     @property
     def comments_dict(self):
         try:
-            return json.loads(self.comments) if self.comments else {}
+            return json.loads(self.comments) 
         except:
             return {}
 
     @property
     def grades_dict(self):
         try:
-            return json.loads(self.grades) if self.grades else {}
+            return json.loads(self.grades)
         except:
             return {}
 
