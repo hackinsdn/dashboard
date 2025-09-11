@@ -11,7 +11,6 @@
   <link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
   <!-- DataTables -->
   <link rel="stylesheet" href="/static/assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
-  <link rel="stylesheet" href="/static/assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css">
   <link rel="stylesheet" type="text/css" href="/static/assets/plugins/datatables/css/datatables.min.css"/>
   <!-- icheck bootstrap -->
   <link rel="stylesheet" href="/static/assets/plugins/icheck-bootstrap/icheck-bootstrap.min.css">
@@ -112,6 +111,7 @@
                     <th>Lab</th>
                     <th>User</th>
 		    <th>Correct Answers (%)</th>
+		    <th>User answers</th>
                     <th class="text-right">Actions</th>
                   </tr>
                 </thead>
@@ -121,7 +121,7 @@
                   <td>{{ lab_answer['lab_title'] }}</td>
                   <td>{{ lab_answer['user'] }}</td>
                   <td>{{ lab_answer['score'] }}</td>
-                  <td>{{ lab_answer['answers'] }}</td>
+                  <td>{{ lab_answer['answers_text'] }}</td>
                   <td class="text-right">
 		    <button type="button" title="Show answer" class="btn btn-outline-dark button-show-answer" data-toggle="modal" data-target="#modal-show-answer" data-answers="<p>Lab answers for user <b>{{ lab_answer['user'] }}</b></p>{{lab_answer['answers']}}" data-answerid="{{lab_answer['id']}}" data-labid="{{lab_answer['lab_id']}}">
                       <i class="fas fa-eye"></i> View Answers
@@ -178,11 +178,10 @@
   <script src="/static/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
 
   <!-- DataTables -->
-  <script src="/static/assets/plugins/datatables/jquery.dataTables.js"></script>
+  <script src="/static/assets/plugins/datatables/jquery.dataTables.min.js"></script>
   <script src="/static/assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
   <script src="/static/assets/plugins/datatables/datatables.min.js"></script>
   <script src="/static/assets/plugins/datatables/dataTables.buttons.min.js"></script>
-  <script src="/static/assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js"></script>
 
   <!-- overlayScrollbars -->
   <script src="/static/assets/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js"></script>
@@ -194,41 +193,6 @@
   <script>
     function confirmDelete() {
       return confirm("Are you sure you want to delete this group?");
-    }
-
-    function tableToJson(htmlString) {
-      if (!htmlString || htmlString.trim() === '') {
-        return '[]';
-      }
-
-      const data = [];
-      const headers = [];
-
-      const headerRegex = /&lt;th&gt;(.*?)&lt;\/th&gt;/g;
-      let headerMatch;
-      while ((headerMatch = headerRegex.exec(htmlString)) !== null) {
-        headers.push(headerMatch[1].replace(/&lt;b&gt;|&lt;\/b&gt;/g, '').trim().toLowerCase());
-      }
-      
-      const rowRegex = /&lt;tr&gt;.*?&lt;td&gt;(.*?)&lt;\/td&gt;&lt;td&gt;(.*?)&lt;\/td&gt;&lt;\/tr&gt;/g;
-      let rowMatch;
-
-      while ((rowMatch = rowRegex.exec(htmlString)) !== null) {
-        const rowObject = {};
-        
-        const question = rowMatch[1].replace(/&lt;b&gt;|&lt;\/b&gt;/g, '').trim();
-        const answer = rowMatch[2].trim();
-
-        if (headers[0] && headers[1]) {
-          rowObject[headers[0]] = question;
-          rowObject[headers[1]] = answer;
-        }
-        if (Object.keys(rowObject).length > 0) {
-            data.push(rowObject);
-        }
-      }
-
-      return JSON.stringify(data);
     }
     $(function () {
       // config DataTable
@@ -247,17 +211,9 @@
                     orthogonal: 'export',
                     format: {
                       header: function ( data, columnIdx ) {
-                        if (columnIdx == 3) {
-                            return 'Lab Answer';
-                        }
                         return data;
                       },
                       body: function (data, rowIdx, columnIdx, node) {
-                        if (columnIdx === 3) { 
-                          const jsonString = tableToJson(data);
-                          return jsonString;
-                        }
-                        
                         return data;
                       }
                     }
@@ -266,7 +222,6 @@
               ]
             },
         },    
-        responsive: true,
         autoWidth: false,
         language: {
           emptyTable: 'No lab answer',
@@ -279,7 +234,7 @@
             name: 'lab_answers',
             visible: false,
             orderable: false,
-         },
+          },
           {
             orderable: false,
             name: 'actions',
