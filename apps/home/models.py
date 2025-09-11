@@ -114,6 +114,8 @@ class LabAnswers(db.Model, AuditMixin):
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     lab_id = db.Column(db.String(36), db.ForeignKey("labs.id"))
     answers = db.Column(db.String)
+    comments = db.Column(db.String)
+    grades = db.Column(db.String)
 
     @property
     def answers_dict(self):
@@ -124,13 +126,45 @@ class LabAnswers(db.Model, AuditMixin):
 
     @property
     def answers_table(self):
-        data = self.answers_dict
+        answers = self.answers_dict
+        comments = self.comments_dict
+        grades = self.grades_dict
+        
         output = "<table class='table table-bordered'>"
-        output += "<tr><th>Question</th><th>Answer</th></tr>"
-        for k, v in data.items():
-            output += f"<tr><td><b>{k}</b></td><td>{v}</td></tr>"
+        output += "<tr><th>Question</th><th>Answer</th><th>Manual Grade (%)</th><th>Comment</th></tr>"
+        for answer_name, answer_value in answers.items():
+            comment_value = comments.get(answer_name, "")
+            grade_value = grades.get(answer_name, "")
+
+            output += f"""
+            <tr>
+                <td><b>{answer_name}</b></td>
+                <td>{answer_value}</td>
+                <input type="hidden" name="name[]" value="{answer_name}">
+                <td>
+                    <input type="number" min="0" max="100" name="grade[]" class="form-control" placeholder="0-100" value="{grade_value}">
+                </td>
+                <td>
+                    <textarea name="comment[]" class="form-control" placeholder="Write your comment here...">{comment_value}</textarea>
+                </td>
+            </tr>
+            """
         output += "</table>"
         return output
+    
+    @property
+    def comments_dict(self):
+        try:
+            return json.loads(self.comments) 
+        except:
+            return {}
+
+    @property
+    def grades_dict(self):
+        try:
+            return json.loads(self.grades)
+        except:
+            return {}
 
 
 class LabAnswerSheet(db.Model, AuditMixin):
