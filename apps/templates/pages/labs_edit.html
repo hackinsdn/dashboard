@@ -448,6 +448,12 @@
     $(function () {
       $('#lab-editor').summernote({
         height: 500,
+        maximumImageFileSize: 358400,
+        callbacks: {
+          onImageUploadError: function(msg) {
+            alert('Image upload failed: ' + msg + ' (Maximum size: 350KB)');
+          }
+        }
       });
       bsCustomFileInput.init();
       //Bootstrap Duallistbox
