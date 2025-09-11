@@ -371,13 +371,14 @@ word-break: break-all;
         var answers = {};
         $("#lab-guide input, #lab-guide textarea, #lab-guide select").each(function(){
           var input = $(this);
+          var inputVal = input.val();
           if ((input.attr('type') == "radio" || input.attr('type') == "checkbox") && !this.checked) {
-            return;
+            inputVal = "";
           }
           if (!input.val()) {
-            return;
+            inputVal = "";
           }
-          answers[input.attr('name')] = input.val();
+          answers[input.attr('name')] = inputVal;
         });
         if (!answers) {
           return;

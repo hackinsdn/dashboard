@@ -150,14 +150,18 @@
             <div class="modal-body">
 	      <input type="hidden" id="lab-answer-id" />
 	      <input type="hidden" id="lab-answer-labid" />
-	      <div id="lab-answers-table"></div>
+              <form id="bulk-comments-form" method="post">
+                <div id="lab-answers-table"></div>
+                <div id="bulk-comment-result" class="mt-2"></div>
+              </form>
 	      <div id="check-lab-answer-result"></div>
+	      <span><i>**Manual grades are the ones assigned by the teacher after manual reviewing the answer. When calculating the score, manual grades have precedence of automatic grades from Answer Sheet.</i></span>
             </div>
             <div class="modal-footer justify-content-between">
               <button type="button" class="btn btn-default button-clear-answer" data-dismiss="modal">Cancel</button>
               <div class="text-right">
-                <button type="button" class="btn btn-primary" id="check-lab-answer">Check if correct</button>
-                <button type="button" class="btn btn-primary" id="submit-answer-correction">Save comments and grades</button>
+                <button type="button" class="btn btn-primary" id="check-lab-answer">Calculate score</button>
+                <button type="button" class="btn btn-primary" id="save-grades-comments">Save grades and comments</button>
               </div>
             </div>
           </div>
@@ -258,7 +262,7 @@
       $( ".button-clear-answer" ).on('click', function(){
         $("#lab-answers-table").html("");
       });
-      $("#submit-answer-correction").on('click', function(e) {
+      $("#save-grades-comments").on('click', function(e) {
         e.preventDefault();
 
         var $form = $("#bulk-comments-form");
@@ -269,25 +273,18 @@
         var grades = {};
 
         var names = $form.find('input[name="name[]"]').map(function(){ return $(this).val(); }).get();
-        var users = $form.find('input[name="user[]"]').map(function(){ return $(this).val(); }).get();
 
         var comment_texts = $form.find('textarea[name="comment[]"]').map(function(){ return $(this).val(); }).get();
         var grade_values = $form.find('input[name="grade[]"]').map(function(){ return $(this).val(); }).get();
 
         for (var i = 0; i < names.length; i++) {
-          comments[names[i]] = {
-            comment: comment_texts[i],
-            user: users[i]
-          };
-          grades[names[i]] = {
-            user: users[i],
-            grade: parseFloat(grade_values[i])
-          };
+          comments[names[i]] = comment_texts[i];
+          grades[names[i]] = parseFloat(grade_values[i]);
         }
 
         $.ajax({
-          url: '/api/lab_answers/correct/' + answer_id,
-          type: 'PUT',
+          url: '/api/lab_answers/grades_comments/' + answer_id,
+          type: 'POST',
           contentType: 'application/json',
           data: JSON.stringify({
             comments: comments,
@@ -297,7 +294,7 @@
             $('#check-lab-answer-result').html('<p class="text-success">Comments saved!</p>');
           },
           error: function(xhr) {
-            $('#check-lab-answer-result').html('<p class="text-danger">Error saving comments.</p>');
+            $('#check-lab-answer-result').html('<p class="text-danger">Error saving comments: ' + xhr.responseText + '.</p>');
           }
         });
       });

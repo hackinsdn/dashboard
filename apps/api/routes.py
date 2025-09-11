@@ -6,8 +6,8 @@ import re
 from apps import db, cache
 from apps.api import blueprint
 from apps.controllers import k8s
-from apps.home.models import Labs, LabInstances, LabAnswers, LabAnswerSheet, UserLikes, UserFeedbacks
-from apps.authentication.models import Users, Groups, DeletedGroupUsers
+from apps.home.models import Labs, LabInstances, LabAnswers, LabAnswerSheet, UserLikes, UserFeedbacks, lab_groups
+from apps.authentication.models import Users, Groups, DeletedGroupUsers, group_members, group_owners
 from flask import request, current_app
 from flask_login import login_required, current_user
 from datetime import timedelta, datetime
@@ -194,21 +194,37 @@ def save_lab_answers(lab_inst_id):
 
     return {"status": "ok", "result": "Answers saved successfully"}, 200
 
-@blueprint.route('/lab_answers/correct/<int:answer_id>', methods=["PUT"])
+@blueprint.route('/lab_answers/grades_comments/<int:answer_id>', methods=["POST"])
 @login_required
-def correct_lab_answer(answer_id):
-    if current_user.category == "user" or current_user.category == "student":
-        return {}, 401
+def save_grades_comments(answer_id):
+    if current_user.category not in ["admin", "teacher"]:
+        return {"status": "fail", "result": "User not authorized"}, 401
 
-    lab_answers = LabAnswers.query.filter_by(id=answer_id).first()
+    lab_answers = LabAnswers.query.get(answer_id)
     if not lab_answers:
         return {"status": "fail", "result": "Lab answers not found"}, 404
-    
-    data = request.json
+
+    # Check for authorization: is this user a teacher who is owner of this group?
+    query = db.session.query(LabAnswers).filter(
+        LabAnswers.id==answer_id
+    ).join(lab_groups, LabAnswers.lab_id == lab_groups.c.lab_id).join(
+        group_owners, lab_groups.c.group_id == group_owners.c.group_id
+    ).join(
+        group_members,
+        group_members.c.group_id == lab_groups.c.group_id and LabAnswers.user_id == group_members.c.user_id
+    ).filter(group_owners.c.user_id == current_user.id).first()
+
+    if current_user.category != "admin" and not query:
+        return {"status": "fail", "result": "Not authorized to save answers"}, 401
+
+    data = request.get_json(silent=True)
+    if not data:
+        return {"status": "fail", "result": "invalid content"}, 400
 
     for k, v in data.get('grades', {}).items():
-        grade_value = v.get('grade')
-        if (not isinstance(grade_value, (int, float))) or (grade_value < 0 or grade_value > 100):
+        if not v:
+            continue
+        if not isinstance(v, (int, float)) or v < 0 or v > 100:
             return {"status": "fail", "result": f"Invalid grade for question {k}"}, 400
 
     lab_answers.comments = json.dumps(data.get('comments', {}))
@@ -344,23 +360,26 @@ def check_lab_answer(lab_id, answer_id):
     if not lab_answer_sheet:
         return {"status": "fail", "result": "No Lab Answer Sheet available. Please create the Answer Sheet first."}, 400
 
+    questions = set()
     answer_sheet = lab_answer_sheet.answers_dict
-
     answers = lab_answer.answers_dict
     grades = lab_answer.grades_dict
+    questions.update(answer_sheet)
+    questions.update(grades)
     total, correct = 0, 0
-    for question, expected_answer in answer_sheet.items():
+    for question in questions:
         total += 1
-        grade = grades.get(question, "") if grades else ""
-        grade_value = grade.get("grade", "") if (grade or grade == 0) else ""
-        if (grade_value or grade_value == 0):
+        grade_value = grades.get(question)
+        if isinstance(grade_value, (int, float)):
             correct += float(grade_value) / 100
-        else: 
-            try:
-                if re.match(fr"^{expected_answer}$", answers.get(question)):
-                    correct += 1
-            except:
-                continue
+            continue
+        if not (expected_answer := answer_sheet.get(question)):
+            continue
+        try:
+            if re.match(fr"^{expected_answer}$", answers.get(question)):
+                correct += 1
+        except:
+            continue
     score = "%.2f" % (100*correct/total) if total > 0 else "--"
 
     return {"status": "ok", "result": score}, 200

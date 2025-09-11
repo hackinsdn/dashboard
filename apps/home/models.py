@@ -130,33 +130,26 @@ class LabAnswers(db.Model, AuditMixin):
         comments = self.comments_dict
         grades = self.grades_dict
         
-        output = "<form id='bulk-comments-form' method='post'>"
-        output += "<table class='table table-bordered'>"
-        output += "<tr><th>Question</th><th>Answer</th><th>Comment</th><th>Grade</th></tr>"
+        output = "<table class='table table-bordered'>"
+        output += "<tr><th>Question</th><th>Answer</th><th>Manual Grade (%)</th><th>Comment</th></tr>"
         for answer_name, answer_value in answers.items():
-            comment = comments.get(answer_name, {}) if comments else {}
-            grade = grades.get(answer_name, {}) if grades else {}
-
-            comment_value = comment.get("comment", "") if comment else ""
-            grade_value = grade.get("grade", "") if (grade or grade == 0) else ""
+            comment_value = comments.get(answer_name, "")
+            grade_value = grades.get(answer_name, "")
 
             output += f"""
             <tr>
                 <td><b>{answer_name}</b></td>
                 <td>{answer_value}</td>
                 <input type="hidden" name="name[]" value="{answer_name}">
-                <input type="hidden" name="user[]" value="{self.user_id}">
                 <td>
-                    <textarea name="comment[]" class="form-control" placeholder="Comentário">{comment_value}</textarea>
+                    <input type="number" min="0" max="100" name="grade[]" class="form-control" placeholder="0-100" value="{grade_value}">
                 </td>
                 <td>
-                    <input type="number" min="0" max="100" name="grade[]" class="form-control" placeholder="Nota" value="{grade_value}">
+                    <textarea name="comment[]" class="form-control" placeholder="Write your comment here...">{comment_value}</textarea>
                 </td>
             </tr>
             """
         output += "</table>"
-        output += "<div id='bulk-comment-result' class='mt-2'></div>"
-        output += "</form>"
         return output
     
     @property

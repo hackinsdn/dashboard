@@ -727,9 +727,19 @@ def list_lab_answers():
         if filter_group_id and user.id not in filtered_members:
             continue
         answers = lab_answer.answers_dict
+        grades = lab_answer.grades_dict
+        questions = set()
+        questions.update(answer_sheet)
+        questions.update(grades)
         total, correct = 0, 0
-        for question, expected_answer in answer_sheet.items():
+        for question in questions:
             total += 1
+            grade_value = grades.get(question)
+            if isinstance(grade_value, (int, float)):
+                correct += float(grade_value) / 100
+                continue
+            if not (expected_answer := answer_sheet.get(question)):
+                continue
             try:
                 if re.match(fr"^{expected_answer}$", answers.get(question)):
                     correct += 1
