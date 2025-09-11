@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
   <!-- DataTables -->
   <link rel="stylesheet" href="/static/assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
-  <link rel="stylesheet" href="/static/assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css">
+  <link rel="stylesheet" type="text/css" href="/static/assets/plugins/datatables/css/datatables.min.css"/>
   <!-- icheck bootstrap -->
   <link rel="stylesheet" href="/static/assets/plugins/icheck-bootstrap/icheck-bootstrap.min.css">
   <!-- Theme style -->
@@ -111,6 +111,7 @@
                     <th>Lab</th>
                     <th>User</th>
 		    <th>Correct Answers (%)</th>
+		    <th>User answers</th>
                     <th class="text-right">Actions</th>
                   </tr>
                 </thead>
@@ -120,6 +121,7 @@
                   <td>{{ lab_answer['lab_title'] }}</td>
                   <td>{{ lab_answer['user'] }}</td>
                   <td>{{ lab_answer['score'] }}</td>
+                  <td>{{ lab_answer['answers_text'] }}</td>
                   <td class="text-right">
 		    <button type="button" title="Show answer" class="btn btn-outline-dark button-show-answer" data-toggle="modal" data-target="#modal-show-answer" data-answers="<p>Lab answers for user <b>{{ lab_answer['user'] }}</b></p>{{lab_answer['answers']}}" data-answerid="{{lab_answer['id']}}" data-labid="{{lab_answer['lab_id']}}">
                       <i class="fas fa-eye"></i> View Answers
@@ -185,8 +187,8 @@
   <!-- DataTables -->
   <script src="/static/assets/plugins/datatables/jquery.dataTables.min.js"></script>
   <script src="/static/assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
-  <script src="/static/assets/plugins/datatables-responsive/js/dataTables.responsive.min.js"></script>
-  <script src="/static/assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js"></script>
+  <script src="/static/assets/plugins/datatables/datatables.min.js"></script>
+  <script src="/static/assets/plugins/datatables/dataTables.buttons.min.js"></script>
 
   <!-- overlayScrollbars -->
   <script src="/static/assets/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js"></script>
@@ -202,7 +204,31 @@
     $(function () {
       // config DataTable
       var table = $("#tableLabAnswers").DataTable({
-        responsive: true,
+
+        layout: {
+            topStart: {
+              pageLength: true,
+              buttons: [
+                {
+                  extend: 'csv',
+                  text: 'CSV',
+                  className: 'btn btn-outline-dark ms-2',
+                    exportOptions: {
+                    columns: [0, 1, 2, 3],
+                    orthogonal: 'export',
+                    format: {
+                      header: function ( data, columnIdx ) {
+                        return data;
+                      },
+                      body: function (data, rowIdx, columnIdx, node) {
+                        return data;
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+        },    
         autoWidth: false,
         language: {
           emptyTable: 'No lab answer',
@@ -211,6 +237,11 @@
           { name: 'lab' },
           { name: 'user' },
           { name: 'score' },
+          {
+            name: 'lab_answers',
+            visible: false,
+            orderable: false,
+          },
           {
             orderable: false,
             name: 'actions',

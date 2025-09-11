@@ -771,6 +771,7 @@ def list_lab_answers():
             "lab_id": lab.id,
             "user": f"{user.name} ({user.email or 'NO-EMAIL'})",
             "answers": lab_answer.answers_table,
+            "answers_text": lab_answer.answers,
             "score": score,
         })
     return render_template("pages/lab_answers_list.html", segment="/lab_answers/list", lab_answers=lab_answers, labs=labs, groups=groups, filter_lab=filter_lab_id, filter_group=filter_group_id)
