@@ -16,6 +16,9 @@
   <link rel="stylesheet" href="/static/assets/plugins/overlayScrollbars/css/OverlayScrollbars.min.css">
   <!-- Theme style -->
   <link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
+  <style type="text/css">
+  .card-h-250 {max-height: 250px;}
+  </style>
 
 {% endblock stylesheets %}
 
@@ -70,6 +73,8 @@
     <section class="content">
       <div class="container-fluid">
         <div class="row">
+          {% set card_size = "col-lg-6" if labs|length > 1 else "col-12" %}
+          {% set card_body = "overflow-hidden card-h-250" if labs|length > 1 else "" %}
           {% for lab in labs %}
             {% set is_running = lab.id in user_labs_status and user_labs_status[lab.id]["is_running"] %}
             {% set is_completed = lab.id in user_labs_status and user_labs_status[lab.id]["is_completed"] %}
@@ -79,7 +84,7 @@
           {% for cat in lab.categories %}
             {% set _ = category_classes.append("category-" ~ cat.id) %}
           {% endfor %}
-          <div class="col-lg-6 ">
+          <div class="{{card_size}}">
             <div class="card card-dark filter {{category_classes|join(' ')}} {% if is_completed %}lab-completed{% else %}lab-not-completed{% endif %} mh-100">
               <div class="card-header">
                 <h2 class="card-title">
@@ -94,7 +99,7 @@
                   </button>
                 </div>
               </div>
-              <div class="card-body overflow-hidden" style="max-height: 250px;">
+              <div class="card-body {{card_body}}">
                 {% if lab.categories|length > 0 %}
                 <div class="float-left w-100 pb-2">
                   {% for category in lab.categories %}
