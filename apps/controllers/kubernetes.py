@@ -14,7 +14,7 @@ import random
 
 from kubernetes import config, client
 from kubernetes.stream import stream
-from kubernetes.utils import create_from_yaml, duration, parse_quantity
+from kubernetes.utils import create_from_dict, duration, parse_quantity
 
 from flask import current_app
 from flask_login import current_user
@@ -420,16 +420,34 @@ class K8sController():
         if dry_run:
             return True, "OK"
 
-        try:
-            results = create_from_yaml(
-                self.k8s_client, namespace=self.namespace, yaml_objects=yaml_docs
-            )
-        except Exception as exc:
-            msg = f"Failed to create resources on Kubernentes: {exc}"
-            err = traceback.format_exc().replace("\n", ", ")
-            current_app.logger.error(msg + " -- " + err)
-            current_app.logger.error(f"yaml_docs={yaml_docs}")
-            return False, msg
+        results = []
+        msg_fail = None
+        for doc in yaml_docs:
+            if doc is None:
+                continue
+            try:
+                result = create_from_dict(
+                    self.k8s_client,
+                    data=doc,
+                    namespace=self.namespace,
+                )
+            except Exception as exc:
+                err = traceback.format_exc().replace("\n", ", ")
+                msg_fail = f"Failed to create resources on Kubernentes: {exc}"
+                current_app.logger.error(f"{msg_fail} {err=} {doc=}")
+                break
+            for resource in result:
+                results.append({
+                    "kind": resource.kind,
+                    "name": resource.metadata.name,
+                    "uid": resource.metadata.uid,
+                })
+
+        if msg_fail:
+            current_app.logger.error(f"Rollback resource creation due to failures! To be removed: {results}")
+            self.delete_resources_by_name(results)
+            self._wait_gone(results, timeout=10)
+            return False, msg_fail
 
         return True, results
 
@@ -496,7 +514,7 @@ class K8sController():
     def delete_pod_by_name(self, pod):
         """Delete pod by its name."""
         try:
-            res = self.v1_api.delete_namespaced_pod(
+            self.v1_api.delete_namespaced_pod(
                 name=pod["name"], namespace=self.namespace
             )
         except Exception as exc:
@@ -507,7 +525,7 @@ class K8sController():
     def delete_deployment_by_name(self, deployment):
         """Delete deployment by its name."""
         try:
-            res = self.apps_v1_api.delete_namespaced_deployment(
+            self.apps_v1_api.delete_namespaced_deployment(
                 name=deployment["name"], namespace=self.namespace
             )
         except Exception as exc:
@@ -518,7 +536,7 @@ class K8sController():
     def delete_service_by_name(self, service):
         """Delete service by its name."""
         try:
-            res = self.v1_api.delete_namespaced_service(
+            self.v1_api.delete_namespaced_service(
                 name=service["name"], namespace=self.namespace
             )
         except Exception as exc:
@@ -529,11 +547,11 @@ class K8sController():
     def delete_config_map_by_name(self, config_map):
         """Delete config_map by its name."""
         try:
-            res = self.v1_api.delete_namespaced_config_map(
+            self.v1_api.delete_namespaced_config_map(
                 name=config_map["name"], namespace=self.namespace
             )
         except Exception as exc:
-            current_app.logger.warning(f"Failed to delete service {config_map['name']} {exc}")
+            current_app.logger.warning(f"Failed to delete configmap {config_map['name']} {exc}")
             return False
         return True
 
@@ -552,6 +570,22 @@ class K8sController():
             else:
                 results.append(False)
         return results
+
+    def _wait_gone(self, resources, timeout=10):
+        """Wait for resources to be removed from the APIServer, or timeout to be exceeded."""
+        start = time.time()
+        while time.time() - start < timeout:
+            has_pending = False
+            for resource in resources:
+                try:
+                    self.get_resources_by_name([resource])
+                except Exception:
+                    continue
+                has_pending = True
+            if not has_pending:
+                return True
+            time.sleep(0.5)
+        return False
 
     def get_nodes(self):
         result = []

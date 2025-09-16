@@ -197,15 +197,7 @@ def run_lab(lab_id):
     status, msg = k8s.create_lab(lab_id, lab.manifest, user_uid=current_user.uid, pod_hash=pod_hash)
 
     if status:
-        k8s_resources = []
-        for result in msg:
-            for resource in result:
-                k8s_resources.append({
-                    "kind": resource.kind,
-                    "name": resource.metadata.name,
-                    "uid": resource.metadata.uid,
-                })
-        lab_inst = LabInstances(pod_hash, current_user, lab, k8s_resources, expiration_ts=expiration_ts)
+        lab_inst = LabInstances(pod_hash, current_user, lab, k8s_resources=msg, expiration_ts=expiration_ts)
         db.session.add(lab_inst)
 
         create_lab_log = HomeLogging(ipaddr=get_remote_addr(), action="create_lab", success=True, lab_id=lab.id, user_id=current_user.id)
@@ -215,7 +207,7 @@ def run_lab(lab_id):
         running_labs = LabInstances.query.filter_by(is_deleted=False, user_id=current_user.id).count()
         cache.set(f"running_labs-{current_user.id}", running_labs)
 
-        return render_template("pages/run_lab_status.html", resources=k8s_resources, lab_instance_id=pod_hash)
+        return render_template("pages/run_lab_status.html", resources=msg, lab_instance_id=pod_hash)
     else:
         create_lab_log_error = HomeLogging(ipaddr=get_remote_addr(), action="create_lab", success=False, lab_id=lab.id, user_id=current_user.id)
         db.session.add(create_lab_log_error)
