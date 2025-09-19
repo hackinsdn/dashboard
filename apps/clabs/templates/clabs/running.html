@@ -1,0 +1,223 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Running CLabs {% endblock %}
+
+{% block body_class %} sidebar-mini layout-navbar-fixed {% endblock body_class %}
+
+{% block stylesheets %}
+<!-- Google Font: Source Sans Pro -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+<!-- Font Awesome -->
+<link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
+<!-- DataTables -->
+<link rel="stylesheet" href="/static/assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
+<link rel="stylesheet" href="/static/assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css">
+<!-- icheck bootstrap -->
+<link rel="stylesheet" href="/static/assets/plugins/icheck-bootstrap/icheck-bootstrap.min.css">
+<!-- Theme style -->
+<link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
+{% endblock stylesheets %}
+
+{% block content %}
+
+<div class="content-wrapper">
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1>Running CLabs</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.index') }}">Home</a></li>
+                        <li class="breadcrumb-item active">Running CLabs</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="content">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Running CLabs</h3>
+                        <div class="float-right">
+                            <button type="button" class="btn btn-default btn-sm checkbox-toggle"><i
+                                    class="far fa-square"></i></button>
+                            <button type="button" class="btn btn-default btn-sm" data-toggle="modal"
+                                data-target="#modal-default">
+                                <i class="far fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- /.card-header -->
+                    <div class="card-body table-responsive lab-items">
+                        <table id="tableLabs" class="table table-striped display">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>User</th>
+                                    <th>Lab title</th>
+                                    <th>Created (UTC)</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for lab in labs %}
+                                <tr id="{{ lab['lab_instance_id'] }}">
+                                    <td>
+                                        <div class="icheck-primary">
+                                            <input type="checkbox" value="" id="checkbox-{{ lab['lab_instance_id'] }}">
+                                            <label for="checkbox-{{ lab['lab_instance_id'] }}"></label>
+                                        </div>
+                                    </td>
+                                    <td>{{ lab['user'] }}</td>
+                                    <td>{{ lab['title'] }}</td>
+                                    <td>{{ lab['created'] }}</td>
+                                    <td>
+                                        <a class="btn btn-default"
+                                            href="{{ url_for('clabs_blueprint.open_clab', clab_id=lab['lab_instance_id']) }}"><i
+                                                class="fas fa-eye"></i> Open CLab</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        <!-- /.table -->
+                    </div>
+                    <!-- /.card-body -->
+                    <div class="card-footer p-0">
+                        <div class="mailbox-controls">
+                            <button type="button" class="btn btn-default btn-sm checkbox-toggle">
+                                <i class="far fa-square"></i>
+                            </button>
+                            <button type="button" class="btn btn-default btn-sm" data-toggle="modal"
+                                data-target="#modal-default">
+                                <i class="far fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!-- /.card -->
+            </div>
+        </div>
+
+        <div class="modal fade" id="modal-default">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title">Confirm CLab removal</h4>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Are you sure you want to remove the selected CLabs?</p>
+                        <ul id="modal-default-items"></ul>
+                    </div>
+                    <div class="modal-footer justify-content-between">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-danger" id="delete-labs">Delete CLabs</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </section>
+</div>
+
+{% endblock content %}
+
+{% block javascripts %}
+
+<!-- jQuery -->
+<script src="/static/assets/plugins/jquery/jquery.min.js"></script>
+<!-- Bootstrap 4 -->
+<script src="/static/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+<!-- DataTables -->
+<script src="/static/assets/plugins/datatables/jquery.dataTables.min.js"></script>
+<script src="/static/assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
+<script src="/static/assets/plugins/datatables-responsive/js/dataTables.responsive.min.js"></script>
+<script src="/static/assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js"></script>
+<!-- AdminLTE App -->
+<script src="/static/assets/js/adminlte.min.js"></script>
+
+<script>
+    $(function () {
+        var table = $("#tableLabs").DataTable({
+            responsive: false,
+            autoWidth: false,
+            language: {
+                emptyTable: 'No running clabs',
+            },
+            columns: [
+                { orderable: false, name: 'select' },
+                { name: 'user' },
+                { name: 'lab' },
+                { name: 'created' },
+                { orderable: false, name: 'actions' },
+            ],
+            order: [[2, 'asc']]
+        });
+
+        if (sessionStorage.getItem('msgSuccess')) {
+            $(document).Toasts('create', {
+                class: 'bg-success',
+                title: 'Sucess',
+                body: sessionStorage.getItem('msgSuccess')
+            });
+            sessionStorage.removeItem('msgSuccess');
+        }
+        if (sessionStorage.getItem('msgFail')) {
+            $(document).Toasts('create', {
+                class: 'bg-danger',
+                title: 'Failure',
+                body: sessionStorage.getItem('msgFail')
+            });
+            sessionStorage.removeItem('msgFail');
+        }
+
+        $('#delete-labs').click(function () {
+            var rows = $('#tableLabs tr').filter(':has(:checkbox:checked)');
+            $("#delete-labs").html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Deleting ' + table.rows(rows).data().length + ' row(s)...');
+            $("#delete-labs").prop('disabled', true);
+            setTimeout(function () {
+                sessionStorage.setItem('msgSuccess', 'Selected CLabs removed (mock).');
+                location.reload();
+            }, 600);
+        });
+
+        $('#modal-default').on('show.bs.modal', function (e) {
+            var rows = $('#tableLabs tr').filter(':has(:checkbox:checked)');
+            var data = table.rows(rows).data();
+            var items = $("#modal-default-items");
+            items.empty();
+            $("#delete-labs").prop('disabled', false);
+            if (data.length === 0) {
+                items.append("<li>No clab selected!</li>");
+                $("#delete-labs").prop('disabled', true);
+                return;
+            }
+            data.each(function (value, index) {
+                items.append(`<li>${value[2]} - ${value[3]}</li>`);
+            });
+        });
+
+        $('.checkbox-toggle').click(function () {
+            var clicks = $(this).data('clicks')
+            if (clicks) {
+                $('.lab-items input[type="checkbox"]').prop('checked', false)
+                $('.checkbox-toggle .far.fa-check-square').removeClass('fa-check-square').addClass('fa-square')
+            } else {
+                $('.lab-items input[type="checkbox"]').prop('checked', true)
+                $('.checkbox-toggle .far.fa-square').removeClass('fa-square').addClass('fa-check-square')
+            }
+            $(this).data('clicks', !clicks)
+        });
+    });
+</script>
+
+<script src="/static/assets/js/demo.js"></script>
+{% endblock javascripts %}

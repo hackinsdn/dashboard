@@ -1,0 +1,349 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Create CLabs {% endblock %}
+
+{% block body_class %} sidebar-mini layout-navbar-fixed {% endblock body_class %}
+
+{% block stylesheets %}
+<!-- Google Font: Source Sans Pro -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+<!-- Font Awesome -->
+<link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
+<!-- AdminLTE -->
+<link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
+<!-- CodeMirror (CDN para PoC) -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/codemirror.min.css"
+    referrerpolicy="no-referrer" />
+<style>
+    .dropzone {
+        border: 2px dashed #adb5bd;
+        border-radius: .25rem;
+        padding: 1.25rem;
+        text-align: center;
+        color: #6c757d;
+        cursor: pointer;
+    }
+
+    .dropzone.dragover {
+        border-color: #3c8dbc;
+        color: #3c8dbc;
+        background: #f8fbff;
+    }
+
+    .file-list small {
+        display: block;
+        color: #6c757d;
+    }
+</style>
+{% endblock stylesheets %}
+
+{% block content %}
+
+<div class="content-wrapper">
+
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1>Create CLabs</h1>
+                    <small class="text-muted">Paste your containerlab YAML and/or upload files/folders</small>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.index') }}">Home</a></li>
+                        <li class="breadcrumb-item"><a href="{{ url_for('clabs_blueprint.running') }}">ContainerLabs</a>
+                        </li>
+                        <li class="breadcrumb-item active">Create</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="content">
+
+        <div class="row">
+            <div class="col-md-12">
+                <form id="clab-form" class="card" enctype="multipart/form-data" onsubmit="return true;">
+                    <div class="card-header">
+                        <h3 class="card-title">New ContainerLab</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="clab_name">Name</label>
+                                <input type="text" class="form-control" id="clab_name" name="clab_name"
+                                    placeholder="e.g., Edge Fabric PoC">
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="clab_namespace">Namespace/Project</label>
+                                <input type="text" class="form-control" id="clab_namespace" name="clab_namespace"
+                                    placeholder="optional">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="clab_yaml">ContainerLab YAML</label>
+                            <textarea id="clab_yaml" name="clab_yaml" class="form-control" rows="10"
+                                placeholder="Paste your containerlab YAML here"></textarea>
+                            <small class="form-text text-muted">Use the same style of editor we já utilizamos para
+                                Kubernetes Manifest (CodeMirror).</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Upload files</label>
+                            <div id="dropzone" class="dropzone">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <div>Drag & drop files here, or click to select</div>
+                                <small>Accepted: multiple files</small>
+                            </div>
+                            <input id="clab_files" name="clab_files" type="file" multiple class="d-none">
+                            <div class="file-list mt-2" id="files_list"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Upload folders (experimental)</label>
+                            <input id="clab_folders" name="clab_folders" type="file" webkitdirectory directory multiple
+                                class="form-control-file">
+                            <small class="form-text text-muted">
+                                Folder upload works on Chromium-based browsers (Chrome/Edge). Firefox não suporta; como
+                                alternativa, compacte em ZIP e envie nos arquivos acima.
+                            </small>
+                        </div>
+
+                    </div>
+                    <div class="card-footer">
+                        <button id="btnSubmit" type="button" class="btn btn-primary">
+                            <span class="btn-text">Create (PoC)</span>
+                            <span class="spinner-border spinner-border-sm d-none" role="status"
+                                aria-hidden="true"></span>
+                        </button>
+                        <a href="{{ url_for('clabs_blueprint.running') }}" class="btn btn-default">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </section>
+
+</div>
+
+{% endblock content %}
+
+{% block javascripts %}
+<!-- jQuery -->
+<script src="/static/assets/plugins/jquery/jquery.min.js"></script>
+<!-- Bootstrap 4 -->
+<script src="/static/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+<!-- AdminLTE -->
+<script src="/static/assets/js/adminlte.min.js"></script>
+
+<!-- CodeMirror (CDN para PoC) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/codemirror.min.js"
+    referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/mode/yaml/yaml.min.js"
+    referrerpolicy="no-referrer"></script>
+
+<script>
+    (function () {
+        if (typeof CodeMirror === 'undefined') {
+            console.error('CodeMirror failed to load');
+            $(document).Toasts && $(document).Toasts('create', {
+                class: 'bg-danger',
+                title: 'Failure',
+                body: 'Failed to load editor. You can still upload files/folders and submit.'
+            });
+        } else {
+            var cm = CodeMirror.fromTextArea(document.getElementById('clab_yaml'), {
+                mode: 'yaml',
+                lineNumbers: true,
+                lineWrapping: true,
+                indentUnit: 2,
+                tabSize: 2,
+                autofocus: false,
+            });
+        }
+
+        // ======= Upload helpers =======
+        var drop = document.getElementById('dropzone');
+        var fileInput = document.getElementById('clab_files');
+        var folderInput = document.getElementById('clab_folders');
+        var filesList = document.getElementById('files_list');
+
+        // DataTransfer store para permitir adicionar/remover arquivos
+        var store = new DataTransfer();
+
+        drop.addEventListener('click', function () { fileInput.click(); });
+
+        // Impede que arrastos/soltas fora da dropzone naveguem a página
+        ['dragover', 'drop'].forEach(function (evt) {
+            document.addEventListener(evt, function (e) {
+                e.preventDefault();
+            }, false);
+        });
+
+        // Renderiza lista com botões "remover"
+        function renderFilesList() {
+            filesList.innerHTML = '';  // Limpa a lista de arquivos
+            if (!store.files.length) {
+                filesList.innerHTML = '<small>No files selected</small>';
+                return;
+            }
+            var ul = document.createElement('ul');
+            ul.className = 'mb-0';  // Classe para formatação da lista
+            for (let i = 0; i < store.files.length; i++) {
+                const f = store.files[i];
+                var li = document.createElement('li');
+                li.className = 'd-flex align-items-center justify-content-between';  // Para alinhar os itens horizontalmente
+                var name = document.createElement('span');
+                name.textContent = f.webkitRelativePath || f.name;  // Mostra o nome ou o path relativo
+                var btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'btn btn-xs btn-outline-danger ml-2';  // Botão de remoção
+                btn.innerHTML = '<i class="fas fa-times"></i>';
+                btn.addEventListener('click', function () {
+                    // Remover o arquivo da lista
+                    var newStore = new DataTransfer();  // Cria um novo DataTransfer
+                    for (let j = 0; j < store.files.length; j++) {
+                        if (j !== i) newStore.items.add(store.files[j]);  // Só adiciona arquivos que não foram removidos
+                    }
+                    store = newStore;  // Atualiza o DataTransfer
+                    fileInput.files = store.files;  // Atualiza o campo de arquivos
+                    renderFilesList();  // Re-renderiza a lista de arquivos
+                });
+                li.appendChild(name);  // Adiciona o nome do arquivo
+                li.appendChild(btn);  // Adiciona o botão de remoção
+                ul.appendChild(li);  // Adiciona o item da lista
+            }
+            filesList.appendChild(ul);  // Adiciona a lista à seção de arquivos
+        }
+
+        // Adiciona arquivos ao store
+        function addFiles(fileList) {
+            if (!fileList || !fileList.length) return;
+
+            for (let i = 0; i < fileList.length; i++) {
+                const f = fileList[i];
+                // Ignora diretórios em DnD (para pastas use o input webkitdirectory)
+                if (typeof f.type === 'undefined' && !f.name) continue;
+                store.items.add(f);
+            }
+            fileInput.files = store.files;
+            renderFilesList();
+        }
+
+        // Input de arquivos (múltiplos)
+        fileInput.addEventListener('change', function (e) {
+            addFiles(e.target.files);
+            // limpa seleção original para permitir selecionar os mesmos nomes de novo
+            fileInput.value = '';
+        });
+
+        // Input de pastas (webkitdirectory) -> adiciona tudo ao store
+        if (folderInput) {
+            folderInput.addEventListener('change', function (e) {
+                addFiles(e.target.files);
+                // não limpamos para manter paths; opcional:
+                // folderInput.value = '';
+            });
+        }
+
+        // Dropzone visual
+        ['dragenter', 'dragover'].forEach(function (evt) {
+            drop.addEventListener(evt, function (e) {
+                e.preventDefault(); e.stopPropagation();
+                drop.classList.add('dragover');
+            }, false);
+        });
+        ['dragleave', 'drop'].forEach(function (evt) {
+            drop.addEventListener(evt, function (e) {
+                e.preventDefault(); e.stopPropagation();
+                drop.classList.remove('dragover');
+            }, false);
+        });
+
+        drop.addEventListener('drop', function (e) {
+            var dt = e.dataTransfer;
+            if (!dt) return;
+
+            // Alguns browsers expõem items com diretórios; ignoramos diretórios e avisamos
+            if (dt.items && dt.items.length) {
+                var hadDir = false;
+                var files = [];
+                for (let i = 0; i < dt.items.length; i++) {
+                    var item = dt.items[i];
+                    if (typeof item.webkitGetAsEntry === 'function') {
+                        var entry = item.webkitGetAsEntry();
+                        if (entry && entry.isDirectory) { hadDir = true; continue; }
+                    }
+                    var f = item.getAsFile && item.getAsFile();
+                    if (f) files.push(f);
+                }
+                if (files.length) addFiles(files);
+                if (hadDir) {
+                    $(document).Toasts('create', {
+                        class: 'bg-info',
+                        title: 'Heads up',
+                        body: 'Folder drops are not supported here. Use "Upload folders" abaixo.'
+                    });
+                }
+            } else if (dt.files && dt.files.length) {
+                addFiles(dt.files);
+            }
+        });
+
+        // ======= Submit (PoC) via fetch -> JSON -> toast + redirect =======
+        var btn = document.getElementById('btnSubmit');
+        var form = document.getElementById('clab-form');
+
+        btn.addEventListener('click', function () {
+            var btnText = btn.querySelector('.btn-text');
+            var spinner = btn.querySelector('.spinner-border');
+            btn.disabled = true; btnText.classList.add('d-none'); spinner.classList.remove('d-none');
+
+            // sincroniza editor -> textarea
+            if (typeof CodeMirror !== 'undefined' && cm) { cm.save(); }
+
+            var fd = new FormData(form);
+
+            // Repassa arquivos do store (pois fileInput.files foi sobrescrito pelo store)
+            for (let i = 0; i < store.files.length; i++) {
+                fd.append('clab_files', store.files[i], store.files[i].webkitRelativePath || store.files[i].name);
+            }
+
+            // Também repassa os de pastas (se quiser distinguir no backend)
+            if (folderInput && folderInput.files && folderInput.files.length) {
+                for (let i = 0; i < folderInput.files.length; i++) {
+                    fd.append('clab_folders', folderInput.files[i], folderInput.files[i].webkitRelativePath || folderInput.files[i].name);
+                }
+            }
+
+            // Validação mínima client-side: YAML ou arquivos
+            var hasYaml = (fd.get('clab_yaml') || '').trim().length > 0;
+            var filesLen = store.files.length + (folderInput.files ? folderInput.files.length : 0);
+            if (!hasYaml && filesLen === 0) {
+                $(document).Toasts('create', { class: 'bg-danger', title: 'Failure', body: 'Provide YAML and/or files' });
+                btn.disabled = false; btnText.classList.remove('d-none'); spinner.classList.add('d-none');
+                return;
+            }
+
+            fetch('{{ url_for("clabs_blueprint.create") }}', {
+                method: 'POST',
+                body: fd
+            }).then(function (resp) {
+                if (!resp.ok) return resp.json().then(function (j) { throw (j && j.result) || 'Failed'; });
+                return resp.json();
+            }).then(function (j) {
+                sessionStorage.setItem('msgSuccess', j.result || 'CLab created (mock).');
+                window.location = '{{ url_for("clabs_blueprint.running") }}';
+            }).catch(function (err) {
+                sessionStorage.setItem('msgFail', (err && err.toString()) || 'Failed to create CLab.');
+                window.location = '{{ url_for("clabs_blueprint.running") }}';
+            });
+        });
+
+        // Render inicial
+        renderFilesList();
+    })();
+</script>
+{% endblock javascripts %}

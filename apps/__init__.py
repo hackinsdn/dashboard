@@ -40,10 +40,33 @@ def register_extensions(app):
 
 def register_blueprints(app):
     for module_name in ('authentication', 'home', 'api', 'k8s', 'cli'):
-        module = import_module('apps.{}.routes'.format(module_name))
+        module = import_module(f'apps.{module_name}.routes')
         app.register_blueprint(module.blueprint)
-    # Load socketio endpoints
-    import_module("apps.events")
+
+    # (PoC) ContainerLabs: registra blueprint se habilitado
+    enable_clabs = app.config.get(
+        "ENABLE_CLABS",
+        str(os.getenv("ENABLE_CLABS", "false")).lower() in ("1", "true", "yes", "on")
+    )
+    if enable_clabs:
+        try:
+            clabs = import_module("apps.clabs.routes")
+            app.register_blueprint(clabs.blueprint)
+            app.logger.info("ContainerLabs blueprint registrado (ENABLE_CLABS=true).")
+        except Exception as e:
+            app.logger.error(f"Falha ao registrar ContainerLabs: {e}")
+    else:
+        app.logger.info("ContainerLabs desativado (ENABLE_CLABS=false).")
+
+    # Carrega endpoints do Socket.IO (xterm)
+    # -> Pula no Windows porque usa pty/termios/fcntl (só Unix)
+    try:
+        if os.name != "nt":
+            import_module("apps.events")
+        else:
+            app.logger.warning("Skipping apps.events on Windows (no termios/pty).")
+    except Exception as e:
+        app.logger.warning(f"Skipping apps.events due to error: {e}")
 
 
 def configure_database(app):
@@ -79,6 +102,11 @@ def configure_log(app):
 def create_app(config):
     app = Flask(__name__)
     app.config.from_object(config)
+
+    # Default da feature flag (pode vir do .env)
+    if "ENABLE_CLABS" not in app.config:
+        app.config["ENABLE_CLABS"] = str(os.getenv("ENABLE_CLABS", "false")).lower() in ("1", "true", "yes", "on")
+
     register_extensions(app)
     register_blueprints(app)
     #configure_database(app)
@@ -86,3 +114,4 @@ def create_app(config):
     configure_log(app)
 
     return app
+
