@@ -143,18 +143,29 @@
     referrerpolicy="no-referrer"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/mode/yaml/yaml.min.js"
     referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js" integrity="" crossorigin="anonymous"
+    referrerpolicy="no-referrer"></script>
 
 <script>
     (function () {
+        // ------- helpers para UI/Toasts -------
+        function showToast(type, title, body) {
+            if (window.$ && $(document).Toasts) {
+                $(document).Toasts('create', { class: type, title: title, body: body });
+            } else {
+                // fallback simples
+                console[type === 'bg-danger' ? 'error' : 'log'](title + ': ' + body);
+                alert(title + ': ' + body);
+            }
+        }
+
+        // ------- CodeMirror init -------
+        var cm = null;
         if (typeof CodeMirror === 'undefined') {
             console.error('CodeMirror failed to load');
-            $(document).Toasts && $(document).Toasts('create', {
-                class: 'bg-danger',
-                title: 'Failure',
-                body: 'Failed to load editor. You can still upload files/folders and submit.'
-            });
+            showToast('bg-danger', 'Failure', 'Failed to load editor. You can still upload files/folders and submit.');
         } else {
-            var cm = CodeMirror.fromTextArea(document.getElementById('clab_yaml'), {
+            cm = CodeMirror.fromTextArea(document.getElementById('clab_yaml'), {
                 mode: 'yaml',
                 lineNumbers: true,
                 lineWrapping: true,
@@ -164,139 +175,284 @@
             });
         }
 
-        // ======= Upload helpers =======
+        // ------- elementos -------
         var drop = document.getElementById('dropzone');
         var fileInput = document.getElementById('clab_files');
         var folderInput = document.getElementById('clab_folders');
         var filesList = document.getElementById('files_list');
+        var btn = document.getElementById('btnSubmit');
+        var form = document.getElementById('clab-form');
 
-        // DataTransfer store para permitir adicionar/remover arquivos
+        // Data store: DataTransfer para manter arquivos selecionados (com remoção)
         var store = new DataTransfer();
 
-        drop.addEventListener('click', function () { fileInput.click(); });
+        // Para trackear linhas marcadas no CodeMirror (limpar marcações antes)
+        var markedLines = [];
 
-        // Impede que arrastos/soltas fora da dropzone naveguem a página
+        // Set para evitar duplicatas por caminho (nome ou caminho relativo)
+        var seenPaths = new Set();
+
+        // Click na dropzone -> abre fileInput
+        drop && drop.addEventListener('click', function () { fileInput && fileInput.click(); });
+
+        // impede navegação em dragover/drop na página
         ['dragover', 'drop'].forEach(function (evt) {
-            document.addEventListener(evt, function (e) {
-                e.preventDefault();
-            }, false);
+            document.addEventListener(evt, function (e) { e.preventDefault(); }, false);
         });
 
-        // Renderiza lista com botões "remover"
+        // Renderiza lista de arquivos + botões remover
         function renderFilesList() {
-            filesList.innerHTML = '';  // Limpa a lista de arquivos
+            filesList.innerHTML = '';
             if (!store.files.length) {
                 filesList.innerHTML = '<small>No files selected</small>';
                 return;
             }
             var ul = document.createElement('ul');
-            ul.className = 'mb-0';  // Classe para formatação da lista
+            ul.className = 'mb-0 list-unstyled';
             for (let i = 0; i < store.files.length; i++) {
                 const f = store.files[i];
                 var li = document.createElement('li');
-                li.className = 'd-flex align-items-center justify-content-between';  // Para alinhar os itens horizontalmente
+                li.className = 'd-flex align-items-center justify-content-between py-1';
                 var name = document.createElement('span');
-                name.textContent = f.webkitRelativePath || f.name;  // Mostra o nome ou o path relativo
-                var btn = document.createElement('button');
-                btn.type = 'button';
-                btn.className = 'btn btn-xs btn-outline-danger ml-2';  // Botão de remoção
-                btn.innerHTML = '<i class="fas fa-times"></i>';
-                btn.addEventListener('click', function () {
-                    // Remover o arquivo da lista
-                    var newStore = new DataTransfer();  // Cria um novo DataTransfer
-                    for (let j = 0; j < store.files.length; j++) {
-                        if (j !== i) newStore.items.add(store.files[j]);  // Só adiciona arquivos que não foram removidos
-                    }
-                    store = newStore;  // Atualiza o DataTransfer
-                    fileInput.files = store.files;  // Atualiza o campo de arquivos
-                    renderFilesList();  // Re-renderiza a lista de arquivos
-                });
-                li.appendChild(name);  // Adiciona o nome do arquivo
-                li.appendChild(btn);  // Adiciona o botão de remoção
-                ul.appendChild(li);  // Adiciona o item da lista
+                name.textContent = f.name; // aqui eu guardarei o path relativo dentro de name (ex: 'subdir/file.txt')
+                var btnRem = document.createElement('button');
+                btnRem.type = 'button';
+                btnRem.className = 'btn btn-xs btn-outline-danger ml-2';
+                btnRem.innerHTML = '<i class="fas fa-times"></i>';
+                btnRem.addEventListener('click', (function (index) {
+                    return function () {
+                        var newStore = new DataTransfer();
+                        for (let j = 0; j < store.files.length; j++) {
+                            if (j !== index) newStore.items.add(store.files[j]);
+                        }
+                        // atualizar seenPaths
+                        seenPaths.clear();
+                        for (let k = 0; k < newStore.files.length; k++) {
+                            seenPaths.add(newStore.files[k].name);
+                        }
+                        store = newStore;
+                        fileInput.files = store.files;
+                        renderFilesList();
+                    };
+                })(i));
+                li.appendChild(name);
+                li.appendChild(btnRem);
+                ul.appendChild(li);
             }
-            filesList.appendChild(ul);  // Adiciona a lista à seção de arquivos
+            filesList.appendChild(ul);
         }
 
-        // Adiciona arquivos ao store
+        // limpa marcações no CodeMirror
+        function clearCmMarks() {
+            if (!cm) return;
+            while (markedLines.length) {
+                var ln = markedLines.pop();
+                cm.removeLineClass(ln, 'background', 'cm-error-line');
+                cm.setGutterMarker(ln, 'error-gutter', null);
+            }
+        }
+
+        // adiciona marcação de erro no CodeMirror (linha: zero-indexed)
+        function markCmError(line, message) {
+            if (!cm) return;
+            cm.addLineClass(line, 'background', 'cm-error-line');
+            var marker = document.createElement('div');
+            marker.className = 'error-gutter-marker';
+            marker.title = message || 'YAML error';
+            marker.innerHTML = '●';
+            cm.setGutterMarker(line, 'error-gutter', marker);
+            markedLines.push(line);
+            // scroll to line
+            cm.scrollIntoView({ line: line, ch: 0 }, 100);
+        }
+
+        // adiciona CSS runtime para highlight de erro e gutter (se preferir leve para CSS)
+        (function addRuntimeCss() {
+            var css = document.createElement('style');
+            css.type = 'text/css';
+            css.innerHTML = "\
+        .cm-error-line { background: rgba(255, 0, 0, 0.06) !important; }\
+        .error-gutter-marker { color: #c0392b; font-weight: bold; }";
+            document.head.appendChild(css);
+            // garante gutter 'error-gutter' existe
+            if (cm) cm.setOption('gutters', ['CodeMirror-linenumbers', 'error-gutter']);
+        })();
+
+        // ====== Validação YAML ======
+        function validateYaml(yamlText) {
+            clearCmMarks();
+            if (!yamlText || !yamlText.trim()) return true; // vazio permitido (se backend aceitar) — ajustável
+            if (typeof jsyaml === 'undefined') {
+                showToast('bg-danger', 'Validation error', 'js-yaml not loaded. Cannot validate YAML client-side.');
+                return false;
+            }
+            try {
+                // jsyaml.load utiliza exception com mark {line, column}
+                jsyaml.load(yamlText);
+                return true;
+            } catch (err) {
+                var msg = err && err.message ? err.message : String(err);
+                // marca linha se disponível (js-yaml usa err.mark.line zero-indexed? geralmente 0-based)
+                if (err && err.mark && typeof err.mark.line === 'number') {
+                    var lineNo = err.mark.line; // já zero-index em muitas versões
+                    markCmError(lineNo, msg);
+                }
+                showToast('bg-danger', 'YAML error', msg);
+                return false;
+            }
+        }
+
+        // ====== Adição / deduplicação de arquivos ao store ======
         function addFiles(fileList) {
             if (!fileList || !fileList.length) return;
-
             for (let i = 0; i < fileList.length; i++) {
-                const f = fileList[i];
-                // Ignora diretórios em DnD (para pastas use o input webkitdirectory)
-                if (typeof f.type === 'undefined' && !f.name) continue;
-                store.items.add(f);
+                let f = fileList[i];
+                // f.name já pode conter caminho relativo (se criado assim)
+                var key = f.name || f.webkitRelativePath || f.fileName || f.path || (i + ':' + f.size);
+                if (seenPaths.has(key)) continue;
+                // Se for um File vindo sem path, usamos name; se tiver webkitRelativePath (ex: folder input) preferimos ela
+                // Mas no fluxo abaixo, quando criarmos Files para pastas, já nomearemos com 'subdir/file'
+                seenPaths.add(key);
+                try {
+                    store.items.add(f);
+                } catch (e) {
+                    // falha ao adicionar (browser restrição) -> ignorar e logar
+                    console.warn('Could not add file to DataTransfer:', e, f);
+                }
             }
-            fileInput.files = store.files;
+            // sincroniza input visível com store para consistência (opcional)
+            try { fileInput.files = store.files; } catch (e) { /* some browsers don't allow */ }
             renderFilesList();
         }
 
-        // Input de arquivos (múltiplos)
-        fileInput.addEventListener('change', function (e) {
-            addFiles(e.target.files);
-            // limpa seleção original para permitir selecionar os mesmos nomes de novo
-            fileInput.value = '';
-        });
-
-        // Input de pastas (webkitdirectory) -> adiciona tudo ao store
-        if (folderInput) {
-            folderInput.addEventListener('change', function (e) {
-                addFiles(e.target.files);
-                // não limpamos para manter paths; opcional:
-                // folderInput.value = '';
+        // ====== Leitura recursiva de pastas via DataTransferItem.webkitGetAsEntry ======
+        function traverseFileTree(entry, path) {
+            return new Promise(function (resolve) {
+                if (entry.isFile) {
+                    entry.file(function (file) {
+                        // criamos novo File com nome que inclui o path relativo (para backend receber o path)
+                        var relPath = path + file.name;
+                        var newFile = new File([file], relPath, { type: file.type });
+                        resolve([newFile]);
+                    }, function () { resolve([]); });
+                } else if (entry.isDirectory) {
+                    var dirReader = entry.createReader();
+                    var entries = [];
+                    var readEntries = function () {
+                        dirReader.readEntries(function (results) {
+                            if (!results.length) {
+                                // processar todas as entradas
+                                var promises = entries.map(function (ent) {
+                                    return traverseFileTree(ent, path + entry.name + '/');
+                                });
+                                Promise.all(promises).then(function (arrays) {
+                                    // flatten
+                                    var flat = [].concat.apply([], arrays);
+                                    resolve(flat);
+                                });
+                            } else {
+                                entries = entries.concat(Array.prototype.slice.call(results || []));
+                                readEntries();
+                            }
+                        }, function () {
+                            resolve([]);
+                        });
+                    };
+                    readEntries();
+                } else {
+                    resolve([]);
+                }
             });
         }
 
-        // Dropzone visual
-        ['dragenter', 'dragover'].forEach(function (evt) {
-            drop.addEventListener(evt, function (e) {
-                e.preventDefault(); e.stopPropagation();
-                drop.classList.add('dragover');
-            }, false);
-        });
-        ['dragleave', 'drop'].forEach(function (evt) {
-            drop.addEventListener(evt, function (e) {
-                e.preventDefault(); e.stopPropagation();
-                drop.classList.remove('dragover');
-            }, false);
-        });
+        // ====== Drop handler com suporte a pastas ======
+        if (drop) {
+            // efeitos visuais
+            ['dragenter', 'dragover'].forEach(function (evt) {
+                drop.addEventListener(evt, function (e) {
+                    e.preventDefault(); e.stopPropagation();
+                    drop.classList.add('dragover');
+                }, false);
+            });
+            ['dragleave', 'drop'].forEach(function (evt) {
+                drop.addEventListener(evt, function (e) {
+                    e.preventDefault(); e.stopPropagation();
+                    drop.classList.remove('dragover');
+                }, false);
+            });
 
-        drop.addEventListener('drop', function (e) {
-            var dt = e.dataTransfer;
-            if (!dt) return;
-
-            // Alguns browsers expõem items com diretórios; ignoramos diretórios e avisamos
-            if (dt.items && dt.items.length) {
-                var hadDir = false;
-                var files = [];
-                for (let i = 0; i < dt.items.length; i++) {
-                    var item = dt.items[i];
-                    if (typeof item.webkitGetAsEntry === 'function') {
-                        var entry = item.webkitGetAsEntry();
-                        if (entry && entry.isDirectory) { hadDir = true; continue; }
+            // drop
+            drop.addEventListener('drop', function (e) {
+                var dt = e.dataTransfer;
+                if (!dt) return;
+                if (dt.items && dt.items.length) {
+                    // quando houver items, podemos examinar diretórios
+                    var promises = [];
+                    var filesToAdd = [];
+                    for (let i = 0; i < dt.items.length; i++) {
+                        var item = dt.items[i];
+                        if (typeof item.webkitGetAsEntry === 'function') {
+                            var entry = item.webkitGetAsEntry();
+                            if (entry) {
+                                // traverseFileTree -> retorna promise de array de Files (com nomes relativos)
+                                promises.push(traverseFileTree(entry, entry.isDirectory ? entry.name + '/' : ''));
+                            } else {
+                                // fallback: item.getAsFile
+                                var f = item.getAsFile && item.getAsFile();
+                                if (f) filesToAdd.push(f);
+                            }
+                        } else {
+                            // fallback: item.getAsFile
+                            var f2 = item.getAsFile && item.getAsFile();
+                            if (f2) filesToAdd.push(f2);
+                        }
                     }
-                    var f = item.getAsFile && item.getAsFile();
-                    if (f) files.push(f);
-                }
-                if (files.length) addFiles(files);
-                if (hadDir) {
-                    $(document).Toasts('create', {
-                        class: 'bg-info',
-                        title: 'Heads up',
-                        body: 'Folder drops are not supported here. Use "Upload folders" abaixo.'
+                    // processar promises
+                    Promise.all(promises).then(function (results) {
+                        var flat = [].concat.apply([], results || []);
+                        if (filesToAdd.length) flat = flat.concat(filesToAdd);
+                        if (flat.length) addFiles(flat);
+                    }).catch(function (err) {
+                        console.warn('Error reading dropped folder:', err);
+                        // fallback para dt.files
+                        if (dt.files && dt.files.length) addFiles(dt.files);
+                        showToast('bg-info', 'Heads up', 'Folder drops may not be fully supported in this browser. Use "Upload folders" abaixo.');
                     });
+                } else if (dt.files && dt.files.length) {
+                    addFiles(dt.files);
                 }
-            } else if (dt.files && dt.files.length) {
-                addFiles(dt.files);
-            }
-        });
+            }, false);
+        }
 
-        // ======= Submit (PoC) via fetch -> JSON -> toast + redirect =======
-        var btn = document.getElementById('btnSubmit');
-        var form = document.getElementById('clab-form');
+        // ====== Input file change ======
+        if (fileInput) {
+            fileInput.addEventListener('change', function (e) {
+                addFiles(e.target.files);
+                // limpar seleção original para permitir re-seleção dos mesmos nomes
+                fileInput.value = '';
+            });
+        }
 
-        btn.addEventListener('click', function () {
+        // ====== Input folder change ======
+        if (folderInput) {
+            folderInput.addEventListener('change', function (e) {
+                // folderInput.files já vem com webkitRelativePath em Chrome; convertê-los para Files com name==relativePath
+                var arr = [];
+                for (let i = 0; i < e.target.files.length; i++) {
+                    var f = e.target.files[i];
+                    var rel = f.webkitRelativePath || f.name;
+                    // criar novo File com nome contendo o caminho relativo (facilita envio com caminho)
+                    var newF = new File([f], rel, { type: f.type });
+                    arr.push(newF);
+                }
+                addFiles(arr);
+                // limpamos o input para evitar duplicação posterior (se o usuário reabrir)
+                folderInput.value = '';
+            });
+        }
+
+        // ====== Submit refinado (async/await) ======
+        async function handleSubmit() {
             var btnText = btn.querySelector('.btn-text');
             var spinner = btn.querySelector('.spinner-border');
             btn.disabled = true; btnText.classList.add('d-none'); spinner.classList.remove('d-none');
@@ -304,46 +460,88 @@
             // sincroniza editor -> textarea
             if (typeof CodeMirror !== 'undefined' && cm) { cm.save(); }
 
-            var fd = new FormData(form);
-
-            // Repassa arquivos do store (pois fileInput.files foi sobrescrito pelo store)
-            for (let i = 0; i < store.files.length; i++) {
-                fd.append('clab_files', store.files[i], store.files[i].webkitRelativePath || store.files[i].name);
-            }
-
-            // Também repassa os de pastas (se quiser distinguir no backend)
-            if (folderInput && folderInput.files && folderInput.files.length) {
-                for (let i = 0; i < folderInput.files.length; i++) {
-                    fd.append('clab_folders', folderInput.files[i], folderInput.files[i].webkitRelativePath || folderInput.files[i].name);
-                }
-            }
-
-            // Validação mínima client-side: YAML ou arquivos
-            var hasYaml = (fd.get('clab_yaml') || '').trim().length > 0;
-            var filesLen = store.files.length + (folderInput.files ? folderInput.files.length : 0);
-            if (!hasYaml && filesLen === 0) {
-                $(document).Toasts('create', { class: 'bg-danger', title: 'Failure', body: 'Provide YAML and/or files' });
-                btn.disabled = false; btnText.classList.remove('d-none'); spinner.classList.add('d-none');
+            // Valida o YAML (através de jsyaml)
+            var yamlText = document.getElementById('clab_yaml').value;
+            if (!validateYaml(yamlText)) {
+                btn.disabled = false;
+                btnText.classList.remove('d-none');
+                spinner.classList.add('d-none');
                 return;
             }
 
-            fetch('{{ url_for("clabs_blueprint.create") }}', {
-                method: 'POST',
-                body: fd
-            }).then(function (resp) {
-                if (!resp.ok) return resp.json().then(function (j) { throw (j && j.result) || 'Failed'; });
-                return resp.json();
-            }).then(function (j) {
-                sessionStorage.setItem('msgSuccess', j.result || 'CLab created (mock).');
-                window.location = '{{ url_for("clabs_blueprint.running") }}';
-            }).catch(function (err) {
-                sessionStorage.setItem('msgFail', (err && err.toString()) || 'Failed to create CLab.');
-                window.location = '{{ url_for("clabs_blueprint.running") }}';
-            });
-        });
+            // FormData a partir do form
+            var fd = new FormData(form);
 
-        // Render inicial
+            // Repassa arquivos do store (já com nomes relativos em store.files[].name)
+            for (let i = 0; i < store.files.length; i++) {
+                var file = store.files[i];
+                // usa file.name como caminho relativo (se existir) no parâmetro filename do append
+                fd.append('clab_files', file, file.name);
+            }
+
+            // Validação mínima: YAML ou arquivos
+            var hasYaml = (fd.get('clab_yaml') || '').trim().length > 0;
+            var filesLen = store.files.length;
+            if (!hasYaml && filesLen === 0) {
+                showToast('bg-danger', 'Failure', 'Provide YAML and/or files');
+                btn.disabled = false;
+                btnText.classList.remove('d-none');
+                spinner.classList.add('d-none');
+                return;
+            }
+
+            try {
+                var resp = await fetch('{{ url_for("clabs_blueprint.create") }}', {
+                    method: 'POST',
+                    body: fd
+                });
+
+                // tentar parsear JSON, mas fallback se não for JSON
+                var resultText;
+                try {
+                    var j = await resp.json();
+                    if (!resp.ok) {
+                        console.error('Erro no servidor:', j);
+                        throw (j && j.result) || 'Failed';
+                    }
+                    resultText = j.result || 'CLab created (mock).';
+                    sessionStorage.setItem('msgSuccess', resultText);
+                    showToast('bg-success', 'Success', resultText);
+                    // redireciona
+                    window.location = '{{ url_for("clabs_blueprint.running") }}';
+                } catch (innerErr) {
+                    if (!resp.ok) {
+                        // servidor retornou erro e não JSON
+                        throw innerErr;
+                    } else {
+                        // resp ok mas não JSON -> success textual
+                        resultText = await resp.text();
+                        sessionStorage.setItem('msgSuccess', resultText || 'CLab created.');
+                        showToast('bg-success', 'Success', sessionStorage.getItem('msgSuccess'));
+                        window.location = '{{ url_for("clabs_blueprint.running") }}';
+                    }
+                }
+            } catch (err) {
+                sessionStorage.setItem('msgFail', (err && err.toString()) || 'Failed to create CLab.');
+                showToast('bg-danger', 'Failure', sessionStorage.getItem('msgFail'));
+                // opcional: não redirecionar em falha? você redirecionava antes; mantive redirecionamento
+                window.location = '{{ url_for("clabs_blueprint.running") }}';
+            } finally {
+                // garante reabilitar UI se o código ficar na mesma página
+                btn.disabled = false;
+                btnText.classList.remove('d-none');
+                spinner.classList.add('d-none');
+                // renderiza lista atualizada
+                renderFilesList();
+            }
+        }
+
+        // attach handler
+        if (btn) btn.addEventListener('click', handleSubmit);
+
+        // render inicial
         renderFilesList();
+
     })();
 </script>
 {% endblock javascripts %}
