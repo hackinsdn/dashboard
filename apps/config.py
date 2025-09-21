@@ -11,6 +11,14 @@ class Config(object):
 
     basedir = os.path.abspath(os.path.dirname(__file__))
 
+    # Persistência dos CLabs (PoC)
+    CLABS_STATE_PATH = os.getenv("CLABS_STATE_PATH", None) 
+    CLABS_EXPIRE_DAYS = int(os.getenv("CLABS_EXPIRE_DAYS", "0"))  
+
+    # Limites de upload
+    MAX_CONTENT_LENGTH = int(os.getenv("MAX_CONTENT_LENGTH", str(50 * 1024 * 1024)))  # 50 MB
+    CLABS_UPLOAD_MAX_FILES = int(os.getenv("CLABS_UPLOAD_MAX_FILES", "200"))
+
     # Limite total do corpo (teto de upload) — 50MB por padrão
     MAX_CONTENT_LENGTH = int(os.getenv("MAX_CONTENT_LENGTH", 50 * 1024 * 1024))
 

@@ -1,8 +1,9 @@
 # -*- encoding: utf-8 -*-
+import os
 from flask import render_template, request, jsonify, current_app
 from flask_login import current_user
 from datetime import datetime
-
+from .store import load_state, save_state, prune_inplace, default_state_path
 from . import blueprint
 from .mock_data import CLABS, CLABS_DETAILS
 
@@ -177,9 +178,15 @@ def create():
         "user": owner,
         "created": created_str,
         "expires_at": None,
-        "resources": resources,    
-        "files": files_meta,        
+        "resources": resources,
+        "files": files_meta,
     }
+
+    # Persistência (PoC)
+    try:
+        save_state(default_state_path(current_app.config.get("CLABS_STATE_PATH")), CLABS, CLABS_DETAILS)
+    except Exception:
+        current_app.logger.warning("Failed to save CLabs state", exc_info=True)
 
     return jsonify({
         "ok": True,
@@ -195,25 +202,35 @@ def create():
 
 @blueprint.route("/api/list", methods=["GET"])
 def api_list():
-    """Retorna a lista normalizada de CLabs em execução (mock)."""
+    expire_days = current_app.config.get("CLABS_EXPIRE_DAYS", 0)
+    removed = 0
+    if expire_days and expire_days > 0:
+        removed = prune_inplace(CLABS, CLABS_DETAILS, max_days=expire_days)
+        if removed:
+            try:
+                save_state(default_state_path(current_app.config.get("CLABS_STATE_PATH")), CLABS, CLABS_DETAILS)
+            except Exception:
+                current_app.logger.warning("Failed to save after prune", exc_info=True)
+
     items = []
     for c in CLABS:
         row = _norm_lab_row(c)
         if row["lab_instance_id"]:
             items.append(row)
-    return jsonify({"items": items})
-
+    return jsonify({"items": items, "pruned": removed})
 
 @blueprint.route("/api/delete/<clab_id>", methods=["DELETE"])
 def api_delete(clab_id):
     """Remove (mock) o CLab da memória."""
-    # remove de CLABS
     removed = False
+
+    # remove de CLABS
     for i in range(len(CLABS) - 1, -1, -1):
         _id = CLABS[i].get("id") or CLABS[i].get("lab_instance_id") or CLABS[i].get("lab_id")
         if _id == clab_id:
             CLABS.pop(i)
             removed = True
+
     # remove detalhe
     if clab_id in CLABS_DETAILS:
         CLABS_DETAILS.pop(clab_id, None)
@@ -221,4 +238,12 @@ def api_delete(clab_id):
 
     if not removed:
         return jsonify({"ok": False, "result": "not found"}), 404
+
+    # Persistência após remoção — alinhado corretamente
+    try:
+        save_state(default_state_path(current_app.config.get("CLABS_STATE_PATH")), CLABS, CLABS_DETAILS)
+    except Exception:
+        current_app.logger.warning("Failed to save CLabs state after delete", exc_info=True)
+
     return jsonify({"ok": True})
+

@@ -1,89 +1,41 @@
-# -*- encoding: utf-8 -*-
+from typing import List, Dict
+from .store import load_state, default_state_path
 
-# Lista simples (usada na página de Running CLabs)
-CLABS = [
+# mocks padrão (usados se não houver estado persistido)
+CLABS: List[dict] = [
     {
-        "id": "clab-001",
-        "name": "Edge Fabric",
-        "owner": "alice@example.com",
-        "status": "running",
-        "created_at": "2025-09-10 14:32",
-        "nodes": 6,
-    },
-    {
-        "id": "clab-002",
-        "name": "Core BGP",
-        "owner": "bob@example.com",
-        "status": "running",
-        "created_at": "2025-09-12 09:05",
-        "nodes": 4,
-    },
+        "id": "clab-sample-1",
+        "name": "Sample Topology",
+        "owner": "demo@example.com",
+        "status": "Running",
+        "created_at": "2025-09-20 12:00:00",
+        "nodes": 2,
+    }
 ]
 
-# Recursos detalhados por CLab (para a página Open CLab)
-# Estrutura inspirada em view_lab_instance: uma lista de "resources" por nó/serviço
-CLABS_DETAILS = {
-    "clab-001": {
-        "title": "Edge Fabric",
-        "lab_instance_id": "clab-001",
-        "user": "Alice (alice@example.com)",
-        "created": "2025-09-10 14:32",
-        "expires_at": None,  # PoC: sem expiração
-        "resources": [
-            {
-                "kind": "node",
-                "name": "leaf1",
-                "ready": "Running",
-                "links": [
-                    {"label": "Console", "href": "#"},
-                ],
-                "services": [
-                    {"name": "Mgmt SSH", "url": "#"},
-                    {"name": "gNMI", "url": "#"},
-                ],
-                "age": "1d",
-                "node_name": "edge-host-01",
-                "pod_ip": "10.0.0.11",
-            },
-            {
-                "kind": "node",
-                "name": "leaf2",
-                "ready": "Running",
-                "links": [{"label": "Console", "href": "#"}],
-                "services": [{"name": "Mgmt SSH", "url": "#"}],
-                "age": "1d",
-                "node_name": "edge-host-02",
-                "pod_ip": "10.0.0.12",
-            },
-        ],
-    },
-    "clab-002": {
-        "title": "Core BGP",
-        "lab_instance_id": "clab-002",
-        "user": "Bob (bob@example.com)",
-        "created": "2025-09-12 09:05",
+CLABS_DETAILS: Dict[str, dict] = {
+    "clab-sample-1": {
+        "lab_instance_id": "clab-sample-1",
+        "title": "Sample Topology",
+        "user": "demo@example.com",
+        "created": "2025-09-20 12:00:00",
         "expires_at": None,
         "resources": [
-            {
-                "kind": "node",
-                "name": "r1",
-                "ready": "Running",
-                "links": [{"label": "Console", "href": "#"}],
-                "services": [{"name": "Mgmt SSH", "url": "#"}],
-                "age": "2h",
-                "node_name": "core-host-01",
-                "pod_ip": "10.1.0.21",
-            },
-            {
-                "kind": "node",
-                "name": "r2",
-                "ready": "Running",
-                "links": [{"label": "Console", "href": "#"}],
-                "services": [{"name": "Mgmt SSH", "url": "#"}],
-                "age": "2h",
-                "node_name": "core-host-02",
-                "pod_ip": "10.1.0.22",
-            },
+            {"kind": "node", "name": "r1", "ready": "Running", "node_name": "linux", "pod_ip": "172.20.20.2", "age": "--", "services": [], "links": []},
+            {"kind": "node", "name": "r2", "ready": "Running", "node_name": "linux", "pod_ip": "172.20.20.3", "age": "--", "services": [], "links": []},
         ],
-    },
+        "files": []
+    }
 }
+
+# tenta carregar estado persistido
+try:
+    path = default_state_path()  # --> .../apps/data/clabs_state.json
+    _clabs, _details = load_state(path)
+    if _clabs or _details:
+        CLABS[:] = _clabs
+        CLABS_DETAILS.clear()
+        CLABS_DETAILS.update(_details)
+except Exception:
+    # mantém mocks se falhar
+    pass
