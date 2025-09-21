@@ -16,6 +16,12 @@ class Config(object):
     UPLOAD_DIR = os.path.join(DATA_DIR, 'uploads')
     os.makedirs(UPLOAD_DIR, exist_ok=True)
 
+    # Git Templates
+    LAB_TEMPLATES_GIT_REPO = os.getenv('LAB_TEMPLATES_GIT_REPO', '')
+    LAB_TEMPLATES_GIT_REPO_NAME = os.getenv('LAB_TEMPLATES_GIT_REPO_NAME', '')
+    GIT_PAT = os.getenv('GIT_PAT', '')
+    LAB_TEMPLATES_DIR = os.path.join(DATA_DIR, LAB_TEMPLATES_GIT_REPO_NAME)
+
     # Assets Management
     ASSETS_ROOT = os.getenv('ASSETS_ROOT', '/static/assets')
 
