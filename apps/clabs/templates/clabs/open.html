@@ -72,7 +72,7 @@
             </div>
         </div>
 
-        <!-- Files Uploaded Section (Alteração para Bloco 3) -->
+        <!-- Files Uploaded Section -->
         <div class="row mt-4">
             <div class="col-md-12">
                 <div class="card card-outline card-info">
@@ -80,16 +80,19 @@
                         <h3 class="card-title">Uploaded Files</h3>
                     </div>
                     <div class="card-body">
-                        {% if lab.files %}
-                        <ul>
-                            {% for file in lab.files %}
+                        {% if lab.files and lab.files|length > 0 %}
+                        <ul class="list-unstyled mb-0">
+                            {% for f in lab.files %}
                             <li>
-                                {{ file.filename if file.filename else file }} <!-- Exibe o nome do arquivo -->
+                                <i class="far fa-file"></i>
+                                {{ f.name or f.filename or f }}
+                                {% if f.size %}<small class="text-muted"> ({{ f.size }} bytes)</small>{% endif %}
+                                {% if f.mimetype %}<small class="text-muted"> — {{ f.mimetype }}</small>{% endif %}
                             </li>
                             {% endfor %}
                         </ul>
                         {% else %}
-                        <p>No files uploaded.</p>
+                        <p class="mb-0"><em>No files uploaded.</em></p>
                         {% endif %}
                     </div>
                 </div>

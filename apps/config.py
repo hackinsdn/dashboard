@@ -11,6 +11,12 @@ class Config(object):
 
     basedir = os.path.abspath(os.path.dirname(__file__))
 
+    # Limite total do corpo (teto de upload) — 50MB por padrão
+    MAX_CONTENT_LENGTH = int(os.getenv("MAX_CONTENT_LENGTH", 50 * 1024 * 1024))
+
+    # Limite de quantidade de arquivos (PoC)
+    CLABS_UPLOAD_MAX_FILES = int(os.getenv("CLABS_UPLOAD_MAX_FILES", 200))
+
     # Directories
     DATA_DIR = os.getenv('DATA_DIR', os.path.join(basedir, 'data'))
     UPLOAD_DIR = os.path.join(DATA_DIR, 'uploads')

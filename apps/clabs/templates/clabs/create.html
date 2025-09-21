@@ -183,24 +183,18 @@
         var btn = document.getElementById('btnSubmit');
         var form = document.getElementById('clab-form');
 
-        // Data store: DataTransfer para manter arquivos selecionados (com remoção)
         var store = new DataTransfer();
 
-        // Para trackear linhas marcadas no CodeMirror (limpar marcações antes)
         var markedLines = [];
 
-        // Set para evitar duplicatas por caminho (nome ou caminho relativo)
         var seenPaths = new Set();
 
-        // Click na dropzone -> abre fileInput
         drop && drop.addEventListener('click', function () { fileInput && fileInput.click(); });
 
-        // impede navegação em dragover/drop na página
         ['dragover', 'drop'].forEach(function (evt) {
             document.addEventListener(evt, function (e) { e.preventDefault(); }, false);
         });
 
-        // Renderiza lista de arquivos + botões remover
         function renderFilesList() {
             filesList.innerHTML = '';
             if (!store.files.length) {
@@ -242,7 +236,6 @@
             filesList.appendChild(ul);
         }
 
-        // limpa marcações no CodeMirror
         function clearCmMarks() {
             if (!cm) return;
             while (markedLines.length) {
@@ -252,7 +245,6 @@
             }
         }
 
-        // adiciona marcação de erro no CodeMirror (linha: zero-indexed)
         function markCmError(line, message) {
             if (!cm) return;
             cm.addLineClass(line, 'background', 'cm-error-line');
@@ -262,11 +254,9 @@
             marker.innerHTML = '●';
             cm.setGutterMarker(line, 'error-gutter', marker);
             markedLines.push(line);
-            // scroll to line
             cm.scrollIntoView({ line: line, ch: 0 }, 100);
         }
 
-        // adiciona CSS runtime para highlight de erro e gutter (se preferir leve para CSS)
         (function addRuntimeCss() {
             var css = document.createElement('style');
             css.type = 'text/css';
@@ -274,27 +264,27 @@
         .cm-error-line { background: rgba(255, 0, 0, 0.06) !important; }\
         .error-gutter-marker { color: #c0392b; font-weight: bold; }";
             document.head.appendChild(css);
-            // garante gutter 'error-gutter' existe
             if (cm) cm.setOption('gutters', ['CodeMirror-linenumbers', 'error-gutter']);
         })();
 
         // ====== Validação YAML ======
+        <!-- dentro de <script> ... -->
         function validateYaml(yamlText) {
             clearCmMarks();
-            if (!yamlText || !yamlText.trim()) return true; // vazio permitido (se backend aceitar) — ajustável
+            if (!yamlText || !yamlText.trim()) return true; 
+
             if (typeof jsyaml === 'undefined') {
-                showToast('bg-danger', 'Validation error', 'js-yaml not loaded. Cannot validate YAML client-side.');
-                return false;
+                showToast('bg-info', 'Heads up', 'js-yaml não carregou; validação será feita no servidor.');
+                return true; 
             }
+
             try {
-                // jsyaml.load utiliza exception com mark {line, column}
                 jsyaml.load(yamlText);
                 return true;
             } catch (err) {
                 var msg = err && err.message ? err.message : String(err);
-                // marca linha se disponível (js-yaml usa err.mark.line zero-indexed? geralmente 0-based)
                 if (err && err.mark && typeof err.mark.line === 'number') {
-                    var lineNo = err.mark.line; // já zero-index em muitas versões
+                    var lineNo = err.mark.line; 
                     markCmError(lineNo, msg);
                 }
                 showToast('bg-danger', 'YAML error', msg);
@@ -302,35 +292,29 @@
             }
         }
 
+
         // ====== Adição / deduplicação de arquivos ao store ======
         function addFiles(fileList) {
             if (!fileList || !fileList.length) return;
             for (let i = 0; i < fileList.length; i++) {
                 let f = fileList[i];
-                // f.name já pode conter caminho relativo (se criado assim)
                 var key = f.name || f.webkitRelativePath || f.fileName || f.path || (i + ':' + f.size);
                 if (seenPaths.has(key)) continue;
-                // Se for um File vindo sem path, usamos name; se tiver webkitRelativePath (ex: folder input) preferimos ela
-                // Mas no fluxo abaixo, quando criarmos Files para pastas, já nomearemos com 'subdir/file'
                 seenPaths.add(key);
                 try {
                     store.items.add(f);
                 } catch (e) {
-                    // falha ao adicionar (browser restrição) -> ignorar e logar
                     console.warn('Could not add file to DataTransfer:', e, f);
                 }
             }
-            // sincroniza input visível com store para consistência (opcional)
             try { fileInput.files = store.files; } catch (e) { /* some browsers don't allow */ }
             renderFilesList();
         }
 
-        // ====== Leitura recursiva de pastas via DataTransferItem.webkitGetAsEntry ======
         function traverseFileTree(entry, path) {
             return new Promise(function (resolve) {
                 if (entry.isFile) {
                     entry.file(function (file) {
-                        // criamos novo File com nome que inclui o path relativo (para backend receber o path)
                         var relPath = path + file.name;
                         var newFile = new File([file], relPath, { type: file.type });
                         resolve([newFile]);
@@ -365,7 +349,6 @@
             });
         }
 
-        // ====== Drop handler com suporte a pastas ======
         if (drop) {
             // efeitos visuais
             ['dragenter', 'dragover'].forEach(function (evt) {
@@ -381,12 +364,10 @@
                 }, false);
             });
 
-            // drop
             drop.addEventListener('drop', function (e) {
                 var dt = e.dataTransfer;
                 if (!dt) return;
                 if (dt.items && dt.items.length) {
-                    // quando houver items, podemos examinar diretórios
                     var promises = [];
                     var filesToAdd = [];
                     for (let i = 0; i < dt.items.length; i++) {
@@ -394,27 +375,22 @@
                         if (typeof item.webkitGetAsEntry === 'function') {
                             var entry = item.webkitGetAsEntry();
                             if (entry) {
-                                // traverseFileTree -> retorna promise de array de Files (com nomes relativos)
                                 promises.push(traverseFileTree(entry, entry.isDirectory ? entry.name + '/' : ''));
                             } else {
-                                // fallback: item.getAsFile
                                 var f = item.getAsFile && item.getAsFile();
                                 if (f) filesToAdd.push(f);
                             }
                         } else {
-                            // fallback: item.getAsFile
                             var f2 = item.getAsFile && item.getAsFile();
                             if (f2) filesToAdd.push(f2);
                         }
                     }
-                    // processar promises
                     Promise.all(promises).then(function (results) {
                         var flat = [].concat.apply([], results || []);
                         if (filesToAdd.length) flat = flat.concat(filesToAdd);
                         if (flat.length) addFiles(flat);
                     }).catch(function (err) {
                         console.warn('Error reading dropped folder:', err);
-                        // fallback para dt.files
                         if (dt.files && dt.files.length) addFiles(dt.files);
                         showToast('bg-info', 'Heads up', 'Folder drops may not be fully supported in this browser. Use "Upload folders" abaixo.');
                     });
@@ -424,11 +400,9 @@
             }, false);
         }
 
-        // ====== Input file change ======
         if (fileInput) {
             fileInput.addEventListener('change', function (e) {
                 addFiles(e.target.files);
-                // limpar seleção original para permitir re-seleção dos mesmos nomes
                 fileInput.value = '';
             });
         }
@@ -436,31 +410,25 @@
         // ====== Input folder change ======
         if (folderInput) {
             folderInput.addEventListener('change', function (e) {
-                // folderInput.files já vem com webkitRelativePath em Chrome; convertê-los para Files com name==relativePath
                 var arr = [];
                 for (let i = 0; i < e.target.files.length; i++) {
                     var f = e.target.files[i];
                     var rel = f.webkitRelativePath || f.name;
-                    // criar novo File com nome contendo o caminho relativo (facilita envio com caminho)
                     var newF = new File([f], rel, { type: f.type });
                     arr.push(newF);
                 }
                 addFiles(arr);
-                // limpamos o input para evitar duplicação posterior (se o usuário reabrir)
                 folderInput.value = '';
             });
         }
 
-        // ====== Submit refinado (async/await) ======
         async function handleSubmit() {
             var btnText = btn.querySelector('.btn-text');
             var spinner = btn.querySelector('.spinner-border');
             btn.disabled = true; btnText.classList.add('d-none'); spinner.classList.remove('d-none');
 
-            // sincroniza editor -> textarea
             if (typeof CodeMirror !== 'undefined' && cm) { cm.save(); }
 
-            // Valida o YAML (através de jsyaml)
             var yamlText = document.getElementById('clab_yaml').value;
             if (!validateYaml(yamlText)) {
                 btn.disabled = false;
@@ -469,17 +437,10 @@
                 return;
             }
 
-            // FormData a partir do form
+            try { fileInput.files = store.files; } catch (e) {}
+
             var fd = new FormData(form);
 
-            // Repassa arquivos do store (já com nomes relativos em store.files[].name)
-            for (let i = 0; i < store.files.length; i++) {
-                var file = store.files[i];
-                // usa file.name como caminho relativo (se existir) no parâmetro filename do append
-                fd.append('clab_files', file, file.name);
-            }
-
-            // Validação mínima: YAML ou arquivos
             var hasYaml = (fd.get('clab_yaml') || '').trim().length > 0;
             var filesLen = store.files.length;
             if (!hasYaml && filesLen === 0) {
@@ -496,7 +457,6 @@
                     body: fd
                 });
 
-                // tentar parsear JSON, mas fallback se não for JSON
                 var resultText;
                 try {
                     var j = await resp.json();
@@ -507,14 +467,11 @@
                     resultText = j.result || 'CLab created (mock).';
                     sessionStorage.setItem('msgSuccess', resultText);
                     showToast('bg-success', 'Success', resultText);
-                    // redireciona
                     window.location = '{{ url_for("clabs_blueprint.running") }}';
                 } catch (innerErr) {
                     if (!resp.ok) {
-                        // servidor retornou erro e não JSON
                         throw innerErr;
                     } else {
-                        // resp ok mas não JSON -> success textual
                         resultText = await resp.text();
                         sessionStorage.setItem('msgSuccess', resultText || 'CLab created.');
                         showToast('bg-success', 'Success', sessionStorage.getItem('msgSuccess'));
@@ -524,22 +481,17 @@
             } catch (err) {
                 sessionStorage.setItem('msgFail', (err && err.toString()) || 'Failed to create CLab.');
                 showToast('bg-danger', 'Failure', sessionStorage.getItem('msgFail'));
-                // opcional: não redirecionar em falha? você redirecionava antes; mantive redirecionamento
                 window.location = '{{ url_for("clabs_blueprint.running") }}';
             } finally {
-                // garante reabilitar UI se o código ficar na mesma página
                 btn.disabled = false;
                 btnText.classList.remove('d-none');
                 spinner.classList.add('d-none');
-                // renderiza lista atualizada
                 renderFilesList();
             }
         }
 
-        // attach handler
         if (btn) btn.addEventListener('click', handleSubmit);
 
-        // render inicial
         renderFilesList();
 
     })();

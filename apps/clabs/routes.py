@@ -1,5 +1,5 @@
 # -*- encoding: utf-8 -*-
-from flask import render_template, request, jsonify
+from flask import render_template, request, jsonify, current_app
 from flask_login import current_user
 from datetime import datetime
 
@@ -16,14 +16,23 @@ except Exception:
 def running():
     labs = []
     for c in CLABS:
-        labs.append({
-            "lab_instance_id": c["id"],        
-            "user": c.get("owner", "--"),      
-            "title": c.get("name", "--"),      
-            "created": c.get("created_at", "--"), 
-        })
-    return render_template("clabs/running.html", labs=labs)
+        lab_id  = c.get("id") or c.get("lab_instance_id") or c.get("lab_id")
+        user    = c.get("owner") or c.get("user") or "--"
+        title   = c.get("name")  or c.get("title") or "--"
+        created = c.get("created_at") or c.get("created") or "--"
 
+        # se não tiver id em nenhum formato, pula a linha
+        if not lab_id:
+            continue
+
+        labs.append({
+            "lab_instance_id": lab_id,
+            "user": user,
+            "title": title,
+            "created": created,
+        })
+
+    return render_template("clabs/running.html", labs=labs)
 
 @blueprint.route("/open/<clab_id>")
 def open_clab(clab_id):
@@ -56,12 +65,11 @@ def _resources_from_clab_yaml(yaml_text: str):
 
     resources = []
     for name, cfg in nodes.items():
-        # cfg costuma ser dict com 'kind', 'image', 'mgmt_ipv4' etc.
         kind = "node"
-        ready = "Running"  # PoC: considera subido
+        ready = "Running"  
         pod_ip = None
         node_name = None
-        links = [{"label": "Console", "href": "#"}]  # placeholder
+        links = [{"label": "Console", "href": "#"}] 
         services = []
 
         if isinstance(cfg, dict):
@@ -87,63 +95,77 @@ def create():
         return render_template("clabs/create.html")
 
     # --- POST (PoC) ---
-    # Recebe dados do formulário e arquivos (mock – não persiste em disco)
+    # Campos do formulário
     name = (request.form.get("clab_name") or "").strip()
     namespace = (request.form.get("clab_namespace") or "").strip()
     yaml_manifest = (request.form.get("clab_yaml") or "").strip()
 
-    # Conta arquivos enviados (arquivos soltos + pastas via webkitdirectory)
-    files_count = 0
-    files_list = []  # Vamos armazenar os nomes dos arquivos enviados aqui
-    try:
-        # Adiciona arquivos individuais
-        files_list.extend(request.files.getlist("clab_files") or [])
+    files = request.files.getlist("clab_files") or []
+    files_meta = []
+    for f in files:
+        files_meta.append({
+            "name": f.filename,                 
+            "mimetype": getattr(f, "mimetype", "") or "",
+            "size": getattr(f, "content_length", None),
+        })
+    files_count = len(files_meta)
 
-        # Adiciona arquivos de pastas com caminho completo
-        for file in request.files.getlist("clab_folders"):
-            # O caminho completo da pasta será adicionado, evitando duplicação
-            files_list.append(file)
-
-        files_count = len(files_list)
-    except Exception:
-        files_count = 0
-
-    # Validação mínima (PoC): exigir YAML ou ao menos 1 arquivo
+    # Regras mínimas de envio: YAML ou pelo menos 1 arquivo
     if not yaml_manifest and files_count == 0:
         return jsonify({"ok": False, "result": "Provide YAML and/or files"}), 400
 
-    # ---- Monta recursos a partir do YAML (se possível) ----
+    # Limites de upload (quantidade) - PoC
+    max_files = current_app.config.get("CLABS_UPLOAD_MAX_FILES", 200)
+    if files_count > max_files:
+        return jsonify({
+            "ok": False,
+            "result": f"Too many files: {files_count} (max {max_files})"
+        }), 400
+
+    # Validação de YAML no servidor (fallback/autoridade)
+    # Se o usuário enviou YAML e houver PyYAML disponível, valide e falhe (400) se inválido.
+    if yaml_manifest:
+        if yaml is not None:
+            try:
+                # Fazemos o parse só para validar; geração de resources acontece na função auxiliar
+                yaml.safe_load(yaml_manifest)
+            except Exception as e:
+                return jsonify({"ok": False, "result": f"YAML inválido: {e}"}), 400
+        # Se yaml==None, seguimos (sem validar) pois o front já tentou avisar.
+
+    # Monta recursos (um por node) — segura mesmo sem YAML (retorna [])
     resources = _resources_from_clab_yaml(yaml_manifest)
     nodes_count = len(resources)
 
-    # ---- Atualiza os mocks para aparecer em Running CLabs e Open CLab ----
+    # Identidade do "owner" (seguro para PoC)
+    try:
+        owner = getattr(current_user, "username", None) or getattr(current_user, "email", None) or "anonymous"
+    except Exception:
+        owner = "anonymous"
+
+    # ID e timestamps
     new_id = f"clab-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}"
     created_str = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
 
-    # Dados do "owner" a partir do usuário logado (fallbacks seguros)
-    owner_name = getattr(current_user, "name", None) or getattr(current_user, "username", "User")
-    owner_email = getattr(current_user, "email", None) or "user@example.com"
-    owner_display = f"{owner_name} ({owner_email})"
-
-    # Lista simples (Running CLabs)
+    # Atualiza mocks (lista e detalhe)
     CLABS.append({
-        "id": new_id,
+        "lab_instance_id": new_id,
+        "user": owner,
+        "title": name or "Unnamed",
         "name": name or "Unnamed",
-        "owner": owner_email,
-        "status": "running",
-        "created_at": created_str,
+        "created": created_str,
+        "status": "Running",
         "nodes": nodes_count,
     })
 
-    # Detalhes (Open CLab) — Incluindo os arquivos enviados
     CLABS_DETAILS[new_id] = {
-        "title": name or "Unnamed",
         "lab_instance_id": new_id,
-        "user": owner_display,
+        "title": name or "Unnamed",
+        "user": owner,
         "created": created_str,
         "expires_at": None,
-        "resources": resources,  # agora populado a partir do YAML
-        "files": files_list,  # Armazena os arquivos enviados com o caminho completo
+        "resources": resources,    
+        "files": files_meta,        
     }
 
     return jsonify({
@@ -157,3 +179,4 @@ def create():
             "resources": nodes_count,
         }
     }), 201
+
