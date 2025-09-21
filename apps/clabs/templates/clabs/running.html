@@ -146,12 +146,15 @@
 
 <script>
     $(function () {
+        // URL templates (o segundo recebe o ID por replace)
+        const listUrl = "{{ url_for('clabs_blueprint.api_list') }}";
+        const deleteUrlTpl = "{{ url_for('clabs_blueprint.api_delete', clab_id='__ID__') }}";
+
+        // DataTable
         var table = $("#tableLabs").DataTable({
             responsive: false,
             autoWidth: false,
-            language: {
-                emptyTable: 'No running clabs',
-            },
+            language: { emptyTable: 'No running clabs' },
             columns: [
                 { orderable: false, name: 'select' },
                 { name: 'user' },
@@ -162,62 +165,115 @@
             order: [[2, 'asc']]
         });
 
-        if (sessionStorage.getItem('msgSuccess')) {
-            $(document).Toasts('create', {
-                class: 'bg-success',
-                title: 'Success',
-                body: sessionStorage.getItem('msgSuccess')
+        // Renderiza linhas para DataTables
+        function buildRows(items) {
+            return (items || []).map(function (it) {
+                var id = it.lab_instance_id;
+                var checkbox = `
+          <div class="icheck-primary">
+            <input type="checkbox" id="checkbox-${id}">
+            <label for="checkbox-${id}"></label>
+          </div>`;
+                var actions = `
+          <a class="btn btn-default" href="/containerlabs/open/${id}">
+            <i class="fas fa-eye"></i> Open CLab
+          </a>`;
+                return [checkbox, it.user || '--', it.title || '--', it.created || '--', actions];
             });
+        }
+
+        // Carrega lista (AJAX) e popula tabela
+        async function loadList() {
+            try {
+                const res = await fetch(listUrl, { cache: 'no-store' });
+                const data = await res.json();
+                const rows = buildRows(data.items || []);
+                table.clear().rows.add(rows).draw(false);
+            } catch (e) {
+                console.warn('Failed to load clabs list', e);
+            }
+        }
+
+        // Toasts de sessão
+        if (sessionStorage.getItem('msgSuccess')) {
+            $(document).Toasts('create', { class: 'bg-success', title: 'Success', body: sessionStorage.getItem('msgSuccess') });
             sessionStorage.removeItem('msgSuccess');
         }
         if (sessionStorage.getItem('msgFail')) {
-            $(document).Toasts('create', {
-                class: 'bg-danger',
-                title: 'Failure',
-                body: sessionStorage.getItem('msgFail')
-            });
+            $(document).Toasts('create', { class: 'bg-danger', title: 'Failure', body: sessionStorage.getItem('msgFail') });
             sessionStorage.removeItem('msgFail');
         }
 
-        $('#delete-labs').click(function () {
-            var rows = $('#tableLabs tr').filter(':has(:checkbox:checked)');
-            $("#delete-labs").html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Deleting ' + table.rows(rows).data().length + ' row(s)...');
-            $("#delete-labs").prop('disabled', true);
-            setTimeout(function () {
-                sessionStorage.setItem('msgSuccess', 'Selected CLabs removed (mock).');
-                location.reload();
-            }, 600);
-        });
-
-        $('#modal-default').on('show.bs.modal', function (e) {
-            var rows = $('#tableLabs tr').filter(':has(:checkbox:checked)');
-            var data = table.rows(rows).data();
+        // Modal de confirmação — montar lista
+        $('#modal-default').on('show.bs.modal', function () {
             var items = $("#modal-default-items");
             items.empty();
-            $("#delete-labs").prop('disabled', false);
-            if (data.length === 0) {
+            var checked = $('#tableLabs tbody input[type="checkbox"]:checked');
+            if (checked.length === 0) {
                 items.append("<li>No clab selected!</li>");
                 $("#delete-labs").prop('disabled', true);
-                return;
+            } else {
+                $("#delete-labs").prop('disabled', false);
+                checked.each(function () {
+                    var id = this.id.replace('checkbox-', '');
+                    // pega a linha correspondente no DataTables para exibir título e data
+                    var row = $(this).closest('tr');
+                    var rowData = table.row(row).data() || [];
+                    var title = rowData[2] || '--';
+                    var created = rowData[3] || '--';
+                    items.append(`<li data-id="${id}">${title} - ${created}</li>`);
+                });
             }
-            data.each(function (value, index) {
-                items.append(`<li>${value[2]} - ${value[3]}</li>`);
-            });
         });
 
-        $('.checkbox-toggle').click(function () {
-            var clicks = $(this).data('clicks')
-            if (clicks) {
-                $('.lab-items input[type="checkbox"]').prop('checked', false)
-                $('.checkbox-toggle .far.fa-check-square').removeClass('fa-check-square').addClass('fa-square')
-            } else {
-                $('.lab-items input[type="checkbox"]').prop('checked', true)
-                $('.checkbox-toggle .far.fa-square').removeClass('fa-square').addClass('fa-check-square')
+        // Delete (mock)
+        $('#delete-labs').click(async function () {
+            var btn = $(this);
+            var rows = $('#tableLabs tbody input[type="checkbox"]:checked');
+            var count = rows.length;
+            btn.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Deleting ' + count + ' row(s)...');
+            btn.prop('disabled', true);
+
+            let ok = 0, fail = 0;
+            for (const el of rows.toArray()) {
+                const id = el.id.replace('checkbox-', '');
+                try {
+                    const url = deleteUrlTpl.replace('__ID__', id);
+                    const resp = await fetch(url, { method: 'DELETE' });
+                    const j = await resp.json().catch(() => ({}));
+                    if (resp.ok && j.ok) ok++; else fail++;
+                } catch (e) { fail++; }
             }
-            $(this).data('clicks', !clicks)
+
+            // fecha modal, atualiza tabela e mostra toast
+            $('#modal-default').modal('hide');
+            await loadList();
+            if (fail === 0) {
+                sessionStorage.setItem('msgSuccess', 'Selected CLabs removed (mock).');
+            } else {
+                sessionStorage.setItem('msgFail', `Some items failed to delete (${fail}/${count}).`);
+            }
+            location.reload(); // mantém seu fluxo de recarregar/mostrar toast
         });
+
+        // Toggle "select all"
+        $('.checkbox-toggle').click(function () {
+            var clicks = $(this).data('clicks');
+            $('#tableLabs tbody input[type="checkbox"]').prop('checked', !clicks);
+            $(this).data('clicks', !clicks);
+            // alterna o ícone
+            var ico = $(this).find('.far');
+            if (clicks) { ico.removeClass('fa-check-square').addClass('fa-square'); }
+            else { ico.removeClass('fa-square').addClass('fa-check-square'); }
+        });
+
+        // inicial
+        loadList();
+        // refresh periódico (8s)
+        setInterval(loadList, 8000);
     });
 </script>
+
 
 <script src="/static/assets/js/demo.js"></script>
 {% endblock javascripts %}

@@ -12,6 +12,19 @@ try:
 except Exception:
     yaml = None
 
+def _norm_lab_row(c: dict) -> dict:
+    """Normaliza um item de CLABS para exibição na tabela."""
+    lab_id  = c.get("id") or c.get("lab_instance_id") or c.get("lab_id")
+    user    = c.get("owner") or c.get("user") or "--"
+    title   = c.get("name")  or c.get("title") or "--"
+    created = c.get("created_at") or c.get("created") or "--"
+    return {
+        "lab_instance_id": lab_id,
+        "user": user,
+        "title": title,
+        "created": created,
+    }
+
 @blueprint.route("/running")
 def running():
     labs = []
@@ -180,3 +193,32 @@ def create():
         }
     }), 201
 
+@blueprint.route("/api/list", methods=["GET"])
+def api_list():
+    """Retorna a lista normalizada de CLabs em execução (mock)."""
+    items = []
+    for c in CLABS:
+        row = _norm_lab_row(c)
+        if row["lab_instance_id"]:
+            items.append(row)
+    return jsonify({"items": items})
+
+
+@blueprint.route("/api/delete/<clab_id>", methods=["DELETE"])
+def api_delete(clab_id):
+    """Remove (mock) o CLab da memória."""
+    # remove de CLABS
+    removed = False
+    for i in range(len(CLABS) - 1, -1, -1):
+        _id = CLABS[i].get("id") or CLABS[i].get("lab_instance_id") or CLABS[i].get("lab_id")
+        if _id == clab_id:
+            CLABS.pop(i)
+            removed = True
+    # remove detalhe
+    if clab_id in CLABS_DETAILS:
+        CLABS_DETAILS.pop(clab_id, None)
+        removed = True
+
+    if not removed:
+        return jsonify({"ok": False, "result": "not found"}), 404
+    return jsonify({"ok": True})

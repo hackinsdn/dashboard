@@ -126,11 +126,10 @@
                                     <td>{{ r.kind }}</td>
                                     <td>{{ r.name }}</td>
                                     <td>
-                                        {% if r.ready == 'Running' %}
-                                        <span class="badge badge-success">{{ r.ready }}</span>
-                                        {% else %}
-                                        <span class="badge badge-secondary">{{ r.ready }}</span>
-                                        {% endif %}
+                                        <span
+                                            class="badge badge-{{ 'success' if r.ready=='Running' else ('danger' if r.ready=='Failed' else 'secondary') }}">
+                                            {{ r.ready or '--' }}
+                                        </span>
                                     </td>
                                     <td>{{ r.node_name or '--' }}</td>
                                     <td>{{ r.pod_ip or '--' }}</td>
