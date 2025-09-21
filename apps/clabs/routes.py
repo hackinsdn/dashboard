@@ -2,7 +2,7 @@
 import os
 from flask import render_template, request, jsonify, current_app
 from flask_login import current_user
-from datetime import datetime
+from datetime import datetime, timedelta
 from .store import load_state, save_state, prune_inplace, default_state_path
 from . import blueprint
 from .mock_data import CLABS, CLABS_DETAILS
@@ -163,10 +163,13 @@ def create():
 
     # Atualiza mocks (lista e detalhe)
     CLABS.append({
+        "id": new_id,                       
         "lab_instance_id": new_id,
+        "owner": owner,                     
         "user": owner,
         "title": name or "Unnamed",
         "name": name or "Unnamed",
+        "created_at": created_str,          
         "created": created_str,
         "status": "Running",
         "nodes": nodes_count,
@@ -202,15 +205,50 @@ def create():
 
 @blueprint.route("/api/list", methods=["GET"])
 def api_list():
-    expire_days = current_app.config.get("CLABS_EXPIRE_DAYS", 0)
+    # TTL opcional por idade em dias (0 = desativa)
+    expire_days = int(current_app.config.get("CLABS_EXPIRE_DAYS", 0) or 0)
     removed = 0
-    if expire_days and expire_days > 0:
-        removed = prune_inplace(CLABS, CLABS_DETAILS, max_days=expire_days)
-        if removed:
+    if expire_days > 0:
+        cutoff = datetime.utcnow() - timedelta(days=expire_days)
+        ids_to_remove = []
+
+        def parse_created(c: dict):
+            val = c.get("created_at") or c.get("created")
+            if not val:
+                return None
+            # tenta formatos comuns
+            for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M:%S.%f"):
+                try:
+                    return datetime.strptime(val, fmt)
+                except Exception:
+                    continue
+            # último recurso: tenta fromisoformat
+            try:
+                return datetime.fromisoformat(val.replace("Z", ""))
+            except Exception:
+                return None
+
+        # coleta ids antigos
+        for c in CLABS:
+            dt = parse_created(c)
+            if dt and dt < cutoff:
+                _id = c.get("id") or c.get("lab_instance_id") or c.get("lab_id")
+                if _id:
+                    ids_to_remove.append(_id)
+
+        if ids_to_remove:
+            ids = set(ids_to_remove)
+            # remove da lista
+            CLABS[:] = [c for c in CLABS if (c.get("id") or c.get("lab_instance_id") or c.get("lab_id")) not in ids]
+            # remove detalhes
+            for cid in list(CLABS_DETAILS.keys()):
+                if cid in ids:
+                    CLABS_DETAILS.pop(cid, None)
+            removed = len(ids)
             try:
                 save_state(default_state_path(current_app.config.get("CLABS_STATE_PATH")), CLABS, CLABS_DETAILS)
             except Exception:
-                current_app.logger.warning("Failed to save after prune", exc_info=True)
+                current_app.logger.warning("Failed to save after TTL prune", exc_info=True)
 
     items = []
     for c in CLABS:
@@ -219,31 +257,13 @@ def api_list():
             items.append(row)
     return jsonify({"items": items, "pruned": removed})
 
-@blueprint.route("/api/delete/<clab_id>", methods=["DELETE"])
-def api_delete(clab_id):
-    """Remove (mock) o CLab da memória."""
-    removed = False
-
-    # remove de CLABS
-    for i in range(len(CLABS) - 1, -1, -1):
-        _id = CLABS[i].get("id") or CLABS[i].get("lab_instance_id") or CLABS[i].get("lab_id")
-        if _id == clab_id:
-            CLABS.pop(i)
-            removed = True
-
-    # remove detalhe
-    if clab_id in CLABS_DETAILS:
-        CLABS_DETAILS.pop(clab_id, None)
-        removed = True
-
-    if not removed:
-        return jsonify({"ok": False, "result": "not found"}), 404
-
-    # Persistência após remoção — alinhado corretamente
+@blueprint.route("/api/clear", methods=["POST"])
+def api_clear_all():
+    """Dev only: limpa todos os CLabs do estado (lista + detalhes)."""
+    CLABS.clear()
+    CLABS_DETAILS.clear()
     try:
         save_state(default_state_path(current_app.config.get("CLABS_STATE_PATH")), CLABS, CLABS_DETAILS)
     except Exception:
-        current_app.logger.warning("Failed to save CLabs state after delete", exc_info=True)
-
+        current_app.logger.warning("Failed to save after clear", exc_info=True)
     return jsonify({"ok": True})
-
