@@ -231,6 +231,32 @@ class UserFeedbacks(db.Model, AuditMixin):
     def __repr__(self):
         return f'<UserFeedbacks User {self.user_id}, Stars {self.stars}>'
 
+class Namespaces (db.Model, AuditMixin):
+    __tablename__ = 'namespaces'
+    id = db.Column(db.Integer, primary_key=True)
+    description = db.Column(db.String)
+    namespace = db.Column(db.String)
+    organization = db.Column(db.String)
+    website = db.Column(db.String)
+    members = db.Column(db.String)
+    owners = db.Column(db.String)
+    is_approved = db.Column(db.Boolean, default=False)
+    is_enabled = db.Column(db.Boolean, default=False)
+    is_deleted = db.Column(db.Boolean, default=False)
+
+    @property
+    def members_dict(self):
+        try:
+            return json.loads(self.members)
+        except:
+            return {}
+    
+    @property
+    def owners_dict(self):
+        try:
+            return json.loads(self.owners)
+        except:
+            return {}
 
 @event.listens_for(Labs, 'after_insert')
 @event.listens_for(LabInstances, 'after_insert')
