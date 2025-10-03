@@ -96,7 +96,16 @@
               </li>
             </ul>
           </li>
-
+          <li class="nav-item">
+            <a href="{{ url_for('home_blueprint.running_labs') }}" class="nav-link {% if request.url_rule.endpoint == 'home_blueprint.running_labs' %} active {% endif %}">
+              <i class="nav-icon far fa-calendar-alt"></i>
+              <p>
+                Running Labs
+                <span class="badge badge-info right">{{ g.running_labs }}</span>
+              </p>
+            </a>
+          </li>
+          
           {% if config.get('ENABLE_CLABS') %}
           <li class="nav-item has-treeview {% if request.path.startswith('/containerlabs') %} menu-open {% endif %}">
             <a href="#" class="nav-link {% if request.path.startswith('/containerlabs') %} active {% endif %}">

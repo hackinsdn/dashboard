@@ -17,10 +17,6 @@ class Config(object):
 
     # Limites de upload
     MAX_CONTENT_LENGTH = int(os.getenv("MAX_CONTENT_LENGTH", str(50 * 1024 * 1024)))  # 50 MB
-    CLABS_UPLOAD_MAX_FILES = int(os.getenv("CLABS_UPLOAD_MAX_FILES", "200"))
-
-    # Limite total do corpo (teto de upload) — 50MB por padrão
-    MAX_CONTENT_LENGTH = int(os.getenv("MAX_CONTENT_LENGTH", 50 * 1024 * 1024))
 
     # Limite de quantidade de arquivos (PoC)
     CLABS_UPLOAD_MAX_FILES = int(os.getenv("CLABS_UPLOAD_MAX_FILES", 200))
@@ -84,7 +80,7 @@ class Config(object):
     # Kubernetes
     K8S_NAMESPACE = os.getenv('K8S_NAMESPACE', "")
     K8S_CONFIG = os.path.expanduser(os.getenv("KUBECONFIG", "~/.kube/config"))
-    K8S_AVOID_NODES = os.getenv("K8S_AVOID_NODES", "").split(",")
+    K8S_AVOID_NODES = [n.strip() for n in os.getenv("K8S_AVOID_NODES", "").split(",") if n.strip()]
 
     # Base URL
     BASE_URL = os.getenv("BASE_URL", 'https://dashboard.hackinsdn.ufba.br')
@@ -125,6 +121,11 @@ class Config(object):
     MAP_ZOOM_LEVEL = int(os.getenv('MAP_ZOOM_LEVEL', "1"))
     MAP_POINTS = json.loads(os.getenv('MAP_POINTS', '[]'))
 
+# -------- Optional modules & feature flags --------
+# Canonical optional modules control (CSV -> list). Default includes "clabs".
+OPTIONAL_MODULES = [m.strip() for m in os.getenv("OPTIONAL_MODULES", "clabs").split(",") if m.strip()]
+# Backward-compatible flag for CLabs; prefer OPTIONAL_MODULES going forward.
+ENABLE_CLABS = str(os.getenv("ENABLE_CLABS", "false")).lower() in ("1", "true", "yes", "on")
 
 class ProductionConfig(Config):
     DEBUG = False

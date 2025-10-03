@@ -39,35 +39,26 @@ def register_extensions(app):
 
 
 def register_blueprints(app):
+    # Core blueprints (always loaded)
     for module_name in ('authentication', 'home', 'api', 'k8s', 'cli'):
         module = import_module(f'apps.{module_name}.routes')
         app.register_blueprint(module.blueprint)
 
-    # (PoC) ContainerLabs: registra blueprint se habilitado
-    enable_clabs = app.config.get(
-        "ENABLE_CLABS",
-        str(os.getenv("ENABLE_CLABS", "false")).lower() in ("1", "true", "yes", "on")
-    )
-    if enable_clabs:
+    # Optional blueprints (controlled by config.OPTIONAL_MODULES)
+    optional_modules = app.config.get("OPTIONAL_MODULES", []) or []
+    for opt in optional_modules:
         try:
-            clabs = import_module("apps.clabs.routes")
-            app.register_blueprint(clabs.blueprint)
-            app.logger.info("ContainerLabs blueprint registrado (ENABLE_CLABS=true).")
+            mod = import_module(f"apps.{opt}.routes")
+            app.register_blueprint(mod.blueprint)
+            app.logger.info(f"Optional module loaded: {opt}")
         except Exception as e:
-            app.logger.error(f"Falha ao registrar ContainerLabs: {e}")
-    else:
-        app.logger.info("ContainerLabs desativado (ENABLE_CLABS=false).")
+            app.logger.error(f"Failed to load optional module '{opt}': {e}")
 
-    # Carrega endpoints do Socket.IO (xterm)
-    # -> Pula no Windows porque usa pty/termios/fcntl (só Unix)
+    # Socket.IO endpoints (xterm) - always load; Windows must run via Docker (see docs)
     try:
-        if os.name != "nt":
-            import_module("apps.events")
-        else:
-            app.logger.warning("Skipping apps.events on Windows (no termios/pty).")
+        import_module("apps.events")
     except Exception as e:
-        app.logger.warning(f"Skipping apps.events due to error: {e}")
-
+        app.logger.error(f"Failed to load apps.events: {e}")
 
 def configure_database(app):
     with app.app_context():
@@ -103,15 +94,10 @@ def create_app(config):
     app = Flask(__name__)
     app.config.from_object(config)
 
-    # Default da feature flag (pode vir do .env)
-    if "ENABLE_CLABS" not in app.config:
-        app.config["ENABLE_CLABS"] = str(os.getenv("ENABLE_CLABS", "false")).lower() in ("1", "true", "yes", "on")
-
     register_extensions(app)
     register_blueprints(app)
-    #configure_database(app)
+    # configure_database(app)
     configure_oauth(app)
     configure_log(app)
 
     return app
-
