@@ -267,3 +267,33 @@ def api_clear_all():
     except Exception:
         current_app.logger.warning("Failed to save after clear", exc_info=True)
     return jsonify({"ok": True})
+
+@blueprint.route("/api/delete/<clab_id>", methods=["DELETE", "POST"])
+def api_delete(clab_id):
+    # Access control básico: só o dono pode remover (ajuste depois conforme RBAC)
+    lab = CLABS_DETAILS.get(clab_id)
+    owner = getattr(current_user, "username", None) or getattr(current_user, "email", None)
+    if not lab:
+        return jsonify({"ok": False, "error": "CLab not found"}), 404
+    if lab.get("user") not in (owner, "anonymous"):
+        return jsonify({"ok": False, "error": "Forbidden"}), 403
+
+    # Remove do mock de lista
+    kept = []
+    removed = False
+    for c in CLABS:
+        _id = c.get("id") or c.get("lab_instance_id") or c.get("lab_id")
+        if _id == clab_id:
+            removed = True
+            continue
+        kept.append(c)
+    if removed:
+        CLABS[:] = kept
+        CLABS_DETAILS.pop(clab_id, None)
+        try:
+            save_state(default_state_path(current_app.config.get("CLABS_STATE_PATH")), CLABS, CLABS_DETAILS)
+        except Exception:
+            current_app.logger.warning("Failed to save after delete", exc_info=True)
+        return jsonify({"ok": True})
+    else:
+        return jsonify({"ok": False, "error": "CLab not found"}), 404
