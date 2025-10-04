@@ -1,102 +1,56 @@
 # -*- encoding: utf-8 -*-
-import os
 from flask import render_template, request, jsonify, current_app
-from flask_login import current_user
-from datetime import datetime, timedelta
+from flask_login import current_user, login_required
+from apps.controllers.clabernetes import C9sController
+import yaml
+
 from . import blueprint
 
-from apps.controllers.clabernetes import C9sController
-import yaml  # agora é dependência real (requirements)
-
-# bootstrap lazy do controller (singleton por processo)
+# -------- Controller singleton (lazy) --------
 _CLABS_CTRL = None
 def ctrl() -> C9sController:
+    """Return a lazily-initialized controller instance."""
     global _CLABS_CTRL
     if _CLABS_CTRL is None:
         cfg = current_app.config
         _CLABS_CTRL = C9sController(
-            state_path=cfg.get("CLABS_STATE_PATH"),
+            state_path=cfg.get("CLABS_STATE_PATH"),          # será removido no Bloco 2
             expire_days=cfg.get("CLABS_EXPIRE_DAYS", 0),
             upload_max_files=cfg.get("CLABS_UPLOAD_MAX_FILES", 200),
         )
     return _CLABS_CTRL
 
+# -------- Access helpers --------
+def _is_admin_or_teacher() -> bool:
+    cat = getattr(current_user, "category", "") or ""
+    return cat in ("admin", "teacher")
 
-def _norm_lab_row(c: dict) -> dict:
-    """Normaliza um item de CLABS para exibição na tabela."""
-    lab_id  = c.get("id") or c.get("lab_instance_id") or c.get("lab_id")
-    user    = c.get("owner") or c.get("user") or "--"
-    title   = c.get("name")  or c.get("title") or "--"
-    created = c.get("created_at") or c.get("created") or "--"
-    return {
-        "lab_instance_id": lab_id,
-        "user": user,
-        "title": title,
-        "created": created,
-    }
+def _owner_identity() -> str:
+    return getattr(current_user, "username", None) or getattr(current_user, "email", None) or "anonymous"
 
+# ----------------- Views -----------------
 @blueprint.route("/running")
+@login_required
 def running():
-    owner = getattr(current_user, "username", None) or getattr(current_user, "email", None)
-    labs = ctrl().list(user=owner)
-    return render_template("clabs/running.html", labs=labs)
+    """List running labs. Admin/teacher sees all; users see only their labs."""
+    if _is_admin_or_teacher():
+        items = ctrl().list()
+    else:
+        items = ctrl().list(user=_owner_identity())
+    return render_template("clabs/running.html", labs=items)
 
 @blueprint.route("/open/<clab_id>")
+@login_required
 def open_clab(clab_id):
     lab = ctrl().get(clab_id)
     if not lab:
         return render_template("pages/error.html", title="Open CLab", msg="CLab not found")
+    if (not _is_admin_or_teacher()) and (lab.get("user") != _owner_identity()):
+        return render_template("pages/error.html", title="Open CLab", msg="Forbidden"), 403
     return render_template("clabs/open.html", lab=lab)
 
-
-def _resources_from_clab_yaml(yaml_text: str):
-    """
-    Constrói a lista de 'resources' (nós) a partir de um YAML ContainerLab.
-    Se PyYAML não estiver disponível ou o YAML estiver inválido, retorna [].
-    """
-    if not yaml or not yaml_text:
-        return []
-
-    try:
-        data = yaml.safe_load(yaml_text)
-    except Exception:
-        return []
-
-    if not isinstance(data, dict):
-        return []
-
-    topo = data.get("topology") or {}
-    nodes = topo.get("nodes") or {}
-    if not isinstance(nodes, dict):
-        return []
-
-    resources = []
-    for name, cfg in nodes.items():
-        kind = "node"
-        ready = "Running"  
-        pod_ip = None
-        node_name = None
-        links = [{"label": "Console", "href": "#"}] 
-        services = []
-
-        if isinstance(cfg, dict):
-            pod_ip = cfg.get("mgmt_ipv4")
-            node_name = cfg.get("kind") or cfg.get("image") or "--"
-
-        resources.append({
-            "kind": kind,
-            "name": str(name),
-            "ready": ready,
-            "links": links,
-            "services": services,
-            "age": "--",
-            "node_name": node_name or "--",
-            "pod_ip": pod_ip or "--",
-        })
-
-    return resources
-
 @blueprint.route("/create", methods=["GET", "POST"])
+@login_required
 def create():
     if request.method == "GET":
         return render_template("clabs/create.html")
@@ -118,9 +72,12 @@ def create():
 
     max_files = current_app.config.get("CLABS_UPLOAD_MAX_FILES", 200)
     if files_count > max_files:
-        return jsonify({"ok": False, "result": f"Too many files: {files_count} (max {max_files})"}), 400
+        return jsonify({
+            "ok": False,
+            "result": f"Too many files: {files_count} (max {max_files})"
+        }), 400
 
-    owner = getattr(current_user, "username", None) or getattr(current_user, "email", None) or "anonymous"
+    owner = _owner_identity()
 
     try:
         detail = ctrl().create(
@@ -132,7 +89,7 @@ def create():
         )
     except yaml.YAMLError as e:
         return jsonify({"ok": False, "result": f"Invalid YAML: {e}"}), 400
-    except Exception as e:
+    except Exception:
         current_app.logger.exception("Failed to create CLab")
         return jsonify({"ok": False, "result": "Internal error"}), 500
 
@@ -150,28 +107,37 @@ def create():
     }), 201
 
 @blueprint.route("/api/list", methods=["GET"])
+@login_required
 def api_list():
-    removed = ctrl().prune()  # respeita CLABS_EXPIRE_DAYS
-    items = ctrl().list()
-    return jsonify({"items": items, "pruned": removed})
+    """Return list of labs + number of pruned items (TTL)."""
+    pruned = ctrl().prune()
+    if _is_admin_or_teacher():
+        items = ctrl().list()
+    else:
+        items = ctrl().list(user=_owner_identity())
+    return jsonify({"items": items, "pruned": pruned})
 
 @blueprint.route("/api/clear", methods=["POST"])
+@login_required
 def api_clear_all():
+    """Admin/teacher-only: clear all labs from state."""
+    if not _is_admin_or_teacher():
+        return jsonify({"ok": False, "error": "Forbidden"}), 403
     n = ctrl().clear()
     return jsonify({"ok": True, "removed": n})
 
 @blueprint.route("/api/delete/<clab_id>", methods=["DELETE", "POST"])
+@login_required
 def api_delete(clab_id):
+    """Delete a single lab. Owners can delete their own; admin/teacher can delete any."""
     lab = ctrl().get(clab_id)
     if not lab:
         return jsonify({"ok": False, "error": "CLab not found"}), 404
 
-    owner = getattr(current_user, "username", None) or getattr(current_user, "email", None)
-    if lab.get("user") not in (owner, "anonymous"):
+    if (not _is_admin_or_teacher()) and (lab.get("user") != _owner_identity()):
         return jsonify({"ok": False, "error": "Forbidden"}), 403
 
     ok = ctrl().delete(clab_id)
     if ok:
         return jsonify({"ok": True})
     return jsonify({"ok": False, "error": "CLab not found"}), 404
-
