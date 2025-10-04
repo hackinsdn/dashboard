@@ -12,7 +12,6 @@ class Config(object):
     basedir = os.path.abspath(os.path.dirname(__file__))
 
     # Persistência dos CLabs (PoC)
-    CLABS_STATE_PATH = os.getenv("CLABS_STATE_PATH", None) 
     CLABS_EXPIRE_DAYS = int(os.getenv("CLABS_EXPIRE_DAYS", "0"))  
 
     # Limites de upload

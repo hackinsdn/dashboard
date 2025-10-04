@@ -3,19 +3,20 @@ from __future__ import annotations
 
 import os
 import json
+import tempfile
 import datetime as dt
 import threading
 from typing import List, Dict, Optional, Any
 
-import yaml  # requer PyYAML no requirements.txt
+import yaml  # requires PyYAML in requirements.txt
 
 
 class C9sController:
     """
-    Controller para gerenciar ContainerLabs (PoC):
-    - Estado em memória com persistência opcional em arquivo JSON
-    - Operações CRUD mínimas + TTL prune
-    - Parse de YAML ContainerLab -> resources (nós)
+    Controller to manage ContainerLabs (PoC):
+    - In-memory state with optional JSON file persistence (safe defaults)
+    - Minimal CRUD ops + TTL prune
+    - ContainerLab YAML parsing -> resource (node) list
     """
 
     def __init__(
@@ -25,7 +26,14 @@ class C9sController:
         upload_max_files: int = 200,
     ) -> None:
         self._lock = threading.RLock()
-        self.state_path = state_path or None
+
+        # Persistence default order:
+        # 1) explicit state_path argument
+        # 2) environment var CLABS_STATE_PATH (backward compatible)
+        # 3) safe temp file fallback
+        default_file = os.path.join(tempfile.gettempdir(), "clabs_state.json")
+        self.state_path = state_path or os.getenv("CLABS_STATE_PATH") or default_file
+
         self.expire_days = int(expire_days or 0)
         self.upload_max_files = int(upload_max_files or 200)
 
@@ -34,12 +42,17 @@ class C9sController:
 
         self._load_state()
 
-    # -------------------- Persistência PoC --------------------
+    # -------------------- Persistence (PoC) --------------------
 
     def _state_file(self) -> Optional[str]:
+        """
+        Ensure the directory exists and return the file path.
+        """
         if not self.state_path:
             return None
-        os.makedirs(os.path.dirname(self.state_path), exist_ok=True)
+        dirname = os.path.dirname(self.state_path) or None
+        if dirname:
+            os.makedirs(dirname, exist_ok=True)
         return self.state_path
 
     def _load_state(self) -> None:
@@ -54,7 +67,7 @@ class C9sController:
             self._list = payload.get("list", []) or []
             self._details = payload.get("details", {}) or {}
         except Exception:
-            # Em caso de erro de leitura, inicia vazio (não quebra a app)
+            # On read error, start empty (do not break the app)
             self._list = []
             self._details = {}
 
@@ -97,18 +110,18 @@ class C9sController:
         except Exception:
             return None
 
-    # -------------------- API pública --------------------
+    # -------------------- Public API --------------------
 
     def list(self, user: Optional[str] = None) -> List[dict]:
         """
-        Retorna linhas normalizadas para tabela. Se `user` for fornecido,
-        o filtro por dono pode ser feito aqui (ou nas rotas/RBAC externo).
+        Return normalized table rows. If `user` is provided, filter by owner.
         """
-        items = []
+        items: List[dict] = []
         for c in self._list:
-            # se quiser filtrar por owner, descomente:
-            # if user and (c.get("owner") or c.get("user")) != user:
-            #     continue
+            if user:
+                owner = c.get("owner") or c.get("user")
+                if owner != user:
+                    continue
             row = self._normalize_row(c)
             if row["lab_instance_id"]:
                 items.append(row)
@@ -121,9 +134,9 @@ class C9sController:
         with self._lock:
             if lab_id not in self._details:
                 return False
-            # remove detalhes
+            # remove details
             self._details.pop(lab_id, None)
-            # remove da lista
+            # remove from list
             self._list = [
                 c
                 for c in self._list
@@ -141,7 +154,7 @@ class C9sController:
             return n
 
     def prune(self, now: Optional[dt.datetime] = None) -> int:
-        """Remove labs criados há mais de `expire_days` (se > 0)."""
+        """Remove labs older than `expire_days` (if > 0)."""
         days = self.expire_days
         if not days or days <= 0:
             return 0
@@ -174,11 +187,11 @@ class C9sController:
 
         return len(ids)
 
-    # -------------------- Criação & YAML --------------------
+    # -------------------- Create & YAML --------------------
 
     def _resources_from_yaml(self, yaml_text: str) -> List[dict]:
         """
-        Constrói a lista de resources (nós) a partir de um YAML ContainerLab.
+        Build the resource (node) list from a ContainerLab YAML manifest.
         """
         if not yaml_text:
             return []
@@ -192,7 +205,7 @@ class C9sController:
         if not isinstance(nodes, dict):
             return []
 
-        resources = []
+        resources: List[dict] = []
         for name, cfg in nodes.items():
             pod_ip = None
             node_name = None
@@ -224,11 +237,11 @@ class C9sController:
         owner: Optional[str],
     ) -> dict:
         """
-        Cria um novo CLab (PoC), valida YAML e atualiza estado.
-        Retorna o detalhe criado.
+        Create a new CLab (PoC), validate YAML and update state.
+        Return the created detail.
         """
         if yaml_manifest:
-            # valida sintaxe (raise se inválido)
+            # validate syntax (raises yaml.YAMLError if invalid)
             yaml.safe_load(yaml_manifest)
 
         resources = self._resources_from_yaml(yaml_manifest)

@@ -14,7 +14,6 @@ def ctrl() -> C9sController:
     if _CLABS_CTRL is None:
         cfg = current_app.config
         _CLABS_CTRL = C9sController(
-            state_path=cfg.get("CLABS_STATE_PATH"),          # será removido no Bloco 2
             expire_days=cfg.get("CLABS_EXPIRE_DAYS", 0),
             upload_max_files=cfg.get("CLABS_UPLOAD_MAX_FILES", 200),
         )
