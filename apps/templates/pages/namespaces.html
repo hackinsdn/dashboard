@@ -1,0 +1,686 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Namespaces {% endblock %} 
+
+<!-- Element injected in the BODY element -->
+{% block body_class %} sidebar-mini layout-navbar-fixed {% endblock body_class %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}
+
+  <!-- Google Font: Source Sans Pro -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
+  <!-- DataTables -->
+  <link rel="stylesheet" href="/static/assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
+  <link rel="stylesheet" href="/static/assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css">
+  <!-- icheck bootstrap -->
+  <link rel="stylesheet" href="/static/assets/plugins/icheck-bootstrap/icheck-bootstrap.min.css">
+  <!-- Theme style -->
+  <link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
+{% endblock stylesheets %}
+
+{% block content %}  
+
+  <!-- Content Wrapper. Contains page content -->
+  <div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+      <div class="container-fluid">
+        <div class="row mb-2">
+          <div class="col-sm-6">
+            <h1>Namespaces</h1>
+          </div>
+          <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+              <li class="breadcrumb-item"><a href="/index">Home</a></li>
+              <li class="breadcrumb-item active">Namespaces</li>
+            </ol>
+          </div>
+        </div>
+      </div><!-- /.container-fluid -->
+    </section>
+
+    <!-- Main content -->
+    <section class="content">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="card">
+            <div class="card-header">
+              <div class="float-right">
+                <button type="button" title="Create namespace" class="btn btn-default btn-sm" data-toggle="modal" data-target="#modal-create-namespace">
+                    <i class="far fa-plus-square"></i>
+                </button>
+                <button type="button" title="Select all namespaces" class="btn btn-default btn-sm checkbox-toggle"><i class="far fa-square"></i></button>
+                <button type="button" title="Delete selected namespaces" class="btn btn-default btn-sm" data-toggle="modal" data-target="#modal-default">
+                  <i class="far fa-trash-alt"></i>
+                </button>
+                <button type="button" title="Approve selected namespaces" class="btn btn-default btn-sm" data-toggle="modal" data-target="#modal-approve-namespaces">
+                  <i class="fas fa-check-square"></i>
+                </button>
+              </div>
+            </div>
+            <!-- /.card-header -->
+            <div class="card-body user-items">
+              <table id="tableNamespaces" class="table table-striped display">
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th>Description</th>
+                    <th>Namespace</th>
+                    <th>Organization</th>
+                    <th>Website</th>
+                    <th>Approved</th>
+                    <th>Enabled</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+            	{% for namespace in namespaces %}
+                <tr id="{{namespace.id}}">
+                  <td>
+                    <div class="icheck-primary">
+                      <input type="checkbox" value="" id="checkbox-{{namespace.id}}">
+                      <label for="checkbox-{{namespace.id}}"></label>
+                    </div>
+                  </td>
+                  <td>{{ namespace.description }}</td>
+                  <td>{{ namespace.namespace }}</td>
+                  <td>{{ namespace.organization }}</td>
+                  <td>{{ namespace.website }}</td>
+                  <td>
+                    {% if namespace.is_approved %}
+                      <span class="badge badge-success">Yes</span>
+                    {% else %}
+                      <span class="badge badge-danger">No</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if namespace.is_enabled %}
+                      <span class="badge badge-success">Yes</span>
+                    {% else %}
+                      <span class="badge badge-danger">No</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <button 
+                      class="btn btn-outline-dark btn-edit-namespace" 
+                      
+                      data-id="{{namespace.id}}" 
+                      type="button"
+                      aria-pressed="true">
+                      <i class="fa fa-pen"></i> Edit
+                    </button>
+                  </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+              </table>
+              <!-- /.table -->
+            </div>
+            <!-- /.card-body -->
+            <div class="card-footer p-0">
+              <div class="mailbox-controls">
+                <!-- Check all button -->
+                <button type="button" title="Select all namespaces" class="btn btn-default btn-sm checkbox-toggle"><i class="far fa-square"></i></button>
+                <button type="button" title="Delete selected namespaces" class="btn btn-default btn-sm" data-toggle="modal" data-target="#modal-default">
+                  <i class="far fa-trash-alt"></i>
+                </button>
+                <button type="button" title="Approve selected namespaces" class="btn btn-default btn-sm" data-toggle="modal" data-target="#modal-approve-namespaces">
+                  <i class="fas fa-check-square"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          <!-- /.card -->
+        </div>
+        <!-- /.col -->
+      </div>
+      <!-- /.row -->
+
+      <!-- Modal delete Namespaces -->
+      <div class="modal fade" id="modal-default">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">Confirm Namespace removal</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <p>Are you sure you want to remove the selected Namespaces?</p>
+              <ul id="modal-default-items"></ul>
+            </div>
+            <div class="modal-footer justify-content-between">
+              <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+              <button type="button" class="btn btn-danger" id="delete-namespaces">Delete Namespaces</button>
+            </div>
+          </div>
+          <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+      </div>
+      <!-- /.Modal delete Namespaces -->
+
+      <!-- Modal approve Namespaces -->
+      <div class="modal fade" id="modal-approve-namespaces">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">Confirm Approve Namespaces</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <p>Are you sure you want to approve the selected Namespaces? </p>
+              <ul id="modal-approve-namespaces-items"></ul>
+            </div>
+            <div class="modal-footer justify-content-between">
+              <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+              <button type="button" class="btn btn-primary" id="approve-namespaces">Approve Namespaces</button>
+            </div>
+          </div>
+          <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+      </div>
+      <!-- /.Modal approve Namespaces -->
+
+      <!-- Modal: Create Namespace -->
+      <div class="modal fade" id="modal-create-namespace">
+        <div class="modal-dialog">
+          <form id="form-create-namespace">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h4 class="modal-title">Create Namespace</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body">
+                <div class="form-group">
+                  <label>Description</label>
+                  <textarea class="form-control" name="description" required>Eu sou apenas um teste</textarea>
+                </div>
+                <div class="form-group">
+                  <label>Namespace</label>
+                  <input type="text" class="form-control" name="namespace" required value="test-namespace">
+                </div>
+                <div class="form-group">
+                  <label>Organization</label>
+                  <input type="text" class="form-control" name="organization" value="RNP">
+                </div>
+                <div class="form-group">
+                  <label>Website</label>
+                  <input type="url" class="form-control" name="website" value="https://www.rnp.br">
+                </div>
+                <div class="form-group">
+                  <label>Owners</label>
+                  <div id="ownersToCreate-list"></div>
+                  <div class="input-group mb-2">
+                    <input type="text" class="form-control" id="owner-input" placeholder="User ID">
+                    <div class="input-group-append">
+                      <button type="button" class="btn btn-success" id="add-owner">Add</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>Members</label>
+                  <div id="members-list"></div>
+                  <div class="input-group mb-2">
+                    <input type="text" class="form-control" id="member-input" placeholder="User ID">
+                    <div class="input-group-append">
+                      <button type="button" class="btn btn-success" id="add-member">Add</button>
+                    </div>
+                  </div>
+                </div>
+                {% if current_user.category == "admin" %}
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="custom-control custom-switch">
+                      <input type="checkbox" class="custom-control-input" name="is-approved" id="is-approved">
+                      <label class="custom-control-label" for="is-approved">Approved</label>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="custom-control custom-switch">
+                      <input type="checkbox" class="custom-control-input" name="is-enabled" id="is-enabled">
+                      <label class="custom-control-label" for="is-enabled">Enabled</label>
+                    </div>
+                  </div>
+                </div>
+                {% endif %}
+              </div>
+              <div class="modal-footer justify-content-between">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary">Create Namespace</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+      <!-- /.Modal: Create Namespace -->
+
+      <!-- Modal: Edit Namespace -->
+      <div class="modal fade" id="modal-edit-namespace">
+        <div class="modal-dialog">
+          <form id="form-edit-namespace">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h4 class="modal-title">Edit Namespace</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body">
+                <input type="hidden" id="edit-namespace-id" name="namespace_id">
+                <div class="form-group">
+                  <label>Description</label>
+                  <textarea class="form-control" name="description" id="edit-description" required></textarea>
+                </div>
+                <div class="form-group">
+                  <label>Namespace</label>
+                  <input type="text" class="form-control" name="namespace" id="edit-namespace" required>
+                </div>
+                <div class="form-group">
+                  <label>Organization</label>
+                  <input type="text" class="form-control" name="organization" id="edit-organization">
+                </div>
+                <div class="form-group">
+                  <label>Website</label>
+                  <input type="url" class="form-control" name="website" id="edit-website">
+                </div>
+                <div class="form-group">
+                  <label>Owners</label>
+                  <div id="edit-owners-list"></div>
+                  <div class="input-group mb-2">
+                    <input type="text" class="form-control" id="edit-owner-input" placeholder="User ID">
+                    <div class="input-group-append">
+                      <button type="button" class="btn btn-success" id="edit-add-owner">Add</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>Members</label>
+                  <div id="edit-members-list"></div>
+                  <div class="input-group mb-2">
+                    <input type="text" class="form-control" id="edit-member-input" placeholder="User ID">
+                    <div class="input-group-append">
+                      <button type="button" class="btn btn-success" id="edit-add-member">Add</button>
+                    </div>
+                  </div>
+                </div>
+                {% if current_user.category == "admin" %}
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="custom-control custom-switch">
+                      <input type="checkbox" class="custom-control-input" name="edit-is-approved" id="edit-is-approved">
+                      <label class="custom-control-label" for="edit-is-approved">Approved</label>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="custom-control custom-switch">
+                      <input type="checkbox" class="custom-control-input" name="edit-is-enabled" id="edit-is-enabled">
+                      <label class="custom-control-label" for="edit-is-enabled">Enabled</label>
+                    </div>
+                  </div>
+                </div>
+                {% endif %}
+              </div>
+              <div class="modal-footer justify-content-between">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div> 
+      <!-- /.Modal: Edit Namespace -->
+
+    </section>
+    <!-- /.content -->
+  </div>
+  <!-- /.content-wrapper -->
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+  <!-- jQuery -->
+  <script src="/static/assets/plugins/jquery/jquery.min.js"></script>
+  <!-- Bootstrap 4 -->
+  <script src="/static/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <!-- DataTables -->
+  <script src="/static/assets/plugins/datatables/jquery.dataTables.min.js"></script>
+  <script src="/static/assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
+  <script src="/static/assets/plugins/datatables-responsive/js/dataTables.responsive.min.js"></script>
+  <script src="/static/assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js"></script>
+  <!-- AdminLTE App -->
+  <script src="/static/assets/js/adminlte.min.js"></script>
+  <!-- Page Script -->
+  <script>
+    $(function () {
+      // config DataTable
+      var table = $("#tableNamespaces").DataTable({
+        responsive: true,
+        autoWidth: false,
+        language: {
+          emptyTable: 'No namespaces found',
+        },
+        columns: [
+          {
+            orderable: false,
+            name: 'select',
+          },
+          { name: 'description' },
+          { name: 'namespace' },
+          { name: 'organization' },
+          { name: 'website' },
+          { name: 'is_approved' },
+          { name: 'is_enabled' },
+          {
+            orderable: false,
+            name: 'actions',
+          },
+        ],
+        order: [[1, 'asc']]
+      });
+      if ( sessionStorage.getItem('msgSuccess') ) {
+        $(document).Toasts('create', {
+          class: 'bg-success',
+          title: 'Sucess',
+          body: sessionStorage.getItem('msgSuccess')
+        });
+        sessionStorage.removeItem('msgSuccess');
+      }
+      if ( sessionStorage.getItem('msgFail') ) {
+        $(document).Toasts('create', {
+          class: 'bg-danger',
+          title: 'Failure',
+          body: sessionStorage.getItem('msgFail')
+        });
+        sessionStorage.removeItem('msgFail');
+      }
+      //Enable check and uncheck all functionality
+      $('#delete-namespaces').click(function () {
+        var rows = $('#tableNamespaces tr').filter(':has(:checkbox:checked)');
+        $("#delete-namespaces").html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Deleting ' + table.rows(rows).data().length + ' row(s)...');
+        $("#delete-namespaces").prop('disabled', true);
+        var items = [];
+        table.rows(rows).each( function ( index ) {
+          var row = table.row( index );
+          items.push(row.id());
+        });
+        var request = $.ajax({
+          url: "/api/namespaces/bulk-delete",
+          type: "POST",
+          dataType: "json",
+          data: JSON.stringify(items),
+          contentType: "application/json",
+        });
+        request.done(function(data) {
+          sessionStorage.setItem('msgSuccess', data.result);
+          location.reload();
+        });
+        request.fail(function(xhr) {
+          sessionStorage.setItem('msgFail', xhr.responseText);
+          location.reload();
+        });
+      });
+      $('#approve-namespaces').click(function () {
+        var rows = $('#tableNamespaces tr').filter(':has(:checkbox:checked)');
+        $("#approve-namespaces").html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Aproving ' + table.rows(rows).data().length + ' row(s)...');
+        $("#approve-namespaces").prop('disabled', true);
+        var items = [];
+        rows.each( function ( index, row ) {
+          items.push(row.id);
+        });
+        var request = $.ajax({
+          url: '/api/namespaces/bulk-approve',
+          type: "POST",
+          dataType: "json",
+          data: JSON.stringify(items),
+          contentType: "application/json",
+        });
+        request.done(function(data) {
+          sessionStorage.setItem('msgSuccess', data.result);
+          location.reload();
+        });
+        request.fail(function(xhr) {
+          sessionStorage.setItem('msgFail', xhr.responseText);
+          location.reload();
+        });
+      });
+      $('#modal-default').on('show.bs.modal', function (e) {
+        var rows = $('#tableNamespaces tr').filter(':has(:checkbox:checked)');
+        var data = table.rows(rows).data();
+        var items = $("#modal-default-items");
+        items.empty();
+        $("#delete-namespaces").prop('disabled', false);
+        if (data.length === 0) {
+          items.append("<li>No namespace selected!</li>");
+          $("#delete-namespaces").prop('disabled', true);
+          return;
+        }
+        data.each(function (value, index) {
+          items.append(`<li>${value[2]} - ${value[3]}</li>`);
+        });
+      });
+      $('#modal-approve-namespaces').on('show.bs.modal', function (e) {
+        var rows = $('#tableNamespaces tr').filter(':has(:checkbox:checked)');
+        var data = table.rows(rows).data();
+        var items = $("#modal-approve-namespaces-items");
+        items.empty();
+        $("#approve-namespaces").prop('disabled', false);
+        if (data.length === 0) {
+          items.append("<li>No namespace selected!</li>");
+          $("#approve-namespaces").prop('disabled', true);
+          return;
+        }
+        data.each(function (value, index) {
+          items.append(`<li>${value[2]} - ${value[3]}</li>`);
+        });
+      });
+      //Enable check and uncheck all functionality
+      $('.checkbox-toggle').click(function () {
+        var clicks = $(this).data('clicks')
+        if (clicks) {
+          //Uncheck all checkboxes
+          $('.user-items input[type=\'checkbox\']').prop('checked', false)
+          $('.checkbox-toggle .far.fa-check-square').removeClass('fa-check-square').addClass('fa-square')
+        } else {
+          //Check all checkboxes
+          $('.user-items input[type=\'checkbox\']').prop('checked', true)
+          $('.checkbox-toggle .far.fa-square').removeClass('fa-square').addClass('fa-check-square')
+        }
+        $(this).data('clicks', !clicks)
+      })
+    })
+
+
+    // Owners and Members arrays
+    let ownersToCreate = [];
+    let members = [];
+
+    function renderList(list, containerId, removeFn) {
+      const container = $(containerId);
+      container.empty();
+      list.forEach((userId, idx) => {
+        container.append(
+          `<span class="badge badge-info mr-1">${userId} <a href="#" data-idx="${idx}" class="text-danger ${removeFn}">&times;</a></span>`
+        );
+      });
+    }
+
+    // Add Owner
+    $('#add-owner').click(function() {
+      const userId = $('#owner-input').val().trim();
+      if (userId && !ownersToCreate.includes(userId) && !members.includes(userId)) {
+        ownersToCreate.push(userId);
+        renderList(ownersToCreate, '#ownersToCreate-list', 'remove-owner');
+        $('#owner-input').val('');
+      }
+    });
+
+    // Add Member
+    $('#add-member').click(function() {
+      const userId = $('#member-input').val().trim();
+      if (userId && !members.includes(userId) && !ownersToCreate.includes(userId)) {
+        members.push(userId);
+        renderList(members, '#members-list', 'remove-member');
+        $('#member-input').val('');
+      }
+    });
+
+    // Remove Owner
+    $(document).on('click', '.remove-owner', function(e) {
+      e.preventDefault();
+      ownersToCreate.splice($(this).data('idx'), 1);
+      renderList(ownersToCreate, '#ownersToCreate-list', 'remove-owner');
+    });
+
+    // Remove Member
+    $(document).on('click', '.remove-member', function(e) {
+      e.preventDefault();
+      members.splice($(this).data('idx'), 1);
+      renderList(members, '#members-list', 'remove-member');
+    });
+
+    // Submit Form
+    $('#form-create-namespace').submit(function(e) {
+      e.preventDefault();
+      const data = {
+        description: $(this).find('[name="description"]').val(),
+        namespace: $(this).find('[name="namespace"]').val(),
+        organization: $(this).find('[name="organization"]').val(),
+        website: $(this).find('[name="website"]').val(),
+        is_approved: $(this).find('[name="is-approved"]').is(':checked'),
+        is_enabled: $(this).find('[name="is-enabled"]').is(':checked'),
+        owners: JSON.stringify(ownersToCreate),
+        members: JSON.stringify(members)
+      };
+      $.ajax({
+        url: '/api/namespaces',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(data),
+        success: function(resp) {
+          sessionStorage.setItem('msgSuccess', resp.result);
+          location.reload();
+        },
+        error: function(xhr) {
+          sessionStorage.setItem('msgFail', xhr.responseText);
+          location.reload();
+        }
+      });
+    });
+
+
+    let editOwners = [];
+    let editMembers = [];
+
+    function renderEditList(list, containerId, removeFn) {
+      const container = $(containerId);
+      container.empty();
+      list.forEach((userId, idx) => {
+        container.append(
+          `<span class="badge badge-info mr-1">${userId} <a href="#" data-idx="${idx}" class="text-danger ${removeFn}">&times;</a></span>`
+        );
+      });
+    }
+
+    // Abrir modal e carregar dados
+    $('#tableNamespaces').on('click', '.btn-edit-namespace', function(e) {
+      e.preventDefault();
+      const nsId = $(this).data('id');
+      $.get('/api/namespaces/' + nsId, function(resp) {
+        if (resp.status === "ok") {
+          const ns = resp.result;
+          $('#edit-namespace-id').val(ns.id);
+          $('#edit-description').val(ns.description);
+          $('#edit-namespace').val(ns.namespace);
+          $('#edit-organization').val(ns.organization);
+          $('#edit-website').val(ns.website);
+          $('#edit-is-approved').prop('checked', ns.is_approved);
+          $('#edit-is-enabled').prop('checked', ns.is_enabled);
+          editOwners = typeof ns.owners === "string" ? JSON.parse(ns.owners) : (ns.owners || []);
+          editMembers = typeof ns.members === "string" ? JSON.parse(ns.members) : (ns.members || []);
+          renderEditList(editOwners, '#edit-owners-list', 'edit-remove-owner');
+          renderEditList(editMembers, '#edit-members-list', 'edit-remove-member');
+          $('#modal-edit-namespace').modal('show');
+        }
+      });
+    });
+
+    // Adicionar Owner
+    $('#edit-add-owner').click(function() {
+      const userId = $('#edit-owner-input').val().trim();
+      if (userId && !editOwners.includes(userId) && !editMembers.includes(userId)) {
+        editOwners.push(userId);
+        renderEditList(editOwners, '#edit-owners-list', 'edit-remove-owner');
+        $('#edit-owner-input').val('');
+      }
+    });
+
+    // Adicionar Member
+    $('#edit-add-member').click(function() {
+      const userId = $('#edit-member-input').val().trim();
+      if (userId && !editMembers.includes(userId) && !editOwners.includes(userId)) {
+        editMembers.push(userId);
+        renderEditList(editMembers, '#edit-members-list', 'edit-remove-member');
+        $('#edit-member-input').val('');
+      }
+    });
+
+    // Remover Owner
+    $(document).on('click', '.edit-remove-owner', function(e) {
+      e.preventDefault();
+      editOwners.splice($(this).data('idx'), 1);
+      renderEditList(editOwners, '#edit-owners-list', 'edit-remove-owner');
+    });
+
+    // Remover Member
+    $(document).on('click', '.edit-remove-member', function(e) {
+      e.preventDefault();
+      editMembers.splice($(this).data('idx'), 1);
+      renderEditList(editMembers, '#edit-members-list', 'edit-remove-member');
+    });
+
+    // Submit edição
+    $('#form-edit-namespace').submit(function(e) {
+      e.preventDefault();
+      const namespaceId = $('#edit-namespace-id').val();
+      const data = {
+        description: $('#edit-description').val(),
+        namespace: $('#edit-namespace').val(),
+        organization: $('#edit-organization').val(),
+        website: $('#edit-website').val(),
+        owners: JSON.stringify(editOwners),
+        members: JSON.stringify(editMembers),
+        is_approved: $('#edit-is-approved').is(':checked'),
+        is_enabled: $('#edit-is-enabled').is(':checked'),
+      };
+      $.ajax({
+        url: '/api/namespaces/' + namespaceId,         
+        type: 'PUT',
+        contentType: 'application/json',
+        data: JSON.stringify(data),
+        success: function(resp) {
+          sessionStorage.setItem('msgSuccess', resp.result);
+          location.reload();
+        },
+        error: function(xhr) {
+          sessionStorage.setItem('msgFail', xhr.responseText);
+          location.reload();
+        }
+      });
+    });
+  </script>
+  <!-- AdminLTE for demo purposes -->
+  <script src="/static/assets/js/demo.js"></script>
+
+{% endblock javascripts %}

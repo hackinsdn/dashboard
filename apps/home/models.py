@@ -243,7 +243,9 @@ class Namespaces (db.Model, AuditMixin):
     is_approved = db.Column(db.Boolean, default=False)
     is_enabled = db.Column(db.Boolean, default=False)
     is_deleted = db.Column(db.Boolean, default=False)
-
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    user = db.relationship('Users', backref='namespaces', foreign_keys=[user_id])
+    
     @property
     def members_dict(self):
         try:
@@ -257,6 +259,22 @@ class Namespaces (db.Model, AuditMixin):
             return json.loads(self.owners)
         except:
             return {}
+        
+    def as_dict(self):
+        return {
+            "id": self.id,
+            "description": self.description,
+            "namespace": self.namespace,
+            "organization": self.organization,
+            "website": self.website,
+            "members": self.members_dict,
+            "owners": self.owners_dict,
+            "is_approved": self.is_approved,
+            "is_enabled": self.is_enabled,
+            "is_deleted": self.is_deleted,
+            "user_id": self.user_id
+        }
+
 
 @event.listens_for(Labs, 'after_insert')
 @event.listens_for(LabInstances, 'after_insert')

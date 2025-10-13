@@ -105,6 +105,15 @@
               </p>
             </a>
           </li>
+          <li class="nav-item">
+            <a href="{{url_for('home_blueprint.view_namespaces')}}" class="nav-link {% if request.url_rule.endpoint == 'home_blueprint.namespaces' %} active {% endif %}">
+              <i class="nav-icon far fa-calendar-alt"></i>
+              <p>
+                Namespaces
+                <span class="badge badge-info right">{{g.namespaces}}</span>
+              </p>
+            </a>
+          </li>
           <li class="nav-header">MANAGEMENT</li>
           {% if current_user.category == "admin" or current_user.category == "teacher" %}
           <li class="nav-item">

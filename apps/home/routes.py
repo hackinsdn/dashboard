@@ -2,6 +2,7 @@
 """
 Copyright (c) 2019 - present AppSeed.us
 """
+import json
 import traceback
 import uuid
 import re
@@ -10,7 +11,7 @@ from collections import OrderedDict
 from apps import db, cache
 from apps.home import blueprint
 from apps.controllers import k8s
-from apps.home.models import Labs, LabInstances, LabCategories, LabAnswers, LabAnswerSheet, HomeLogging, UserLikes, UserFeedbacks
+from apps.home.models import Labs, LabInstances, LabCategories, LabAnswers, LabAnswerSheet, HomeLogging, UserLikes, UserFeedbacks, Namespaces
 from apps.authentication.models import Users, Groups
 from flask import render_template, request, current_app, redirect, url_for, session
 from flask_login import login_required, current_user
@@ -949,3 +950,16 @@ def view_contact():
 @login_required
 def view_finished_lab_infos(lab_id):
     return render_template("pages/finished_lab_infos.html", lab_id=lab_id)
+
+@blueprint.route('/namespaces', methods=["GET"])
+@login_required
+@check_user_category(["admin", "teacher"])
+def view_namespaces():
+    namespaces = Namespaces.query.all()
+    authorized_namespaces = []
+    for ns in namespaces:
+        users_in_namespace = json.loads(ns.owners or "[]") + json.loads(ns.members or "[]")
+        if (current_user.id in users_in_namespace) and ns.is_deleted == False:
+            authorized_namespaces.append(ns)
+
+    return render_template("pages/namespaces.html", namespaces=authorized_namespaces)
