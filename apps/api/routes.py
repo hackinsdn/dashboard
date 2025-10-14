@@ -6,7 +6,7 @@ import re
 from apps import db, cache
 from apps.api import blueprint
 from apps.controllers import k8s
-from apps.home.models import Labs, LabInstances, LabAnswers, LabAnswerSheet, UserLikes, UserFeedbacks, lab_groups
+from apps.home.models import Labs, LabInstances, LabAnswers, LabAnswerSheet, UserLikes, UserFeedbacks, lab_groups, Namespaces
 from apps.authentication.models import Users, Groups, DeletedGroupUsers, group_members, group_owners
 from flask import request, current_app
 from flask_login import login_required, current_user
@@ -505,3 +505,181 @@ def extend_lab(lab_id):
     )
 
     return {"status": "ok", "result": new_expiration}, 200
+
+@blueprint.route("/namespaces", methods=["POST"])
+@login_required
+def create_namespace():
+    if current_user.category not in ["admin", "teacher"]:
+        return {"status": "fail", "result": "Unauthorized access."}, 401
+
+    content = request.get_json(silent=True)
+    if not content:
+        return {"status": "fail", "result": "Invalid content."}, 400
+
+    if current_user.category == "admin":
+        content["is_approved"] = True
+        content["is_enabled"] = True
+        
+    owners = [int(x) for x in json.loads(content.get("owners", "[]"))]
+    members = [int(x) for x in json.loads(content.get("members", "[]"))]
+
+    if current_user.id not in owners:
+        owners = json.dumps([current_user.id] + owners)
+        
+    content["owners"] = json.dumps(list(set(owners)))
+    content["members"] = json.dumps(list(set(members)))
+    content["user_id"] = current_user.id
+
+    namespace = Namespaces(**content)
+    db.session.add(namespace)
+    db.session.commit()
+
+    return {"status": "ok", "result": "Namespace saved successfully"}, 200
+
+
+@blueprint.route("/namespaces/<namespace_id>", methods=["GET"])
+@login_required
+def get_namespace_by_id(namespace_id):
+    namespace = Namespaces.query.get(namespace_id)
+    if not namespace:
+        return {"status": "fail", "result": "Namespace not found"}, 404
+
+    users_in_namespace = json.loads(namespace.owners or "[]") + json.loads(namespace.members or "[]")
+    if current_user.id not in users_in_namespace:
+        return {"status": "fail", "result": "Unauthorized access to this namespace."}, 401
+
+    return {
+        "status": "ok",
+        "result": namespace.as_dict()
+    }, 200
+
+
+@blueprint.route("/namespaces/<namespace_id>", methods=["PUT"])
+@login_required
+def update_namespace(namespace_id):
+    if current_user.category not in ["admin", "teacher"]:
+        return {"status": "fail", "result": "Unauthorized access"}, 401
+    
+    content = request.get_json(silent=True)
+    if not content:
+        return {"status": "fail", "result": "Invalid content."}, 400
+
+    print(content)
+
+    namespace = Namespaces.query.get(namespace_id)
+    if not namespace:
+        return {"status": "fail", "result": "Namespace not found"}, 404
+
+    owners = [int(x) for x in json.loads(content.get("owners", namespace.owners))]
+    members = [int(x) for x in json.loads(content.get("members", namespace.members))]
+
+    if current_user.id not in owners:
+        return {"status": "fail", "result": "Unauthorized access to modify this namespace."}, 401
+
+    data = request.get_json(silent=True)
+    if not data:
+        return {"status": "fail", "result": "Invalid content"}, 400
+
+    namespace.description = data.get("description", namespace.description)
+    namespace.namespace = data.get("namespace", namespace.namespace)
+    namespace.organization = data.get("organization", namespace.organization)
+    namespace.website = data.get("website", namespace.website)
+    namespace.members = json.dumps(members)
+    namespace.owners = json.dumps(owners)
+
+    if (current_user.category == "admin"):
+        namespace.is_approved = data.get("is_approved", namespace.is_approved)
+        namespace.is_enabled = data.get("is_enabled", namespace.is_enabled)
+
+    try:
+        db.session.commit()
+    except Exception as exc:
+        current_app.logger.error(f"Failed to update lab: {exc}")
+        return {"status": "fail", "result": "Failed to update lab"}, 400
+
+    return {"status": "ok", "result": "Lab updated successfully"}, 200
+
+
+@blueprint.route('/namespaces/bulk-approve', methods=["POST"])
+@login_required
+def bulk_approve_namespaces():
+    if current_user.category not in ["admin", "teacher"]:
+        return {}, 401
+
+    content = request.get_json(silent=True)
+    if not content:
+        return {"status": "fail", "result": "invalid content"}, 400
+
+    namespaces = []
+    errors = []
+    for namespace_id in content:
+        if not namespace_id.isdigit():
+            errors.append(f"Invalid namespace provided {namespace_id=}")
+            continue
+        namespace = Namespaces.query.get(int(namespace_id))
+        owners = [int(x) for x in json.loads(namespace.owners)]
+        if current_user.id not in owners or current_user.category != "admin":
+            errors.append(f"Unauthorized access to modify the namespace with ID {namespace_id=}")
+            continue
+        if not namespace or namespace.is_deleted:
+            errors.append(f"Invalid namespace provided {namespace_id=}")
+            continue
+        namespaces.append(namespace)
+
+    if errors:
+        return {"status": "fail", "result": "Invalid namespaces to approve: " + "<br/>".join(errors)}, 400
+
+    for namespace in namespaces:
+        namespace.is_approved = True
+        namespace.is_enabled = True
+
+    try:
+        db.session.commit()
+    except Exception as exc:
+        current_app.logger.error(f"Failed to approve namespaces: {exc}")
+        return {"status": "fail", "result": "Failed to save updated data"}, 400
+
+    return {"status": "ok", "result": "all namespaces approved"}, 200
+
+
+@blueprint.route('/namespaces/bulk-delete', methods=["POST"])
+@login_required
+def bulk_delete_namespaces():
+    if current_user.category not in ["admin", "teacher"]:
+        return {}, 401
+
+    content = request.get_json(silent=True)
+    if not content:
+        return {"status": "fail", "result": "invalid content"}, 400
+
+    namespaces = []
+    errors = []
+    for namespace_id in content:
+        if not str(namespace_id).isdigit():
+            errors.append(f"Invalid namespace provided {namespace_id=}")
+            continue
+        namespace = Namespaces.query.get(int(namespace_id))
+        if not namespace or namespace.is_deleted:
+            errors.append(f"Invalid namespace provided {namespace_id=}")
+            continue
+        owners = [int(x) for x in json.loads(namespace.owners)]
+        if current_user.id not in owners and current_user.category != "admin":
+            errors.append(f"Unauthorized access to delete the namespace with ID {namespace_id=}")
+            continue
+        namespaces.append(namespace)
+
+    if errors:
+        return {"status": "fail", "result": "Invalid namespaces to delete: " + "<br/>".join(errors)}, 400
+
+    for namespace in namespaces:
+        who = "owner" if namespace.user_id == current_user.id else "admin"
+        namespace.is_deleted = True
+        namespace.finish_reason = "Finished by the " + who
+
+    try:
+        db.session.commit()
+    except Exception as exc:
+        current_app.logger.error(f"Failed to delete namespaces: {exc}")
+        return {"status": "fail", "result": "Failed to save updated data"}, 400
+
+    return {"status": "ok", "result": "all namespaces deleted"}, 200
