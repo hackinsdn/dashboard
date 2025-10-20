@@ -84,3 +84,31 @@ The other section on that page is the "Lab guide", which is basically a document
 ## Video on Using Labs
 
 [![altimg](https://img.youtube.com/vi/o5lC5tBhZM0/0.jpg)](https://www.youtube.com/watch?v=o5lC5tBhZM0)
+
+## Dynamic Lab Templates Repository
+
+The Dashboard uses an external Git repository to store all Kubernetes manifests (`.yaml` files) that serve as templates for creating new Labs.  
+This approach ensures that the list of available templates is always synchronized with the source code, eliminating the need to restart the application every time a template is added or updated.
+
+## Repository Synchronization Process
+
+During the application's startup process, a dedicated function is executed to:
+
+1. **Check the environment variables** (`LAB_TEMPLATES_GIT_REPO` and `GIT_PAT`).
+2. **Clone the Git repository** to the path specified by `LAB_TEMPLATES_DIR` (inside the container).
+3. **Update the repository** if it already exists (via `git pull`).
+
+After loading, the **Lab editing interface** accesses this cloned directory to dynamically list and load the templates, ensuring the **Manifest editor** is always updated with the latest resources.
+
+---
+
+## Lab Templates Configuration (Git)
+
+These variables are used by the application's initialization function to clone and keep the Kubernetes manifest repository (`.yaml` files) updated.  
+This repository serves as the source for creating new Labs.
+
+| Variable | Description | Example Value | Required |
+|-----------|--------------|----------------|-----------|
+| `LAB_TEMPLATES_GIT_REPO` | The URL of the Git repository containing the templates, excluding the `https://` protocol. | `github.com/user/lab-templates.git` | Yes |
+| `GIT_PAT` | The Personal Access Token (PAT) for Git. Essential for accessing private repositories. | `ghp_your_pat_here_1234567890` | Yes (for Private Repos) |
+| `LAB_TEMPLATES_DIR` | The absolute or relative path where the templates repository will be cloned inside the container. | `/app/apps/data/templates-test` | No (uses default value) |
