@@ -3,6 +3,12 @@ from flask import render_template, request, jsonify, current_app
 from flask_login import current_user, login_required
 from apps.controllers.clabernetes import C9sController
 import yaml
+from apps import db
+from apps.clabs.models import Clab, ClabInstance
+from apps.authentication.models import Users
+import json
+import datetime as dt
+
 
 from . import blueprint
 
@@ -27,25 +33,65 @@ def _is_admin_or_teacher() -> bool:
 def _owner_identity() -> str:
     return getattr(current_user, "username", None) or getattr(current_user, "email", None) or "anonymous"
 
+# -------- Serialization helpers (DB → UI/API) --------
+def _row_from_db(ci: ClabInstance) -> dict:
+    """Linha para /running e /api/list."""
+    owner = getattr(ci, "owner", None)
+    clab = getattr(ci, "clab", None)
+    created = (ci.created_at or dt.datetime.utcnow()).strftime("%Y-%m-%d %H:%M:%S")
+    return {
+        "lab_instance_id": ci.id,
+        "user": getattr(owner, "username", None) or getattr(owner, "email", None) or "anonymous",
+        "title": getattr(clab, "title", None) or "Unnamed",
+        "created": created,
+    }
+
+def _detail_from_db(ci: ClabInstance) -> dict:
+    """Detalhe para /open/<id>."""
+    owner = getattr(ci, "owner", None)
+    clab = getattr(ci, "clab", None)
+
+    created = (ci.created_at or dt.datetime.utcnow()).strftime("%Y-%m-%d %H:%M:%S")
+    try:
+        resources = json.loads(ci._clab_resources or "[]")
+        if not isinstance(resources, list):
+            resources = []
+    except Exception:
+        resources = []
+
+    return {
+        "lab_instance_id": ci.id,
+        "user": getattr(owner, "username", None) or getattr(owner, "email", None) or "anonymous",
+        "title": getattr(clab, "title", None) or "Unnamed",
+        "created": created,
+        "namespace": ci.namespace_effective or getattr(clab, "namespace_default", None) or "--",
+        "resources": resources,
+        "name": getattr(clab, "title", None) or "Unnamed",
+        "status": "Running",
+    }
+
 # ----------------- Views -----------------
 @blueprint.route("/running")
 @login_required
 def running():
     """List running labs. Admin/teacher sees all; users see only their labs."""
-    if _is_admin_or_teacher():
-        items = ctrl().list()
-    else:
-        items = ctrl().list(user=_owner_identity())
+    q = ClabInstance.query.filter_by(is_deleted=False)
+    if not _is_admin_or_teacher():
+        q = q.filter_by(owner_user_id=current_user.id)
+    cis = q.order_by(ClabInstance.created_at.desc()).all()
+    items = [_row_from_db(ci) for ci in cis]
     return render_template("clabs/running.html", labs=items)
 
 @blueprint.route("/open/<clab_id>")
 @login_required
 def open_clab(clab_id):
-    lab = ctrl().get(clab_id)
-    if not lab:
+    ci = ClabInstance.query.get(clab_id)
+    if not ci or ci.is_deleted:
         return render_template("pages/error.html", title="Open CLab", msg="CLab not found")
-    if (not _is_admin_or_teacher()) and (lab.get("user") != _owner_identity()):
+    if (not _is_admin_or_teacher()) and (ci.owner_user_id != current_user.id):
         return render_template("pages/error.html", title="Open CLab", msg="Forbidden"), 403
+
+    lab = _detail_from_db(ci)
     return render_template("clabs/open.html", lab=lab)
 
 @blueprint.route("/create", methods=["GET", "POST"])
@@ -78,6 +124,7 @@ def create():
 
     owner = _owner_identity()
 
+    # 1) usa o controller PoC para validar YAML e montar o "detail" compatível
     try:
         detail = ctrl().create(
             name=name,
@@ -92,6 +139,52 @@ def create():
         current_app.logger.exception("Failed to create CLab")
         return jsonify({"ok": False, "result": "Internal error"}), 500
 
+    # 2) persistência no DB (MVP)
+    clab_title = (detail.get("title") or name or "Unnamed").strip() or "Unnamed"
+    clab_ns = namespace or None
+
+    # encontra ou cria o template Clab pelo par (namespace_default, title)
+    existing = Clab.query.filter_by(namespace_default=clab_ns, title=clab_title).first()
+    if existing:
+        clab = existing
+    else:
+        import uuid
+        clab = Clab(
+            id=str(uuid.uuid4()),
+            title=clab_title,
+            description=None,
+            extended_desc=None,
+            clab_guide_md=None,
+            clab_guide_html=None,
+            yaml_manifest=yaml_manifest or "",
+            namespace_default=clab_ns,
+        )
+        db.session.add(clab)
+        db.session.flush() 
+
+    # cria a instância com o mesmo ID que o PoC gerou
+    inst_id = detail.get("lab_instance_id")
+    if not inst_id:
+        inst_id = f"clab-{int(dt.datetime.utcnow().timestamp())}"
+
+    token = f"tok_{inst_id}" 
+    resources = json.dumps(detail.get("resources", []))
+
+    ci = ClabInstance(
+        id=inst_id,
+        token=token,
+        owner_user_id=current_user.id,
+        clab_id=clab.id,
+        is_deleted=False,
+        expiration_ts=None,
+        finish_reason=None,
+        _clab_resources=resources,
+        namespace_effective=detail.get("namespace") or clab_ns,
+    )
+    db.session.add(ci)
+    db.session.commit()
+
+    # 3) resposta compatível com a UI (mantida)
     nodes_count = len(detail.get("resources", []))
     return jsonify({
         "ok": True,
@@ -109,11 +202,13 @@ def create():
 @login_required
 def api_list():
     """Return list of labs + number of pruned items (TTL)."""
-    pruned = ctrl().prune()
-    if _is_admin_or_teacher():
-        items = ctrl().list()
-    else:
-        items = ctrl().list(user=_owner_identity())
+    pruned = 0
+
+    q = ClabInstance.query.filter_by(is_deleted=False)
+    if not _is_admin_or_teacher():
+        q = q.filter_by(owner_user_id=current_user.id)
+    cis = q.order_by(ClabInstance.created_at.desc()).all()
+    items = [_row_from_db(ci) for ci in cis]
     return jsonify({"items": items, "pruned": pruned})
 
 @blueprint.route("/api/clear", methods=["POST"])
@@ -129,14 +224,21 @@ def api_clear_all():
 @login_required
 def api_delete(clab_id):
     """Delete a single lab. Owners can delete their own; admin/teacher can delete any."""
-    lab = ctrl().get(clab_id)
-    if not lab:
+    ci = ClabInstance.query.get(clab_id)
+    if not ci or ci.is_deleted:
         return jsonify({"ok": False, "error": "CLab not found"}), 404
 
-    if (not _is_admin_or_teacher()) and (lab.get("user") != _owner_identity()):
+    if (not _is_admin_or_teacher()) and (ci.owner_user_id != current_user.id):
         return jsonify({"ok": False, "error": "Forbidden"}), 403
 
-    ok = ctrl().delete(clab_id)
-    if ok:
-        return jsonify({"ok": True})
-    return jsonify({"ok": False, "error": "CLab not found"}), 404
+    # tentativa de teardown no PoC (idempotente)
+    try:
+        ctrl().delete(clab_id)
+    except Exception:
+        current_app.logger.exception("PoC teardown failed (continuing)")
+
+    ci.is_deleted = True
+    ci.finish_reason = ci.finish_reason or "user_deleted" if not _is_admin_or_teacher() else "admin_cleanup"
+    db.session.commit()
+    return jsonify({"ok": True})
+
