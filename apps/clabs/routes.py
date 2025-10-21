@@ -59,6 +59,7 @@ def _detail_from_db(ci: ClabInstance) -> dict:
     except Exception:
         resources = []
 
+    st = _status_from_ci(ci)
     return {
         "lab_instance_id": ci.id,
         "user": getattr(owner, "username", None) or getattr(owner, "email", None) or "anonymous",
@@ -67,7 +68,42 @@ def _detail_from_db(ci: ClabInstance) -> dict:
         "namespace": ci.namespace_effective or getattr(clab, "namespace_default", None) or "--",
         "resources": resources,
         "name": getattr(clab, "title", None) or "Unnamed",
+        "status": st["status"],
+        "expires_at": st["expires_at"],            
+        "remaining_seconds": st["remaining_seconds"]
+    }
+
+# -------- Time & Status helpers --------
+def _now_utc():
+    return dt.datetime.utcnow()
+
+def _status_from_ci(ci: ClabInstance) -> dict:
+    """
+    Calcula status atual da instância com base em is_deleted e expiration_ts.
+    Retorna dict com: status, expires_at (str ISO), remaining_seconds (int|None).
+    """
+    if ci.is_deleted:
+        return {"status": "Deleted", "expires_at": None, "remaining_seconds": None}
+
+    now = _now_utc()
+    exp = ci.expiration_ts 
+    if exp is None:
+        # Sem expiração definida - considerar "Running" sem deadline
+        return {"status": "Running", "expires_at": None, "remaining_seconds": None}
+
+    # Com data de expiração definida
+    if now >= exp:
+        return {
+            "status": "Expired",
+            "expires_at": exp.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "remaining_seconds": 0,
+        }
+
+    remaining = int((exp - now).total_seconds())
+    return {
         "status": "Running",
+        "expires_at": exp.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "remaining_seconds": remaining,
     }
 
 # ----------------- Views -----------------
@@ -242,3 +278,94 @@ def api_delete(clab_id):
     db.session.commit()
     return jsonify({"ok": True})
 
+@blueprint.route("/api/status/<clab_id>", methods=["GET"])
+@login_required
+def api_status(clab_id):
+    """
+    Retorna o status atual da instância:
+    { ok, status, expires_at, remaining_seconds }
+    Regras de acesso: owner/admin/teacher.
+    """
+    ci = ClabInstance.query.get(clab_id)
+    if not ci:
+        return jsonify({"ok": False, "error": "CLab not found"}), 404
+
+    if (not _is_admin_or_teacher()) and (ci.owner_user_id != current_user.id):
+        return jsonify({"ok": False, "error": "Forbidden"}), 403
+
+    st = _status_from_ci(ci)
+    return jsonify({
+        "ok": True,
+        "status": st["status"],
+        "expires_at": st["expires_at"],
+        "remaining_seconds": st["remaining_seconds"],
+    })
+
+@blueprint.route("/api/extend/<clab_id>", methods=["POST"])
+@login_required
+def api_extend(clab_id):
+    """
+    Estende a expiração da instância em X horas (limites por configuração).
+    Body (JSON ou form): {"hours": <int|str>}
+    """
+    ci = ClabInstance.query.get(clab_id)
+    if not ci:
+        return jsonify({"ok": False, "error": "CLab not found"}), 404
+
+    if (not _is_admin_or_teacher()) and (ci.owner_user_id != current_user.id):
+        return jsonify({"ok": False, "error": "Forbidden"}), 403
+
+    if ci.is_deleted:
+        return jsonify({"ok": False, "error": "Cannot extend a deleted CLab"}), 400
+
+    # parâmetros e limites
+    cfg = current_app.config
+    max_per_req = int(cfg.get("CLABS_EXTEND_MAX_PER_REQUEST_HOURS", 4))
+    max_total = int(cfg.get("CLABS_EXTEND_MAX_TOTAL_HOURS", 48))
+
+    hours_raw = (request.json or {}).get("hours") if request.is_json else request.form.get("hours")
+    try:
+        req_hours = int(hours_raw) if hours_raw is not None else max_per_req
+    except Exception:
+        return jsonify({"ok": False, "error": "Invalid 'hours'"}), 400
+
+    if req_hours <= 0:
+        return jsonify({"ok": False, "error": "Invalid 'hours'"}), 400
+
+    delta_hours = min(req_hours, max_per_req)
+
+    now = _now_utc()
+    old_exp = ci.expiration_ts  
+    base = old_exp if old_exp and old_exp > now else now
+    new_exp = base + dt.timedelta(hours=delta_hours)
+
+    # teto absoluto: created_at + max_total
+    hard_cap = (ci.created_at or now) + dt.timedelta(hours=max_total)
+    if new_exp > hard_cap:
+        new_exp = hard_cap
+
+    # se mesmo após o ajuste não houver ganho, avisa
+    if old_exp and new_exp <= old_exp:
+        st = _status_from_ci(ci)
+        return jsonify({
+            "ok": False,
+            "error": "Max extension reached",
+            "status": st["status"],
+            "expires_at": st["expires_at"],
+            "remaining_seconds": st["remaining_seconds"],
+        }), 400
+
+    # aplica
+    ci.expiration_ts = new_exp
+    db.session.commit()
+
+    st = _status_from_ci(ci)
+    return jsonify({
+        "ok": True,
+        "old_expires_at": old_exp.strftime("%Y-%m-%dT%H:%M:%SZ") if old_exp else None,
+        "new_expires_at": st["expires_at"],
+        "status": st["status"],
+        "remaining_seconds": st["remaining_seconds"],
+        "applied_hours": delta_hours,
+        "max_total_hours": max_total,
+    })
