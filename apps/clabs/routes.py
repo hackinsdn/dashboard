@@ -131,6 +131,7 @@ def upsert(clab_id="new"):
 
         clab.manifest = result
 
+    # 1) usa o controller PoC para validar YAML e montar o "detail" compatível
     try:
         db.session.add(clab)
         db.session.add(clab_md)
