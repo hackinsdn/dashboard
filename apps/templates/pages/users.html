@@ -215,25 +215,24 @@
         },
         responsive: true,
         autoWidth: false,
-        language: {
-          emptyTable: 'No user',
-        },
+        language: { emptyTable: 'No user' },
         columns: [
-          {
-            orderable: false,
-            name: 'select',
-          },
+          { orderable: false, name: 'select' },
           { name: 'username' },
           { name: 'name' },
           { name: 'email' },
           { name: 'category' },
           { name: 'issuer' },
-          {
-            orderable: false,
-            name: 'actions',
-          },
+          { orderable: false, name: 'actions' },
         ],
-        order: [[1, 'asc']]
+
+        search: { search: savedQuery },
+        order: savedOrder,
+        pageLength: savedLength,
+        displayStart: savedPage * savedLength,
+
+        stateSave: true,
+        stateDuration: -1
       });
       $('#tableUsers').on('change', 'input[type="checkbox"]', function() {
         table.state.save();
@@ -246,7 +245,7 @@
         });
         sessionStorage.removeItem('msgSuccess');
       }
-      if ( sessionStorage.getItem('msgFail') ) {
+      if (sessionStorage.getItem('msgFail')) {
         $(document).Toasts('create', {
           class: 'bg-danger',
           title: 'Failure',
@@ -254,101 +253,78 @@
         });
         sessionStorage.removeItem('msgFail');
       }
-      //Enable check and uncheck all functionality
+
+      // === Delete (rowId)
       $('#delete-users').click(function () {
         var rows = $('#tableUsers tr').filter(':has(:checkbox:checked)');
-        $("#delete-users").html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Deleting ' + table.rows(rows).data().length + ' row(s)...');
+        $("#delete-users").html(
+          '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Deleting ' +
+          table.rows(rows).data().length + ' row(s)...'
+        );
         $("#delete-users").prop('disabled', true);
+
         var items = [];
-        table.rows(rows).each( function ( index ) {
-          var row = table.row( index );
-          items.push(row.id());
-        });
+        table.rows(rows).every(function () { items.push(this.id()); });
+
         var delete_url = '/api/users/bulk';
-        if (items.length === 1) {
-          delete_url = '/api/users/' + items[0];
-        }
-        var request = $.ajax({
+        if (items.length === 1) delete_url = '/api/users/' + items[0];
+
+        $.ajax({
           url: delete_url,
           type: "DELETE",
           dataType: "json",
           data: JSON.stringify(items),
           contentType: "application/json",
-        });
-        request.done(function(data) {
-          sessionStorage.setItem('msgSuccess', data.result);
-          location.reload();
-        });
-        request.fail(function(xhr) {
-          sessionStorage.setItem('msgFail', xhr.responseText);
-          location.reload();
-        });
+        })
+          .done(function (data) {
+            sessionStorage.setItem('msgSuccess', data.result);
+            location.reload();
+          })
+          .fail(function (xhr) {
+            sessionStorage.setItem('msgFail', xhr.responseText);
+            location.reload();
+          });
       });
+
+      // === Approve (rowId)
       $('#approve-users').click(function () {
         var rows = $('#tableUsers tr').filter(':has(:checkbox:checked)');
-        $("#approve-users").html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Aproving ' + table.rows(rows).data().length + ' row(s)...');
+
+        $("#approve-users").html(
+          '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Approving ' +
+          table.rows(rows).data().length + ' row(s)...'
+        );
         $("#approve-users").prop('disabled', true);
+
         var items = [];
-        rows.each( function ( index, row ) {
-          items.push(row.id);
-        });
-        var request = $.ajax({
+        table.rows(rows).every(function () { items.push(this.id()); });
+
+        $.ajax({
           url: '/api/users/bulk-approve',
           type: "POST",
           dataType: "json",
           data: JSON.stringify(items),
           contentType: "application/json",
-        });
-        request.done(function(data) {
-          sessionStorage.setItem('msgSuccess', data.result);
-          location.reload();
-        });
-        request.fail(function(xhr) {
-          sessionStorage.setItem('msgFail', xhr.responseText);
-          location.reload();
-        });
+        })
+          .done(function (data) {
+            sessionStorage.setItem('msgSuccess', data.result);
+            location.reload();
+          })
+          .fail(function (xhr) {
+            sessionStorage.setItem('msgFail', xhr.responseText);
+            location.reload();
+          });
       });
-      $('#modal-default').on('show.bs.modal', function (e) {
-        var rows = $('#tableUsers tr').filter(':has(:checkbox:checked)');
-        var data = table.rows(rows).data();
-        var items = $("#modal-default-items");
-        items.empty();
-        $("#delete-users").prop('disabled', false);
-        if (data.length === 0) {
-          items.append("<li>No user selected!</li>");
-          $("#delete-users").prop('disabled', true);
-          return;
-        }
-        data.each(function (value, index) {
-          items.append(`<li>${value[2]} - ${value[3]}</li>`);
-        });
-      });
-      $('#modal-approve-users').on('show.bs.modal', function (e) {
-        var rows = $('#tableUsers tr').filter(':has(:checkbox:checked)');
-        var data = table.rows(rows).data();
-        var items = $("#modal-approve-users-items");
-        items.empty();
-        $("#approve-users").prop('disabled', false);
-        if (data.length === 0) {
-          items.append("<li>No user selected!</li>");
-          $("#approve-users").prop('disabled', true);
-          return;
-        }
-        data.each(function (value, index) {
-          items.append(`<li>${value[2]} - ${value[3]}</li>`);
-        });
-      });
-      //Enable check and uncheck all functionality
+
+      // === Toggle check all
       $('.checkbox-toggle').click(function () {
-        var clicks = $(this).data('clicks')
+        var clicks = $(this).data('clicks');
         if (clicks) {
-          //Uncheck all checkboxes
-          $('.user-items input[type=\'checkbox\']').prop('checked', false)
-          $('.checkbox-toggle .far.fa-check-square').removeClass('fa-check-square').addClass('fa-square')
+          $('.user-items input[type="checkbox"]').prop('checked', false);
+          $('.checkbox-toggle .far.fa-check-square').removeClass('fa-check-square').addClass('fa-square');
         } else {
-          //Check all checkboxes
-          $('.user-items input[type=\'checkbox\']').prop('checked', true)
-          $('.checkbox-toggle .far.fa-square').removeClass('fa-square').addClass('fa-check-square')
+          $('.user-items input[type="checkbox"]').prop('checked', true);
+          $('.checkbox-toggle .far.fa-square').removeClass('fa-square').addClass('fa-check-square');
         }
         $(this).data('clicks', !clicks)
       })
@@ -359,6 +335,7 @@
       })
     })
   </script>
+
   <!-- AdminLTE for demo purposes -->
   <script src="/static/assets/js/demo.js"></script>
 
