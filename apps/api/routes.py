@@ -3,15 +3,18 @@
 
 import json
 import re
+import calendar
 from apps import db, cache
 from apps.api import blueprint
 from apps.controllers import k8s
 from apps.home.models import Labs, LabInstances, LabAnswers, LabAnswerSheet, UserLikes, UserFeedbacks, lab_groups
 from apps.authentication.models import Users, Groups, DeletedGroupUsers, group_members, group_owners
-from flask import request, current_app
+from flask import request, current_app, jsonify
 from flask_login import login_required, current_user
 from datetime import timedelta, datetime
-from apps.utils import datetime_from_ts, parse_lab_expiration
+from apps.utils import datetime_from_ts, parse_lab_expiration, shift_month_start, count_between
+from sqlalchemy import func, extract
+from math import floor
 
 @blueprint.route('/pods/<lab_id>', methods=["GET"])
 @login_required
@@ -505,3 +508,72 @@ def extend_lab(lab_id):
     )
 
     return {"status": "ok", "result": new_expiration}, 200
+
+
+@blueprint.route("/lab/usage_stats", methods=["GET"])
+@login_required
+def get_lab_usage_stats():
+    if cached := cache.get("lab_usage_stats"):
+        return cached
+
+    today = datetime.now()
+
+    month_keys = [(d.year, d.month) for d in (shift_month_start(today, i) for i in range(-5, 1))]
+    months = [calendar.month_name[m] for _, m in month_keys]
+
+    six_months_ago = shift_month_start(today, -5)
+    one_month_ago = shift_month_start(today, 0)
+    current_month = shift_month_start(today, 1)
+
+    # TODO: Refactor to reduce the amount of queries
+    completed_labs_from_last_six_months = count_between(LabInstances, LabInstances.created_at, six_months_ago, current_month, [LabInstances.is_deleted.is_(True)])
+    completed_labs_from_current_month = count_between(LabInstances, LabInstances.created_at, one_month_ago, current_month, [LabInstances.is_deleted.is_(True)])
+    completed_challenges_from_last_six_months = count_between(LabAnswers, LabAnswers.created_at, six_months_ago, current_month)
+    completed_challenges_from_current_month = count_between(LabAnswers, LabAnswers.created_at, one_month_ago, current_month)
+
+    answers = (
+        LabAnswers.query
+        .filter(LabAnswers.created_at >= six_months_ago, LabAnswers.created_at <= current_month)
+        .all()
+    )
+    answered_questions_from_last_six_months = sum(len(a.answers_dict) for a in answers)
+    answered_questions_from_current_month = sum(len(a.answers_dict) for a in answers if a.created_at >= one_month_ago)
+
+    # TODO: Refactor to reduce the amount of queries
+    lab_instances_executed_from_last_six_months_counts = {
+        (int(y), int(m)): c
+        for y, m, c in db.session.query(
+            func.extract('year', LabInstances.created_at),
+            func.extract('month', LabInstances.created_at),
+            func.count()
+        )
+        .filter(LabInstances.created_at >= six_months_ago, LabInstances.created_at <= current_month)
+        .group_by(func.extract('year', LabInstances.created_at), func.extract('month', LabInstances.created_at))
+        .all()
+    }
+    lab_instances_executed_from_last_six_months_data = [lab_instances_executed_from_last_six_months_counts.get(k, 0) for k in month_keys]
+
+    # TODO: Refactor to reduce the amount of queries
+    labs_instances_hours_data = {}
+    for li in LabInstances.query.filter(LabInstances.created_at >= six_months_ago, LabInstances.created_at < current_month, LabInstances.is_deleted.is_(True)).all():
+        start = li.created_at
+        end = li.updated_at
+        if not (isinstance(start, datetime) and isinstance(end, datetime)):
+            continue
+        key = ((li.created_at or start).year, (li.created_at or start).month)
+        labs_instances_hours_data[key] = labs_instances_hours_data.get(key, 0) + max(0.0, (end - start).total_seconds() / 3600)
+
+    data = {
+        "months": months,
+        "labs_executed_counts": lab_instances_executed_from_last_six_months_data,
+        "labs_executed_hours": [round(labs_instances_hours_data.get(k, 0)) for k in month_keys],
+        "completed_labs_from_last_six_months": completed_labs_from_last_six_months,
+        "completed_labs_from_current_month": completed_labs_from_current_month,
+        "completed_challenges_from_last_six_months": completed_challenges_from_last_six_months,
+        "completed_challenges_from_current_month": completed_challenges_from_current_month,
+        "answered_questions_from_last_six_months": answered_questions_from_last_six_months,
+        "answered_questions_from_current_month": answered_questions_from_current_month,
+    }
+
+    cache.set("lab_usage_stats", data)
+    return data

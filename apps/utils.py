@@ -7,7 +7,8 @@ import datetime
 from flask import g
 from flask_login import current_user
 
-from apps import cache
+from apps import cache, db
+from sqlalchemy import func
 from apps.home.models import LabInstances
 
 
@@ -90,3 +91,17 @@ def datetime_from_ts(timestamp):
         return dt.isoformat()
     except:
         return None
+    
+    
+def shift_month_start(date, offset):
+    total_month = (date.year * 12 + (date.month - 1)) + offset
+    year = total_month // 12
+    month = (total_month % 12) + 1
+    return datetime.datetime(year, month, 1)
+
+
+def count_between(model, field, start, end, extra_filters=None):
+    filters = [field >= start, field < end]
+    if extra_filters:
+        filters.extend(extra_filters)
+    return db.session.query(func.count()).filter(*filters).scalar() or 0

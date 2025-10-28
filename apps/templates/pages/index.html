@@ -226,40 +226,33 @@
                     </p>
 
                     <div class="progress-group">
-                      Completed Labs
-                      <span class="float-right"><b>{{stats['cpu_usage']}}</b>/{{stats['cpu_capacity']}}</span>
-                      <div class="progress progress-sm">
+                      Completed Labs:
+                      <span class="float-right" id="completed-labs">0</span>
+                      <!-- <div class="progress progress-sm">
                         <div class="progress-bar bg-primary" style="width: 80%"></div>
-                      </div>
+                      </div> -->
                     </div>
-                    <!-- /.progress-group -->
+
+                    <br/>
 
                     <div class="progress-group">
-                      Answred questions
-                      <span class="float-right"><b>310</b>/400</span>
-                      <div class="progress progress-sm">
+                      Answered questions:
+                      <span class="float-right" id="answered-questions">0</span>
+                      <!-- <div class="progress progress-sm">
                         <div class="progress-bar bg-danger" style="width: 75%"></div>
-                      </div>
+                      </div> -->
                     </div>
 
-                    <!-- /.progress-group -->
+                    <br/>
+
                     <div class="progress-group">
-                      <span class="progress-text">Solved Challenges</span>
-                      <span class="float-right"><b>480</b>/800</span>
-                      <div class="progress progress-sm">
+                      <span class="progress-text">Solved Challenges:</span>
+                      <span class="float-right" id="completed-challenges">0</span>
+                      <!-- <div class="progress progress-sm">
                         <div class="progress-bar bg-success" style="width: 60%"></div>
-                      </div>
+                      </div> -->
                     </div>
 
-                    <!-- /.progress-group -->
-                    <div class="progress-group">
-                      Send Inquiries
-                      <span class="float-right"><b>250</b>/500</span>
-                      <div class="progress progress-sm">
-                        <div class="progress-bar bg-warning" style="width: 50%"></div>
-                      </div>
-                    </div>
-                    <!-- /.progress-group -->
                   </div>
                   <!-- /.col -->
                 </div>
@@ -270,8 +263,8 @@
                 <div class="row">
                   <div class="col-sm-4 col-8">
                     <div class="description-block border-right">
-                      <span class="description-percentage text-success"><i class="fas fa-caret-up"></i> 17%</span>
-                      <h5 class="description-header">35</h5>
+                      <!-- <span class="description-percentage text-success"><i class="fas fa-caret-up"></i> 17%</span> -->
+                      <h5 class="description-header" id="current-month-completed-labs">0</h5>
                       <span class="description-text">LAST MONTH LAB COMPLETION</span>
                     </div>
                     <!-- /.description-block -->
@@ -279,8 +272,8 @@
                   <!-- /.col -->
                   <div class="col-sm-4 col-8">
                     <div class="description-block border-right">
-                      <span class="description-percentage text-warning"><i class="fas fa-caret-left"></i> 0%</span>
-                      <h5 class="description-header">10</h5>
+                      <!-- <span class="description-percentage text-warning"><i class="fas fa-caret-left"></i> 0%</span> -->
+                      <h5 class="description-header" id="current-month-answers-questions">0</h5>
                       <span class="description-text">LAST MONTH ANSWRED QUESTIONS</span>
                     </div>
                     <!-- /.description-block -->
@@ -288,8 +281,8 @@
                   <!-- /.col -->
                   <div class="col-sm-4 col-8">
                     <div class="description-block border-right">
-                      <span class="description-percentage text-success"><i class="fas fa-caret-up"></i> 20%</span>
-                      <h5 class="description-header">5</h5>
+                      <!-- <span class="description-percentage text-success"><i class="fas fa-caret-up"></i> 20%</span> -->
+                      <h5 class="description-header" id="current-month-completed-challenges">0</h5>
                       <span class="description-text">LAST MONTH SOLVED CHALLENGES</span>
                     </div>
                     <!-- /.description-block -->
