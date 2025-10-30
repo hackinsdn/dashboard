@@ -510,7 +510,7 @@ def extend_lab(lab_id):
 
 @blueprint.route('/labs/categories_usage', methods=["GET"])
 @login_required
-def labs_created_last_6_months():
+def labs_categories_usage():
     if cached := cache.get("lab_categories_usage_stats"):
         return {"status": "ok", **cached}, 200
 
