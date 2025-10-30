@@ -90,7 +90,7 @@ $(function () {
         {
           data: data.usage_counts,
           backgroundColor: data.category_colors,
-          borderColor: '#ccc'
+          borderColor: '#eeeeeeff'
         }
       ]
     }
