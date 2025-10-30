@@ -80,37 +80,41 @@ $(function () {
   // - PIE CHART -
   //-------------
   // Get context with jQuery - using jQuery's .get() method.
-  var pieChartCanvas = $('#pieChart').get(0).getContext('2d')
-  var pieData = {
-    labels: [
-      'Offensive Security',
-      'Intermediate Labs',
-      'Advanced Labs',
-      'Introductory Labs',
-      'Defensive Security',
-      'Networking'
-    ],
-    datasets: [
-      {
-        data: [700, 500, 400, 600, 300, 100],
-        backgroundColor: ['#f56954', '#00a65a', '#f39c12', '#00c0ef', '#3c8dbc', '#d2d6de']
-      }
-    ]
-  }
-  var pieOptions = {
-    legend: {
-      display: false
+  $.get('/api/labs/categories_usage', function(data) {
+    console.log('Dashboard stats data:', data);
+    
+    var pieChartCanvas = $('#pieChart').get(0).getContext('2d')
+    var pieData = {
+      labels: data.category_names,
+      datasets: [
+        {
+          data: data.usage_counts,
+          backgroundColor: data.category_colors,
+          borderColor: '#000'
+        }
+      ]
     }
-  }
-  // Create pie or douhnut chart
-  // You can switch between pie and douhnut using the method below.
-  // eslint-disable-next-line no-unused-vars
-  var pieChart = new Chart(pieChartCanvas, {
-    type: 'doughnut',
-    data: pieData,
-    options: pieOptions
-  })
+    var pieOptions = {
+      legend: {
+        display: false
+      }
+    }
+    // Create pie or douhnut chart
+    // You can switch between pie and douhnut using the method below.
+    // eslint-disable-next-line no-unused-vars
+    new Chart(pieChartCanvas, {
+      type: 'doughnut',
+      data: pieData,
+      options: pieOptions
+    })
 
+    const pieChartLegend = document.getElementById('pie-chart-legend');
+    data.categories.forEach(l => {
+        pieChartLegend.innerHTML += `
+          <li><i class="fa fa-circle fa-border text-${l.color_cls}"></i> ${l.category}</li>
+        `;
+    });
+  });
   //-----------------
   // - END PIE CHART -
   //-----------------
