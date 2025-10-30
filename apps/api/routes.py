@@ -6,12 +6,13 @@ import re
 from apps import db, cache
 from apps.api import blueprint
 from apps.controllers import k8s
-from apps.home.models import Labs, LabInstances, LabAnswers, LabAnswerSheet, UserLikes, UserFeedbacks, lab_groups
+from apps.home.models import Labs, LabInstances, LabAnswers, LabAnswerSheet, UserLikes, UserFeedbacks, lab_groups, LabCategories
 from apps.authentication.models import Users, Groups, DeletedGroupUsers, group_members, group_owners
 from flask import request, current_app
 from flask_login import login_required, current_user
 from datetime import timedelta, datetime
 from apps.utils import datetime_from_ts, parse_lab_expiration
+from sqlalchemy.orm import joinedload
 
 @blueprint.route('/pods/<lab_id>', methods=["GET"])
 @login_required
@@ -505,3 +506,22 @@ def extend_lab(lab_id):
     )
 
     return {"status": "ok", "result": new_expiration}, 200
+
+
+@blueprint.route("/labs/recently_added", methods=["GET"])
+def get_recently_added_labs():
+    if cached := cache.get("recently_added_labs"):
+        return {"status": "ok", "data": cached}, 200
+    labs = Labs.query.options(joinedload(Labs.categories)).order_by(Labs.created_at.desc()).limit(5).all()
+    labs_data = []
+    for lab in labs:
+        lab_categories = lab.categories
+        print(lab_categories, type(lab_categories))
+        labs_data.append({
+            "id": lab.id,
+            "title": lab.title,
+            "description": lab.description,
+            "categories": [cat.as_dict() for cat in lab_categories],
+        })
+    cache.set("recently_added_labs", labs_data)
+    return {"status": "ok", "data": labs_data}, 200

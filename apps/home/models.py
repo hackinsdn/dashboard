@@ -37,6 +37,12 @@ class LabCategories(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     category = db.Column(db.String(64))
     color_cls = db.Column(db.String(16))
+    
+    def as_dict(self):
+        return {
+            "category": self.category,
+            "color_cls": self.color_cls
+        }
 
 class Labs(db.Model, AuditMixin):
     __tablename__ = 'labs'
@@ -71,6 +77,12 @@ class Labs(db.Model, AuditMixin):
     @property
     def lab_guide_md_str(self):
         return self.lab_guide_md.decode()
+    
+    def as_dict(self):
+        return {
+            "title": self.title,
+            "description": self.description
+        }
 
 
 class LabInstances(db.Model, AuditMixin):
