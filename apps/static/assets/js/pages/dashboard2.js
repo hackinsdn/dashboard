@@ -17,8 +17,8 @@ $(function () {
   $.get('/api/lab/usage_stats', function(data) {
     console.log('Dashboard stats data:', data);
 
-    var salesChartCanvas = $('#salesChart').get(0).getContext('2d')
-    var salesChartData = {
+    const salesChartCanvas = $('#salesChart').get(0).getContext('2d')
+    const salesChartData = {
       labels: data.months,
       datasets: [
         {
@@ -31,22 +31,11 @@ $(function () {
           pointHighlightFill: '#fff',
           pointHighlightStroke: 'rgba(60,141,188,1)',
           data: data.labs_executed_counts
-        },
-        {
-          label: 'Online Hours',
-          backgroundColor: 'rgba(210, 214, 222, 1)',
-          borderColor: 'rgba(210, 214, 222, 1)',
-          pointRadius: false,
-          pointColor: 'rgba(210, 214, 222, 1)',
-          pointStrokeColor: '#c1c7d1',
-          pointHighlightFill: '#fff',
-          pointHighlightStroke: 'rgba(220,220,220,1)',
-          data: data.labs_executed_hours
         }
       ]
     }
 
-    var salesChartOptions = {
+    const salesChartOptions = {
       maintainAspectRatio: true,
       responsive: true,
       legend: {
@@ -80,13 +69,72 @@ $(function () {
       options: salesChartOptions
     })
 
-    $('#completed-labs').text(data.completed_labs_from_last_six_months)
-    $('#answered-questions').text(data.answered_questions_from_last_six_months)
-    $('#completed-challenges').text(data.completed_challenges_from_last_six_months)
-    
     $('#current-month-completed-labs').text(data.completed_labs_from_current_month)
     $('#current-month-answers-questions').text(data.answered_questions_from_current_month)
     $('#current-month-completed-challenges').text(data.completed_challenges_from_current_month)
+
+    const labInstancesCreatedInterval = document.getElementById('lab-instances-created-interval');
+    labInstancesCreatedInterval.innerHTML = `<strong>Lab instances created: ${data.start_date} - ${data.end_date}</strong>`;
+
+    const usageStatisticsInterval = document.getElementById('usage-statistics-interval');
+    usageStatisticsInterval.innerHTML = `<strong>Data interval: ${data.start_date} - ${data.end_date}</strong>`;
+
+    const usageStatisticsCanvas = $('#usage-statistics-chart').get(0).getContext('2d')
+    const usageStatisticsData = {
+      labels: ['Completed labs', 'Completed challenges', 'Answered questions'],
+      datasets: [{
+        data: [
+          data.completed_labs_from_last_six_months,
+          data.completed_challenges_from_last_six_months,
+          data.answered_questions_from_last_six_months
+        ],
+        backgroundColor: [
+          '#a963ffff',
+          '#bdcc8aff',
+          '#7acfcfff',
+        ],
+        borderColor: '#000',
+      }]
+    };
+    const usageStatisticsConfig = {
+        scales: {
+          xAxes: [{
+            ticks: {
+              beginAtZero: true
+            },
+            gridLines: {
+              display: false
+            }
+          }],
+          yAxes: [{
+            gridLines: {
+              display: false
+            }
+          }]
+        },
+        maintainAspectRatio: true,
+        responsive: true,
+        legend: {
+          display: false
+        },
+        tooltips: {
+          mode: 'index',
+          intersect: false
+        },
+        hover: {
+          mode: 'index',
+          intersect: false
+        }
+    };
+    new Chart(usageStatisticsCanvas, {
+      type: 'horizontalBar',
+      data: usageStatisticsData,
+      options: usageStatisticsConfig
+    })
+
+    updateGrowthPercentage('completed-labs-growth', data.completed_labs_growth);
+    updateGrowthPercentage('completed-challenges-growth', data.completed_challenges_growth);
+    updateGrowthPercentage('answered-questions-growth', data.answered_questions_growth);
   })
 
   //---------------------------
@@ -235,4 +283,13 @@ $(function () {
     };
     setTimeout(updateMap, 50);
   }
+
+  const updateGrowthPercentage = (elementId, growthValue) => {
+    const element = document.getElementById(elementId);
+    if (growthValue > 0) {
+      element.innerHTML = `<span class="description-percentage text-success"><i class="fas fa-caret-up"></i> ${growthValue}%</span>`;
+    } else if (growthValue < 0) {
+      element.innerHTML = `<span class="description-percentage text-danger"><i class="fas fa-caret-down"></i> ${Math.abs(growthValue)}%</span>`;
+    }
+  };
 })

@@ -523,13 +523,18 @@ def get_lab_usage_stats():
 
     six_months_ago = shift_month_start(today, -5)
     one_month_ago = shift_month_start(today, 0)
+    two_months_ago = shift_month_start(today, -1)
     current_month = shift_month_start(today, 1)
 
     # TODO: Refactor to reduce the amount of queries
     completed_labs_from_last_six_months = count_between(LabInstances, LabInstances.created_at, six_months_ago, current_month, [LabInstances.is_deleted.is_(True)])
     completed_labs_from_current_month = count_between(LabInstances, LabInstances.created_at, one_month_ago, current_month, [LabInstances.is_deleted.is_(True)])
+    completed_labs_from_last_month = count_between(LabInstances, LabInstances.created_at, two_months_ago, one_month_ago, [LabInstances.is_deleted.is_(True)])
+    
+    # TODO: Refactor to reduce the amount of queries
     completed_challenges_from_last_six_months = count_between(LabAnswers, LabAnswers.created_at, six_months_ago, current_month)
     completed_challenges_from_current_month = count_between(LabAnswers, LabAnswers.created_at, one_month_ago, current_month)
+    completed_challenges_from_last_month = count_between(LabAnswers, LabAnswers.created_at, two_months_ago, one_month_ago)
 
     answers = (
         LabAnswers.query
@@ -538,6 +543,7 @@ def get_lab_usage_stats():
     )
     answered_questions_from_last_six_months = sum(len(a.answers_dict) for a in answers)
     answered_questions_from_current_month = sum(len(a.answers_dict) for a in answers if a.created_at >= one_month_ago)
+    answered_questions_from_last_month = sum(len(a.answers_dict) for a in answers if a.created_at >= two_months_ago and a.created_at <= one_month_ago)
 
     # TODO: Refactor to reduce the amount of queries
     lab_instances_executed_from_last_six_months_counts = {
@@ -553,26 +559,39 @@ def get_lab_usage_stats():
     }
     lab_instances_executed_from_last_six_months_data = [lab_instances_executed_from_last_six_months_counts.get(k, 0) for k in month_keys]
 
-    # TODO: Refactor to reduce the amount of queries
-    labs_instances_hours_data = {}
-    for li in LabInstances.query.filter(LabInstances.created_at >= six_months_ago, LabInstances.created_at < current_month, LabInstances.is_deleted.is_(True)).all():
-        start = li.created_at
-        end = li.updated_at
-        if not (isinstance(start, datetime) and isinstance(end, datetime)):
-            continue
-        key = ((li.created_at or start).year, (li.created_at or start).month)
-        labs_instances_hours_data[key] = labs_instances_hours_data.get(key, 0) + max(0.0, (end - start).total_seconds() / 3600)
+    completed_labs_growth = 0
+    if completed_labs_from_last_month > 0:
+        completed_labs_growth = round(((completed_labs_from_current_month - completed_labs_from_last_month) / completed_labs_from_last_month) * 100)
+    elif completed_labs_from_current_month > 0:
+        completed_labs_growth = 100
+
+    completed_challenges_growth = 0
+    if completed_challenges_from_last_month > 0:
+        completed_challenges_growth = round(((completed_challenges_from_current_month - completed_challenges_from_last_month) / completed_challenges_from_last_month) * 100)
+    elif completed_challenges_from_current_month > 0:
+        completed_challenges_growth = 100
+
+    answered_questions_growth = 0
+    if answered_questions_from_last_month > 0:
+        answered_questions_growth = round(((answered_questions_from_current_month - answered_questions_from_last_month) / answered_questions_from_last_month) * 100)
+    elif answered_questions_from_current_month > 0:
+        answered_questions_growth = 100 * answered_questions_from_current_month
 
     data = {
+        "start_date": six_months_ago.strftime("%#d %b, %Y"),
+        "end_date": today.strftime("%#d %b, %Y"),
         "months": months,
         "labs_executed_counts": lab_instances_executed_from_last_six_months_data,
-        "labs_executed_hours": [round(labs_instances_hours_data.get(k, 0)) for k in month_keys],
         "completed_labs_from_last_six_months": completed_labs_from_last_six_months,
         "completed_labs_from_current_month": completed_labs_from_current_month,
         "completed_challenges_from_last_six_months": completed_challenges_from_last_six_months,
         "completed_challenges_from_current_month": completed_challenges_from_current_month,
         "answered_questions_from_last_six_months": answered_questions_from_last_six_months,
         "answered_questions_from_current_month": answered_questions_from_current_month,
+        #TODO: Analyze if growth percentage makes sense when previous month count is low, and think about alternatives (like absolute growth)
+        "completed_labs_growth": completed_labs_growth,
+        "completed_challenges_growth": completed_challenges_growth,
+        "answered_questions_growth": answered_questions_growth,
     }
 
     cache.set("lab_usage_stats", data)
