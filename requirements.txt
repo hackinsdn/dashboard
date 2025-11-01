@@ -20,6 +20,7 @@ kubernetes
 markdown2
 flask_mail
 Flask-Caching
+PyYAML>=6.0.1,<7
 
 # flask_mysqldb
 # psycopg2-binary

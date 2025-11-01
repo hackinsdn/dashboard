@@ -1,0 +1,73 @@
+{
+  "clabs": [
+    {
+      "id": "clab-sample-1",
+      "name": "Sample Topology",
+      "owner": "demo@example.com",
+      "status": "Running",
+      "created_at": "2025-09-20 12:00:00",
+      "nodes": 2
+    },
+    {
+      "lab_instance_id": "clab-20250921023818",
+      "user": "admin",
+      "title": "mano pivas",
+      "name": "mano pivas",
+      "created": "2025-09-21 02:38:18",
+      "status": "Running",
+      "nodes": 0
+    }
+  ],
+  "details": {
+    "clab-sample-1": {
+      "lab_instance_id": "clab-sample-1",
+      "title": "Sample Topology",
+      "user": "demo@example.com",
+      "created": "2025-09-20 12:00:00",
+      "expires_at": null,
+      "resources": [
+        {
+          "kind": "node",
+          "name": "r1",
+          "ready": "Running",
+          "node_name": "linux",
+          "pod_ip": "172.20.20.2",
+          "age": "--",
+          "services": [],
+          "links": []
+        },
+        {
+          "kind": "node",
+          "name": "r2",
+          "ready": "Running",
+          "node_name": "linux",
+          "pod_ip": "172.20.20.3",
+          "age": "--",
+          "services": [],
+          "links": []
+        }
+      ],
+      "files": []
+    },
+    "clab-20250921023818": {
+      "lab_instance_id": "clab-20250921023818",
+      "title": "mano pivas",
+      "user": "admin",
+      "created": "2025-09-21 02:38:18",
+      "expires_at": null,
+      "resources": [],
+      "files": [
+        {
+          "name": "teste/Novo(a) Documento de Texto.txt",
+          "mimetype": "text/plain",
+          "size": 0
+        },
+        {
+          "name": "teste/teste 1/Novo(a) Documento de Texto2.txt",
+          "mimetype": "text/plain",
+          "size": 0
+        }
+      ]
+    }
+  }
+}
