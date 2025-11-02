@@ -27,3 +27,7 @@ export TESTBED_TITLE=xxxx
 
 # Enable or disable the Collaborative Labs feature
 ENABLE_CLABS=true
+
+BRAND_LOGO_URL=/static/assets/img/hackinsdn.png
+BRAND_LOGO_ALT=HackInSDN
+BRAND_HREF=/
