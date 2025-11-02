@@ -70,6 +70,8 @@
                     <th>E-mail</th>
                     <th>Category</th>
                     <th>Issuer</th>
+                    <th>Last login</th>
+                    <th>Created at</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -87,6 +89,20 @@
                   <td>{{ user.email|default('', true) }}</td>
                   <td>{{ user.category }}</td>
                   <td>{{ user.issuer|default('LOCAL', true) }}</td>
+                  <td
+                    {% if user.last_login_at %}data-order="{{ user.last_login_at.isoformat() }}"{% else %}data-order=""{% endif %}
+                    title="{% if user.last_login_at %}{{ user.last_login_at.isoformat() }}{% else %}—{% endif %}"
+                  >
+                    {% if user.last_login_at %}{{ user.last_login_at.strftime('%d/%m/%Y %H:%M') }}{% else %}&mdash;{% endif %}
+                  </td>
+
+                  <td
+                    {% if user.created_at %}data-order="{{ user.created_at.isoformat() }}"{% else %}data-order=""{% endif %}
+                    title="{% if user.created_at %}{{ user.created_at.isoformat() }}{% else %}—{% endif %}"
+                  >
+                    {% if user.created_at %}{{ user.created_at.strftime('%d/%m/%Y %H:%M') }}{% else %}&mdash;{% endif %}
+                  </td>
+                  
                   <td><a href="{{url_for('home_blueprint.edit_user', user_id=user.id)}}" class="btn btn-outline-dark" role="button" aria-pressed="true"><i class="fa fa-pen"></i> Edit</a></td>
                 </tr>
                 {% endfor %}
@@ -247,6 +263,8 @@
           { name: 'email' },
           { name: 'category' },
           { name: 'issuer' },
+          { name: 'last_login' },
+          { name: 'created_at' },
           { orderable: false, name: 'actions' },
         ],
 
