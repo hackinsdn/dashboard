@@ -201,54 +201,169 @@
     function confirmDelete() {
       return confirm("Are you sure you want to delete this group?");
     }
-    $(function () {
-      // config DataTable
-      var table = $("#tableLabAnswers").DataTable({
 
+    $(function () {
+      // === KEYS de storage 
+      var LABANSWERS_LIST_SEARCH_KEY = 'labanswers:list:v1:query';
+      var LABANSWERS_LIST_ORDER_KEY  = 'labanswers:list:v1:order';
+      var LABANSWERS_LIST_PAGE_KEY   = 'labanswers:list:v1:page';
+      var LABANSWERS_LIST_LEN_KEY    = 'labanswers:list:v1:length';
+
+      // === Helpers de storage
+      function getLS(key, fallback) {
+        try {
+          var v = localStorage.getItem(key);
+          return (v === null ? fallback : v);
+        } catch (e) { return fallback; }
+      }
+      function setLS(key, value) {
+        try {
+          if (value === '' || value === null || typeof value === 'undefined') {
+            localStorage.removeItem(key);
+          } else {
+            localStorage.setItem(key, value);
+          }
+        } catch (e) { }
+      }
+
+      // === Harden do input de busca
+      function hardenSearchInputEl($input, savedQuery) {
+        if (!$input || !$input.length) return;
+        $input
+          .attr('type', 'search')
+          .attr('autocomplete', 'off')
+          .attr('autocorrect', 'off')
+          .attr('autocapitalize', 'none')
+          .attr('spellcheck', 'false')
+          .prop('spellcheck', false)
+          .attr('data-gramm', 'false')
+          .attr('data-gramm_editor', 'false')
+          .attr('data-lt-active', 'false')
+          .attr('data-ms-editor', 'false')
+          .attr('lang', 'zxx');
+        if (typeof savedQuery !== 'undefined' && savedQuery) { $input.val(savedQuery); }
+      }
+      function getDtFilterInput(dt) {
+        return $(dt.table().container()).find('div.dataTables_filter input[type="search"]');
+      }
+
+      // === Estado salvo
+      var savedQuery = getLS(LABANSWERS_LIST_SEARCH_KEY, '');
+      var savedOrder;
+      try {
+        savedOrder = JSON.parse(getLS(LABANSWERS_LIST_ORDER_KEY, '[[0,"asc"],[1,"asc"]]'));
+      } catch (e) {
+        savedOrder = [[0, 'asc'], [1, 'asc']];
+        setLS(LABANSWERS_LIST_ORDER_KEY, JSON.stringify(savedOrder));
+      }
+      var savedLength = parseInt(getLS(LABANSWERS_LIST_LEN_KEY, '10'), 10);
+      if (isNaN(savedLength) || savedLength <= 0) savedLength = 10;
+      var savedPage = parseInt(getLS(LABANSWERS_LIST_PAGE_KEY, '0'), 10);
+      if (isNaN(savedPage) || savedPage < 0) savedPage = 0;
+
+      // === DataTable (com persistência)
+      var $tableEl = $("#tableLabAnswers");
+      var table = $tableEl.DataTable({
         layout: {
-            topStart: {
-              pageLength: true,
-              buttons: [
-                {
-                  extend: 'csv',
-                  text: 'CSV',
-                  className: 'btn btn-outline-dark ms-2',
-                    exportOptions: {
-                    columns: [0, 1, 2, 3],
-                    orthogonal: 'export',
-                    format: {
-                      header: function ( data, columnIdx ) {
-                        return data;
-                      },
-                      body: function (data, rowIdx, columnIdx, node) {
-                        return data;
-                      }
-                    }
-                  }
+          topStart: {
+            pageLength: true,
+            buttons: [{
+              extend: 'csv',
+              text: 'CSV',
+              className: 'btn btn-outline-dark ms-2',
+              exportOptions: {
+                columns: [0, 1, 2, 3],
+                orthogonal: 'export',
+                format: {
+                  header: function (data) { return data; },
+                  body: function (data) { return data; }
                 }
-              ]
-            },
-        },    
-        autoWidth: false,
-        language: {
-          emptyTable: 'No lab answer',
+              }
+            }]
+          },
         },
+        autoWidth: false,
+        language: { emptyTable: 'No lab answer' },
         columns: [
           { name: 'lab' },
           { name: 'user' },
           { name: 'score' },
-          {
-            name: 'lab_answers',
-            visible: false,
-            orderable: false,
-          },
-          {
-            orderable: false,
-            name: 'actions',
-          },
+          { name: 'lab_answers', visible: false, orderable: false },
+          { name: 'actions', orderable: false },
         ],
-        order: [[0, 'asc'], [1, 'asc']]
+        search:       { search: savedQuery },
+        order:        savedOrder,
+        pageLength:   savedLength,
+        displayStart: savedPage * savedLength
       });
+
+      // === Hardening do input + botão "Limpar"
+      (function applyNoSpellcheck(dt, savedQuery) {
+        var $input = getDtFilterInput(dt);
+        hardenSearchInputEl($input, savedQuery);
+      })(table, savedQuery);
+
+      table.on('init.dt', function () {
+        var $input = getDtFilterInput(table);
+        if ($input.length === 0) {
+          console.warn('DataTables search input não encontrado');
+          return;
+        }
+        hardenSearchInputEl($input, savedQuery);
+
+        var $filter = $input.closest('div.dataTables_filter');
+        if ($filter.find('.btn-clear-filter').length === 0) {
+          $('<button type="button" class="btn btn-sm btn-outline-secondary ml-2 btn-clear-filter">Limpar</button>')
+            .appendTo($filter)
+            .on('click', function () {
+              table.search('').draw();
+              $input.val('');
+              setLS(LABANSWERS_LIST_SEARCH_KEY, null);
+              setLS(LABANSWERS_LIST_PAGE_KEY, '0');
+              setLS(LABANSWERS_LIST_ORDER_KEY, JSON.stringify([[0, 'asc'], [1, 'asc']]));
+              setLS(LABANSWERS_LIST_LEN_KEY, String(10));
+              table.order([[0, 'asc'], [1, 'asc']]).page.len(10).page(0).draw(false);
+            });
+        }
+
+        // salvar query ao digitar
+        $input.on('input change blur', function () {
+          var q = $(this).val() || '';
+          if (q !== table.search()) {
+            table.search(q).draw();
+          }
+          q.trim() === '' ? setLS(LABANSWERS_LIST_SEARCH_KEY, null) : setLS(LABANSWERS_LIST_SEARCH_KEY, q);
+        });
+      });
+
+      // reaplicar hardening a cada draw
+      table.on('draw.dt', function () {
+        hardenSearchInputEl(getDtFilterInput(table));
+      });
+
+      // garantir que o navegador não reative correções
+      $(table.table().container())
+        .off('.inputfix')
+        .on('focus.inputfix input.inputfix', 'div.dataTables_filter input[type="search"]', function () {
+          hardenSearchInputEl($(this));
+        });
+
+      // === Persistência por eventos 
+      $tableEl.on('search.dt', function () {
+        var q = table.search() || '';
+        q.trim() === '' ? setLS(LABANSWERS_LIST_SEARCH_KEY, null) : setLS(LABANSWERS_LIST_SEARCH_KEY, q);
+      });
+      $tableEl.on('order.dt', function () {
+        setLS(LABANSWERS_LIST_ORDER_KEY, JSON.stringify(table.order()));
+      });
+      $tableEl.on('length.dt', function (e, settings, len) {
+        setLS(LABANSWERS_LIST_LEN_KEY, String(len));
+        setLS(LABANSWERS_LIST_PAGE_KEY, String(table.page.info().page));
+      });
+      $tableEl.on('page.dt', function () {
+        setLS(LABANSWERS_LIST_PAGE_KEY, String(table.page.info().page));
+      });
+
       if ( sessionStorage.getItem('msgSuccess') ) {
         $(document).Toasts('create', {
           class: 'bg-success',
@@ -265,18 +380,20 @@
         });
         sessionStorage.removeItem('msgFail');
       }
-      $( "#modal-show-answer" ).on('show.bs.modal', function(event){
+
+      $("#modal-show-answer").on('show.bs.modal', function(event){
         var answers = $(event.relatedTarget).data('answers');
         var answerId = $(event.relatedTarget).data('answerid');
         var labId = $(event.relatedTarget).data('labid');
-        $("#lab-answers-table").html( answers );
-        $("#lab-answer-id").val( answerId );
-        $("#lab-answer-labid").val( labId );
+        $("#lab-answers-table").html(answers);
+        $("#lab-answer-id").val(answerId);
+        $("#lab-answer-labid").val(labId);
         $("#check-lab-answer-result").html('');
       });
+
       $('#check-lab-answer').click(function () {
-	var labId = $("#lab-answer-labid").val();
-	var answerId = $("#lab-answer-id").val();
+        var labId = $("#lab-answer-labid").val();
+        var answerId = $("#lab-answer-id").val();
         var request = $.ajax({
           url: '/api/lab_answers/check/' + labId + '/' + answerId,
           type: "GET",
@@ -290,37 +407,29 @@
           $("#check-lab-answer-result").html('<p class="text-danger"> Fail to check answers: ' + xhr.responseText + '</p>');
         });
       });
-      $( ".button-clear-answer" ).on('click', function(){
+
+      $(".button-clear-answer").on('click', function(){
         $("#lab-answers-table").html("");
       });
+
       $("#save-grades-comments").on('click', function(e) {
         e.preventDefault();
-
         var $form = $("#bulk-comments-form");
-
         var answer_id = $("#lab-answer-id").val();
-
         var comments = {};
         var grades = {};
-
         var names = $form.find('input[name="name[]"]').map(function(){ return $(this).val(); }).get();
-
         var comment_texts = $form.find('textarea[name="comment[]"]').map(function(){ return $(this).val(); }).get();
         var grade_values = $form.find('input[name="grade[]"]').map(function(){ return $(this).val(); }).get();
-
         for (var i = 0; i < names.length; i++) {
           comments[names[i]] = comment_texts[i];
           grades[names[i]] = parseFloat(grade_values[i]);
         }
-
         $.ajax({
           url: '/api/lab_answers/grades_comments/' + answer_id,
           type: 'POST',
           contentType: 'application/json',
-          data: JSON.stringify({
-            comments: comments,
-            grades: grades
-          }),
+          data: JSON.stringify({ comments: comments, grades: grades }),
           success: function(response) {
             $('#check-lab-answer-result').html('<p class="text-success">Comments saved!</p>');
           },
@@ -329,6 +438,7 @@
           }
         });
       });
+
     });
   </script>
 {% endblock javascripts %}
