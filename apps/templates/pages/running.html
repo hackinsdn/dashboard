@@ -186,28 +186,150 @@
   <!-- Page Script -->
   <script>
     $(function () {
-      // config DataTable
-      var table = $("#tableLabs").DataTable({
+      // === KEYS de storage (Running Labs)
+      var RUNNING_LIST_SEARCH_KEY = 'runninglabs:list:v1:query';
+      var RUNNING_LIST_ORDER_KEY  = 'runninglabs:list:v1:order';
+      var RUNNING_LIST_PAGE_KEY   = 'runninglabs:list:v1:page';
+      var RUNNING_LIST_LEN_KEY    = 'runninglabs:list:v1:length';
+
+      // === Helpers
+      function getLS(key, fallback) {
+        try {
+          var v = localStorage.getItem(key);
+          return (v === null ? fallback : v);
+        } catch (e) { return fallback; }
+      }
+      function setLS(key, value) {
+        try {
+          if (value === '' || value === null || typeof value === 'undefined') {
+            localStorage.removeItem(key);
+          } else {
+            localStorage.setItem(key, value);
+          }
+        } catch (e) { }
+      }
+
+      // === “Harden” do input de busca
+      function hardenSearchInputEl($input, savedQuery) {
+        if (!$input || !$input.length) return;
+        $input
+          .attr('type', 'search')
+          .attr('autocomplete', 'off')
+          .attr('autocorrect', 'off')
+          .attr('autocapitalize', 'none')
+          .attr('spellcheck', 'false')
+          .prop('spellcheck', false)
+          .attr('data-gramm', 'false')
+          .attr('data-gramm_editor', 'false')
+          .attr('data-lt-active', 'false')
+          .attr('data-ms-editor', 'false')
+          .attr('lang', 'zxx');
+        if (savedQuery) { $input.val(savedQuery); }
+      }
+      function getDtFilterInput(dt) {
+        return $(dt.table().container()).find('div.dataTables_filter input[type="search"]');
+      }
+
+      // === Estado salvo
+      var savedQuery = getLS(RUNNING_LIST_SEARCH_KEY, '');
+      var savedOrder;
+      try {
+        savedOrder = JSON.parse(getLS(RUNNING_LIST_ORDER_KEY, '[[2,"asc"]]'));
+      } catch (e) {
+        savedOrder = [[2, 'asc']];
+        setLS(RUNNING_LIST_ORDER_KEY, JSON.stringify(savedOrder));
+      }
+      var savedLength = parseInt(getLS(RUNNING_LIST_LEN_KEY, '10'), 10);
+      if (isNaN(savedLength) || savedLength <= 0) savedLength = 10;
+      var savedPage = parseInt(getLS(RUNNING_LIST_PAGE_KEY, '0'), 10);
+      if (isNaN(savedPage) || savedPage < 0) savedPage = 0;
+
+      // === DataTable (com persistência)
+      var $tableEl = $("#tableLabs");
+      var table = $tableEl.DataTable({
         responsive: false,
         autoWidth: false,
-        language: {
-          emptyTable: 'No running labs',
-        },
+        language: { emptyTable: 'No running labs' },
         columns: [
-          {
-            orderable: false,
-            name: 'select',
-          },
+          { orderable: false, name: 'select' },
           { name: 'user' },
           { name: 'lab' },
           { name: 'created' },
-          {
-            orderable: false,
-            name: 'actions',
-          },
+          { orderable: false, name: 'actions' },
         ],
-        order: [[2, 'asc']]
+        search:       { search: savedQuery },
+        order:        savedOrder,
+        pageLength:   savedLength,
+        displayStart: savedPage * savedLength
       });
+
+      // === Hardening do input + botão “Clear”
+      (function applyNoSpellcheck(dt, savedQuery) {
+        hardenSearchInputEl(getDtFilterInput(dt), savedQuery);
+      })(table, savedQuery);
+
+      table.on('init.dt', function () {
+        var $input = getDtFilterInput(table);
+        if ($input.length === 0) {
+          console.warn('DataTables search input not found');
+          return;
+        }
+        hardenSearchInputEl($input, savedQuery);
+
+        var $filter = $input.closest('div.dataTables_filter');
+        if ($filter.find('.btn-clear-filter').length === 0) {
+          $('<button type="button" class="btn btn-sm btn-outline-secondary ml-2 btn-clear-filter">Clear</button>')
+            .appendTo($filter)
+            .on('click', function () {
+              table.search('').draw();
+              $input.val('');
+              setLS(RUNNING_LIST_SEARCH_KEY, null);
+              setLS(RUNNING_LIST_PAGE_KEY, '0');
+              setLS(RUNNING_LIST_ORDER_KEY, JSON.stringify([[2, 'asc']]));
+              setLS(RUNNING_LIST_LEN_KEY, String(10));
+
+              table.order([[2, 'asc']]).page.len(10).page(0).draw(false);
+            });
+        }
+
+        // salvar query ao digitar 
+        $input.on('input change blur', function () {
+          var q = $(this).val() || '';
+          if (q !== table.search()) {
+            table.search(q).draw();
+          }
+          q.trim() === '' ? setLS(RUNNING_LIST_SEARCH_KEY, null) : setLS(RUNNING_LIST_SEARCH_KEY, q);
+        });
+      });
+
+      // reaplicar hardening em cada draw
+      table.on('draw.dt', function () {
+        hardenSearchInputEl(getDtFilterInput(table));
+      });
+
+      // garantir que navegador não reative assistentes
+      $(table.table().container())
+        .off('.inputfix')
+        .on('focus.inputfix input.inputfix', 'div.dataTables_filter input[type="search"]', function () {
+          hardenSearchInputEl($(this));
+        });
+
+      // === Persistência por eventos
+      $tableEl.on('search.dt', function () {
+        var q = table.search() || '';
+        q.trim() === '' ? setLS(RUNNING_LIST_SEARCH_KEY, null) : setLS(RUNNING_LIST_SEARCH_KEY, q);
+      });
+      $tableEl.on('order.dt', function () {
+        setLS(RUNNING_LIST_ORDER_KEY, JSON.stringify(table.order()));
+      });
+      $tableEl.on('length.dt', function (e, settings, len) {
+        setLS(RUNNING_LIST_LEN_KEY, String(len));
+        setLS(RUNNING_LIST_PAGE_KEY, String(table.page.info().page));
+      });
+      $tableEl.on('page.dt', function () {
+        setLS(RUNNING_LIST_PAGE_KEY, String(table.page.info().page));
+      });
+
       if ( sessionStorage.getItem('msgSuccess') ) {
         $(document).Toasts('create', {
           class: 'bg-success',
@@ -224,37 +346,38 @@
         });
         sessionStorage.removeItem('msgFail');
       }
-      //Enable check and uncheck all functionality
+
       $('#delete-labs').click(function () {
+        var table = $("#tableLabs").DataTable();
         var rows = $('#tableLabs tr').filter(':has(:checkbox:checked)');
         $("#delete-labs").html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Deleting ' + table.rows(rows).data().length + ' row(s)...');
         $("#delete-labs").prop('disabled', true);
         var items = [];
-        table.rows(rows).each( function ( index ) {
-          var row = table.row( index );
+        table.rows(rows).each(function (index) {
+          var row = table.row(index);
           items.push(row.id());
         });
         var delete_url = '/api/labs';
-        if (items.length === 1) {
-          delete_url = '/api/lab/' + items[0];
-        }
-        var request = $.ajax({
+        if (items.length === 1) delete_url = '/api/lab/' + items[0];
+        $.ajax({
           url: delete_url,
           type: "DELETE",
           dataType: "json",
           data: JSON.stringify(items),
           contentType: "application/json",
-        });
-        request.done(function(data) {
+        })
+        .done(function(data) {
           sessionStorage.setItem('msgSuccess', data.result);
           location.reload();
-        });
-        request.fail(function(xhr) {
+        })
+        .fail(function(xhr) {
           sessionStorage.setItem('msgFail', xhr.responseText);
           location.reload();
         });
       });
-      $('#modal-default').on('show.bs.modal', function (e) {
+
+      $('#modal-default').on('show.bs.modal', function () {
+        var table = $("#tableLabs").DataTable();
         var rows = $('#tableLabs tr').filter(':has(:checkbox:checked)');
         var data = table.rows(rows).data();
         var items = $("#modal-default-items");
@@ -265,25 +388,24 @@
           $("#delete-labs").prop('disabled', true);
           return;
         }
-        data.each(function (value, index) {
+        data.each(function (value) {
           items.append(`<li>${value[2]} - ${value[3]}</li>`);
         });
-      })
-      //Enable check and uncheck all functionality
+      });
+
       $('.checkbox-toggle').click(function () {
-        var clicks = $(this).data('clicks')
+        var clicks = $(this).data('clicks');
         if (clicks) {
-          //Uncheck all checkboxes
-          $('.lab-items input[type=\'checkbox\']').prop('checked', false)
-          $('.checkbox-toggle .far.fa-check-square').removeClass('fa-check-square').addClass('fa-square')
+          $('.lab-items input[type="checkbox"]').prop('checked', false);
+          $('.checkbox-toggle .far.fa-check-square').removeClass('fa-check-square').addClass('fa-square');
         } else {
-          //Check all checkboxes
-          $('.lab-items input[type=\'checkbox\']').prop('checked', true)
-          $('.checkbox-toggle .far.fa-square').removeClass('fa-square').addClass('fa-check-square')
+          $('.lab-items input[type="checkbox"]').prop('checked', true);
+          $('.checkbox-toggle .far.fa-square').removeClass('fa-square').addClass('fa-check-square');
         }
-        $(this).data('clicks', !clicks)
-      })
-    })
+        $(this).data('clicks', !clicks);
+      });
+
+    });
   </script>
   <!-- AdminLTE for demo purposes -->
   <script src="/static/assets/js/demo.js"></script>
