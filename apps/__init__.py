@@ -39,12 +39,26 @@ def register_extensions(app):
 
 
 def register_blueprints(app):
+    # Core blueprints (always loaded)
     for module_name in ('authentication', 'home', 'api', 'k8s', 'cli'):
-        module = import_module('apps.{}.routes'.format(module_name))
+        module = import_module(f'apps.{module_name}.routes')
         app.register_blueprint(module.blueprint)
-    # Load socketio endpoints
-    import_module("apps.events")
 
+    # Optional blueprints (controlled by config.OPTIONAL_MODULES)
+    optional_modules = app.config.get("OPTIONAL_MODULES", []) or []
+    for opt in optional_modules:
+        try:
+            mod = import_module(f"apps.{opt}.routes")
+            app.register_blueprint(mod.blueprint)
+            app.logger.info(f"Optional module loaded: {opt}")
+        except Exception as e:
+            app.logger.error(f"Failed to load optional module '{opt}': {e}")
+
+    # Socket.IO endpoints (xterm) - always load; Windows must run via Docker (see docs)
+    try:
+        import_module("apps.events")
+    except Exception as e:
+        app.logger.error(f"Failed to load apps.events: {e}")
 
 def configure_database(app):
     with app.app_context():
@@ -79,9 +93,10 @@ def configure_log(app):
 def create_app(config):
     app = Flask(__name__)
     app.config.from_object(config)
+
     register_extensions(app)
     register_blueprints(app)
-    #configure_database(app)
+    # configure_database(app)
     configure_oauth(app)
     configure_log(app)
 

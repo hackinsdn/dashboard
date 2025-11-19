@@ -11,6 +11,7 @@ import traceback
 import datetime
 import uuid
 import random
+import subprocess
 
 from kubernetes import config, client
 from kubernetes.stream import stream
@@ -147,11 +148,122 @@ class K8sController():
             })
         return response
 
+    def get_lab_resources(self, resources, published_ports={}):
+        labs = []
+        owners = set()
+        now = datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0)
+        for resource in resources:
+            if isinstance(resource, str):
+                owners.add(resource)
+            if isinstance(resource, dict) and "uid" in resource:
+                owners.add(resource["uid"])
+
+        deployments = self.apps_v1_api.list_namespaced_deployment(
+            namespace=self.namespace,
+        )
+        dep_uid = {}
+        for dep in deployments.items:
+            try:
+                is_child = dep.metadata.owner_references[0].uid in owners
+            except:
+                is_child = False
+            if dep.metadata.uid in owners or is_child:
+                dep_uid[dep.metadata.uid] = dep
+
+        owners.update(dep_uid.keys())
+
+        replica_sets = self.apps_v1_api.list_namespaced_replica_set(
+            namespace=self.namespace
+        )
+        rs_uid_to_dep = {}
+        for rs in replica_sets.items:
+            try:
+                dep = dep_uid[rs.metadata.owner_references[0].uid]
+            except:
+                continue
+            rs_uid_to_dep[rs.metadata.uid] = dep
+
+        owners.update(rs_uid_to_dep.keys())
+
+        pod_services = {}
+        pod_names = {}
+        app_pod_map = defaultdict(list)
+        pods = self.v1_api.list_namespaced_pod(
+            namespace=self.namespace
+        )
+        for pod in pods.items:
+            pod_labels = pod.metadata.labels or {}
+            app = pod_labels.get("app")
+            if app:
+                app_pod_map[app].append(pod)
+            elif clab_name := pod_labels.get("clabernetes/name"):
+                app_pod_map[clab_name].append(pod)
+            try:
+                is_child = pod.metadata.owner_references[0].uid in owners
+            except:
+                is_child = False
+            if pod.metadata.uid not in owners and not is_child:
+                continue
+            pod_services[pod.metadata.uid] = []
+            statuses = [
+                status.ready for status in pod.status.container_statuses
+            ]
+            containers = [
+                container.name for container in pod.spec.containers
+            ]
+            display_name = pod.metadata.name
+            if "clabernetes/topologyNode" in pod_labels:
+                display_name = pod_labels["clabernetes/topologyNode"]
+            pod_names[pod.metadata.uid] = display_name
+            labs.append({
+                "containers_total": len(statuses),
+                "containers_ready": sum(statuses),
+                "created": pod.metadata.creation_timestamp,
+                "age": duration.format_duration(now - pod.metadata.creation_timestamp.replace(microsecond=0)),
+                "name": pod.metadata.name,
+                "display_name": display_name,
+                "node_name": pod.spec.node_name,
+                "pod_ip": pod.status.pod_ip,
+                "containers": containers,
+                "services": pod_services[pod.metadata.uid],
+                "phase": pod.status.phase,
+                "more": str(pod),
+            })
+
+        services = self.v1_api.list_namespaced_service(
+            namespace=self.namespace,
+        )
+        for srv in services.items:
+            srv_labels = srv.metadata.labels or {}
+            try:
+                is_child = srv.metadata.owner_references[0].uid in owners
+            except:
+                is_child = False
+            if srv.metadata.uid not in owners and not is_child:
+                continue
+            pods = app_pod_map.get(srv.spec.selector.get("app"), [])
+            if not pods and (clab_name := srv.spec.selector.get("clabernetes/name")):
+                pods = app_pod_map.get(clab_name, [])
+
+            for port in srv.spec.ports:
+                port_name = port.name if port.name else f"{port.port}/{port.protocol}"
+                for pod in pods:
+                    if str(port.port) not in published_ports.get(pod_names[pod.metadata.uid], []):
+                        continue
+                    node_ip = self.get_node_ip(pod.spec.node_name)
+                    service_link = [
+                        port_name,
+                        f"{self.try_get_app(port_name)}{node_ip}:{port.node_port}"
+                    ]
+                    if port.node_port:
+                        pod_services[pod.metadata.uid].append(service_link)
+
+        return labs
+
     def get_labs_by_user(self, f_user_uid, f_lab_id=None):
         if not self.v1_api:
             return []
         now = datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0)
-        self.update_nodes()
         label_selector = "app=hackinsdn-dashboard"
         if f_user_uid:
             label_selector += f",user_uid={f_user_uid}"
@@ -345,6 +457,7 @@ class K8sController():
         self.nodes_last_updated = time.time()
 
     def get_node_ip(self, name):
+        self.update_nodes()
         node = self.nodes.get(name)
         if not node:
             return None
@@ -362,20 +475,17 @@ class K8sController():
                 return self.identifiers[key]
         return None
 
-    def create_lab(
+    def substitute_identifiers(
         self,
-        lab_id,
         manifest,
-        dry_run=False,
         user_uid=None,
         pod_hash=None,
         allowed_nodes=None,
     ):
-        """create lab according to manifest and labels"""
         try:
             tmpl = string.Template(manifest)
         except Exception as exc:
-            current_app.logger.info(f"Invalid manifest content {exc}")
+            current_app.logger.warning(f"Invalid manifest content {exc}")
             return False, f"Failed to read manifest content: {exc}"
         mapping = {}
         for identf in tmpl.get_identifiers():
@@ -399,6 +509,86 @@ class K8sController():
         except Exception as exc:
             # app.logger.info(f"Invalid manifest {filename} {exc}")
             return False, f"Failed to apply placeholders: {exc}"
+
+        return True, data
+
+    def get_k8s_resource(self, resource):
+        """Get k8s resource using kubectl."""
+        try:
+            result = subprocess.run(
+                ["kubectl", "get", resource["kind"], resource["name"], "-o", "json"],
+                capture_output=True,
+                text=True,
+                check=True
+            )
+            result = json.loads(result.stdout)
+        except subprocess.CalledProcessError as exc:
+            raise Exception(f"Failed to get k8s resource: {exc} -- {exc.stderr}")
+        except Exception as exc:
+            raise Exception(f"Failed to get k8s resource: {exc}")
+        result["is_ok"] = True
+        return result
+
+    def create_k8s_resource(self, resource):
+        """Create k8s resource trying to use kubernetes lib and fallback to kubectl."""
+        if resource["kind"] in ["Pod", "Service", "Deployment", "ConfigMap"]:
+            k8s_objs = create_from_dict(
+                self.k8s_client,
+                data=resource,
+                namespace=self.namespace,
+            )
+            return k8s_objs[0].to_dict()
+        try:
+            result = subprocess.run(
+                ["kubectl", "create", "-f", "-", "-o", "json"],
+                input=json.dumps(resource),
+                capture_output=True,
+                text=True,
+                check=True
+            )
+            result = json.loads(result.stdout)
+        except subprocess.CalledProcessError as exc:
+            raise Exception(f"Failed to create k8s resource: {exc} -- {exc.stderr}")
+        except Exception as exc:
+            raise Exception(f"Failed to create k8s resource: {exc}")
+        return result
+
+    def delete_k8s_resource(self, resource):
+        """Delete k8s resource using kubectl."""
+        try:
+            result = subprocess.run(
+                ["kubectl", "delete", resource["kind"], resource["name"]],
+                capture_output=True,
+                text=True,
+                check=True
+            )
+        except subprocess.CalledProcessError as exc:
+            current_app.logger.error(f"Failed to delete k8s resource: {exc} -- {exc.stderr}")
+            return False
+        except Exception as exc:
+            current_app.logger.error(f"Failed to delete k8s resource: {exc}")
+            return False
+        return True
+
+    def create_lab(
+        self,
+        lab_id,
+        manifest,
+        dry_run=False,
+        replace_identifiers=True,
+        user_uid=None,
+        pod_hash=None,
+        allowed_nodes=None,
+    ):
+        """create lab according to manifest and labels"""
+        data = manifest
+        if replace_identifiers:
+            status, result = self.substitute_identifiers(
+                manifest, user_uid=user_uid, pod_hash=pod_hash, allowed_nodes=allowed_nodes
+            )
+            if not status:
+                return status, result
+            data = result
 
         yaml_docs = []
         try:
@@ -426,22 +616,17 @@ class K8sController():
             if doc is None:
                 continue
             try:
-                result = create_from_dict(
-                    self.k8s_client,
-                    data=doc,
-                    namespace=self.namespace,
-                )
+                result = self.create_k8s_resource(doc)
             except Exception as exc:
                 err = traceback.format_exc().replace("\n", ", ")
                 msg_fail = f"Failed to create resources on Kubernentes: {exc}"
                 current_app.logger.error(f"{msg_fail} {err=} {doc=}")
                 break
-            for resource in result:
-                results.append({
-                    "kind": resource.kind,
-                    "name": resource.metadata.name,
-                    "uid": resource.metadata.uid,
-                })
+            results.append({
+                "kind": result["kind"],
+                "name": result["metadata"]["name"],
+                "uid": result["metadata"]["uid"],
+            })
 
         if msg_fail:
             current_app.logger.error(f"Rollback resource creation due to failures! To be removed: {results}")
@@ -508,7 +693,7 @@ class K8sController():
             elif resource["kind"] == "ConfigMap":
                 results.append(self.get_config_map_by_name(resource))
             else:
-                raise ValueError(f"Invalid resource type {resource['kind']}")
+                results.append(self.get_k8s_resource(resource))
         return results
 
     def delete_pod_by_name(self, pod):
@@ -568,7 +753,7 @@ class K8sController():
             elif resource["kind"] == "ConfigMap":
                 results.append(self.delete_config_map_by_name(resource))
             else:
-                results.append(False)
+                results.append(self.delete_k8s_resource(resource))
         return results
 
     def _wait_gone(self, resources, timeout=10):
