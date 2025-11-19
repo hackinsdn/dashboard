@@ -16,7 +16,7 @@ class _LazyProxy:
     def __call__(self, *args, **kwargs):
         return self._get()
 
-# proxies: só instanciam quando alguém usa
+# lazy proxies are only instantiated when someone uses it
 k8s = _LazyProxy(lambda: K8sController())
 c9s = _LazyProxy(lambda: C9sController())
 

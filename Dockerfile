@@ -5,6 +5,9 @@ RUN --mount=source=requirements.txt,target=/mnt/requirements.txt,type=bind \
  && cd /tmp \
  && curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" \
  && install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl \
+ && curl -LO https://github.com/srl-labs/clabernetes/releases/latest/download/clabernetes_linux_x86_64.tar.gz \
+ && tar -xzf clabernetes_linux_x86_64.tar.gz \
+ && install -o root -g root -m 0755 clabverter /usr/local/bin/clabverter \
  && rm -rf /var/lib/apt/lists/* /tmp/*
 
 WORKDIR /app

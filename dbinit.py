@@ -37,6 +37,11 @@ def dbinit():
         db.session.add(lab_cat)
         idx += 1
 
+    if app.config.get("ENABLE_CLABS"):
+        clab_cat = LabCategories(id=idx, category="ContainerLab", color_cls="secondary")
+        db.session.add(clab_cat)
+        idx += 1
+
     lab1 = Labs(
         title="Hello World",
         description="Hello World testing lab",

@@ -1,0 +1,664 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Create ContainerLab {% endblock %}
+
+{% block body_class %} sidebar-mini {% endblock body_class %}
+
+{% block stylesheets %}
+<!-- Google Font: Source Sans Pro -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+<!-- Font Awesome -->
+<link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
+<!-- AdminLTE -->
+<link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
+<!-- summernote -->
+<link rel="stylesheet" href="/static/assets/plugins/summernote/summernote-bs4.min.css">
+<!-- Select2 -->
+<link rel="stylesheet" href="/static/assets/plugins/select2/css/select2.min.css">
+<link rel="stylesheet" href="/static/assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
+<!-- Bootstrap4 Duallistbox -->
+<link rel="stylesheet" href="/static/assets/plugins/bootstrap4-duallistbox/bootstrap-duallistbox.min.css">
+<!-- CodeMirror -->
+<link rel="stylesheet" href="/static/assets/plugins/codemirror/lib/codemirror.css">
+<link rel="stylesheet" href="/static/assets/plugins/codemirror/theme/abcdef.css">
+<style>
+.dropzone {
+    border: 2px dashed #adb5bd;
+    border-radius: .25rem;
+    padding: 1.25rem;
+    text-align: center;
+    color: #6c757d;
+    cursor: pointer;
+}
+.dropzone.dragover {
+    border-color: #3c8dbc;
+    color: #3c8dbc;
+    background: #f8fbff;
+}
+.file-list small {
+    display: block;
+    color: #6c757d;
+}
+.input-group > .select2-container--default {
+    width: auto;
+    flex: 1 1 auto;
+}
+.input-group > .select2-container--default .select2-selection--single {
+    height: 100%;
+    line-height: inherit;
+    padding: 0.5rem 1rem;
+}
+.select2-container--default .select2-selection--multiple .select2-selection__choice {
+    border: none !important;
+    background: transparent !important;
+}
+</style>
+{% endblock stylesheets %}
+
+{% block content %}
+
+<div class="content-wrapper">
+
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1>Create/Update Container Lab</h1>
+                    {% if msg_ok %}
+                    <div class="alert alert-success alert-dismissible">
+                      <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                      <h5><i class="icon fas fa-check"></i> Lab created/updated successfully!</h5>
+                      {{msg_ok}}
+                    </div>
+                    {% endif %}
+                    {% if msg_fail %}
+                    <div class="alert alert-danger alert-dismissible">
+                      <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                      <h5><i class="icon fas fa-ban"></i> Fail to insert/update container lab!</h5>
+                      {{msg_fail}}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.index') }}">Home</a></li>
+                        <li class="breadcrumb-item"><a href="{{url_for('home_blueprint.view_labs')}}">Labs</a></li>
+                        <li class="breadcrumb-item active">Create/Update CLab</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="content">
+      <form id="clab-form" enctype="multipart/form-data" onsubmit="return true;">
+      <div class="container-fluid">
+        <div class="row">
+          <!-- left column -->
+          <div class="col-md-6">
+            <!-- general form elements -->
+            <div class="card card-dark">
+              <div class="card-header">
+                <h3 class="card-title">General information</h3>
+              </div>
+              <!-- /.card-header -->
+              <!-- form start -->
+                <div class="card-body">
+                  <div class="form-group">
+                    <label>Lab title</label>
+                    <input name="clab_title" type="text" class="form-control" placeholder="Enter container lab title..." value="{{clab.title|default('', true)}}">
+                  </div>
+                  <div class="form-group">
+                    <label>Short Description</label>
+                    <input name="clab_desc" type="text" class="form-control" placeholder="Max 255 characters" value="{{clab.description|default('', true)}}">
+                  </div>
+                  <div class="form-group">
+                    <label>Lab categories</label>
+                    <select name="clab_categories" class="form-control select2" multiple="multiple" data-placeholder="Select one or more categories" style="width: 100%;">
+                      {% for cat_id in lab_categories %}
+                      <option value="{{cat_id}}" data-color="{{lab_categories[cat_id].color_cls}}" {{'selected' if lab_categories[cat_id] in clab.categories else ""}}>{{lab_categories[cat_id].category}}</option>
+                      {% endfor %}
+                    </select>
+                    <small class="form-text text-muted">Select one or more categories</small>
+                  </div>
+                </div>
+                <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
+
+          </div>
+          <!--/.col (left) -->
+
+          <!-- right column -->
+          <div class="col-md-6">
+            <div class="card card-dark">
+              <div class="card-header">
+                <h3 class="card-title">Lab additional information</h3>
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-12">
+                    <div class="form-group">
+                      <label>Access Control: Availabe groups (left) &gt;&gt; Allowed groups (right)</label>
+                      <select name="clab_allowed_groups" class="duallistbox" multiple="multiple">
+                        {% for group in groups %}
+                          {% if group in clab.allowed_groups %}
+                          <option value="{{group.id}}" selected>{{group.groupname}}</option>
+                          {% else %}
+                          <option value="{{group.id}}">{{group.groupname}}</option>
+                          {% endif %}
+                        {% endfor %}
+                      </select>
+                    </div>
+                    <!-- /.form-group -->
+                  </div>
+                </div>
+              </div>
+              <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
+          </div>
+          <!--/.col (right) -->
+        </div>
+        <!--/.row -->
+        <div class="row">
+          <div class="col-md-12">
+            <div class="card card-dark">
+              <div class="card-header">
+                <h3 class="card-title">
+                  ContainerLab extended description
+                </h3>
+                <!-- tools box -->
+                <div class="card-tools">
+                  <button type="button" class="btn btn-tool btn-sm" data-card-widget="collapse" title="Collapse">
+                    <i class="fas fa-minus"></i>
+                  </button>
+                  <button type="button" class="btn btn-tool btn-sm" data-card-widget="remove" title="Remove">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+                <!-- /. tools -->
+              </div>
+              <!-- /.card-header -->
+              <div class="card-body pad">
+                <div class="mb-3">
+                  <textarea name="clab_extended_desc" id="lab-editor" class="textarea" placeholder="Place some text here"
+                            style="width: 100%; height: 400px; font-size: 14px; line-height: 18px; border: 1px solid #dddddd; padding: 10px;">{{clab.extended_desc_str|default('', true)}}</textarea>
+                </div>
+                <p class="text-sm mb-0">
+                  Editor <a href="https://github.com/summernote/summernote">Documentation and license
+                  information.</a>
+                </p>
+              </div>
+            </div>
+          </div>
+          <!-- /.col-->
+        </div>
+        <!--/.row -->
+        <div class="row">
+          <div class="col-md-12">
+            <div class="card card-dark">
+              <div class="card-header">
+                <h3 class="card-title">
+                  ContainerLab Resources
+                </h3>
+              </div>
+              <!-- /.card-header -->
+              <div class="card-body">
+                <div class="row">
+                  <p>You can specify the GIT repository containing all information necessary to create the container lab below (will be read when you hit the save button -- you can always come back here and save again to reload!).</p>
+                  <div class="col-md-12">
+                    <div class="form-group">
+                      <label>GIT repo URL (<span class="text-danger">Under development</span>):</label>
+                      <input name="clab_giturl" type="text" class="form-control" placeholder="Max 255 characters" value="{{clab.giturl|default('', true)}}" disabled>
+                    </div>
+		  </div> <!-- end of col-md-6 -->
+                </div>
+                <!-- .row -->
+                <div class="row">
+                  <p>Or you can upload here your ContainerLab topology and additional files.</p>
+                  <div class="col-md-12">
+                    <div class="form-group">
+                        <label>Upload Area</label>
+                        <div id="dropzone" class="dropzone">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <div>Drag & drop files here, or click to select</div>
+                            <small>Accepted: multiple files</small>
+                        </div>
+                        <input id="clab_files" name="clab_files" type="file" webkitdirectory directory multiple class="d-none">
+                        <div class="file-list mt-2" id="files_list"></div>
+                    </div>
+                  </div>
+                </div>
+                <!-- ./row -->
+		<div class="row {{'d-none' if not clab.manifest}}">
+                  <div class="col-md-12">
+                    <label>ContainerLab manifest</label>
+                    <textarea name="clab_yaml" id="clab_yaml" class="textarea" placeholder="Place some text here" rows="16">{{clab.manifest|default('', true)}}</textarea>
+                  </div>
+		</div>
+              </div>
+            </div>
+          </div>
+          <!-- /.col-->
+        </div>
+        <!-- /.row -->
+        <div class="row">
+          <div class="col-md-12">
+            <div class="card card-dark">
+              <div class="card-header">
+                <h3 class="card-title">
+                  Lab Guide
+                </h3>
+              </div>
+              <!-- /.card-header -->
+              <div class="card-body">
+                <p>Add here the Lab instructions for students/experimenters to run this Lab (step-by-step) using Markdown format (<a href="https://www.markdownguide.org/basic-syntax/" target="_blank">read more about Markdown syntax</a>):</p>
+                <button class="btn btn-outline-secondary" type="button" id="add-text-input-labguide">Add text question</button>
+                <button class="btn btn-outline-secondary" type="button" id="add-select-input-labguide">Add select question</button>
+                <button class="btn btn-outline-secondary" type="button" id="add-check-input-labguide">Add checkbox question</button>
+                <div class="mb-3">
+                  <textarea name="clab_guide" id="lab-edit-guide" class="textarea" placeholder="Place some text here" rows="16">{{clab.lab_guide_md_str|default('', true)}}</textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- /.col-->
+        </div>
+        <!-- ./row -->
+        <div class="row">
+          <div class="col-md-12 mb-2">
+            <button id="btnSubmit" type="button" class="btn btn-primary">
+              <span class="btn-text">{{"Create ContainerLab" if not clab.id else "Update ContainerLab"}}</span>
+              <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+            </button>
+            <a href="{{ url_for('home_blueprint.view_labs', lab_id=clab.id) if clab.id else url_for('home_blueprint.view_labs') }}" class="btn btn-secondary mx-2" role="button" aria-pressed="true">Cancel</a>
+          </div>
+        </div>
+      </div><!-- /.container-fluid -->
+      </form>
+    </section> <!-- /.content -->
+</div>
+
+{% endblock content %}
+
+{% block javascripts %}
+<!-- jQuery -->
+<script src="/static/assets/plugins/jquery/jquery.min.js"></script>
+<!-- Bootstrap 4 -->
+<script src="/static/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+<!-- bs-custom-file-input -->
+<script src="/static/assets/plugins/bs-custom-file-input/bs-custom-file-input.min.js"></script>
+<!-- Bootstrap4 Duallistbox -->
+<script src="/static/assets/plugins/bootstrap4-duallistbox/jquery.bootstrap-duallistbox.min.js"></script>
+<!-- AdminLTE -->
+<script src="/static/assets/js/adminlte.min.js"></script>
+<!-- Summernote -->
+<script src="/static/assets/plugins/summernote/summernote-bs4.min.js"></script>
+<!-- CodeMirror -->
+<script src="/static/assets/plugins/codemirror/lib/codemirror.js"></script>
+<script src="/static/assets/plugins/codemirror/mode/yaml/yaml.js"></script>
+<script src="/static/assets/plugins/codemirror/mode/markdown/markdown.js"></script>
+<!-- Select2 -->
+<script src="/static/assets/plugins/select2/js/select2.full.min.js"></script>
+<script>
+    (function () {
+        // ------- Bootstrap Duallistbox --------
+        $('.duallistbox').bootstrapDualListbox({
+          infoText: false,
+        });
+        // ------- Bootstrap Select2 --------
+        $('select[name="clab_categories"]').select2({
+          placeholder: 'Select one or more categories',
+          allowClear: false,
+          closeOnSelect: false,
+          templateResult: function(option) {
+            if (!option.id) {
+              return option.text;
+            }
+
+            var $option = $(option.element);
+            var colorClass = $option.data('color') || 'secondary';
+
+            return $(
+              '<span class="badge badge-' + colorClass + ' mr-2" style="font-size: 0.9em;">' + option.text + '</span>'
+            );
+          },
+          templateSelection: function(option) {
+            if (!option.id) {
+              return option.text;
+            }
+
+            var $option = $(option.element);
+            var colorClass = $option.data('color') || 'secondary';
+
+            return $(
+              '<span class="badge badge-' + colorClass + '" style="font-size: 0.8em; margin: 1px;">' + option.text + '</span>'
+            );
+          }
+        });
+        // ------- Summer Note -------
+        $('#lab-editor').summernote({
+          height: 500,
+          maximumImageFileSize: 358400,
+          callbacks: {
+            onImageUploadError: function(msg) {
+              alert('Image upload failed: ' + msg + ' (Maximum size: 350KB)');
+            }
+          }
+        });
+        // ------- CodeMirror - Lab Guide -------
+        var editorLabGuide = CodeMirror.fromTextArea(document.getElementById("lab-edit-guide"), {
+          lineNumbers: true,
+          styleActiveLine: true,
+          theme: 'abcdef',
+          mode: 'markdown',
+        });
+        editorLabGuide.setSize("100%", 600);
+        // ------- helpers para UI/Toasts -------
+        function showToast(type, title, body) {
+            if (window.$ && $(document).Toasts) {
+                $(document).Toasts('create', { class: type, title: title, body: body });
+            } else {
+                // fallback simples
+                console[type === 'bg-danger' ? 'error' : 'log'](title + ': ' + body);
+                alert(title + ': ' + body);
+            }
+        }
+
+        // ------- CodeMirror init -------
+        var cm = null;
+        if (typeof CodeMirror === 'undefined') {
+            console.error('CodeMirror failed to load');
+            showToast('bg-danger', 'Failure', 'Failed to load editor. You can still upload files/folders and submit.');
+        } else {
+            cm = CodeMirror.fromTextArea(document.getElementById('clab_yaml'), {
+                mode: 'yaml',
+                lineNumbers: true,
+                lineWrapping: true,
+                indentUnit: 2,
+                tabSize: 2,
+                autofocus: false,
+                theme: 'abcdef',
+            });
+            cm.setSize("100%", 600);
+        }
+
+        // ------- elementos -------
+        var drop = document.getElementById('dropzone');
+        var fileInput = document.getElementById('clab_files');
+        var filesList = document.getElementById('files_list');
+        var btn = document.getElementById('btnSubmit');
+        var form = document.getElementById('clab-form');
+
+        var store = new DataTransfer();
+
+        var markedLines = [];
+
+        var seenPaths = new Set();
+
+        drop && drop.addEventListener('click', function () { fileInput && fileInput.click(); });
+
+        ['dragover', 'drop'].forEach(function (evt) {
+            document.addEventListener(evt, function (e) { e.preventDefault(); }, false);
+        });
+
+        function renderFilesList() {
+            filesList.innerHTML = '';
+            if (!store.files.length) {
+                filesList.innerHTML = '<small>No files selected</small>';
+                return;
+            }
+            var ul = document.createElement('ul');
+            ul.className = 'mb-0 list-unstyled';
+            for (let i = 0; i < store.files.length; i++) {
+                const f = store.files[i];
+                var li = document.createElement('li');
+                li.className = 'd-flex align-items-center justify-content-between py-1';
+                var name = document.createElement('span');
+                name.textContent = f.webkitRelativePath || f.name;
+                var btnRem = document.createElement('button');
+                btnRem.type = 'button';
+                btnRem.className = 'btn btn-xs btn-outline-danger ml-2';
+                btnRem.innerHTML = '<i class="fas fa-times"></i>';
+                btnRem.addEventListener('click', (function (index) {
+                    return function () {
+                        var newStore = new DataTransfer();
+                        for (let j = 0; j < store.files.length; j++) {
+                            if (j !== index) newStore.items.add(store.files[j]);
+                        }
+                        // atualizar seenPaths
+                        seenPaths.clear();
+                        for (let k = 0; k < newStore.files.length; k++) {
+                            seenPaths.add(newStore.files[k].name);
+                        }
+                        store = newStore;
+                        fileInput.files = store.files;
+                        renderFilesList();
+                    };
+                })(i));
+                li.appendChild(name);
+                li.appendChild(btnRem);
+                ul.appendChild(li);
+            }
+            filesList.appendChild(ul);
+        }
+
+        function clearCmMarks() {
+            if (!cm) return;
+            while (markedLines.length) {
+                var ln = markedLines.pop();
+                cm.removeLineClass(ln, 'background', 'cm-error-line');
+                cm.setGutterMarker(ln, 'error-gutter', null);
+            }
+        }
+
+        function markCmError(line, message) {
+            if (!cm) return;
+            cm.addLineClass(line, 'background', 'cm-error-line');
+            var marker = document.createElement('div');
+            marker.className = 'error-gutter-marker';
+            marker.title = message || 'YAML error';
+            marker.innerHTML = '●';
+            cm.setGutterMarker(line, 'error-gutter', marker);
+            markedLines.push(line);
+            cm.scrollIntoView({ line: line, ch: 0 }, 100);
+        }
+
+        (function addRuntimeCss() {
+            var css = document.createElement('style');
+            css.type = 'text/css';
+            css.innerHTML = "\
+        .cm-error-line { background: rgba(255, 0, 0, 0.06) !important; }\
+        .error-gutter-marker { color: #c0392b; font-weight: bold; }";
+            document.head.appendChild(css);
+            if (cm) cm.setOption('gutters', ['CodeMirror-linenumbers', 'error-gutter']);
+        })();
+
+
+        // ====== Adição / deduplicação de arquivos ao store ======
+        function addFiles(fileList) {
+            if (!fileList || !fileList.length) return;
+            for (let i = 0; i < fileList.length; i++) {
+                let f = fileList[i];
+                var key = f.webkitRelativePath || f.name || f.fileName || f.path || (i + ':' + f.size);
+                if (seenPaths.has(key)) continue;
+                seenPaths.add(key);
+                try {
+                    store.items.add(f);
+                } catch (e) {
+                    console.warn('Could not add file to DataTransfer:', e, f);
+                }
+            }
+            try { fileInput.files = store.files; } catch (e) { /* some browsers don't allow */ }
+            renderFilesList();
+        }
+
+        function traverseFileTree(entry, path) {
+            return new Promise(function (resolve) {
+                if (entry.isFile) {
+                    entry.file(function (file) {
+                        var relPath = path + file.name;
+                        var newFile = new File([file], relPath, { type: file.type });
+                        resolve([newFile]);
+                    }, function () { resolve([]); });
+                } else if (entry.isDirectory) {
+                    var dirReader = entry.createReader();
+                    var entries = [];
+                    var readEntries = function () {
+                        dirReader.readEntries(function (results) {
+                            if (!results.length) {
+                                // processar todas as entradas
+                                var promises = entries.map(function (ent) {
+				    var subpath = path === entry.name + '/' ? path : path + entry.name + '/';
+                                    return traverseFileTree(ent, subpath);
+                                });
+                                Promise.all(promises).then(function (arrays) {
+                                    // flatten
+                                    var flat = [].concat.apply([], arrays);
+                                    resolve(flat);
+                                });
+                            } else {
+                                entries = entries.concat(Array.prototype.slice.call(results || []));
+                                readEntries();
+                            }
+                        }, function () {
+                            resolve([]);
+                        });
+                    };
+                    readEntries();
+                } else {
+                    resolve([]);
+                }
+            });
+        }
+
+        if (drop) {
+            // efeitos visuais
+            ['dragenter', 'dragover'].forEach(function (evt) {
+                drop.addEventListener(evt, function (e) {
+                    e.preventDefault(); e.stopPropagation();
+                    drop.classList.add('dragover');
+                }, false);
+            });
+            ['dragleave', 'drop'].forEach(function (evt) {
+                drop.addEventListener(evt, function (e) {
+                    e.preventDefault(); e.stopPropagation();
+                    drop.classList.remove('dragover');
+                }, false);
+            });
+
+            drop.addEventListener('drop', function (e) {
+                var dt = e.dataTransfer;
+                if (!dt) return;
+                if (dt.items && dt.items.length) {
+                    var promises = [];
+                    var filesToAdd = [];
+                    for (let i = 0; i < dt.items.length; i++) {
+                        var item = dt.items[i];
+                        if (typeof item.webkitGetAsEntry === 'function') {
+                            var entry = item.webkitGetAsEntry();
+                            if (entry) {
+                                promises.push(traverseFileTree(entry, entry.isDirectory ? entry.name + '/' : ''));
+                            } else {
+                                var f = item.getAsFile && item.getAsFile();
+                                if (f) filesToAdd.push(f);
+                            }
+                        } else {
+                            var f2 = item.getAsFile && item.getAsFile();
+                            if (f2) filesToAdd.push(f2);
+                        }
+                    }
+                    Promise.all(promises).then(function (results) {
+                        var flat = [].concat.apply([], results || []);
+                        if (filesToAdd.length) flat = flat.concat(filesToAdd);
+                        if (flat.length) addFiles(flat);
+                    }).catch(function (err) {
+                        console.warn('Error reading dropped folder:', err);
+                        if (dt.files && dt.files.length) addFiles(dt.files);
+                        showToast('bg-info', 'Heads up', 'Folder drops may not be fully supported in this browser. Use "Upload folders" abaixo.');
+                    });
+                } else if (dt.files && dt.files.length) {
+                    addFiles(dt.files);
+                }
+            }, false);
+        }
+
+        if (fileInput) {
+            fileInput.addEventListener('change', function (e) {
+                addFiles(e.target.files);
+            });
+        }
+
+        async function handleSubmit() {
+            var btnText = btn.querySelector('.btn-text');
+            var spinner = btn.querySelector('.spinner-border');
+            btn.disabled = true; btnText.classList.add('d-none'); spinner.classList.remove('d-none');
+
+            if (typeof CodeMirror !== 'undefined' && cm) { cm.save(); }
+            if (editorLabGuide) { editorLabGuide.save(); }
+
+            var fd = new FormData(form);
+
+            var hasYaml = (fd.get('clab_yaml') || '').trim().length > 0;
+            var filesLen = fileInput.files.length;
+            if (!hasYaml && filesLen === 0) {
+                showToast('bg-danger', 'Failure', 'Provide YAML and/or files');
+                btn.disabled = false;
+                btnText.classList.remove('d-none');
+                spinner.classList.add('d-none');
+                return;
+            }
+            for (const file of fileInput.files) {
+              fd.append("relative_paths", file.webkitRelativePath || file.name);
+            }
+
+            try {
+                var resp = await fetch('{{ url_for("clabs_blueprint.upsert", clab_id=clab.id|default('new', true)) }}', {
+                    method: 'POST',
+                    body: fd
+                });
+                if (!resp.ok) {
+                    const errorText = await resp.text();
+                    throw new Error(`HTTP Error ${resp.status}, Message: ${errorText}`);
+                }
+
+                var resultText;
+                try {
+                    var j = await resp.json();
+                    if (!resp.ok) {
+                        console.error('Server error:', j);
+                        throw (j && j.result) || 'Failed';
+                    }
+                    resultText = j.result || 'CLab created (mock).';
+                    sessionStorage.setItem('msgSuccess', resultText);
+                    window.location = '{{ url_for("home_blueprint.view_labs") }}/' + j.clab_id;
+                } catch (innerErr) {
+                    if (!resp.ok) {
+                        throw innerErr;
+                    } else {
+                        resultText = await resp.text();
+                        sessionStorage.setItem('msgSuccess', resultText || 'CLab created.');
+                        //showToast('bg-success', 'Success', sessionStorage.getItem('msgSuccess'));
+                        window.location = '{{ url_for("home_blueprint.view_labs") }}';
+                    }
+                }
+            } catch (err) {
+                //sessionStorage.setItem('msgFail', `Failed to create ContainerLab: ${err.name}: ${err.message}`);
+                showToast('bg-danger', 'Failure', `Failed to create ContainerLab: ${err.name}: ${err.message}`);
+                //window.location = '{{ url_for("home_blueprint.view_labs") }}';
+            } finally {
+                btn.disabled = false;
+                btnText.classList.remove('d-none');
+                spinner.classList.add('d-none');
+                renderFilesList();
+            }
+        }
+
+        if (btn) btn.addEventListener('click', handleSubmit);
+
+        renderFilesList();
+
+    })();
+</script>
+{% endblock javascripts %}

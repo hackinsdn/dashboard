@@ -24,6 +24,8 @@ class Config(object):
     DATA_DIR = os.getenv('DATA_DIR', os.path.join(basedir, 'data'))
     UPLOAD_DIR = os.path.join(DATA_DIR, 'uploads')
     os.makedirs(UPLOAD_DIR, exist_ok=True)
+    CLABS_DIR = os.path.join(DATA_DIR, 'containerlab')
+    os.makedirs(CLABS_DIR, exist_ok=True)
 
     # Assets Management
     ASSETS_ROOT = os.getenv('ASSETS_ROOT', '/static/assets')
@@ -123,8 +125,7 @@ class Config(object):
     # -------- Optional modules & feature flags --------
     # Canonical optional modules control (CSV -> list). Default includes "clabs".
     OPTIONAL_MODULES = [m.strip() for m in os.getenv("OPTIONAL_MODULES", "clabs").split(",") if m.strip()]
-    # Backward-compatible flag for CLabs; prefer OPTIONAL_MODULES going forward.
-    ENABLE_CLABS = str(os.getenv("ENABLE_CLABS", "false")).lower() in ("1", "true", "yes", "on")
+    ENABLE_CLABS = "clabs" in OPTIONAL_MODULES
 
 class ProductionConfig(Config):
     DEBUG = False
