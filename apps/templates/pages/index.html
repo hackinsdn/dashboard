@@ -208,7 +208,7 @@
               <!-- /.card-header -->
               <div class="card-body">
                 <div class="row">
-                  <div class="col-md-12">
+                  <div class="col-md-8">
                     <p class="text-center">
                       <span id="lab-instances-created-interval">0 - 0</span>
                     </p>
@@ -219,6 +219,46 @@
                     </div>
                     <!-- /.chart-responsive -->
                   </div>
+                  <div class="col-md-4">
+                    <p class="text-center">
+                      <strong>User evaluation</strong>
+                    </p>
+
+                    <div class="progress-group">
+                      Completed Labs
+                      <span class="float-right fw-bold" id="completed-labs-last-six-months">0</span>
+                      <div class="progress progress-sm">
+                        <div class="progress-bar bg-primary" style="width: 80%"></div>
+                      </div>
+                    </div>
+                    <!-- /.progress-group -->
+
+                    <div class="progress-group">
+                      Answered questions
+                      <span class="float-right fw-bold" id="answered-questions-last-six-months">0</span>
+                      <div class="progress progress-sm">
+                        <div class="progress-bar bg-danger" style="width: 75%"></div>
+                      </div>
+                    </div>
+
+                    <!-- /.progress-group -->
+                    <div class="progress-group">
+                      <span class="progress-text">Solved Challenges</span>
+                      <span class="float-right fw-bold" id="solved-challenges-last-six-months">0</span>
+                      <div class="progress progress-sm">
+                        <div class="progress-bar bg-success" style="width: 60%"></div>
+                      </div>
+                    </div>
+
+                    <!-- /.progress-group -->
+                    <div class="progress-group">
+                      Send Inquiries
+                      <span class="float-right fw-bold">250</span>
+                      <div class="progress progress-sm">
+                        <div class="progress-bar bg-warning" style="width: 50%"></div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
                 <!-- /.row -->
               </div>
@@ -228,7 +268,7 @@
                   <div class="col-sm-4 col-8">
                     <div class="description-block border-right">
                       <div id="completed-labs-growth">
-                        <span class="description-percentage text-warning"><i class="fas fa-caret-up"></i> 0%</span>
+                        <span class="description-percentage text-warning"><i class="fas fa-caret-up"></i> 0</span>
                       </div>
                       <h5 class="description-header" id="current-month-completed-labs">0</h5>
                       <span class="description-text">LAST MONTH LAB COMPLETION</span>
@@ -485,25 +525,6 @@
           <!-- /.col -->
         </div>
         <!-- /.row -->
-        <div class="row">
-          <div class="col-md-12">
-            <div class="card">
-              <div class="card-header">
-                <h3 class="card-title">Usage statistics</h3>
-              </div>
-              <!-- /.card-header -->
-              <div class="card-body">
-                <p class="text-center">
-                  <span id="usage-statistics-interval">0 - 0</span>
-                </p>
-                <div class="chart-responsive">
-                  <canvas id="usage-statistics-chart" height="100"></canvas>
-                </div>
-              </div>
-            </div>
-            <!-- /.card -->
-          </div>
-        </div>
       </div><!--/. container-fluid -->
     </section>
     <!-- /.content -->

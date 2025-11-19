@@ -559,23 +559,9 @@ def get_lab_usage_stats():
     }
     lab_instances_executed_from_last_six_months_data = [lab_instances_executed_from_last_six_months_counts.get(k, 0) for k in month_keys]
 
-    completed_labs_growth = 0
-    if completed_labs_from_last_month > 0:
-        completed_labs_growth = round(((completed_labs_from_current_month - completed_labs_from_last_month) / completed_labs_from_last_month) * 100)
-    elif completed_labs_from_current_month > 0:
-        completed_labs_growth = 100
-
-    completed_challenges_growth = 0
-    if completed_challenges_from_last_month > 0:
-        completed_challenges_growth = round(((completed_challenges_from_current_month - completed_challenges_from_last_month) / completed_challenges_from_last_month) * 100)
-    elif completed_challenges_from_current_month > 0:
-        completed_challenges_growth = 100
-
-    answered_questions_growth = 0
-    if answered_questions_from_last_month > 0:
-        answered_questions_growth = round(((answered_questions_from_current_month - answered_questions_from_last_month) / answered_questions_from_last_month) * 100)
-    elif answered_questions_from_current_month > 0:
-        answered_questions_growth = 100 * answered_questions_from_current_month
+    completed_labs_growth = completed_labs_from_current_month - completed_labs_from_last_month
+    completed_challenges_growth = completed_challenges_from_current_month - completed_challenges_from_last_month
+    answered_questions_growth = answered_questions_from_current_month - answered_questions_from_last_month
 
     data = {
         "start_date": six_months_ago.strftime("%#d %b, %Y"),
@@ -588,7 +574,6 @@ def get_lab_usage_stats():
         "completed_challenges_from_current_month": completed_challenges_from_current_month,
         "answered_questions_from_last_six_months": answered_questions_from_last_six_months,
         "answered_questions_from_current_month": answered_questions_from_current_month,
-        #TODO: Analyze if growth percentage makes sense when previous month count is low, and think about alternatives (like absolute growth)
         "completed_labs_growth": completed_labs_growth,
         "completed_challenges_growth": completed_challenges_growth,
         "answered_questions_growth": answered_questions_growth,

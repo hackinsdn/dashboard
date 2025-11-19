@@ -76,65 +76,13 @@ $(function () {
     const labInstancesCreatedInterval = document.getElementById('lab-instances-created-interval');
     labInstancesCreatedInterval.innerHTML = `<strong>Lab instances created: ${data.start_date} - ${data.end_date}</strong>`;
 
-    const usageStatisticsInterval = document.getElementById('usage-statistics-interval');
-    usageStatisticsInterval.innerHTML = `<strong>Data interval: ${data.start_date} - ${data.end_date}</strong>`;
+    $('#completed-labs-last-six-months').text(data.completed_labs_from_last_six_months);
+    $('#answered-questions-last-six-months').text(data.answered_questions_from_last_six_months);
+    $('#solved-challenges-last-six-months').text(data.completed_challenges_from_last_six_months);
 
-    const usageStatisticsCanvas = $('#usage-statistics-chart').get(0).getContext('2d')
-    const usageStatisticsData = {
-      labels: ['Completed labs', 'Completed challenges', 'Answered questions'],
-      datasets: [{
-        data: [
-          data.completed_labs_from_last_six_months,
-          data.completed_challenges_from_last_six_months,
-          data.answered_questions_from_last_six_months
-        ],
-        backgroundColor: [
-          '#a963ffff',
-          '#bdcc8aff',
-          '#7acfcfff',
-        ],
-        borderColor: '#000',
-      }]
-    };
-    const usageStatisticsConfig = {
-        scales: {
-          xAxes: [{
-            ticks: {
-              beginAtZero: true
-            },
-            gridLines: {
-              display: false
-            }
-          }],
-          yAxes: [{
-            gridLines: {
-              display: false
-            }
-          }]
-        },
-        maintainAspectRatio: true,
-        responsive: true,
-        legend: {
-          display: false
-        },
-        tooltips: {
-          mode: 'index',
-          intersect: false
-        },
-        hover: {
-          mode: 'index',
-          intersect: false
-        }
-    };
-    new Chart(usageStatisticsCanvas, {
-      type: 'horizontalBar',
-      data: usageStatisticsData,
-      options: usageStatisticsConfig
-    })
-
-    updateGrowthPercentage('completed-labs-growth', data.completed_labs_growth);
-    updateGrowthPercentage('completed-challenges-growth', data.completed_challenges_growth);
-    updateGrowthPercentage('answered-questions-growth', data.answered_questions_growth);
+    updateGrowthAmount('completed-labs-growth', data.completed_labs_growth);
+    updateGrowthAmount('completed-challenges-growth', data.completed_challenges_growth);
+    updateGrowthAmount('answered-questions-growth', data.answered_questions_growth);
   })
 
   //---------------------------
@@ -284,12 +232,12 @@ $(function () {
     setTimeout(updateMap, 50);
   }
 
-  const updateGrowthPercentage = (elementId, growthValue) => {
+  const updateGrowthAmount = (elementId, growthValue) => {
     const element = document.getElementById(elementId);
     if (growthValue > 0) {
-      element.innerHTML = `<span class="description-percentage text-success"><i class="fas fa-caret-up"></i> ${growthValue}%</span>`;
+      element.innerHTML = `<span class="description-percentage text-success"><i class="fas fa-caret-up"></i> ${growthValue}</span>`;
     } else if (growthValue < 0) {
-      element.innerHTML = `<span class="description-percentage text-danger"><i class="fas fa-caret-down"></i> ${Math.abs(growthValue)}%</span>`;
+      element.innerHTML = `<span class="description-percentage text-danger"><i class="fas fa-caret-down"></i> ${Math.abs(growthValue)}</span>`;
     }
   };
 })
