@@ -24,3 +24,6 @@ export MAP_ZOOM_LEVEL=xxxx
 # Pontos do mapa (formato JSON)
 export MAP_POINTS=xxxx
 export TESTBED_TITLE=xxxx
+
+# Enable or disable the Collaborative Labs feature
+ENABLE_CLABS=true

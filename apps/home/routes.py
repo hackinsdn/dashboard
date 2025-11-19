@@ -186,18 +186,27 @@ def run_lab(lab_id):
     if request.method == "GET":
         return render_template("pages/run_lab.html", lab=lab, lab_expirations=lab_expirations)
 
-    pod_hash = uuid.uuid4().hex[:14]
-
     lab_expiration = request.form.get("lab_expiration")
     if not lab_expiration or lab_expiration not in lab_expirations:
         return render_template("pages/run_lab.html", lab=lab, msg_fail="Invalid lab duration/expiration, please choose one of the values provided.")
 
     expiration_ts = parse_lab_expiration(lab_expiration)
 
-    status, msg = k8s.create_lab(lab_id, lab.manifest, user_uid=current_user.uid, pod_hash=pod_hash)
+    lab_inst = LabInstances()
+    pod_hash = lab_inst.get_id()
+    replace_identifiers = True
+    lab_manifest = lab.manifest
+    if lab.is_clab:
+        replace_identifiers = False
+        lab_manifest = lab_manifest.replace(f"clab-{lab.lab_metadata.short_uuid}", f"clab-{pod_hash}")
+
+    status, msg = k8s.create_lab(lab_id, lab_manifest, user_uid=current_user.uid, pod_hash=pod_hash, replace_identifiers=replace_identifiers)
 
     if status:
-        lab_inst = LabInstances(pod_hash, current_user, lab, k8s_resources=msg, expiration_ts=expiration_ts)
+        lab_inst.user_id = current_user.id
+        lab_inst.lab_id = lab.id
+        lab_inst.k8s_resources = msg
+        lab_inst.expiration_ts = expiration_ts
         db.session.add(lab_inst)
 
         create_lab_log = HomeLogging(ipaddr=get_remote_addr(), action="create_lab", success=True, lab_id=lab.id, user_id=current_user.id)
@@ -331,29 +340,45 @@ def view_lab_instance(lab_id):
     if lab_instance.user_id != current_user.id:
         owner = Users.query.get(lab_instance.user_id)
 
-    running_labs = k8s.get_labs_by_user(owner.uid, lab_instance.lab_id)
+    ports = {}
+    if lab.lab_metadata:
+        ports = lab.lab_metadata.md.get("ports", {})
 
-    if not running_labs or (lab_instance.lab_id, owner.uid) not in running_labs:
-        return render_template("pages/error.html", title="Lab instance is not running", msg="No resource found for Lab Instance")
+    #running_labs = k8s.get_labs_by_user(owner.uid, lab_instance.lab_id)
+    try:
+        lab_resources = k8s.get_lab_resources(lab_instance.k8s_resources, published_ports=ports)
+        assert lab_resources
+    except Exception as exc:
+        err = traceback.format_exc().replace("\n", ", ")
+        current_app.logger.error(f"Failed to get resources for lab_id={lab.id} lab_instance_id={lab_instance.id} exception={exc} err={err}")
+        return render_template("pages/error.html", title="Failed to get Lab Resources", msg="No resource found for Lab Instance. Try again later and if the error persists, please contact the administrator.")
+
+    #if not running_labs or (lab_instance.lab_id, owner.uid) not in running_labs:
+    #if not lab_resources:
+    #    return render_template("pages/error.html", title="Lab instance is not running", msg="No resource found for Lab Instance")
 
     lab_dict = {
         "title": lab.title,
         "lab_id": lab.id,
+        "is_clab": lab.is_clab,
         "lab_instance_id": lab_instance.id,
         "user": f"{owner.name} ({owner.email or 'NO-EMAIL'})",
         "user_id": owner.id,
         "resources": [],
+        "created": "--",
         "expires_at": datetime_from_ts(lab_instance.expiration_ts),
     }
     created = None
-    for pod in running_labs[(lab_instance.lab_id, owner.uid)]:
-        if pod["kind"] != "pod":
-            continue
+    #for pod in running_labs[(lab_instance.lab_id, owner.uid)]:
+    for pod in lab_resources:
+        #if pod["kind"] != "pod":
+        #    continue
         if not created or created > pod['created']:
             created = pod["created"]
         lab_dict["resources"].append({
-            "kind": pod["kind"],
+            "kind": "pod",
             "name": pod["name"],
+            "display_name": pod["display_name"],
             "ready": pod["phase"],
             "links": pod["containers"],
             "services": pod["services"],
@@ -363,8 +388,6 @@ def view_lab_instance(lab_id):
         })
     if created:
         lab_dict["created"] = created.strftime('%Y-%m-%d %H:%M:%S')
-    else:
-        lab_dict["created"] = "--"
 
     return render_template("pages/lab_instance_view.html", lab=lab_dict, lab_guide=lab.lab_guide_html_str)
 
@@ -376,7 +399,7 @@ def edit_lab(lab_id):
     if lab_id != "new":
         lab = Labs.query.get(lab_id)
         if not lab:
-            return render_template("pages/labs_edit.html", segment="/labs/edit", msg_fail="Lab not found")
+            return render_template("pages/labs_edit.html", lab=None, segment="/labs/edit", msg_fail="Lab not found")
     else:
         lab = Labs()
 

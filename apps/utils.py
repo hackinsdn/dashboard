@@ -3,12 +3,17 @@
 Copyright (c) 2015 - HackInSDN team
 """
 import datetime
+import re
+import os
+import unicodedata
 
 from flask import g
 from flask_login import current_user
 
 from apps import cache
 from apps.home.models import LabInstances
+
+_filename_ascii_strip_re = re.compile(r"[^A-Za-z0-9_.-]")
 
 
 def utcnow():
@@ -90,3 +95,83 @@ def datetime_from_ts(timestamp):
         return dt.isoformat()
     except:
         return None
+
+
+def secure_filename(filename: str) -> str:
+    r"""Pass it a filename and it will return a secure version of it.  This
+    filename can then safely be stored on a regular file system and passed
+    to :func:`os.path.join`.  The filename returned is an ASCII only string
+    for maximum portability.
+
+    On windows systems the function also makes sure that the file is not
+    named after one of the special device files.
+
+    >>> secure_filename("My cool movie.mov")
+    'My_cool_movie.mov'
+    >>> secure_filename("../../../etc/passwd")
+    'etc/passwd'
+    >>> secure_filename("xpto/a b c/../../../../../../etc/passwd")
+    'xpto/a_b_c/etc/passwd'
+    >>> secure_filename('i contain cool \xfcml\xe4uts.txt')
+    'i_contain_cool_umlauts.txt'
+
+    The function might return an empty filename.  It's your responsibility
+    to ensure that the filename is unique and that you abort or
+    generate a random filename if the function returned an empty one.
+
+    Update: this was slightly modified from its original implementation
+    (from werkzeug.utils) to allow relative paths.
+
+    .. versionadded:: 0.6
+
+    :param filename: the filename to secure
+    """
+    filename = unicodedata.normalize("NFKD", filename)
+    filename = filename.encode("ascii", "ignore").decode("ascii")
+
+    for sep in os.sep, os.path.altsep:
+        if sep:
+            filename = filename.replace(sep, "\0")
+
+    parts = []
+    for part in filename.split("\0"):
+        part = str(re.sub(r"\s+", "_", part))
+        part = str(_filename_ascii_strip_re.sub("", part)).strip("._")
+        if part:
+            parts.append(part)
+
+    filename = "/".join(parts)
+
+    # on nt a couple of special files are present in each folder.  We
+    # have to ensure that the target file is not such a filename.  In
+    # this case we prepend an underline
+    if (
+        os.name == "nt"
+        and filename
+        and filename.split(".")[0].upper() in _windows_device_files
+    ):
+        filename = f"_{filename}"
+
+    return filename
+
+
+def list_files(folder, ignore_prefix=""):
+    """List files in a folder recursively. Params:
+       - ignore_prefix: files matching this string will be ignored
+    """
+    current_files = set()
+    for root, dirs, files in os.walk(folder):
+        relpath = root.removeprefix(folder)
+        for file in files:
+            if ignore_prefix and file.startswith(ignore_prefix):
+                continue
+            current_files.add(os.path.join(relpath, file))
+    return current_files
+
+
+def remove_empty_folders(folder):
+    """Remove empty folders inside a particular folder."""
+    folders = list(os.walk(mydir))[1:]
+    for folder in folders:
+        if not folder[2]:
+            os.rmdir(folder[0])

@@ -13,6 +13,7 @@ __pycache__/
 
 # venv
 venv
+*.venv
 
 # .env variables file
 .env
