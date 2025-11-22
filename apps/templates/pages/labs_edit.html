@@ -204,24 +204,18 @@
                 <p>Add here your Kubernetes Manifest file containing Pods, Deployments and Services. You should customize the item names with variables that will be replaced during resource creation, example: <code>${pod_hash}</code></p>
                 <div class="row">
                   <div class="col-md-6">
-	            <div class="form-group">
+                    <div class="form-group">
                       <label>Kubernetes Manifest Template:</label>
-		      <div class="input-group">
-                        <select class="form-control select2">
-                          <option>--</option>
-		          <option>Mininet-Sec</option>
-		          <option>Mininet-Sec and Kytos with Services</option>
-		          <option>Mininet-Sec with custom topology</option>
-		          <option>One Pod</option>
-                          <option>Two Pods</option>
-                          <option>Deployment with Service</option>
+                      <div class="input-group">
+                        <select class="form-control select2" id="template-select">
+                          <option value="">Loading templates...</option>
                         </select>
                         <div class="input-group-append">
-                          <button class="btn btn-outline-secondary" type="button">Load Template</button>
+                          <button class="btn btn-outline-secondary" type="button" id="load-template-btn">Load Template</button>
                         </div>
-		      </div>
+                      </div>
                     </div>
-		  </div> <!-- end of col-md-6 -->
+		              </div> <!-- end of col-md-6 -->
                 </div>
                 <div class="mb-3">
                   <textarea name="lab_manifest" id="lab-edit-manifest" class="textarea" placeholder="Place some text here" rows="16">{{lab.manifest|default('', true)}}</textarea>
@@ -460,14 +454,6 @@
       $('.duallistbox').bootstrapDualListbox({
         infoText: false,
       });
-      var editorLabManifest = CodeMirror.fromTextArea(document.getElementById("lab-edit-manifest"), {
-        lineNumbers: true,
-        styleActiveLine: true,
-        tabSize: 2,
-        theme: 'abcdef',
-        mode: 'yaml',
-      });
-      editorLabManifest.setSize("100%", 600);
       var editorLabGuide = CodeMirror.fromTextArea(document.getElementById("lab-edit-guide"), {
         lineNumbers: true,
         styleActiveLine: true,
@@ -537,6 +523,74 @@
         doc.replaceRange("<input type='text' name='xpto-foobar' placeholder='insert your check here'>", cursor);
       });
     });
+
+    async function loadTemplates() {
+        const templateSelect = document.getElementById('template-select');
+        try {
+          const response = await fetch('/templates/list');
+          if (!response.ok) {
+            throw new Error('Falha ao carregar a lista de templates.');
+          }
+          const templates = await response.json();
+
+          templateSelect.innerHTML = '';
+          
+          const defaultOption = document.createElement('option');
+          defaultOption.value = '';
+          defaultOption.text = '--';
+          templateSelect.appendChild(defaultOption);
+
+          templates.forEach(templateName => {
+            const option = document.createElement('option');
+            option.value = templateName;
+            option.text = templateName.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+            templateSelect.appendChild(option);
+          });
+
+      } catch (error) {
+        console.error(error);
+        templateSelect.innerHTML = '<option value="">Failed to load</option>';
+        alert('Failed to load templates.');
+      }
+    }
+
+    loadTemplates();
+
+    const loadBtn = document.getElementById('load-template-btn');
+    const templateSelect = document.getElementById('template-select');
+    const cmEditor = CodeMirror.fromTextArea(document.getElementById("lab-edit-manifest"), {
+      lineNumbers: true,
+      styleActiveLine: true,
+      tabSize: 2,
+      theme: 'abcdef',
+      mode: 'yaml',
+    });
+
+      loadBtn.addEventListener('click', async () => {
+        const templateName = templateSelect.value;
+
+        if (!templateName) {
+          alert('Por favor, selecione um template para carregar.');
+          return;
+        }
+
+        try {
+          const response = await fetch(`/templates/${templateName}`);
+          if (response.ok) {
+            const templateContent = await response.text();
+            
+            cmEditor.setValue(templateContent);
+            cmEditor.setSize("100%",600)
+          } else {
+            const errorData = await response.json();
+            alert(`Erro ao carregar o template: ${errorData.error}`);
+          }
+        } catch (error) {
+          alert('Erro ao carregar template. Tente novamente.');
+          console.error('Fetch error:', error);
+        }
+      });
+
   </script>
 
 {% endblock javascripts %}
