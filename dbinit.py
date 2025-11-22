@@ -1,3 +1,4 @@
+import os
 from apps import db
 from run import app
 from apps.authentication.models import Users, Groups
@@ -21,20 +22,26 @@ def dbinit():
 
     default_pw = uuid.uuid4().hex[:16]
     admin = Users(
-        username="admin",
-        password=default_pw,
-        email="admin@localhost.com",
+        username=os.environ.get("HACKINSDN_ADMIN_USERNAME", "admin"),
+        password=os.environ.get("HACKINSDN_ADMIN_PASSWORD", default_pw),
+        email=os.environ.get("HACKINSDN_ADMIN_EMAIL", "admin@localhost.com"),
         category="admin"
     )
     db.session.add(admin)
-    print("#######################################")
-    print(f"## Default admin password: {default_pw}")
-    print("#######################################")
+    if "HACKINSDN_ADMIN_PASSWORD" not in os.environ:
+        print("#######################################")
+        print(f"## Default admin password: {default_pw}")
+        print("#######################################")
 
     idx = 1
     for cat, color in [('All', 'dark'), ('Introductory', 'light'), ('Intermediate', 'info'), ('Advanced', 'warning'), ('Offensive Security', 'danger'), ('Defensive Security', 'success'), ('Networking', 'primary')]:
         lab_cat = LabCategories(id=idx, category=cat, color_cls=color)
         db.session.add(lab_cat)
+        idx += 1
+
+    if app.config.get("ENABLE_CLABS"):
+        clab_cat = LabCategories(id=idx, category="ContainerLab", color_cls="secondary")
+        db.session.add(clab_cat)
         idx += 1
 
     lab1 = Labs(
