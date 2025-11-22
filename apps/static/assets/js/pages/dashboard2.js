@@ -13,64 +13,77 @@ $(function () {
   //-----------------------
 
   // Get context with jQuery - using jQuery's .get() method.
-  var salesChartCanvas = $('#salesChart').get(0).getContext('2d')
 
-  var salesChartData = {
-    labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
-    datasets: [
-      {
-        label: 'Digital Goods',
-        backgroundColor: 'rgba(60,141,188,0.9)',
-        borderColor: 'rgba(60,141,188,0.8)',
-        pointRadius: false,
-        pointColor: '#3b8bba',
-        pointStrokeColor: 'rgba(60,141,188,1)',
-        pointHighlightFill: '#fff',
-        pointHighlightStroke: 'rgba(60,141,188,1)',
-        data: [28, 48, 40, 19, 86, 27, 90]
-      },
-      {
-        label: 'Electronics',
-        backgroundColor: 'rgba(210, 214, 222, 1)',
-        borderColor: 'rgba(210, 214, 222, 1)',
-        pointRadius: false,
-        pointColor: 'rgba(210, 214, 222, 1)',
-        pointStrokeColor: '#c1c7d1',
-        pointHighlightFill: '#fff',
-        pointHighlightStroke: 'rgba(220,220,220,1)',
-        data: [65, 59, 80, 81, 56, 55, 40]
-      }
-    ]
-  }
+  $.get('/api/lab/usage_stats', function(data) {
+    console.log('Dashboard stats data:', data);
 
-  var salesChartOptions = {
-    maintainAspectRatio: false,
-    responsive: true,
-    legend: {
-      display: false
-    },
-    scales: {
-      xAxes: [{
-        gridLines: {
-          display: false
+    const salesChartCanvas = $('#salesChart').get(0).getContext('2d')
+    const salesChartData = {
+      labels: data.months,
+      datasets: [
+        {
+          label: 'Lab Instances',
+          backgroundColor: 'rgba(60,141,188,0.9)',
+          borderColor: 'rgba(60,141,188,0.8)',
+          pointRadius: false,
+          pointColor: '#3b8bba',
+          pointStrokeColor: 'rgba(60,141,188,1)',
+          pointHighlightFill: '#fff',
+          pointHighlightStroke: 'rgba(60,141,188,1)',
+          data: data.labs_executed_counts
         }
-      }],
-      yAxes: [{
-        gridLines: {
-          display: false
-        }
-      }]
+      ]
     }
-  }
 
-  // This will get the first returned node in the jQuery collection.
-  // eslint-disable-next-line no-unused-vars
-  var salesChart = new Chart(salesChartCanvas, {
-    type: 'line',
-    data: salesChartData,
-    options: salesChartOptions
-  }
-  )
+    const salesChartOptions = {
+      maintainAspectRatio: true,
+      responsive: true,
+      legend: {
+        display: true
+      },
+      scales: {
+        xAxes: [{
+          gridLines: {
+            display: false
+          }
+        }],
+        yAxes: [{
+          gridLines: {
+            display: false
+          }
+        }]
+      },
+      tooltips: {
+        mode: 'index',
+        intersect: false
+      },
+      hover: {
+        mode: 'index',
+        intersect: false
+      }
+    }
+
+    new Chart(salesChartCanvas, {
+      type: 'line',
+      data: salesChartData,
+      options: salesChartOptions
+    })
+
+    $('#current-month-completed-labs').text(data.completed_labs_from_current_month)
+    $('#current-month-answers-questions').text(data.answered_questions_from_current_month)
+    $('#current-month-completed-challenges').text(data.completed_challenges_from_current_month)
+
+    const labInstancesCreatedInterval = document.getElementById('lab-instances-created-interval');
+    labInstancesCreatedInterval.innerHTML = `<strong>Lab instances created: ${data.start_date} - ${data.end_date}</strong>`;
+
+    $('#completed-labs-last-six-months').text(data.completed_labs_from_last_six_months);
+    $('#answered-questions-last-six-months').text(data.answered_questions_from_last_six_months);
+    $('#solved-challenges-last-six-months').text(data.completed_challenges_from_last_six_months);
+
+    updateGrowthAmount('completed-labs-growth', data.completed_labs_growth);
+    updateGrowthAmount('completed-challenges-growth', data.completed_challenges_growth);
+    updateGrowthAmount('answered-questions-growth', data.answered_questions_growth);
+  })
 
   //---------------------------
   // - END MONTHLY SALES CHART -
@@ -218,4 +231,13 @@ $(function () {
     };
     setTimeout(updateMap, 50);
   }
+
+  const updateGrowthAmount = (elementId, growthValue) => {
+    const element = document.getElementById(elementId);
+    if (growthValue > 0) {
+      element.innerHTML = `<span class="description-percentage text-success"><i class="fas fa-caret-up"></i> ${growthValue}</span>`;
+    } else if (growthValue < 0) {
+      element.innerHTML = `<span class="description-percentage text-danger"><i class="fas fa-caret-down"></i> ${Math.abs(growthValue)}</span>`;
+    }
+  };
 })

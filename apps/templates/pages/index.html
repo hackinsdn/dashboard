@@ -210,16 +210,15 @@
                 <div class="row">
                   <div class="col-md-8">
                     <p class="text-center">
-                      <strong>Lab instances created: {{stats['lab_inst_period_report']}}</strong>
+                      <span id="lab-instances-created-interval">0 - 0</span>
                     </p>
 
                     <div class="chart">
                       <!-- Sales Chart Canvas -->
-                      <canvas id="salesChart" height="180" style="height: 180px;"></canvas>
+                      <canvas id="salesChart" height="100" ></canvas>
                     </div>
                     <!-- /.chart-responsive -->
                   </div>
-                  <!-- /.col -->
                   <div class="col-md-4">
                     <p class="text-center">
                       <strong>User evaluation</strong>
@@ -227,7 +226,7 @@
 
                     <div class="progress-group">
                       Completed Labs
-                      <span class="float-right"><b>{{stats['cpu_usage']}}</b>/{{stats['cpu_capacity']}}</span>
+                      <span class="float-right fw-bold" id="completed-labs-last-six-months">0</span>
                       <div class="progress progress-sm">
                         <div class="progress-bar bg-primary" style="width: 80%"></div>
                       </div>
@@ -235,8 +234,8 @@
                     <!-- /.progress-group -->
 
                     <div class="progress-group">
-                      Answred questions
-                      <span class="float-right"><b>310</b>/400</span>
+                      Answered questions
+                      <span class="float-right fw-bold" id="answered-questions-last-six-months">0</span>
                       <div class="progress progress-sm">
                         <div class="progress-bar bg-danger" style="width: 75%"></div>
                       </div>
@@ -245,7 +244,7 @@
                     <!-- /.progress-group -->
                     <div class="progress-group">
                       <span class="progress-text">Solved Challenges</span>
-                      <span class="float-right"><b>480</b>/800</span>
+                      <span class="float-right fw-bold" id="solved-challenges-last-six-months">0</span>
                       <div class="progress progress-sm">
                         <div class="progress-bar bg-success" style="width: 60%"></div>
                       </div>
@@ -254,14 +253,12 @@
                     <!-- /.progress-group -->
                     <div class="progress-group">
                       Send Inquiries
-                      <span class="float-right"><b>250</b>/500</span>
+                      <span class="float-right fw-bold">250</span>
                       <div class="progress progress-sm">
                         <div class="progress-bar bg-warning" style="width: 50%"></div>
                       </div>
                     </div>
-                    <!-- /.progress-group -->
                   </div>
-                  <!-- /.col -->
                 </div>
                 <!-- /.row -->
               </div>
@@ -270,8 +267,10 @@
                 <div class="row">
                   <div class="col-sm-4 col-8">
                     <div class="description-block border-right">
-                      <span class="description-percentage text-success"><i class="fas fa-caret-up"></i> 17%</span>
-                      <h5 class="description-header">35</h5>
+                      <div id="completed-labs-growth">
+                        <span class="description-percentage text-warning"><i class="fas fa-caret-up"></i> 0</span>
+                      </div>
+                      <h5 class="description-header" id="current-month-completed-labs">0</h5>
                       <span class="description-text">LAST MONTH LAB COMPLETION</span>
                     </div>
                     <!-- /.description-block -->
@@ -279,8 +278,10 @@
                   <!-- /.col -->
                   <div class="col-sm-4 col-8">
                     <div class="description-block border-right">
-                      <span class="description-percentage text-warning"><i class="fas fa-caret-left"></i> 0%</span>
-                      <h5 class="description-header">10</h5>
+                      <div id="completed-challenges-growth">
+                        <span class="description-percentage text-warning"><i class="fas fa-caret-up"></i> 0%</span>
+                      </div>
+                      <h5 class="description-header" id="current-month-answers-questions">0</h5>
                       <span class="description-text">LAST MONTH ANSWRED QUESTIONS</span>
                     </div>
                     <!-- /.description-block -->
@@ -288,8 +289,10 @@
                   <!-- /.col -->
                   <div class="col-sm-4 col-8">
                     <div class="description-block border-right">
-                      <span class="description-percentage text-success"><i class="fas fa-caret-up"></i> 20%</span>
-                      <h5 class="description-header">5</h5>
+                      <div id="answered-questions-growth">
+                        <span class="description-percentage text-warning"><i class="fas fa-caret-up"></i> 0%</span>
+                      </div>
+                      <h5 class="description-header" id="current-month-completed-challenges">0</h5>
                       <span class="description-text">LAST MONTH SOLVED CHALLENGES</span>
                     </div>
                     <!-- /.description-block -->
