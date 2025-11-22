@@ -218,4 +218,25 @@ $(function () {
     };
     setTimeout(updateMap, 50);
   }
+
+
+  //------------------------
+  // - RECENTLY ADDED LABS CHART -
+  //------------------------
+  $.get('/api/labs/recently_added', function(data) {
+    console.log('Dashboard stats data:', data);
+    const labsData = data.data;
+    const recentlyAddedLabs = document.getElementById('recent-labs-list');
+    labsData.forEach(l => {
+        recentlyAddedLabs.innerHTML += `
+          <li class="item">
+            <div class="product-info ml-3">
+              <a href="/labs/view/${l.id}" class="product-title">${l.title}
+                ${l.categories.map(c => `<span class="badge float-right badge-${c.color_cls}">${c.category}</span>`).join(' ')}
+                <span class="product-description">${l.description}</span>
+            </div>
+          </li>
+        `;
+    });
+  });
 })
