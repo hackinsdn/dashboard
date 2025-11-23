@@ -28,10 +28,11 @@ class Config(object):
     os.makedirs(CLABS_DIR, exist_ok=True)
 
     # Git Templates
-    LAB_TEMPLATES_GIT_REPO = os.getenv('LAB_TEMPLATES_GIT_REPO', '')
-    LAB_TEMPLATES_GIT_REPO_NAME = os.getenv('LAB_TEMPLATES_GIT_REPO_NAME', '')
-    GIT_PAT = os.getenv('GIT_PAT', '')
-    LAB_TEMPLATES_DIR = os.path.join(DATA_DIR, LAB_TEMPLATES_GIT_REPO_NAME)
+    # for Git repos with authentication, you can endode in the URL
+    GIT_UPDATE_TIMEOUT = os.getenv("GIT_UPDATE_TIMEOUT", 30)
+    LAB_TEMPLATES_GIT_URL = os.getenv('LAB_TEMPLATES_GIT_URL', 'https://github.com/hackinsdn/lab_templates')
+    LAB_TEMPLATES_DIR = os.getenv("LAB_TEMPLATES_DIR", os.path.join(DATA_DIR, "lab_templates"))
+    LAB_TEMPLATES_REFRESH = int(os.getenv("LAB_TEMPLATES_REFRESH", 3600))
 
     # Assets Management
     ASSETS_ROOT = os.getenv('ASSETS_ROOT', '/static/assets')

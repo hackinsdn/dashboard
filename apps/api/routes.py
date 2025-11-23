@@ -5,13 +5,14 @@ import json
 import re
 from apps import db, cache
 from apps.api import blueprint
-from apps.controllers import k8s
+from apps.controllers import k8s, git
 from apps.home.models import Labs, LabInstances, LabAnswers, LabAnswerSheet, UserLikes, UserFeedbacks, lab_groups
 from apps.authentication.models import Users, Groups, DeletedGroupUsers, group_members, group_owners
+from apps.audit_mixin import check_user_category
 from flask import request, current_app
 from flask_login import login_required, current_user
 from datetime import timedelta, datetime
-from apps.utils import datetime_from_ts, parse_lab_expiration
+from apps.utils import datetime_from_ts, parse_lab_expiration, secure_filename
 
 @blueprint.route('/pods/<lab_id>', methods=["GET"])
 @login_required
@@ -505,3 +506,36 @@ def extend_lab(lab_id):
     )
 
     return {"status": "ok", "result": new_expiration}, 200
+
+
+@blueprint.route('/templates/list')
+def list_kubernetes_templates():
+    git_url = current_app.config.get('LAB_TEMPLATES_GIT_URL')
+    git_dir = current_app.config.get('LAB_TEMPLATES_DIR')
+    refresh = current_app.config.get('LAB_TEMPLATES_REFRESH')
+    force_refresh = request.args.get('force_refresh')
+    if not git_url:
+        return {"status": "not-defined", "result": []}, 200
+    if force_refresh:
+        refresh = 0
+    try:
+        git.update_repo(git_url, git_dir, refresh_interval=refresh)
+        template_files = [
+            f.removesuffix(".yaml")
+            for f in git.list_files(git_dir, pattern="**/*.yaml")
+        ]
+        return {"status": "ok", "result": template_files}, 200
+    except Exception as e:
+        return {"status": "fail", "result": "Failed to list templates"}, 400
+
+
+@blueprint.route('/templates/<template_name>', methods=['GET'])
+@login_required
+@check_user_category(["admin", "teacher"])
+def get_kubernetes_template(template_name):
+    templates_dir = current_app.config.get('LAB_TEMPLATES_DIR')
+    template_name = secure_filename(template_name)
+    status, result = git.get_file(templates_dir, f'{template_name}.yaml')
+    if not status:
+        return {"status": "fail", "result": result}, 400
+    return {"status": "ok", "result": result}, 200

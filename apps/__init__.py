@@ -7,7 +7,6 @@ Copyright (c) 2014 - present HackInSDN Team
 import os
 import sys
 import logging
-import git
 
 from flask import Flask
 from flask_login import LoginManager
@@ -91,34 +90,6 @@ def configure_log(app):
     for handler in app.logger.handlers:
         handler.setFormatter(logging.Formatter(fmt=app.config["LOG_FMT"]))
 
-def update_lab_templates(app):    
-    git_pat = os.getenv('GIT_PAT')
-    repo_url = app.config.get('LAB_TEMPLATES_GIT_REPO')
-    lab_templates_dir = app.config.get('LAB_TEMPLATES_DIR')
-    
-    if git_pat:
-        repo_url = f'https://oauth2:{git_pat}@{repo_url}'
-    else:
-        repo_url = f'https://{repo_url}'
-
-    os.makedirs(os.path.dirname(lab_templates_dir), exist_ok=True)
-    
-    try:
-        if not os.path.exists(lab_templates_dir):
-            print(f"Cloning repo of templates in {lab_templates_dir}...")
-            git.Repo.clone_from(repo_url, lab_templates_dir)
-        else:
-            print("Updating templates repo...")
-            repo = git.Repo(lab_templates_dir)
-            origin = repo.remotes.origin
-            origin.pull()
-    except git.GitCommandError as e:
-        print(f"Error in Git repo: {e}")
-        return False
-    
-    print("Templates updated.")
-    return True
-
 def create_app(config):
     app = Flask(__name__)
     app.config.from_object(config)
@@ -128,6 +99,5 @@ def create_app(config):
     # configure_database(app)
     configure_oauth(app)
     configure_log(app)
-    update_lab_templates(app)
 
     return app

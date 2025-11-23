@@ -12,14 +12,13 @@ from apps.home import blueprint
 from apps.controllers import k8s
 from apps.home.models import Labs, LabInstances, LabCategories, LabAnswers, LabAnswerSheet, HomeLogging, UserLikes, UserFeedbacks
 from apps.authentication.models import Users, Groups
-from flask import render_template, request, current_app, redirect, url_for, session, jsonify
+from flask import render_template, request, current_app, redirect, url_for, session
 from flask_login import login_required, current_user
 from jinja2 import TemplateNotFound
 from apps.audit_mixin import get_remote_addr, check_user_category
 from apps.authentication.forms import GroupForm
 from apps.utils import update_running_labs_stats, parse_lab_expiration, datetime_from_ts
 from sqlalchemy import desc
-from pathlib import Path
 
 
 @blueprint.before_request
@@ -460,31 +459,6 @@ def edit_lab(lab_id):
         return redirect(url_for('home_blueprint.view_labs', lab_id=lab.id))
     else:
         return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, msg_fail=msg, segment="/labs/edit", groups=groups, allowed_groups=lab.allowed_groups)
-
-@blueprint.route('/templates/<template_name>', methods=['GET'])
-@login_required
-@check_user_category(["admin", "teacher"])
-def get_kubernetes_template(template_name):
-    lab_templates_dir = current_app.config.get('LAB_TEMPLATES_DIR')
-    template_path = Path(lab_templates_dir) / f'{template_name}.yaml'
-    if not template_path.exists():
-        return jsonify({'error': 'Template not found'}), 404
-        
-    try:
-        return template_path.read_text()
-    except Exception as e:
-        current_app.logger.error(f"Failed to read template file: {e}")
-        return jsonify({'error': str(e)}), 500
-
-@blueprint.route('/templates/list')
-def list_kubernetes_templates():
-    lab_templates_dir = current_app.config.get('LAB_TEMPLATES_DIR')
-    try:
-        templates_dir = Path(lab_templates_dir)
-        template_files = [f.stem for f in templates_dir.glob('*.yaml')]
-        return jsonify(template_files)
-    except Exception as e:
-        return jsonify({'error': 'Failed to list templates'}), 500
 
 @blueprint.route('/users')
 @login_required

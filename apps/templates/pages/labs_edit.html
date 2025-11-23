@@ -208,7 +208,7 @@
                       <label>Kubernetes Manifest Template:</label>
                       <div class="input-group">
                         <select class="form-control select2" id="template-select">
-                          <option value="">Loading templates...</option>
+                          <option value="">Wait! Loading templates...</option>
                         </select>
                         <div class="input-group-append">
                           <button class="btn btn-outline-secondary" type="button" id="load-template-btn">Load Template</button>
@@ -527,9 +527,9 @@
     async function loadTemplates() {
         const templateSelect = document.getElementById('template-select');
         try {
-          const response = await fetch('/templates/list');
+          const response = await fetch('/api/templates/list');
           if (!response.ok) {
-            throw new Error('Falha ao carregar a lista de templates.');
+            throw new Error('Fail to load the list of templates.');
           }
           const templates = await response.json();
 
@@ -540,10 +540,10 @@
           defaultOption.text = '--';
           templateSelect.appendChild(defaultOption);
 
-          templates.forEach(templateName => {
+          templates.result.forEach(templateName => {
             const option = document.createElement('option');
             option.value = templateName;
-            option.text = templateName.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+            option.text = templateName.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
             templateSelect.appendChild(option);
           });
 
@@ -570,24 +570,23 @@
         const templateName = templateSelect.value;
 
         if (!templateName) {
-          alert('Por favor, selecione um template para carregar.');
+          alert('Please select a template to load.');
           return;
         }
 
         try {
-          const response = await fetch(`/templates/${templateName}`);
+          const response = await fetch(`/api/templates/${templateName}`);
           if (response.ok) {
-            const templateContent = await response.text();
+            const templateContent = await response.json();
             
-            cmEditor.setValue(templateContent);
+            cmEditor.setValue(templateContent.result);
             cmEditor.setSize("100%",600)
           } else {
-            const errorData = await response.json();
-            alert(`Erro ao carregar o template: ${errorData.error}`);
+            const errorData = await response.text();
+            alert(`Failed to load template: ${errorData.error}`);
           }
         } catch (error) {
-          alert('Erro ao carregar template. Tente novamente.');
-          console.error('Fetch error:', error);
+          alert('Failed to load template: ', error);
         }
       });
 
