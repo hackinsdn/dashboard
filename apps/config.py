@@ -11,10 +11,21 @@ class Config(object):
 
     basedir = os.path.abspath(os.path.dirname(__file__))
 
+    # Persistência dos CLabs (PoC)
+    CLABS_EXPIRE_DAYS = int(os.getenv("CLABS_EXPIRE_DAYS", "0"))  
+
+    # Limites de upload
+    MAX_CONTENT_LENGTH = int(os.getenv("MAX_CONTENT_LENGTH", str(50 * 1024 * 1024)))  # 50 MB
+
+    # Limite de quantidade de arquivos (PoC)
+    CLABS_UPLOAD_MAX_FILES = int(os.getenv("CLABS_UPLOAD_MAX_FILES", 200))
+
     # Directories
     DATA_DIR = os.getenv('DATA_DIR', os.path.join(basedir, 'data'))
     UPLOAD_DIR = os.path.join(DATA_DIR, 'uploads')
     os.makedirs(UPLOAD_DIR, exist_ok=True)
+    CLABS_DIR = os.path.join(DATA_DIR, 'containerlab')
+    os.makedirs(CLABS_DIR, exist_ok=True)
 
     # Assets Management
     ASSETS_ROOT = os.getenv('ASSETS_ROOT', '/static/assets')
@@ -70,7 +81,7 @@ class Config(object):
     # Kubernetes
     K8S_NAMESPACE = os.getenv('K8S_NAMESPACE', "")
     K8S_CONFIG = os.path.expanduser(os.getenv("KUBECONFIG", "~/.kube/config"))
-    K8S_AVOID_NODES = os.getenv("K8S_AVOID_NODES", "").split(",")
+    K8S_AVOID_NODES = [n.strip() for n in os.getenv("K8S_AVOID_NODES", "").split(",") if n.strip()]
 
     # Base URL
     BASE_URL = os.getenv("BASE_URL", 'https://dashboard.hackinsdn.ufba.br')
@@ -111,6 +122,10 @@ class Config(object):
     MAP_ZOOM_LEVEL = int(os.getenv('MAP_ZOOM_LEVEL', "1"))
     MAP_POINTS = json.loads(os.getenv('MAP_POINTS', '[]'))
 
+    # -------- Optional modules & feature flags --------
+    # Canonical optional modules control (CSV -> list). Default includes "clabs".
+    OPTIONAL_MODULES = [m.strip() for m in os.getenv("OPTIONAL_MODULES", "clabs").split(",") if m.strip()]
+    ENABLE_CLABS = "clabs" in OPTIONAL_MODULES
 
 class ProductionConfig(Config):
     DEBUG = False

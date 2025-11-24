@@ -44,6 +44,22 @@ class LabCategories(db.Model):
             "color_cls": self.color_cls
         }
 
+    @property
+    def color_hex(self):
+        return {
+            "primary": "#0d6efd",
+            "secondary": "#6c757d",
+            "success": "#198754",
+            "danger": "#dc3545",
+            "warning": "#ffc107",
+            "info": "#0dcaf0",
+            "light": "#f8f9fa",
+            "dark": "#212529",
+            "white": "#ffffff",
+             "black": "#000000"
+        }.get(self.color_cls, "primary")
+
+
 class Labs(db.Model, AuditMixin):
     __tablename__ = 'labs'
     id = db.Column(db.String(40), primary_key=True, default=generate_uuid)
@@ -58,6 +74,7 @@ class Labs(db.Model, AuditMixin):
                                 backref=db.backref('labs', lazy=True))
     allowed_groups = db.relationship('Groups', secondary=lab_groups, lazy='subquery',
                                      backref=db.backref('labs', lazy=True))
+    lab_metadata = db.relationship("LabMetadata", back_populates="lab", uselist=False)
 
     def set_extended_desc(self, desc_str):
         self.extended_desc = desc_str.encode()
@@ -84,6 +101,10 @@ class Labs(db.Model, AuditMixin):
             "description": self.description
         }
 
+    @property
+    def is_clab(self):
+        return self.lab_metadata and self.lab_metadata.is_clab
+
 
 class LabInstances(db.Model, AuditMixin):
     __tablename__ = 'lab_instances'
@@ -95,13 +116,6 @@ class LabInstances(db.Model, AuditMixin):
     is_deleted = db.Column(db.Boolean, default=False)
     expiration_ts = db.Column(db.Integer)
     finish_reason = db.Column(db.String(255))
-
-    def __init__(self, id, user, lab, k8s_resources, expiration_ts=None):
-        self.id = id
-        self.user_id = user.id
-        self.lab_id = lab.id
-        self.k8s_resources = k8s_resources
-        self.expiration_ts = expiration_ts
 
     @property
     def k8s_resources(self):
@@ -118,6 +132,46 @@ class LabInstances(db.Model, AuditMixin):
     def get_lab(self):
         lab = Labs.query.get(self.lab_id)
         return lab.title
+
+    def get_id(self):
+        if not self.id:
+            for _ in range(100):
+                self.id = generate_uuid_14()
+                if not db.session.query(LabInstances).filter(LabInstances.id == self.id).first():
+                    break
+            else:
+                raise ValueError("Could not generate id")
+        return self.id
+
+
+class LabMetadata(db.Model, AuditMixin):
+    __tablename__ = 'lab_metadata'
+    id = db.Column(db.Integer, primary_key=True)
+    short_uuid = db.Column(db.String(14), default=generate_uuid_14, unique=True)
+    is_clab = db.Column(db.Boolean, default=False)
+    _md = db.Column(db.String)
+    lab_id = db.Column(db.String(40), db.ForeignKey("labs.id"), nullable=True)
+    lab = db.relationship("Labs", back_populates="lab_metadata")
+
+    @property
+    def md(self):
+        if not self._md:
+            return {}
+        return json.loads(self._md)
+
+    @md.setter
+    def md(self, md):
+        self._md = json.dumps(md)
+
+    def get_short_uuid(self):
+        if not self.short_uuid:
+            for _ in range(100):
+                self.short_uuid = generate_uuid_14()
+                if not db.session.query(LabMetadata).filter(LabMetadata.short_uuid == self.short_uuid).first():
+                    break
+            else:
+                raise ValueError("Could not generate short uuid")
+        return self.short_uuid
 
 
 class LabAnswers(db.Model, AuditMixin):
