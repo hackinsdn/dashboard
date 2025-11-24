@@ -91,25 +91,37 @@
                         </div>
 
                         <div class="form-group">
-                            <label>Upload files</label>
-                            <div id="dropzone" class="dropzone">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <label class="mb-1">Upload files</label>
+
+                                <div class="btn-group btn-group-sm" role="group" aria-label="Upload actions">
+                                    <button id="btnAddFile" type="button" class="btn btn-outline-dark mx-2">
+                                        <i class="fas fa-plus mr-1"></i> Add File
+                                    </button>
+                                    <button id="btnAddDirectory" type="button" class="btn btn-outline-dark mx-2">
+                                        <i class="fas fa-plus mr-1"></i> Add Directory
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div id="dropzone" class="dropzone mt-1">
                                 <i class="fas fa-cloud-upload-alt"></i>
                                 <div>Drag & drop files here, or click to select</div>
                                 <small>Accepted: multiple files</small>
                             </div>
+
                             <input id="clab_files" name="clab_files" type="file" multiple class="d-none">
+                            <input id="clab_folders" name="clab_folders" type="file" webkitdirectory directory multiple
+                                class="d-none">
+
+                            <small class="form-text text-muted mt-1">
+                                Add Directory works on Chromium-based browsers (Chrome/Edge). Firefox não suporta;
+                                alternativa: compacte em ZIP.
+                            </small>
+
                             <div class="file-list mt-2" id="files_list"></div>
                         </div>
 
-                        <div class="form-group">
-                            <label>Upload folders (experimental)</label>
-                            <input id="clab_folders" name="clab_folders" type="file" webkitdirectory directory multiple
-                                class="form-control-file">
-                            <small class="form-text text-muted">
-                                Folder upload works on Chromium-based browsers (Chrome/Edge). Firefox não suporta; como
-                                alternativa, compacte em ZIP e envie nos arquivos acima.
-                            </small>
-                        </div>
 
                     </div>
                     <div class="card-footer">
@@ -179,6 +191,8 @@
         var drop = document.getElementById('dropzone');
         var fileInput = document.getElementById('clab_files');
         var folderInput = document.getElementById('clab_folders');
+        var btnAddFile = document.getElementById('btnAddFile');
+        var btnAddDirectory = document.getElementById('btnAddDirectory');
         var filesList = document.getElementById('files_list');
         var btn = document.getElementById('btnSubmit');
         var form = document.getElementById('clab-form');
@@ -190,6 +204,14 @@
         var seenPaths = new Set();
 
         drop && drop.addEventListener('click', function () { fileInput && fileInput.click(); });
+
+        btnAddFile && btnAddFile.addEventListener('click', function () {
+            fileInput && fileInput.click();
+        });
+
+        btnAddDirectory && btnAddDirectory.addEventListener('click', function () {
+            folderInput && folderInput.click();
+        });
 
         ['dragover', 'drop'].forEach(function (evt) {
             document.addEventListener(evt, function (e) { e.preventDefault(); }, false);
@@ -271,11 +293,11 @@
         <!-- dentro de <script> ... -->
         function validateYaml(yamlText) {
             clearCmMarks();
-            if (!yamlText || !yamlText.trim()) return true; 
+            if (!yamlText || !yamlText.trim()) return true;
 
             if (typeof jsyaml === 'undefined') {
                 showToast('bg-info', 'Heads up', 'js-yaml não carregou; validação será feita no servidor.');
-                return true; 
+                return true;
             }
 
             try {
@@ -284,7 +306,7 @@
             } catch (err) {
                 var msg = err && err.message ? err.message : String(err);
                 if (err && err.mark && typeof err.mark.line === 'number') {
-                    var lineNo = err.mark.line; 
+                    var lineNo = err.mark.line;
                     markCmError(lineNo, msg);
                 }
                 showToast('bg-danger', 'YAML error', msg);
@@ -437,7 +459,7 @@
                 return;
             }
 
-            try { fileInput.files = store.files; } catch (e) {}
+            try { fileInput.files = store.files; } catch (e) { }
 
             var fd = new FormData(form);
 
