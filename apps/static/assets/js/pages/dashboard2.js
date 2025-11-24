@@ -76,49 +76,6 @@ $(function () {
   // - END MONTHLY SALES CHART -
   //---------------------------
 
-  //-------------
-  // - PIE CHART -
-  //-------------
-  // Get context with jQuery - using jQuery's .get() method.
-  $.get('/api/labs/categories_usage', function(data) {
-    console.log('Dashboard stats data:', data);
-    
-    var pieChartCanvas = $('#pieChart').get(0).getContext('2d')
-    var pieData = {
-      labels: data.category_names,
-      datasets: [
-        {
-          data: data.usage_counts,
-          backgroundColor: data.category_colors,
-          borderColor: '#eeeeeeff'
-        }
-      ]
-    }
-    var pieOptions = {
-      legend: {
-        display: false
-      }
-    }
-    // Create pie or douhnut chart
-    // You can switch between pie and douhnut using the method below.
-    // eslint-disable-next-line no-unused-vars
-    new Chart(pieChartCanvas, {
-      type: 'doughnut',
-      data: pieData,
-      options: pieOptions
-    })
-
-    const pieChartLegend = document.getElementById('pie-chart-legend');
-    data.categories.forEach(l => {
-        pieChartLegend.innerHTML += `
-          <li><i class="fa fa-circle fa-border text-${l.color_cls}"></i> ${l.category}</li>
-        `;
-    });
-  });
-  //-----------------
-  // - END PIE CHART -
-  //-----------------
-
   /* Leaflet Map
    * ------------
    * Create a world map with markers using parametrized config

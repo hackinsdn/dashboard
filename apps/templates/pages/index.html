@@ -646,6 +646,34 @@
           });
         }
       });
+      // ------ PIE CHART ------
+      var pieChartCanvas = $('#pieChart').get(0).getContext('2d')
+      var pieData = {
+        labels: {{stats.lab_categories.category_names|safe}},
+        datasets: [
+          {
+            data: {{stats.lab_categories.usage_counts|safe}},
+            backgroundColor: {{stats.lab_categories.category_colors|safe}},
+            borderColor: '#eeeeeeff'
+          }
+        ]
+      }
+      var pieOptions = {
+        legend: {
+           display: false
+        }
+      }
+      new Chart(pieChartCanvas, {
+        type: 'doughnut',
+        data: pieData,
+        options: pieOptions
+      })
+      const pieChartLegend = document.getElementById('pie-chart-legend');
+      const categories = {{stats.lab_categories.name_cls|safe}};
+      Object.keys(categories).forEach(name => {
+          pieChartLegend.innerHTML += `<li><i class="fa fa-circle fa-border text-${categories[name]}"></i> ${name}</li>`;
+      });
+      // ------ END PIE CHART ------
     });
   </script>
 
