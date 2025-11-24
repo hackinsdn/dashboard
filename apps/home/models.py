@@ -38,12 +38,6 @@ class LabCategories(db.Model):
     category = db.Column(db.String(64))
     color_cls = db.Column(db.String(16))
     
-    def as_dict(self):
-        return {
-            "category": self.category,
-            "color_cls": self.color_cls
-        }
-
     @property
     def color_hex(self):
         return {
@@ -95,12 +89,6 @@ class Labs(db.Model, AuditMixin):
     def lab_guide_md_str(self):
         return self.lab_guide_md.decode()
     
-    def as_dict(self):
-        return {
-            "title": self.title,
-            "description": self.description
-        }
-
     @property
     def is_clab(self):
         return self.lab_metadata and self.lab_metadata.is_clab

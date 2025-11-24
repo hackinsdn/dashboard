@@ -43,13 +43,13 @@ def index():
             current_app.logger.error(f"Failed to retrieve Kubernetes data: {e}")
         stats_data["lab_instances"] = LabInstances.query.filter_by(is_deleted=True).count()
         stats_data["users"] = Users.query.filter_by(is_deleted=False).count()
-        stats_data["labs"] = Labs.query.count()
+        stats_data["labs"] = Labs.query.order_by(Labs.created_at.desc()).all()
         stats_data["lab_categories"] = update_category_stats()
         cache.set("stats_data", stats_data)
 
     stats = {
         "lab_instances": stats_data.get("lab_instances", 0),
-        "registered_labs": stats_data.get("labs", 0),
+        "registered_labs": stats_data.get("labs", []),
         "lab_categories": stats_data.get("lab_categories", {}),
         "likes": user_likes,
         "has_liked": UserLikes.query.get(current_user.id),
