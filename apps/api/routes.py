@@ -6,13 +6,12 @@ import re
 from apps import db, cache
 from apps.api import blueprint
 from apps.controllers import k8s
-from apps.home.models import Labs, LabInstances, LabAnswers, LabAnswerSheet, UserLikes, UserFeedbacks, lab_groups, LabCategories
+from apps.home.models import Labs, LabInstances, LabAnswers, LabAnswerSheet, UserLikes, UserFeedbacks, lab_groups
 from apps.authentication.models import Users, Groups, DeletedGroupUsers, group_members, group_owners
 from flask import request, current_app
 from flask_login import login_required, current_user
 from datetime import timedelta, datetime, timezone
 from apps.utils import datetime_from_ts, parse_lab_expiration
-from sqlalchemy.orm import joinedload
 
 @blueprint.route('/pods/<lab_id>', methods=["GET"])
 @login_required
@@ -506,47 +505,3 @@ def extend_lab(lab_id):
     )
 
     return {"status": "ok", "result": new_expiration}, 200
-
-
-@blueprint.route('/labs/categories_usage', methods=["GET"])
-@login_required
-def labs_categories_usage():
-    if cached := cache.get("lab_categories_usage_stats"):
-        return {"status": "ok", **cached}, 200
-
-    six_months_ago = datetime.now(timezone.utc) - timedelta(days=180)
-    labs = Labs.query.options(joinedload(Labs.categories)).filter(Labs.created_at >= six_months_ago).all()
-
-    categories = LabCategories.query.filter(LabCategories.category != "All").order_by(LabCategories.category).all()
-    category_id_to_index = {category.id: index for index, category in enumerate(categories)}
-    category_counts = [0] * len(categories)
-
-    for lab in labs:
-        lab_categories = getattr(lab, "categories", [])
-        for lab_category in lab_categories:
-            if (category_index := category_id_to_index.get(lab_category.id)) is not None:
-                category_counts[category_index] += 1
-
-    category_color_cls = [category.color_cls for category in categories]
-    bootstrapColorsHex = {
-        "primary": "#0d6efd",
-        "secondary": "#6c757d",
-        "success": "#198754",
-        "danger": "#dc3545",
-        "warning": "#ffc107",
-        "info": "#0dcaf0",
-        "light": "#f8f9fa",
-        "dark": "#212529",
-        "white": "#ffffff",
-        "black": "#000000"
-    }
-
-    data = {
-        "categories": [category.as_dict() for category in categories],
-        "category_names": [category.category for category in categories],
-        "category_colors": [bootstrapColorsHex.get(category.color_cls) for category in categories],
-        "usage_counts": category_counts
-    }
-    cache.set("lab_categories_usage_stats", data)
-
-    return {"status": "ok", **data}, 200
