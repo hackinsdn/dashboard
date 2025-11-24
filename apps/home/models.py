@@ -38,6 +38,22 @@ class LabCategories(db.Model):
     category = db.Column(db.String(64))
     color_cls = db.Column(db.String(16))
 
+    @property
+    def color_hex(self):
+        return {
+            "primary": "#0d6efd",
+            "secondary": "#6c757d",
+            "success": "#198754",
+            "danger": "#dc3545",
+            "warning": "#ffc107",
+            "info": "#0dcaf0",
+            "light": "#f8f9fa",
+            "dark": "#212529",
+            "white": "#ffffff",
+             "black": "#000000"
+        }.get(self.color_cls, "primary")
+
+
 class Labs(db.Model, AuditMixin):
     __tablename__ = 'labs'
     id = db.Column(db.String(40), primary_key=True, default=generate_uuid)

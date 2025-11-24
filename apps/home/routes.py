@@ -17,7 +17,7 @@ from flask_login import login_required, current_user
 from jinja2 import TemplateNotFound
 from apps.audit_mixin import get_remote_addr, check_user_category
 from apps.authentication.forms import GroupForm
-from apps.utils import update_running_labs_stats, parse_lab_expiration, datetime_from_ts
+from apps.utils import update_running_labs_stats, parse_lab_expiration, datetime_from_ts, update_category_stats
 from sqlalchemy import desc
 
 
@@ -44,11 +44,13 @@ def index():
         stats_data["lab_instances"] = LabInstances.query.filter_by(is_deleted=True).count()
         stats_data["users"] = Users.query.filter_by(is_deleted=False).count()
         stats_data["labs"] = Labs.query.count()
+        stats_data["lab_categories"] = update_category_stats()
         cache.set("stats_data", stats_data)
 
     stats = {
         "lab_instances": stats_data.get("lab_instances", 0),
         "registered_labs": stats_data.get("labs", 0),
+        "lab_categories": stats_data.get("lab_categories", {}),
         "likes": user_likes,
         "has_liked": UserLikes.query.get(current_user.id),
         "users": stats_data.get("users", 0),

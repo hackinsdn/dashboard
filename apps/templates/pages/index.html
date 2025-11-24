@@ -19,7 +19,6 @@
   <!-- Theme style -->
   <link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
   <link rel="stylesheet" href="/static/assets/css/custom.css">
-
 {% endblock stylesheets %}
 
 {% block content %}
@@ -472,49 +471,13 @@
                   </div>
                   <!-- /.col -->
                   <div class="col-md-4">
-                    <ul class="chart-legend clearfix">
-                      <li><i class="far fa-circle text-danger"></i> Offensive Security</li>
-                      <li><i class="far fa-circle text-success"></i> Intermediate Labs</li>
-                      <li><i class="far fa-circle text-warning"></i> Advanced Labs</li>
-                      <li><i class="far fa-circle text-info"></i> Introductory Labs</li>
-                      <li><i class="far fa-circle text-primary"></i> Defensive Security</li>
-                      <li><i class="far fa-circle text-secondary"></i> Networking</li>
+                    <ul class="chart-legend clearfix" id="pie-chart-legend">
                     </ul>
                   </div>
                   <!-- /.col -->
                 </div>
                 <!-- /.row -->
               </div>
-              <!-- /.card-body -->
-              <div class="card-footer bg-white p-0">
-                <ul class="nav nav-pills flex-column">
-                  <li class="nav-item">
-                    <a href="#" class="nav-link">
-                      UFBA students
-                      <span class="float-right text-danger">231
-                        (<i class="fas fa-arrow-down text-sm"></i> 12%)
-                      </span>
-                    </a>
-                  </li>
-                  <li class="nav-item">
-                    <a href="#" class="nav-link">
-                      IFBA students
-                      <span class="float-right text-success">56
-                        (<i class="fas fa-arrow-up text-sm"></i> 4%)
-                      </span>
-                    </a>
-                  </li>
-                  <li class="nav-item">
-                    <a href="#" class="nav-link">
-                      No-affiliation students
-                      <span class="float-right text-warning"> 100
-                        (<i class="fas fa-arrow-left text-sm"></i> 0%)
-                      </span>
-                    </a>
-                  </li>
-                </ul>
-              </div>
-              <!-- /.footer -->
             </div>
             <!-- /.card -->
 
@@ -683,6 +646,34 @@
           });
         }
       });
+      // ------ PIE CHART ------
+      var pieChartCanvas = $('#pieChart').get(0).getContext('2d')
+      var pieData = {
+        labels: {{stats.lab_categories.category_names|safe}},
+        datasets: [
+          {
+            data: {{stats.lab_categories.usage_counts|safe}},
+            backgroundColor: {{stats.lab_categories.category_colors|safe}},
+            borderColor: '#eeeeeeff'
+          }
+        ]
+      }
+      var pieOptions = {
+        legend: {
+           display: false
+        }
+      }
+      new Chart(pieChartCanvas, {
+        type: 'doughnut',
+        data: pieData,
+        options: pieOptions
+      })
+      const pieChartLegend = document.getElementById('pie-chart-legend');
+      const categories = {{stats.lab_categories.name_cls|safe}};
+      Object.keys(categories).forEach(name => {
+          pieChartLegend.innerHTML += `<li><i class="fa fa-circle fa-border text-${categories[name]}"></i> ${name}</li>`;
+      });
+      // ------ END PIE CHART ------
     });
   </script>
 
@@ -834,3 +825,4 @@
     });
     </script>
 {% endblock javascripts %}
+
