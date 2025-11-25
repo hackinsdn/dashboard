@@ -28,13 +28,17 @@ class Config(object):
     # Assets Management
     ASSETS_ROOT = os.getenv('ASSETS_ROOT', '/static/assets')
 
-    # --- Branding (Logo) ---
+    # --- Header Branding (Logo) ---
     # URL of the main brand image (can be absolute or /static/...)
-    BRAND_LOGO_URL = os.getenv('BRAND_LOGO_URL', '/static/assets/img/hackinsdn.png')
+    BRAND_LOGO_HEADER_URL = os.getenv('BRAND_LOGO_HEADER_URL', '/static/assets/img/hackinsdn.png')
     # Alternative text (accessibility)
-    BRAND_LOGO_ALT = os.getenv('BRAND_LOGO_ALT', 'HackInSDN')
+    BRAND_LOGO_HEADER_ALT = os.getenv('BRAND_LOGO_HEADER_ALT', 'HackInSDN')
     # Destination link when clicking on the tag.
     BRAND_HREF = os.getenv('BRAND_HREF', '/')
+
+    # --- Sidebar Branding (Logo) ---
+    BRAND_LOGO_SIDEBAR_URL= os.getenv('BRAND_LOGO_SIDEBAR_URL', '/static/assets/img/hackersdobem.png')
+    BRAND_LOGO_SIDEBAR_ALT = os.getenv('BRAND_LOGO_SIDEBAR_ALT', 'HackInSDN')
 
     # Set up the App SECRET_KEY
     SECRET_KEY  = os.getenv('SECRET_KEY', "")
