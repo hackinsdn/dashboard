@@ -10,7 +10,7 @@ from apps.home.models import Labs, LabInstances, LabAnswers, LabAnswerSheet, Use
 from apps.authentication.models import Users, Groups, DeletedGroupUsers, group_members, group_owners
 from flask import request, current_app
 from flask_login import login_required, current_user
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, timezone
 from apps.utils import datetime_from_ts, parse_lab_expiration
 
 @blueprint.route('/pods/<lab_id>', methods=["GET"])
