@@ -80,7 +80,7 @@
                 <tr id="{{user.id}}">
                   <td>
                     <div class="icheck-primary">
-                      <input type="checkbox" value="" id="checkbox-{{user.id}}">
+                      <input type="checkbox" class="userCheckbox" value="" id="checkbox-{{user.id}}" data-user-id="{{user.id}}">
                       <label for="checkbox-{{user.id}}"></label>
                     </div>
                   </td>
@@ -331,6 +331,37 @@
 
       table.on('draw.dt', function () {
         hardenSearchInputEl(getDtFilterInput(table));
+      });
+
+      function saveUserSelections() {
+        const userSelections = {};
+
+        document.querySelectorAll('.userCheckbox').forEach(checkbox => {
+          userSelections[checkbox.dataset.userId] = checkbox.checked;
+        });
+
+        localStorage.setItem('userSelections', JSON.stringify(userSelections));
+      }
+
+      function restoreUserSelections() {
+        const savedSelections = JSON.parse(localStorage.getItem('userSelections')) || {};
+
+        document.querySelectorAll('.userCheckbox').forEach(checkbox => {
+          const userId = checkbox.dataset.userId;
+          if (savedSelections[userId] !== undefined) {
+            checkbox.checked = savedSelections[userId];
+          }
+        });
+      }
+
+      document.querySelectorAll('.userCheckbox').forEach(checkbox => {
+        checkbox.addEventListener('change', saveUserSelections);
+      });
+
+      window.addEventListener('load', restoreUserSelections);
+
+      $tableEl.on('page.dt', function () {
+        restoreUserSelections();
       });
 
       $(table.table().container())
