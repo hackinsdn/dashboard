@@ -37,6 +37,22 @@ class LabCategories(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     category = db.Column(db.String(64))
     color_cls = db.Column(db.String(16))
+    
+    @property
+    def color_hex(self):
+        return {
+            "primary": "#0d6efd",
+            "secondary": "#6c757d",
+            "success": "#198754",
+            "danger": "#dc3545",
+            "warning": "#ffc107",
+            "info": "#0dcaf0",
+            "light": "#f8f9fa",
+            "dark": "#212529",
+            "white": "#ffffff",
+             "black": "#000000"
+        }.get(self.color_cls, "primary")
+
 
 class Labs(db.Model, AuditMixin):
     __tablename__ = 'labs'
@@ -72,7 +88,7 @@ class Labs(db.Model, AuditMixin):
     @property
     def lab_guide_md_str(self):
         return self.lab_guide_md.decode()
-
+    
     @property
     def is_clab(self):
         return self.lab_metadata and self.lab_metadata.is_clab
