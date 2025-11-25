@@ -36,5 +36,3 @@ apps/static/assets/.temp
 
 *.pem
 kube-config.yaml
-
-*.sh text eol=lf
