@@ -81,6 +81,10 @@ def pty_connect(auth):
         current_app.logger.info(f"session already connected")
         return False
     current_app.logger.info(f"connecting to {pod=} {container=} {session_id=}")
+    start_script = 'if [ -x /bin/bash ]; then exec /bin/bash; else exec /bin/sh; fi'
+    if kind == "clab":
+        kind = "pod"
+        start_script = f"ssh {container}"
     # create child process attached to a pty we can read from and write to
     (child_pid, fd) = pty.fork()
     if child_pid == 0:
@@ -88,7 +92,7 @@ def pty_connect(auth):
         # change default env vars to avoid massive logs when DEBUG is enabled
         myenv = dict(os.environ)
         myenv.update({"DEBUG": ""})
-        subprocess.run(['kubectl', 'exec', '-it', f"{kind}/{pod}", '--container', container, '--', 'sh', '-c', 'if [ -x /bin/bash ]; then exec /bin/bash; else exec /bin/sh; fi'], env=myenv)
+        subprocess.run(['kubectl', 'exec', '-it', f"{kind}/{pod}", '--container', container, '--', 'sh', '-c', start_script], env=myenv)
         os._exit(os.EX_OK)
     else:
         # this is the parent process fork.

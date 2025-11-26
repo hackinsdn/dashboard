@@ -85,6 +85,16 @@
                   <p>Create Lab</p>
                 </a>
               </li>
+	      {% endif %}
+              {% if config.get('ENABLE_CLABS') and (current_user.category == "admin" or current_user.category == "teacher") %}
+              <li class="nav-item">
+                <a href="{{ url_for('clabs_blueprint.upsert') }}" class="nav-link {% if request.endpoint == 'clabs_blueprint.upsert' %} active {% endif %}">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Create ContainerLab</p>
+                </a>
+              </li>
+	      {% endif %}
+              {% if current_user.category == "admin" or current_user.category == "teacher" %}
               <li class="nav-item">
                 <a href="{{url_for('home_blueprint.list_lab_answers')}}" class="nav-link {% if request.url_rule.endpoint == 'home_blueprint.list_lab_answers' %} active {% endif %}">
                   <i class="far fa-circle nav-icon"></i>
@@ -115,32 +125,6 @@
               </p>
             </a>
           </li>
-          
-          {% if config.get('ENABLE_CLABS') %}
-          <li class="nav-item has-treeview {% if request.path.startswith('/containerlabs') %} menu-open {% endif %}">
-            <a href="#" class="nav-link {% if request.path.startswith('/containerlabs') %} active {% endif %}">
-              <i class="nav-icon fas fa-layer-group"></i>
-              <p>
-                ContainerLabs
-                <i class="fas fa-angle-left right"></i>
-              </p>
-            </a>
-            <ul class="nav nav-treeview">
-              <li class="nav-item">
-                <a href="{{ url_for('clabs_blueprint.running') }}" class="nav-link {% if request.endpoint == 'clabs_blueprint.running' %} active {% endif %}">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>Running CLabs</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="{{ url_for('clabs_blueprint.create') }}" class="nav-link {% if request.endpoint == 'clabs_blueprint.create' %} active {% endif %}">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>Create CLabs</p>
-                </a>
-              </li>
-            </ul>
-          </li>
-          {% endif %}
 
           <li class="nav-header">MANAGEMENT</li>
           {% if current_user.category == "admin" or current_user.category == "teacher" %}

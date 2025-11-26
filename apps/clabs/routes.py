@@ -1,371 +1,154 @@
 # -*- encoding: utf-8 -*-
-from flask import render_template, request, jsonify, current_app
+import os
+import shutil
+import re
+from collections import OrderedDict, defaultdict
+from flask import render_template, redirect, url_for, request, jsonify, current_app
 from flask_login import current_user, login_required
-from apps.controllers.clabernetes import C9sController
-import yaml
+from apps.controllers import c9s, k8s
 from apps import db
-from apps.clabs.models import Clab, ClabInstance
-from apps.authentication.models import Users
-import json
-import datetime as dt
+from apps.authentication.models import Groups
+from apps.clabs import blueprint
+from apps.audit_mixin import get_remote_addr, check_user_category
+from apps.home.models import Labs, LabCategories, LabMetadata, HomeLogging
+from apps.utils import secure_filename, list_files
 
 
-from . import blueprint
+# PORT_RE: regex to match ports published on ContainerLab Topology
+# CLab node ports are similar to Docker ports and accept the following cases:
+# ["8080:80", "80", "192.168.1.100:8080:80", "8080:80/udp", "8080:80/tcp",
+#  "[::1]:8080:80", "127.0.0.1:80/tcp", "[2001:db8:100:200::1]:80",
+#  "127.0.0.1:80:8080/tcp", "8080/tcp"]
+PORT_RE = re.compile(r"(\d+.\d+.\d+.\d+:|\[[0-9a-fA-F:]+\]:)?(\d+:)?(?P<port>\d+)(/\w+)?")
 
-# -------- Controller singleton (lazy) --------
-_CLABS_CTRL = None
-def ctrl() -> C9sController:
-    """Return a lazily-initialized controller instance."""
-    global _CLABS_CTRL
-    if _CLABS_CTRL is None:
-        cfg = current_app.config
-        _CLABS_CTRL = C9sController(
-            expire_days=cfg.get("CLABS_EXPIRE_DAYS", 0),
-            upload_max_files=cfg.get("CLABS_UPLOAD_MAX_FILES", 200),
-        )
-    return _CLABS_CTRL
 
-# -------- Access helpers --------
-def _is_admin_or_teacher() -> bool:
-    cat = getattr(current_user, "category", "") or ""
-    return cat in ("admin", "teacher")
-
-def _owner_identity() -> str:
-    return getattr(current_user, "username", None) or getattr(current_user, "email", None) or "anonymous"
-
-# -------- Serialization helpers (DB → UI/API) --------
-def _row_from_db(ci: ClabInstance) -> dict:
-    """Linha para /running e /api/list."""
-    owner = getattr(ci, "owner", None)
-    clab = getattr(ci, "clab", None)
-    created = (ci.created_at or dt.datetime.utcnow()).strftime("%Y-%m-%d %H:%M:%S")
-    return {
-        "lab_instance_id": ci.id,
-        "user": getattr(owner, "username", None) or getattr(owner, "email", None) or "anonymous",
-        "title": getattr(clab, "title", None) or "Unnamed",
-        "created": created,
-    }
-
-def _detail_from_db(ci: ClabInstance) -> dict:
-    """Detalhe para /open/<id>."""
-    owner = getattr(ci, "owner", None)
-    clab = getattr(ci, "clab", None)
-
-    created = (ci.created_at or dt.datetime.utcnow()).strftime("%Y-%m-%d %H:%M:%S")
-    try:
-        resources = json.loads(ci._clab_resources or "[]")
-        if not isinstance(resources, list):
-            resources = []
-    except Exception:
-        resources = []
-
-    st = _status_from_ci(ci)
-    return {
-        "lab_instance_id": ci.id,
-        "user": getattr(owner, "username", None) or getattr(owner, "email", None) or "anonymous",
-        "title": getattr(clab, "title", None) or "Unnamed",
-        "created": created,
-        "namespace": ci.namespace_effective or getattr(clab, "namespace_default", None) or "--",
-        "resources": resources,
-        "name": getattr(clab, "title", None) or "Unnamed",
-        "status": st["status"],
-        "expires_at": st["expires_at"],            
-        "remaining_seconds": st["remaining_seconds"]
-    }
-
-# -------- Time & Status helpers --------
-def _now_utc():
-    return dt.datetime.utcnow()
-
-def _status_from_ci(ci: ClabInstance) -> dict:
-    """
-    Calcula status atual da instância com base em is_deleted e expiration_ts.
-    Retorna dict com: status, expires_at (str ISO), remaining_seconds (int|None).
-    """
-    if ci.is_deleted:
-        return {"status": "Deleted", "expires_at": None, "remaining_seconds": None}
-
-    now = _now_utc()
-    exp = ci.expiration_ts 
-    if exp is None:
-        # Sem expiração definida - considerar "Running" sem deadline
-        return {"status": "Running", "expires_at": None, "remaining_seconds": None}
-
-    # Com data de expiração definida
-    if now >= exp:
-        return {
-            "status": "Expired",
-            "expires_at": exp.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "remaining_seconds": 0,
-        }
-
-    remaining = int((exp - now).total_seconds())
-    return {
-        "status": "Running",
-        "expires_at": exp.strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "remaining_seconds": remaining,
-    }
-
-# ----------------- Views -----------------
-@blueprint.route("/running")
+@blueprint.route("/upsert/", methods=["GET", "POST"])
+@blueprint.route("/upsert/<clab_id>", methods=["GET", "POST"])
 @login_required
-def running():
-    """List running labs. Admin/teacher sees all; users see only their labs."""
-    q = ClabInstance.query.filter_by(is_deleted=False)
-    if not _is_admin_or_teacher():
-        q = q.filter_by(owner_user_id=current_user.id)
-    cis = q.order_by(ClabInstance.created_at.desc()).all()
-    items = [_row_from_db(ci) for ci in cis]
-    return render_template("clabs/running.html", labs=items)
+@check_user_category(["admin", "teacher"])
+def upsert(clab_id="new"):
+    """Update or Insert a ContainerLab."""
 
-@blueprint.route("/open/<clab_id>")
-@login_required
-def open_clab(clab_id):
-    ci = ClabInstance.query.get(clab_id)
-    if not ci or ci.is_deleted:
-        return render_template("pages/error.html", title="Open CLab", msg="CLab not found")
-    if (not _is_admin_or_teacher()) and (ci.owner_user_id != current_user.id):
-        return render_template("pages/error.html", title="Open CLab", msg="Forbidden"), 403
+    if clab_id != "new":
+        clab = Labs.query.get(clab_id)
+        if not clab:
+            return render_template("pages/clabs_upsert.html", clab=None, msg_fail="ContainerLab not found")
+        if not clab.is_clab:
+            return redirect(url_for('home_blueprint.edit_lab', lab_id=clab_id))
+    else:
+        clab = Labs()
 
-    lab = _detail_from_db(ci)
-    return render_template("clabs/open.html", lab=lab)
+    lab_categories = {cat.id: cat for cat in LabCategories.query.all()}
+    if not lab_categories:
+        return render_template("pages/clabs_upsert.html", msg_fail="No Lab Categories found. Please create a Lab Category first.", clab=clab)
 
-@blueprint.route("/create", methods=["GET", "POST"])
-@login_required
-def create():
+    groups = Groups.query.filter_by(is_deleted=False).all()
+
+    if not (clab_md := clab.lab_metadata):
+        clab_md = LabMetadata(lab=clab, is_clab=True)
+
+    clab_uuid = clab_md.get_short_uuid()
+    clab_dir = os.path.join(current_app.config['CLABS_DIR'], clab_uuid)
+    current_files = list_files(clab_dir, ignore_prefix=clab_uuid)
+
     if request.method == "GET":
-        return render_template("clabs/create.html")
+        return render_template("pages/clabs_upsert.html", clab=clab, lab_categories=lab_categories, groups=groups, current_files=current_files)
 
-    name = (request.form.get("clab_name") or "").strip()
-    namespace = (request.form.get("clab_namespace") or "").strip()
-    yaml_manifest = (request.form.get("clab_yaml") or "").strip()
+    current_app.logger.info(f"clab_id={clab.id} short_uuid={clab_uuid} clab_guide={request.form['clab_guide']}")
+    clab.title = request.form.get("clab_title", "").strip()
+    clab.description = request.form.get("clab_desc", "").strip()
+    clab.set_extended_desc(request.form["clab_extended_desc"])
+    clab.set_lab_guide_md(request.form["clab_guide"])
+    clab.manifest = (request.form.get("clab_yaml") or "").strip()
+    clab.goals = request.form.get("clab_goals", "")
+    selected_group_ids = request.form.getlist('clab_allowed_groups')
+    clab.allowed_groups = Groups.query.filter(Groups.id.in_(selected_group_ids), Groups.is_deleted==False).all()
+    selected_category_ids = request.form.getlist('clab_categories')
+    clab.categories = LabCategories.query.filter(LabCategories.id.in_(selected_category_ids)).all()
+    clab_category = LabCategories.query.filter(LabCategories.category=="ContainerLab").first()
+    if clab_category and clab_category not in clab.categories:
+        clab.categories.append(clab_category)
 
+    if not clab.categories:
+        return render_template("pages/clabs_upsert.html", clab=clab, lab_categories=lab_categories, msg_fail="Please select at least one category", groups=groups)
+
+    giturl = request.form.get("clab_giturl", "").strip()
     files = request.files.getlist("clab_files") or []
-    files_meta = [{
-        "name": f.filename,
-        "mimetype": getattr(f, "mimetype", "") or "",
-        "size": getattr(f, "content_length", None),
-    } for f in files]
-    files_count = len(files_meta)
+    relative_paths = request.form.getlist("relative_paths") or []
 
-    if not yaml_manifest and files_count == 0:
-        return jsonify({"ok": False, "result": "Provide YAML and/or files"}), 400
+    if not clab.manifest and not giturl and len(files) == 0:
+        return jsonify({"ok": False, "result": "Provide GIT URL or files"}), 400
 
-    max_files = current_app.config.get("CLABS_UPLOAD_MAX_FILES", 200)
-    if files_count > max_files:
+    max_files = current_app.config["CLABS_UPLOAD_MAX_FILES"]
+    if len(files) > max_files:
         return jsonify({
             "ok": False,
             "result": f"Too many files: {files_count} (max {max_files})"
         }), 400
 
-    owner = _owner_identity()
+    changed_files = False
+    for file, path in zip(files, relative_paths):
+        if not path:
+            current_app.logger.warning(f"ignoring file without name: {file}")
+            continue
+        full_path = os.path.join(clab_dir, secure_filename(path))
+        os.makedirs(os.path.dirname(full_path), exist_ok=True)
+        file.save(full_path)
+        changed_files = True
 
-    # 1) usa o controller PoC para validar YAML e montar o "detail" compatível
+    if changed_files:
+        topo_status, topo_data = c9s.parse_clab_topology(clab_dir)
+        if not topo_status:
+            msg = f"Failed to parse ContainerLab topology: {topo_data}"
+            current_app.logger.error(msg)
+            return jsonify({"ok": False, "result": msg}), 400
+
+        try:
+            nodes = topo_data["topology"]["nodes"]
+        except:
+            nodes = {}
+        published_ports = defaultdict(dict)
+        for node_name, node in nodes.items():
+            for port in node.get("ports", []):
+                if match := PORT_RE.match(port):
+                    published_ports[node_name][match.group("port")] = port
+
+        md = clab_md.md
+        md["clab"] = topo_data
+        md["ports"] = published_ports
+        clab_md.md = md
+
+        convert_status, result = c9s.convert_clab(
+            clab_dir,
+            clab_uuid=clab_uuid,
+            destination_namespace=current_app.config["K8S_NAMESPACE"],
+        )
+
+        #shutil.rmtree(clab_dir)
+        if not convert_status:
+            current_app.logger.error(f"Clabverter failed for clab.uuid={clab_uuid}: {result}")
+            return jsonify({"ok": False, "result": result}), 400
+
+        clab.manifest = result
+
     try:
-        detail = ctrl().create(
-            name=name,
-            namespace=namespace,
-            yaml_manifest=yaml_manifest,
-            files_meta=files_meta,
-            owner=owner,
-        )
-    except yaml.YAMLError as e:
-        return jsonify({"ok": False, "result": f"Invalid YAML: {e}"}), 400
-    except Exception:
-        current_app.logger.exception("Failed to create CLab")
-        return jsonify({"ok": False, "result": "Internal error"}), 500
-
-    # 2) persistência no DB (MVP)
-    clab_title = (detail.get("title") or name or "Unnamed").strip() or "Unnamed"
-    clab_ns = namespace or None
-
-    # encontra ou cria o template Clab pelo par (namespace_default, title)
-    existing = Clab.query.filter_by(namespace_default=clab_ns, title=clab_title).first()
-    if existing:
-        clab = existing
-    else:
-        import uuid
-        clab = Clab(
-            id=str(uuid.uuid4()),
-            title=clab_title,
-            description=None,
-            extended_desc=None,
-            clab_guide_md=None,
-            clab_guide_html=None,
-            yaml_manifest=yaml_manifest or "",
-            namespace_default=clab_ns,
-        )
         db.session.add(clab)
-        db.session.flush() 
+        db.session.add(clab_md)
+        db.session.commit()
+        status = True
+        msg = "ContainerLab saved with success"
+        status_code = 201
+    except Exception as exc:
+        status = False
+        msg = "Failed to save ContainerLab information"
+        status_code = 400
+        current_app.logger.error(f"{msg} - {exc} -- applying rollback")
+        db.session.rollback()
 
-    # cria a instância com o mesmo ID que o PoC gerou
-    inst_id = detail.get("lab_instance_id")
-    if not inst_id:
-        inst_id = f"clab-{int(dt.datetime.utcnow().timestamp())}"
-
-    token = f"tok_{inst_id}" 
-    resources = json.dumps(detail.get("resources", []))
-
-    ci = ClabInstance(
-        id=inst_id,
-        token=token,
-        owner_user_id=current_user.id,
-        clab_id=clab.id,
-        is_deleted=False,
-        expiration_ts=None,
-        finish_reason=None,
-        _clab_resources=resources,
-        namespace_effective=detail.get("namespace") or clab_ns,
-    )
-    db.session.add(ci)
+    upsert_clab_log = HomeLogging(ipaddr=get_remote_addr(), action="upsert_clab", success=status, lab_id=clab.id, user_id=current_user.id)
+    db.session.add(upsert_clab_log)
     db.session.commit()
 
-    # 3) resposta compatível com a UI (mantida)
-    nodes_count = len(detail.get("resources", []))
-    return jsonify({
-        "ok": True,
-        "result": f"CLab '{detail.get('title','Unnamed')}' created.",
-        "received": {
-            "id": detail.get("lab_instance_id"),
-            "namespace": detail.get("namespace") or "--",
-            "has_yaml": bool(yaml_manifest),
-            "files": files_count,
-            "resources": nodes_count,
-        }
-    }), 201
+    current_app.logger.info(f"upsert_clab clab_id={clab_id} id={clab.id} status={status} user_id={current_user.id} files={relative_paths}")
 
-@blueprint.route("/api/list", methods=["GET"])
-@login_required
-def api_list():
-    """Return list of labs + number of pruned items (TTL)."""
-    pruned = 0
-
-    q = ClabInstance.query.filter_by(is_deleted=False)
-    if not _is_admin_or_teacher():
-        q = q.filter_by(owner_user_id=current_user.id)
-    cis = q.order_by(ClabInstance.created_at.desc()).all()
-    items = [_row_from_db(ci) for ci in cis]
-    return jsonify({"items": items, "pruned": pruned})
-
-@blueprint.route("/api/clear", methods=["POST"])
-@login_required
-def api_clear_all():
-    """Admin/teacher-only: clear all labs from state."""
-    if not _is_admin_or_teacher():
-        return jsonify({"ok": False, "error": "Forbidden"}), 403
-    n = ctrl().clear()
-    return jsonify({"ok": True, "removed": n})
-
-@blueprint.route("/api/delete/<clab_id>", methods=["DELETE", "POST"])
-@login_required
-def api_delete(clab_id):
-    """Delete a single lab. Owners can delete their own; admin/teacher can delete any."""
-    ci = ClabInstance.query.get(clab_id)
-    if not ci or ci.is_deleted:
-        return jsonify({"ok": False, "error": "CLab not found"}), 404
-
-    if (not _is_admin_or_teacher()) and (ci.owner_user_id != current_user.id):
-        return jsonify({"ok": False, "error": "Forbidden"}), 403
-
-    # tentativa de teardown no PoC (idempotente)
-    try:
-        ctrl().delete(clab_id)
-    except Exception:
-        current_app.logger.exception("PoC teardown failed (continuing)")
-
-    ci.is_deleted = True
-    ci.finish_reason = ci.finish_reason or "user_deleted" if not _is_admin_or_teacher() else "admin_cleanup"
-    db.session.commit()
-    return jsonify({"ok": True})
-
-@blueprint.route("/api/status/<clab_id>", methods=["GET"])
-@login_required
-def api_status(clab_id):
-    """
-    Retorna o status atual da instância:
-    { ok, status, expires_at, remaining_seconds }
-    Regras de acesso: owner/admin/teacher.
-    """
-    ci = ClabInstance.query.get(clab_id)
-    if not ci:
-        return jsonify({"ok": False, "error": "CLab not found"}), 404
-
-    if (not _is_admin_or_teacher()) and (ci.owner_user_id != current_user.id):
-        return jsonify({"ok": False, "error": "Forbidden"}), 403
-
-    st = _status_from_ci(ci)
-    return jsonify({
-        "ok": True,
-        "status": st["status"],
-        "expires_at": st["expires_at"],
-        "remaining_seconds": st["remaining_seconds"],
-    })
-
-@blueprint.route("/api/extend/<clab_id>", methods=["POST"])
-@login_required
-def api_extend(clab_id):
-    """
-    Estende a expiração da instância em X horas (limites por configuração).
-    Body (JSON ou form): {"hours": <int|str>}
-    """
-    ci = ClabInstance.query.get(clab_id)
-    if not ci:
-        return jsonify({"ok": False, "error": "CLab not found"}), 404
-
-    if (not _is_admin_or_teacher()) and (ci.owner_user_id != current_user.id):
-        return jsonify({"ok": False, "error": "Forbidden"}), 403
-
-    if ci.is_deleted:
-        return jsonify({"ok": False, "error": "Cannot extend a deleted CLab"}), 400
-
-    # parâmetros e limites
-    cfg = current_app.config
-    max_per_req = int(cfg.get("CLABS_EXTEND_MAX_PER_REQUEST_HOURS", 4))
-    max_total = int(cfg.get("CLABS_EXTEND_MAX_TOTAL_HOURS", 48))
-
-    hours_raw = (request.json or {}).get("hours") if request.is_json else request.form.get("hours")
-    try:
-        req_hours = int(hours_raw) if hours_raw is not None else max_per_req
-    except Exception:
-        return jsonify({"ok": False, "error": "Invalid 'hours'"}), 400
-
-    if req_hours <= 0:
-        return jsonify({"ok": False, "error": "Invalid 'hours'"}), 400
-
-    delta_hours = min(req_hours, max_per_req)
-
-    now = _now_utc()
-    old_exp = ci.expiration_ts  
-    base = old_exp if old_exp and old_exp > now else now
-    new_exp = base + dt.timedelta(hours=delta_hours)
-
-    # teto absoluto: created_at + max_total
-    hard_cap = (ci.created_at or now) + dt.timedelta(hours=max_total)
-    if new_exp > hard_cap:
-        new_exp = hard_cap
-
-    # se mesmo após o ajuste não houver ganho, avisa
-    if old_exp and new_exp <= old_exp:
-        st = _status_from_ci(ci)
-        return jsonify({
-            "ok": False,
-            "error": "Max extension reached",
-            "status": st["status"],
-            "expires_at": st["expires_at"],
-            "remaining_seconds": st["remaining_seconds"],
-        }), 400
-
-    # aplica
-    ci.expiration_ts = new_exp
-    db.session.commit()
-
-    st = _status_from_ci(ci)
-    return jsonify({
-        "ok": True,
-        "old_expires_at": old_exp.strftime("%Y-%m-%dT%H:%M:%SZ") if old_exp else None,
-        "new_expires_at": st["expires_at"],
-        "status": st["status"],
-        "remaining_seconds": st["remaining_seconds"],
-        "applied_hours": delta_hours,
-        "max_total_hours": max_total,
-    })
+    return jsonify({"ok": status, "result": msg, "clab_id": clab.id}), status_code
