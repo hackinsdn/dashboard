@@ -11,7 +11,7 @@ from apps import db, cache
 from apps.home import blueprint
 from apps.controllers import k8s
 from apps.home.models import Labs, LabInstances, LabCategories, LabAnswers, LabAnswerSheet, HomeLogging, UserLikes, UserFeedbacks
-from apps.authentication.models import Users, Groups
+from apps.authentication.models import Users, Groups, LoginLogging
 from flask import render_template, request, current_app, redirect, url_for, session
 from flask_login import login_required, current_user
 from jinja2 import TemplateNotFound
@@ -466,11 +466,74 @@ def edit_lab(lab_id):
 @login_required
 @check_user_category(["admin", "teacher"])
 def view_users():
-   
-    users = Users.query.filter_by(is_deleted=False)
+    users_q = Users.query.filter_by(is_deleted=False)
     if current_user.category in ["teacher"]:
-        users = users.filter(Users.category == "user")
-    users = users.all()
+        users_q = users_q.filter(Users.category == "user")
+    users = users_q.all()
+
+    emails = set()
+    usernames = set()
+    subjects = set()
+    issuers = set()
+
+    for u in users:
+        if u.email:
+            emails.add(u.email)
+        if u.username:
+            usernames.add(u.username)
+        if u.subject:
+            subjects.add(u.subject)
+        if u.issuer:
+            issuers.add(u.issuer)
+
+    map_local = {}
+    map_oidc = {}
+
+    possible_local_logins = (emails | usernames)
+    if possible_local_logins:
+        rows = (
+            LoginLogging.query
+            .with_entities(LoginLogging.login, db.func.max(LoginLogging.datetime))
+            .filter(
+                LoginLogging.success.is_(True),
+                LoginLogging.auth_provider == "local",
+                LoginLogging.login.in_(possible_local_logins),
+            )
+            .group_by(LoginLogging.login)
+            .all()
+        )
+        map_local = {login: max_dt for (login, max_dt) in rows}
+
+    if subjects and issuers:
+        rows = (
+            LoginLogging.query
+            .with_entities(LoginLogging.login, LoginLogging.auth_provider, db.func.max(LoginLogging.datetime))
+            .filter(
+                LoginLogging.success.is_(True),
+                LoginLogging.login.in_(subjects),
+                LoginLogging.auth_provider.in_(issuers),
+            )
+            .group_by(LoginLogging.login, LoginLogging.auth_provider)
+            .all()
+        )
+        map_oidc = {(login, provider): max_dt for (login, provider, max_dt) in rows}
+
+    for u in users:
+        last_login = None
+        if u.subject and u.issuer:
+            last_login = map_oidc.get((u.subject, u.issuer))
+        if last_login is None and u.email:
+            last_login = map_local.get(u.email)
+        if last_login is None and u.username:
+            last_login = map_local.get(u.username)
+
+        setattr(u, "last_login_at", last_login)
+
+    from flask import current_app
+
+    current_app.logger.info("DEBUG users last_login sample: %s", [
+            (u.username, u.email, u.last_login_at.isoformat() if u.last_login_at else None) for u in users[:5]
+    ])
 
     return render_template("pages/users.html", users=users)
 

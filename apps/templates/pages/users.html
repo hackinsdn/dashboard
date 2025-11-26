@@ -70,6 +70,8 @@
                     <th>E-mail</th>
                     <th>Category</th>
                     <th>Issuer</th>
+                    <th>Last login</th>
+                    <th>Created at</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -87,6 +89,20 @@
                   <td>{{ user.email|default('', true) }}</td>
                   <td>{{ user.category }}</td>
                   <td>{{ user.issuer|default('LOCAL', true) }}</td>
+                  <td
+                    {% if user.last_login_at %}data-order="{{ user.last_login_at.isoformat() }}"{% else %}data-order=""{% endif %}
+                    title="{% if user.last_login_at %}{{ user.last_login_at.isoformat() }}{% else %}—{% endif %}"
+                  >
+                    {% if user.last_login_at %}{{ user.last_login_at.strftime('%d/%m/%Y %H:%M') }}{% else %}&mdash;{% endif %}
+                  </td>
+
+                  <td
+                    {% if user.created_at %}data-order="{{ user.created_at.isoformat() }}"{% else %}data-order=""{% endif %}
+                    title="{% if user.created_at %}{{ user.created_at.isoformat() }}{% else %}—{% endif %}"
+                  >
+                    {% if user.created_at %}{{ user.created_at.strftime('%d/%m/%Y %H:%M') }}{% else %}&mdash;{% endif %}
+                  </td>
+                  
                   <td><a href="{{url_for('home_blueprint.edit_user', user_id=user.id)}}" class="btn btn-outline-dark" role="button" aria-pressed="true"><i class="fa fa-pen"></i> Edit</a></td>
                 </tr>
                 {% endfor %}
@@ -186,10 +202,10 @@
   <script>
     $(function () {
       // === KEYS de storage
-      var USERS_LIST_SEARCH_KEY = 'users:list:query';
-      var USERS_LIST_ORDER_KEY = 'users:list:order';
-      var USERS_LIST_PAGE_KEY = 'users:list:page';
-      var USERS_LIST_LEN_KEY = 'users:list:length';
+      var USERS_LIST_SEARCH_KEY = 'users:list:v2:query';
+      var USERS_LIST_ORDER_KEY  = 'users:list:v2:order';
+      var USERS_LIST_PAGE_KEY   = 'users:list:v2:page';
+      var USERS_LIST_LEN_KEY    = 'users:list:v2:length';
 
       // === Helpers de storage
       function getLS(key, fallback) {
@@ -228,7 +244,13 @@
 
       // === Estado salvo 
       var savedQuery = getLS(USERS_LIST_SEARCH_KEY, '');
-      var savedOrder = JSON.parse(getLS(USERS_LIST_ORDER_KEY, '[[1,"asc"]]'));
+      var savedOrder;
+        try {
+          savedOrder = JSON.parse(getLS(USERS_LIST_ORDER_KEY, '[[1,"asc"]]'));
+        } catch (e) {
+          savedOrder = [[1, 'asc']]; // fallback seguro (coluna Username)
+          setLS(USERS_LIST_ORDER_KEY, JSON.stringify(savedOrder));
+        }
       var savedLength = parseInt(getLS(USERS_LIST_LEN_KEY, '10'), 10);
       if (isNaN(savedLength) || savedLength <= 0) savedLength = 10;
       var savedPage = parseInt(getLS(USERS_LIST_PAGE_KEY, '0'), 10);
@@ -247,6 +269,8 @@
           { name: 'email' },
           { name: 'category' },
           { name: 'issuer' },
+          { name: 'last_login' },
+          { name: 'created_at' },
           { orderable: false, name: 'actions' },
         ],
 
@@ -255,8 +279,8 @@
         pageLength: savedLength,
         displayStart: savedPage * savedLength,
 
-        stateSave: true,
-        stateDuration: -1
+        /* stateSave: true,
+        stateDuration: -1 */
       });
 
       (function applyNoSpellcheck(dt, savedQuery) {
@@ -283,8 +307,16 @@
             .appendTo($filter)
             .on('click', function () {
               table.search('').draw();
-              setLS(USERS_LIST_SEARCH_KEY, null);
               $input.val('');
+
+              // limpar chaves v2
+              setLS(USERS_LIST_SEARCH_KEY, null);
+              setLS(USERS_LIST_PAGE_KEY, '0');
+              setLS(USERS_LIST_ORDER_KEY, JSON.stringify([[1, 'asc']]));
+              setLS(USERS_LIST_LEN_KEY, String(10));
+
+              // refletir no DataTables
+              table.order([[1, 'asc']]).page.len(10).page(0).draw(false);
             });
         }
 
