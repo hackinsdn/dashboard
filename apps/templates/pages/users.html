@@ -235,6 +235,9 @@
         ],
         order: [[1, 'asc']]
       });
+      $('#tableUsers').on('change', 'input[type="checkbox"]', function() {
+        table.state.save();
+      });
       if ( sessionStorage.getItem('msgSuccess') ) {
         $(document).Toasts('create', {
           class: 'bg-success',
