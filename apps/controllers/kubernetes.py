@@ -481,6 +481,7 @@ class K8sController():
         user_uid=None,
         pod_hash=None,
         allowed_nodes=None,
+        dry_run=False,
     ):
         try:
             tmpl = string.Template(manifest)
@@ -584,7 +585,11 @@ class K8sController():
         data = manifest
         if replace_identifiers:
             status, result = self.substitute_identifiers(
-                manifest, user_uid=user_uid, pod_hash=pod_hash, allowed_nodes=allowed_nodes
+                manifest,
+                user_uid=user_uid,
+                pod_hash=pod_hash,
+                dry_run=dry_run,
+                allowed_nodes=allowed_nodes,
             )
             if not status:
                 return status, result
