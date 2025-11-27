@@ -297,7 +297,7 @@
         displayStart: savedPage * savedLength
       });
 
-      // === Hardening do input + botão "Limpar"
+      // === input hardening + clear button
       (function applyNoSpellcheck(dt, savedQuery) {
         var $input = getDtFilterInput(dt);
         hardenSearchInputEl($input, savedQuery);
@@ -306,14 +306,13 @@
       table.on('init.dt', function () {
         var $input = getDtFilterInput(table);
         if ($input.length === 0) {
-          console.warn('DataTables search input não encontrado');
           return;
         }
         hardenSearchInputEl($input, savedQuery);
 
         var $filter = $input.closest('div.dataTables_filter');
         if ($filter.find('.btn-clear-filter').length === 0) {
-          $('<button type="button" class="btn btn-sm btn-outline-secondary ml-2 btn-clear-filter">Limpar</button>')
+          $('<button type="button" class="btn btn-sm btn-outline-secondary ml-2 btn-clear-filter">Clear saved filter</button>')
             .appendTo($filter)
             .on('click', function () {
               table.search('').draw();
@@ -326,7 +325,7 @@
             });
         }
 
-        // salvar query ao digitar
+        // save data table search
         $input.on('input change blur', function () {
           var q = $(this).val() || '';
           if (q !== table.search()) {
@@ -336,19 +335,19 @@
         });
       });
 
-      // reaplicar hardening a cada draw
+      // re-apply hardening on table draw
       table.on('draw.dt', function () {
         hardenSearchInputEl(getDtFilterInput(table));
       });
 
-      // garantir que o navegador não reative correções
+      // make sure browser do not re-activate correct
       $(table.table().container())
         .off('.inputfix')
         .on('focus.inputfix input.inputfix', 'div.dataTables_filter input[type="search"]', function () {
           hardenSearchInputEl($(this));
         });
 
-      // === Persistência por eventos 
+      // user persistency by event
       $tableEl.on('search.dt', function () {
         var q = table.search() || '';
         q.trim() === '' ? setLS(LABANSWERS_LIST_SEARCH_KEY, null) : setLS(LABANSWERS_LIST_SEARCH_KEY, q);
