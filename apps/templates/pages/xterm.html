@@ -177,8 +177,14 @@ body {
       });
 
       socket.on("server-disconnected", function (data) {
-        window.close();
-        term.dispose();
+        term.writeln("");
+        term.writeln("------------------");
+        term.writeln("Server disconnected! Window will close in 5 seconds...");
+        term.writeln("(if it does not close automatically, please close it)");
+        setTimeout(() => {
+          window.close();
+          term.dispose();
+	}, 5000);
       });
 
       socket.on("connect", () => {
