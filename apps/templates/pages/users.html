@@ -57,6 +57,7 @@
                 <button type="button" title="Approve selected users" class="btn btn-default btn-sm" data-toggle="modal" data-target="#modal-approve-users">
                   <i class="fas fa-user-check"></i>
                 </button>
+                <button type="button" title="Clear table filters" class="btn btn-default btn-sm clear-table-state"><i class="far fa-recycle"></i></button>
               </div>
             </div>
             <!-- /.card-header -->
@@ -78,7 +79,7 @@
                 <tr id="{{user.id}}">
                   <td>
                     <div class="icheck-primary">
-                      <input type="checkbox" value="" id="checkbox-{{user.id}}">
+                      <input type="checkbox" value="" id="checkbox-{{user.id}}" class="checkbox-user">
                       <label for="checkbox-{{user.id}}"></label>
                     </div>
                   </td>
@@ -105,6 +106,7 @@
                 <button type="button" title="Approve selected users" class="btn btn-default btn-sm" data-toggle="modal" data-target="#modal-approve-users">
                   <i class="fas fa-user-check"></i>
                 </button>
+                <button type="button" title="Clear table filters" class="btn btn-default btn-sm checkbox-toggle"><i class="far fa-recycle"></i></button>
               </div>
             </div>
           </div>
@@ -187,6 +189,30 @@
     $(function () {
       // config DataTable
       var table = $("#tableUsers").DataTable({
+        stateSave: true,
+        stateDuration: 0,
+        stateSaveParams: function (settings, data) {
+          var checked_items = []
+          $('.checkbox-user').each(function (index) {
+            if ($(this).prop('checked')) {checked_items.push($(this).attr('id'));}
+          });
+          data['checkbox_user'] = checked_items;
+        },
+        stateLoadParams: function (settings, data) {
+          $('.checkbox-user').each(function (index) {
+            if (data['checkbox_user'].includes($(this).attr('id'))) {
+              $(this).prop('checked', true);
+            }
+          });
+        },
+        initComplete: function() {
+          var searchInput = $(this.api().table().container()).find('input[type="search"]');
+          // Set the attributes to disable autocorrect and autocomplete
+          searchInput.attr('autocomplete', 'off');
+          searchInput.attr('autocorrect', 'off');
+          searchInput.attr('autocapitalize', 'off');
+          searchInput.attr('spellcheck', 'false');
+        },
         responsive: true,
         autoWidth: false,
         language: {
@@ -322,6 +348,11 @@
           $('.checkbox-toggle .far.fa-square').removeClass('fa-square').addClass('fa-check-square')
         }
         $(this).data('clicks', !clicks)
+      })
+      // clear table state storage
+      $('.clear-table-state').click(function () {
+        table.state.clear();
+        window.location.reload();
       })
     })
   </script>
