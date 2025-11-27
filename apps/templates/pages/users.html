@@ -185,13 +185,13 @@
   <!-- Page Script -->
   <script>
     $(function () {
-      // === KEYS de storage
+      // keys for local storage
       var USERS_LIST_SEARCH_KEY = 'users:list:v2:query';
       var USERS_LIST_ORDER_KEY  = 'users:list:v2:order';
       var USERS_LIST_PAGE_KEY   = 'users:list:v2:page';
       var USERS_LIST_LEN_KEY    = 'users:list:v2:length';
 
-      // === Helpers de storage
+      // local storage helper functions
       function getLS(key, fallback) {
         try {
           var v = localStorage.getItem(key);
@@ -226,13 +226,13 @@
         if (savedQuery) { $input.val(savedQuery); }
       }
 
-      // === Estado salvo 
+      // saved state
       var savedQuery = getLS(USERS_LIST_SEARCH_KEY, '');
       var savedOrder;
         try {
           savedOrder = JSON.parse(getLS(USERS_LIST_ORDER_KEY, '[[1,"asc"]]'));
         } catch (e) {
-          savedOrder = [[1, 'asc']]; // fallback seguro (coluna Username)
+          savedOrder = [[1, 'asc']]; // safe fallback (Username column)
           setLS(USERS_LIST_ORDER_KEY, JSON.stringify(savedOrder));
         }
       var savedLength = parseInt(getLS(USERS_LIST_LEN_KEY, '10'), 10);
@@ -260,9 +260,6 @@
         order: savedOrder,
         pageLength: savedLength,
         displayStart: savedPage * savedLength,
-
-        /* stateSave: true,
-        stateDuration: -1 */
       });
 
       (function applyNoSpellcheck(dt, savedQuery) {
@@ -291,13 +288,13 @@
               table.search('').draw();
               $input.val('');
 
-              // limpar chaves v2
+              // clean up keys v2
               setLS(USERS_LIST_SEARCH_KEY, null);
               setLS(USERS_LIST_PAGE_KEY, '0');
               setLS(USERS_LIST_ORDER_KEY, JSON.stringify([[1, 'asc']]));
               setLS(USERS_LIST_LEN_KEY, String(10));
 
-              // refletir no DataTables
+              // update datatables
               table.order([[1, 'asc']]).page.len(10).page(0).draw(false);
             });
         }
