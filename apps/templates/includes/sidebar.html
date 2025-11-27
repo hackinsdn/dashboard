@@ -1,21 +1,11 @@
   <!-- Main Sidebar Container sidebar-dark-primary / sidebar-light-navy -->
   <aside class="main-sidebar sidebar-dark-primary elevation-4">
     <!-- Brand Logo -->
-    <a href="{{ config.BRAND_HREF or '/' }}" class="brand-link">
-      <img
-        src="{{ config.BRAND_LOGO_URL or '/static/assets/img/hackinsdn.png' }}"
-        alt="{{ config.BRAND_LOGO_ALT or 'HackInSDN' }}"
-        class="brand-image img-circle elevation-3"
-        style="opacity: .8"
-      >
-      <span class="brand-text font-weight-light">
-        {{ config.BRAND_LOGO_ALT or 'HackInSDN' }}
-      </span>
+    <a href="/" class="brand-link">
+      <img src="/static/assets/img/hackinsdn.png" alt="HackInSDN" class="brand-image img-circle elevation-3" style="opacity: .8">
+      <span class="brand-text font-weight-light">HackInSDN</span>
     </a>
-    
-    {% if not config.BRAND_LOGO_URL or config.BRAND_LOGO_URL == '/static/assets/img/hackinsdn.png' %}
-      <img src="/static/assets/img/hackersdobem.png" alt="HackInSDN" class="img-fluid">
-    {% endif %}
+    <img src="/static/assets/img/hackersdobem.png" alt="HackInSDN" class="img-fluid">
 
     <!-- Sidebar -->
     <div class="sidebar">
