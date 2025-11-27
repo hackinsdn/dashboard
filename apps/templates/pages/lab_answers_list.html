@@ -211,7 +211,7 @@
               buttons: [
                 {
                   extend: 'csv',
-                  text: 'CSV',
+                  text: '<i class="far fa-file-csv"></i> CSV',
                   className: 'btn btn-outline-dark ms-2',
                     exportOptions: {
                     columns: [0, 1, 2, 3],
@@ -225,7 +225,15 @@
                       }
                     }
                   }
-                }
+                },
+                {
+                    text: '<i class="far fa-recycle"></i> Clear filters',
+                    className: 'btn btn-outline-dark ms-2',
+                    action: function ( e, dt, node, config ) {
+                        dt.state.clear();
+                        window.location.reload();
+                    }
+                },
               ]
             },
         },    
@@ -247,6 +255,16 @@
             name: 'actions',
           },
         ],
+        stateSave: true,
+        stateDuration: 0,
+        initComplete: function() {
+          var searchInput = $(this.api().table().container()).find('input[type="search"]');
+          // Set the attributes to disable autocorrect and autocomplete
+          searchInput.attr('autocomplete', 'off');
+          searchInput.attr('autocorrect', 'off');
+          searchInput.attr('autocapitalize', 'off');
+          searchInput.attr('spellcheck', 'false');
+        },
         order: [[0, 'asc'], [1, 'asc']]
       });
       if ( sessionStorage.getItem('msgSuccess') ) {
