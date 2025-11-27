@@ -1,6 +1,5 @@
 # -*- encoding: utf-8 -*-
 from flask import Blueprint
-from .models import Clab, ClabInstance 
 
 blueprint = Blueprint(
     "clabs_blueprint",
