@@ -202,10 +202,10 @@
   <script>
     $(function () {
       // === KEYS de storage
-      var USERS_LIST_SEARCH_KEY = 'users:list:v2:query';
-      var USERS_LIST_ORDER_KEY  = 'users:list:v2:order';
-      var USERS_LIST_PAGE_KEY   = 'users:list:v2:page';
-      var USERS_LIST_LEN_KEY    = 'users:list:v2:length';
+      var USERS_LIST_SEARCH_KEY = 'users:list:query';
+      var USERS_LIST_ORDER_KEY = 'users:list:order';
+      var USERS_LIST_PAGE_KEY = 'users:list:page';
+      var USERS_LIST_LEN_KEY = 'users:list:length';
 
       // === Helpers de storage
       function getLS(key, fallback) {
@@ -244,13 +244,7 @@
 
       // === Estado salvo 
       var savedQuery = getLS(USERS_LIST_SEARCH_KEY, '');
-      var savedOrder;
-        try {
-          savedOrder = JSON.parse(getLS(USERS_LIST_ORDER_KEY, '[[1,"asc"]]'));
-        } catch (e) {
-          savedOrder = [[1, 'asc']]; // fallback seguro (coluna Username)
-          setLS(USERS_LIST_ORDER_KEY, JSON.stringify(savedOrder));
-        }
+      var savedOrder = JSON.parse(getLS(USERS_LIST_ORDER_KEY, '[[1,"asc"]]'));
       var savedLength = parseInt(getLS(USERS_LIST_LEN_KEY, '10'), 10);
       if (isNaN(savedLength) || savedLength <= 0) savedLength = 10;
       var savedPage = parseInt(getLS(USERS_LIST_PAGE_KEY, '0'), 10);
@@ -279,8 +273,8 @@
         pageLength: savedLength,
         displayStart: savedPage * savedLength,
 
-        /* stateSave: true,
-        stateDuration: -1 */
+        stateSave: true,
+        stateDuration: -1
       });
       $('#tableUsers').on('change', 'input[type="checkbox"]', function() {
         table.state.save();
