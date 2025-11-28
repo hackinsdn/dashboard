@@ -27,13 +27,16 @@ body {
   padding: 0;
 }
 .menucontrols button {
+  color: #444444;
   font-weight: bolder !important;
   font-size: 1rem !important;
+  height: 2rem !important;
   background-color: lightgray;
 }
 @media only screen and (max-width: 600px) {
   .menucontrols button {
-    font-size: 1.5rem !important;
+    font-size: 1rem !important;
+    height: 2rem !important;
   }
 }
     </style>
@@ -58,7 +61,7 @@ body {
         <button id="uarr" type="button">&uarr;</button>
         <button id="darr" type="button">&darr;</button>
         <button id="rarr" type="button">&rarr;</button>
-        <button id="themeButton" type="button">☀︎</button>
+        <button id="themeButton" type="button"></button>
       </div>
     </div>
 
@@ -117,7 +120,7 @@ body {
           selectionForeground: '#000000',
         },
         light: {
-          background: '#FFFFFF',
+          background: '#D3D3D3',
           foreground: '#000000',
           cursor: '#000000',
           selectionBackground: '#000000',
@@ -125,6 +128,7 @@ body {
         },
       };
       let user_theme = getLS('hackinsdn_xterm_theme', 'dark');
+      themeButton.textContent = user_theme === 'dark' ? '☀' : '❨';
       const term = new Terminal({
         cursorBlink: true,
         macOptionIsMeta: true,
@@ -179,12 +183,12 @@ body {
       socket.on("server-disconnected", function (data) {
         term.writeln("");
         term.writeln("------------------");
-        term.writeln("Server disconnected! Window will close in 5 seconds...");
+        term.writeln("Server disconnected! Window will close in 3 seconds...");
         term.writeln("(if it does not close automatically, please close it)");
         setTimeout(() => {
           window.close();
           term.dispose();
-	}, 5000);
+	}, 3000);
       });
 
       socket.on("connect", () => {
@@ -195,13 +199,6 @@ body {
       socket.on("disconnect", () => {
         status.innerHTML =
           '<span style="background-color: #ff8383;">disconnected</span>';
-      });
-
-      themeButton.addEventListener('click', () => {
-        user_theme = user_theme === 'light' ? 'dark' : 'light';
-        term.options.theme = xtermTheme[user_theme];
-        setLS('hackinsdn_xterm_theme', user_theme);
-        themeButton.textContent = user_theme === 'dark' ? '☀' : '❨';
       });
 
       function fitToscreen() {
@@ -281,6 +278,11 @@ body {
         } else if (evt.target.id === "alt") {
           altButton.style.backgroundColor = "lightblue";
           altPressed = true;
+        } else if (evt.target.id === "themeButton") {
+          user_theme = user_theme === 'light' ? 'dark' : 'light';
+          term.options.theme = xtermTheme[user_theme];
+          setLS('hackinsdn_xterm_theme', user_theme);
+          themeButton.textContent = user_theme === 'dark' ? '☀' : '❨';
         }
       }
       function clearVirtualKeyboard() {
