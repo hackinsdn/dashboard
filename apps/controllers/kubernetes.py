@@ -481,7 +481,6 @@ class K8sController():
         user_uid=None,
         pod_hash=None,
         allowed_nodes=None,
-        dry_run=False,
     ):
         try:
             tmpl = string.Template(manifest)
@@ -510,90 +509,6 @@ class K8sController():
         except Exception as exc:
             # app.logger.info(f"Invalid manifest {filename} {exc}")
             return False, f"Failed to apply placeholders: {exc}"
-
-        return True, data
-
-    def get_k8s_resource(self, resource):
-        """Get k8s resource using kubectl."""
-        try:
-            result = subprocess.run(
-                ["kubectl", "get", resource["kind"], resource["name"], "-o", "json"],
-                capture_output=True,
-                text=True,
-                check=True
-            )
-            result = json.loads(result.stdout)
-        except subprocess.CalledProcessError as exc:
-            raise Exception(f"Failed to get k8s resource: {exc} -- {exc.stderr}")
-        except Exception as exc:
-            raise Exception(f"Failed to get k8s resource: {exc}")
-        result["is_ok"] = True
-        return result
-
-    def create_k8s_resource(self, resource):
-        """Create k8s resource trying to use kubernetes lib and fallback to kubectl."""
-        if resource["kind"] in ["Pod", "Service", "Deployment", "ConfigMap"]:
-            k8s_objs = create_from_dict(
-                self.k8s_client,
-                data=resource,
-                namespace=self.namespace,
-            )
-            return k8s_objs[0].to_dict()
-        try:
-            result = subprocess.run(
-                ["kubectl", "create", "-f", "-", "-o", "json"],
-                input=json.dumps(resource),
-                capture_output=True,
-                text=True,
-                check=True
-            )
-            result = json.loads(result.stdout)
-        except subprocess.CalledProcessError as exc:
-            raise Exception(f"Failed to create k8s resource: {exc} -- {exc.stderr}")
-        except Exception as exc:
-            raise Exception(f"Failed to create k8s resource: {exc}")
-        return result
-
-    def delete_k8s_resource(self, resource):
-        """Delete k8s resource using kubectl."""
-        try:
-            result = subprocess.run(
-                ["kubectl", "delete", resource["kind"], resource["name"]],
-                capture_output=True,
-                text=True,
-                check=True
-            )
-        except subprocess.CalledProcessError as exc:
-            current_app.logger.error(f"Failed to delete k8s resource: {exc} -- {exc.stderr}")
-            return False
-        except Exception as exc:
-            current_app.logger.error(f"Failed to delete k8s resource: {exc}")
-            return False
-        return True
-
-    def create_lab(
-        self,
-        lab_id,
-        manifest,
-        dry_run=False,
-        replace_identifiers=True,
-        user_uid=None,
-        pod_hash=None,
-        allowed_nodes=None,
-    ):
-        """create lab according to manifest and labels"""
-        data = manifest
-        if replace_identifiers:
-            status, result = self.substitute_identifiers(
-                manifest,
-                user_uid=user_uid,
-                pod_hash=pod_hash,
-                dry_run=dry_run,
-                allowed_nodes=allowed_nodes,
-            )
-            if not status:
-                return status, result
-            data = result
 
         yaml_docs = []
         try:

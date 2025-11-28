@@ -56,7 +56,6 @@
                 <button type="button" class="btn btn-default btn-sm" data-toggle="modal" data-target="#modal-default">
                   <i class="far fa-trash-alt"></i>
                 </button>
-                <button type="button" title="Clear table filters" class="btn btn-default btn-sm clear-table-state"><i class="far fa-recycle"></i></button>
               </div>
               <div class="row">
                 <!-- left column -->
@@ -104,7 +103,7 @@
                 <tr id="{{lab['lab_instance_id']}}">
                   <td>
                     <div class="icheck-primary">
-                      <input type="checkbox" value="" id="checkbox-{{lab['lab_instance_id']}}" class="checkbox-labs">
+                      <input type="checkbox" value="" id="checkbox-{{lab['lab_instance_id']}}">
                       <label for="checkbox-{{lab['lab_instance_id']}}"></label>
                     </div>
                   </td>
@@ -130,7 +129,6 @@
                 <button type="button" class="btn btn-default btn-sm" data-toggle="modal" data-target="#modal-default">
                   <i class="far fa-trash-alt"></i>
                 </button>
-                <button type="button" title="Clear table filters" class="btn btn-default btn-sm clear-table-state"><i class="far fa-recycle"></i></button>
               </div>
             </div>
           </div>
@@ -188,32 +186,67 @@
   <!-- Page Script -->
   <script>
     $(function () {
-      // config DataTable
-      var table = $("#tableLabs").DataTable({
-        stateSave: true,
-        stateDuration: 0,
-        stateSaveParams: function (settings, data) {
-          var checked_items = []
-          $('.checkbox-labs').each(function (index) {
-            if ($(this).prop('checked')) {checked_items.push($(this).attr('id'));}
-          });
-          data['checkbox_labs'] = checked_items;
-        },
-        stateLoadParams: function (settings, data) {
-          $('.checkbox-labs').each(function (index) {
-            if (data['checkbox_labs'].includes($(this).attr('id'))) {
-              $(this).prop('checked', true);
-            }
-          });
-        },
-        initComplete: function() {
-          var searchInput = $(this.api().table().container()).find('input[type="search"]');
-          // Set the attributes to disable autocorrect and autocomplete
-          searchInput.attr('autocomplete', 'off');
-          searchInput.attr('autocorrect', 'off');
-          searchInput.attr('autocapitalize', 'off');
-          searchInput.attr('spellcheck', 'false');
-        },
+      // === KEYS de storage (Running Labs)
+      var RUNNING_LIST_SEARCH_KEY = 'runninglabs:list:v1:query';
+      var RUNNING_LIST_ORDER_KEY  = 'runninglabs:list:v1:order';
+      var RUNNING_LIST_PAGE_KEY   = 'runninglabs:list:v1:page';
+      var RUNNING_LIST_LEN_KEY    = 'runninglabs:list:v1:length';
+
+      // === Helpers
+      function getLS(key, fallback) {
+        try {
+          var v = localStorage.getItem(key);
+          return (v === null ? fallback : v);
+        } catch (e) { return fallback; }
+      }
+      function setLS(key, value) {
+        try {
+          if (value === '' || value === null || typeof value === 'undefined') {
+            localStorage.removeItem(key);
+          } else {
+            localStorage.setItem(key, value);
+          }
+        } catch (e) { }
+      }
+
+      // === “Harden” do input de busca
+      function hardenSearchInputEl($input, savedQuery) {
+        if (!$input || !$input.length) return;
+        $input
+          .attr('type', 'search')
+          .attr('autocomplete', 'off')
+          .attr('autocorrect', 'off')
+          .attr('autocapitalize', 'none')
+          .attr('spellcheck', 'false')
+          .prop('spellcheck', false)
+          .attr('data-gramm', 'false')
+          .attr('data-gramm_editor', 'false')
+          .attr('data-lt-active', 'false')
+          .attr('data-ms-editor', 'false')
+          .attr('lang', 'zxx');
+        if (savedQuery) { $input.val(savedQuery); }
+      }
+      function getDtFilterInput(dt) {
+        return $(dt.table().container()).find('div.dataTables_filter input[type="search"]');
+      }
+
+      // === Estado salvo
+      var savedQuery = getLS(RUNNING_LIST_SEARCH_KEY, '');
+      var savedOrder;
+      try {
+        savedOrder = JSON.parse(getLS(RUNNING_LIST_ORDER_KEY, '[[2,"asc"]]'));
+      } catch (e) {
+        savedOrder = [[2, 'asc']];
+        setLS(RUNNING_LIST_ORDER_KEY, JSON.stringify(savedOrder));
+      }
+      var savedLength = parseInt(getLS(RUNNING_LIST_LEN_KEY, '10'), 10);
+      if (isNaN(savedLength) || savedLength <= 0) savedLength = 10;
+      var savedPage = parseInt(getLS(RUNNING_LIST_PAGE_KEY, '0'), 10);
+      if (isNaN(savedPage) || savedPage < 0) savedPage = 0;
+
+      // === DataTable (com persistência)
+      var $tableEl = $("#tableLabs");
+      var table = $tableEl.DataTable({
         responsive: false,
         autoWidth: false,
         language: { emptyTable: 'No running labs' },
@@ -232,6 +265,30 @@
       $('#tableLabs').on('change', 'input[type="checkbox"]', function() {
         table.state.save();
       });
+
+      // garantir que navegador não reative assistentes
+      $(table.table().container())
+        .off('.inputfix')
+        .on('focus.inputfix input.inputfix', 'div.dataTables_filter input[type="search"]', function () {
+          hardenSearchInputEl($(this));
+        });
+
+      // === Persistência por eventos
+      $tableEl.on('search.dt', function () {
+        var q = table.search() || '';
+        q.trim() === '' ? setLS(RUNNING_LIST_SEARCH_KEY, null) : setLS(RUNNING_LIST_SEARCH_KEY, q);
+      });
+      $tableEl.on('order.dt', function () {
+        setLS(RUNNING_LIST_ORDER_KEY, JSON.stringify(table.order()));
+      });
+      $tableEl.on('length.dt', function (e, settings, len) {
+        setLS(RUNNING_LIST_LEN_KEY, String(len));
+        setLS(RUNNING_LIST_PAGE_KEY, String(table.page.info().page));
+      });
+      $tableEl.on('page.dt', function () {
+        setLS(RUNNING_LIST_PAGE_KEY, String(table.page.info().page));
+      });
+
       if ( sessionStorage.getItem('msgSuccess') ) {
         $(document).Toasts('create', {
           class: 'bg-success',

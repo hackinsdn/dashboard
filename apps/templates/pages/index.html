@@ -69,7 +69,7 @@
 
               <div class="info-box-content">
                 <span class="info-box-text">Registered Labs</span>
-                <span class="info-box-number">{{stats['registered_labs']|length}}</span>
+                <span class="info-box-number">{{stats['registered_labs']}}</span>
               </div>
               <!-- /.info-box-content -->
             </div>
@@ -373,32 +373,80 @@
               </div>
               <!-- /.card-header -->
               <div class="card-body p-0">
-                <ul class="products-list product-list-in-card pl-2 pr-2" id="recent-labs-list">
-                {% for lab in stats["registered_labs"] %}
-		  {% if loop.index <= 5 %}
+                <ul class="products-list product-list-in-card pl-2 pr-2">
                   <li class="item">
                     <div class="product-img">
-                      <img src="/static/assets/img/default-150x150.png" alt="Lab Image" class="img-size-50">
+                      <img src="/static/assets/img/default-150x150.png" alt="Product Image" class="img-size-50">
                     </div>
                     <div class="product-info">
-                      <a href="/labs/view/{{lab.id}}" class="product-title">
-                        {{lab.title}}
-			{% for category in lab.categories %}
-			<span class="badge badge-{{category.color_cls}} float-right ml-1">{{category.category}}</span>
-			{% endfor %}
-		      </a>
+                      <a href="javascript:void(0)" class="product-title">Simple Attacks - Scan, Brute-force, DoS
+                        <span class="badge badge-warning float-right">$1800</span></a>
                       <span class="product-description">
-                        {{lab.description|default('No short description provided. Click to see more details', true)}}
+                        Lab demonstrating simple network attacks such as network scanning, application brute-force and Denial of Service.
                       </span>
                     </div>
-                   </li>
-		   {% endif %}
-                {% endfor %}
+                  </li>
+                  <!-- /.item -->
+                  <li class="item">
+                    <div class="product-img">
+                      <img src="/static/assets/img/default-150x150.png" alt="Product Image" class="img-size-50">
+                    </div>
+                    <div class="product-info">
+                      <a href="javascript:void(0)" class="product-title">Distributed DoS - Orchestration, Execution, Detection and Mitigation
+                        <span class="badge badge-info float-right">$700</span></a>
+                      <span class="product-description">
+                        Advanced Lab on Distributed Denial of Service covering all the phases of an typical attack: orchestration, execution, detection and mitigation.
+                      </span>
+                    </div>
+                  </li>
+                  <!-- /.item -->
+                  <li class="item">
+                    <div class="product-img">
+                      <img src="/static/assets/img/default-150x150.png" alt="Product Image" class="img-size-50">
+                    </div>
+                    <div class="product-info">
+                      <a href="javascript:void(0)" class="product-title">DNS Tunneling
+                      <span class="badge badge-danger float-right">
+                        $350
+                      </span>
+                      </a>
+                      <span class="product-description">
+                        DNS tunneling is an exploit method that abuses the DNS protocol to tunnel malware and other data via a client-server model. This lab will demonstrate how this attack works, how to monitor and how to mitigate.
+                      </span>
+                    </div>
+                  </li>
+                  <!-- /.item -->
+                  <li class="item">
+                    <div class="product-img">
+                      <img src="/static/assets/img/default-150x150.png" alt="Product Image" class="img-size-50">
+                    </div>
+                    <div class="product-info">
+                      <a href="javascript:void(0)" class="product-title">MISP Threat Intelligence
+                        <span class="badge badge-success float-right">$399</span></a>
+                      <span class="product-description">
+                        On this lab you will learn how to use MISP Threat Intelligence Platform to share indicators of compromise and integrate it with Zeek IDS to detect downloaded malwares on the network.
+                      </span>
+                    </div>
+                  </li>
+                  <!-- /.item -->
+                  <li class="item">
+                    <div class="product-img">
+                      <img src="/static/assets/img/default-150x150.png" alt="Product Image" class="img-size-50">
+                    </div>
+                    <div class="product-info">
+                      <a href="javascript:void(0)" class="product-title">IA-powered Anomaly Detection
+                        <span class="badge badge-success float-right">$4791</span></a>
+                      <span class="product-description">
+                        Lab demonstrating how to leverage network telemetry to feed IA/ML algorithms/models for Anomaly Detection.
+                      </span>
+                    </div>
+                  </li>
+                  <!-- /.item -->
                 </ul>
               </div>
               <!-- /.card-body -->
               <div class="card-footer text-center">
-                <a href="/labs/view" class="uppercase">View All Labs</a>
+                <a href="javascript:void(0)" class="uppercase">View All Labs</a>
               </div>
               <!-- /.card-footer -->
             </div>

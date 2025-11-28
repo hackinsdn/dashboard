@@ -22,21 +22,39 @@ from apps.utils import secure_filename, list_files
 PORT_RE = re.compile(r"(\d+.\d+.\d+.\d+:|\[[0-9a-fA-F:]+\]:)?(\d+:)?(?P<port>\d+)(/\w+)?")
 
 
-@blueprint.route("/upsert/", methods=["GET", "POST"])
-@blueprint.route("/upsert/<clab_id>", methods=["GET", "POST"])
-@login_required
-@check_user_category(["admin", "teacher"])
-def upsert(clab_id="new"):
-    """Update or Insert a ContainerLab."""
+# -------- Access helpers --------
+def _is_admin_or_teacher() -> bool:
+    cat = getattr(current_user, "category", "") or ""
+    return cat in ("admin", "teacher")
 
-    if clab_id != "new":
-        clab = Labs.query.get(clab_id)
-        if not clab:
-            return render_template("pages/clabs_upsert.html", clab=None, msg_fail="ContainerLab not found")
-        if not clab.is_clab:
-            return redirect(url_for('home_blueprint.edit_lab', lab_id=clab_id))
-    else:
-        clab = Labs()
+def _owner_identity() -> str:
+    return getattr(current_user, "username", None) or getattr(current_user, "email", None) or "anonymous"
+
+# -------- Serialization helpers (DB → UI/API) --------
+def _row_from_db(ci: ClabInstance) -> dict:
+    """Linha para /running e /api/list."""
+    owner = getattr(ci, "owner", None)
+    clab = getattr(ci, "clab", None)
+    created = (ci.created_at or dt.datetime.utcnow()).strftime("%Y-%m-%d %H:%M:%S")
+    return {
+        "lab_instance_id": ci.id,
+        "user": getattr(owner, "username", None) or getattr(owner, "email", None) or "anonymous",
+        "title": getattr(clab, "title", None) or "Unnamed",
+        "created": created,
+    }
+
+def _detail_from_db(ci: ClabInstance) -> dict:
+    """Detalhe para /open/<id>."""
+    owner = getattr(ci, "owner", None)
+    clab = getattr(ci, "clab", None)
+
+    created = (ci.created_at or dt.datetime.utcnow()).strftime("%Y-%m-%d %H:%M:%S")
+    try:
+        resources = json.loads(ci._clab_resources or "[]")
+        if not isinstance(resources, list):
+            resources = []
+    except Exception:
+        resources = []
 
     lab_categories = {cat.id: cat for cat in LabCategories.query.all()}
     if not lab_categories:

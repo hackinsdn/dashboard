@@ -265,40 +265,22 @@
       var $tableEl = $("#tableLabAnswers");
       var table = $tableEl.DataTable({
         layout: {
-            topStart: {
-              pageLength: true,
-              buttons: [
-                {
-                  extend: 'csv',
-                  text: '<i class="far fa-file-csv"></i> CSV',
-                  className: 'btn btn-outline-dark ms-2',
-                    exportOptions: {
-                    columns: [0, 1, 2, 3],
-                    orthogonal: 'export',
-                    format: {
-                      header: function ( data, columnIdx ) {
-                        return data;
-                      },
-                      body: function (data, rowIdx, columnIdx, node) {
-                        return data;
-                      }
-                    }
-                  }
-                },
-                {
-                    text: '<i class="far fa-recycle"></i> Clear filters',
-                    className: 'btn btn-outline-dark ms-2',
-                    action: function ( e, dt, node, config ) {
-                        dt.state.clear();
-                        window.location.reload();
-                    }
-                },
-              ]
-            },
-        },    
-        autoWidth: false,
-        language: {
-          emptyTable: 'No lab answer',
+          topStart: {
+            pageLength: true,
+            buttons: [{
+              extend: 'csv',
+              text: 'CSV',
+              className: 'btn btn-outline-dark ms-2',
+              exportOptions: {
+                columns: [0, 1, 2, 3],
+                orthogonal: 'export',
+                format: {
+                  header: function (data) { return data; },
+                  body: function (data) { return data; }
+                }
+              }
+            }]
+          },
         },
         autoWidth: false,
         language: { emptyTable: 'No lab answer' },
@@ -309,17 +291,74 @@
           { name: 'lab_answers', visible: false, orderable: false },
           { name: 'actions', orderable: false },
         ],
-        stateSave: true,
-        stateDuration: 0,
-        initComplete: function() {
-          var searchInput = $(this.api().table().container()).find('input[type="search"]');
-          // Set the attributes to disable autocorrect and autocomplete
-          searchInput.attr('autocomplete', 'off');
-          searchInput.attr('autocorrect', 'off');
-          searchInput.attr('autocapitalize', 'off');
-          searchInput.attr('spellcheck', 'false');
-        },
-        order: [[0, 'asc'], [1, 'asc']]
+        search:       { search: savedQuery },
+        order:        savedOrder,
+        pageLength:   savedLength,
+        displayStart: savedPage * savedLength
+      });
+
+      // === Hardening do input + botão "Limpar"
+      (function applyNoSpellcheck(dt, savedQuery) {
+        var $input = getDtFilterInput(dt);
+        hardenSearchInputEl($input, savedQuery);
+      })(table, savedQuery);
+
+      table.on('init.dt', function () {
+        var $input = getDtFilterInput(table);
+        if ($input.length === 0) {
+          console.warn('DataTables search input não encontrado');
+          return;
+        }
+        hardenSearchInputEl($input, savedQuery);
+
+        var $filter = $input.closest('div.dataTables_filter');
+        if ($filter.find('.btn-clear-filter').length === 0) {
+          $('<button type="button" class="btn btn-sm btn-outline-secondary ml-2 btn-clear-filter">Limpar</button>')
+            .appendTo($filter)
+            .on('click', function () {
+              table.search('').draw();
+              $input.val('');
+              setLS(LABANSWERS_LIST_SEARCH_KEY, null);
+              setLS(LABANSWERS_LIST_PAGE_KEY, '0');
+              setLS(LABANSWERS_LIST_ORDER_KEY, JSON.stringify([[0, 'asc'], [1, 'asc']]));
+              setLS(LABANSWERS_LIST_LEN_KEY, String(10));
+              table.order([[0, 'asc'], [1, 'asc']]).page.len(10).page(0).draw(false);
+            });
+        }
+
+        // salvar query ao digitar
+        $input.on('input change blur', function () {
+          var q = $(this).val() || '';
+          if (q !== table.search()) {
+            table.search(q).draw();
+          }
+          q.trim() === '' ? setLS(LABANSWERS_LIST_SEARCH_KEY, null) : setLS(LABANSWERS_LIST_SEARCH_KEY, q);
+        });
+      });
+
+      // reaplicar hardening a cada draw
+      table.on('draw.dt', function () {
+        hardenSearchInputEl(getDtFilterInput(table));
+      });
+
+      // garantir que o navegador não reative correções
+      $(table.table().container())
+        .off('.inputfix')
+        .on('focus.inputfix input.inputfix', 'div.dataTables_filter input[type="search"]', function () {
+          hardenSearchInputEl($(this));
+        });
+
+      // === Persistência por eventos 
+      $tableEl.on('search.dt', function () {
+        var q = table.search() || '';
+        q.trim() === '' ? setLS(LABANSWERS_LIST_SEARCH_KEY, null) : setLS(LABANSWERS_LIST_SEARCH_KEY, q);
+      });
+      $tableEl.on('order.dt', function () {
+        setLS(LABANSWERS_LIST_ORDER_KEY, JSON.stringify(table.order()));
+      });
+      $tableEl.on('length.dt', function (e, settings, len) {
+        setLS(LABANSWERS_LIST_LEN_KEY, String(len));
+        setLS(LABANSWERS_LIST_PAGE_KEY, String(table.page.info().page));
       });
 
       // === Hardening do input + botão "Limpar"

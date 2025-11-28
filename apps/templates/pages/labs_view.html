@@ -120,7 +120,7 @@
               <div class="card-footer mt-auto">
                 {% if is_running %}
                 {%   set route = 'home_blueprint.view_lab_instance' %}
-                {%   set lab_id = user_labs_status[lab.id]["running_id"] %}
+                {%   set lab_id = lab.id %}
                 {%   set link_text = 'Resume Lab' %}
                 {% else %}
                 {%   set route = 'home_blueprint.run_lab' %}

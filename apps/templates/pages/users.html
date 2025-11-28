@@ -57,7 +57,6 @@
                 <button type="button" title="Approve selected users" class="btn btn-default btn-sm" data-toggle="modal" data-target="#modal-approve-users">
                   <i class="fas fa-user-check"></i>
                 </button>
-                <button type="button" title="Clear table filters" class="btn btn-default btn-sm clear-table-state"><i class="far fa-recycle"></i></button>
               </div>
             </div>
             <!-- /.card-header -->
@@ -81,7 +80,7 @@
                 <tr id="{{user.id}}">
                   <td>
                     <div class="icheck-primary">
-                      <input type="checkbox" value="" id="checkbox-{{user.id}}" class="checkbox-user">
+                      <input type="checkbox" value="" id="checkbox-{{user.id}}">
                       <label for="checkbox-{{user.id}}"></label>
                     </div>
                   </td>
@@ -122,7 +121,6 @@
                 <button type="button" title="Approve selected users" class="btn btn-default btn-sm" data-toggle="modal" data-target="#modal-approve-users">
                   <i class="fas fa-user-check"></i>
                 </button>
-                <button type="button" title="Clear table filters" class="btn btn-default btn-sm checkbox-toggle"><i class="far fa-recycle"></i></button>
               </div>
             </div>
           </div>
@@ -203,32 +201,64 @@
   <!-- Page Script -->
   <script>
     $(function () {
-      // config DataTable
-      var table = $("#tableUsers").DataTable({
-        stateSave: true,
-        stateDuration: 0,
-        stateSaveParams: function (settings, data) {
-          var checked_items = []
-          $('.checkbox-user').each(function (index) {
-            if ($(this).prop('checked')) {checked_items.push($(this).attr('id'));}
-          });
-          data['checkbox_user'] = checked_items;
-        },
-        stateLoadParams: function (settings, data) {
-          $('.checkbox-user').each(function (index) {
-            if (data['checkbox_user'].includes($(this).attr('id'))) {
-              $(this).prop('checked', true);
-            }
-          });
-        },
-        initComplete: function() {
-          var searchInput = $(this.api().table().container()).find('input[type="search"]');
-          // Set the attributes to disable autocorrect and autocomplete
-          searchInput.attr('autocomplete', 'off');
-          searchInput.attr('autocorrect', 'off');
-          searchInput.attr('autocapitalize', 'off');
-          searchInput.attr('spellcheck', 'false');
-        },
+      // === KEYS de storage
+      var USERS_LIST_SEARCH_KEY = 'users:list:v2:query';
+      var USERS_LIST_ORDER_KEY  = 'users:list:v2:order';
+      var USERS_LIST_PAGE_KEY   = 'users:list:v2:page';
+      var USERS_LIST_LEN_KEY    = 'users:list:v2:length';
+
+      // === Helpers de storage
+      function getLS(key, fallback) {
+        try {
+          var v = localStorage.getItem(key);
+          return (v === null ? fallback : v);
+        } catch (e) { return fallback; }
+      }
+      function setLS(key, value) {
+        try {
+          if (value === '' || value === null || typeof value === 'undefined') {
+            localStorage.removeItem(key);
+          } else {
+            localStorage.setItem(key, value);
+          }
+        } catch (e) { }
+      }
+
+      function hardenSearchInputEl($input, savedQuery) {
+        if (!$input || !$input.length) return;
+        $input
+          .attr('type', 'search')
+          .attr('autocomplete', 'off')
+          .attr('autocorrect', 'off')
+          .attr('autocapitalize', 'none')
+          .attr('spellcheck', 'false')
+          .prop('spellcheck', false)
+          .attr('data-gramm', 'false')
+          .attr('data-gramm_editor', 'false')
+          .attr('data-lt-active', 'false')
+          .attr('data-ms-editor', 'false')
+          .attr('lang', 'zxx');
+
+        if (savedQuery) { $input.val(savedQuery); }
+      }
+
+      // === Estado salvo 
+      var savedQuery = getLS(USERS_LIST_SEARCH_KEY, '');
+      var savedOrder;
+        try {
+          savedOrder = JSON.parse(getLS(USERS_LIST_ORDER_KEY, '[[1,"asc"]]'));
+        } catch (e) {
+          savedOrder = [[1, 'asc']]; // fallback seguro (coluna Username)
+          setLS(USERS_LIST_ORDER_KEY, JSON.stringify(savedOrder));
+        }
+      var savedLength = parseInt(getLS(USERS_LIST_LEN_KEY, '10'), 10);
+      if (isNaN(savedLength) || savedLength <= 0) savedLength = 10;
+      var savedPage = parseInt(getLS(USERS_LIST_PAGE_KEY, '0'), 10);
+      if (isNaN(savedPage) || savedPage < 0) savedPage = 0;
+
+      // === DataTable
+      var $tableEl = $("#tableUsers");
+      var table = $tableEl.DataTable({
         responsive: true,
         autoWidth: false,
         language: { emptyTable: 'No user' },
@@ -255,7 +285,12 @@
       $('#tableUsers').on('change', 'input[type="checkbox"]', function() {
         table.state.save();
       });
-      if ( sessionStorage.getItem('msgSuccess') ) {
+      $tableEl.on('page.dt', function () {
+        setLS(USERS_LIST_PAGE_KEY, String(table.page.info().page));
+      });
+
+      // === Toasts
+      if (sessionStorage.getItem('msgSuccess')) {
         $(document).Toasts('create', {
           class: 'bg-success',
           title: 'Sucess',
@@ -344,14 +379,10 @@
           $('.user-items input[type="checkbox"]').prop('checked', true);
           $('.checkbox-toggle .far.fa-square').removeClass('fa-square').addClass('fa-check-square');
         }
-        $(this).data('clicks', !clicks)
-      })
-      // clear table state storage
-      $('.clear-table-state').click(function () {
-        table.state.clear();
-        window.location.reload();
-      })
-    })
+        $(this).data('clicks', !clicks);
+      });
+
+    });
   </script>
 
   <!-- AdminLTE for demo purposes -->
