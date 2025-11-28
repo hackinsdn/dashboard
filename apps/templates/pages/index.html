@@ -549,7 +549,9 @@
   <!-- PAGE PLUGINS -->
   <!-- Leaflet -->
   <script src="/static/assets/plugins/leaflet/leaflet.js"></script>
+  {% if config.MAP_GEOJSON_JS %}
   <script src="/static/assets/plugins/leaflet/geojson/{{config.MAP_GEOJSON_JS}}"></script>
+  {% endif %}
   <!-- ChartJS -->
   <script src="/static/assets/plugins/chart.js/Chart.min.js"></script>
   <!-- Motion JS -->
