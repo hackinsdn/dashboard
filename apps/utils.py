@@ -11,10 +11,12 @@ from flask import g
 from flask_login import current_user
 
 from apps import cache, db
-from sqlalchemy import func
-from apps.home.models import LabInstances, LabCategories, lab_categories
+from apps.home.models import LabAnswers, LabInstances, LabCategories, lab_categories
 
 _filename_ascii_strip_re = re.compile(r"[^A-Za-z0-9_.-]")
+MONTH_SHORT = [
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+]
 
 
 def utcnow():
@@ -54,6 +56,45 @@ def update_category_stats():
         stats["category_names"].append(category.category)
         stats["category_colors"].append(category.color_hex)
         stats["usage_counts"].append(count.get(category.id, 0))
+    return stats
+
+
+def update_stats_lab_instances_answers(months_ago=6):
+    """Calculate stats for Lab Instances and Answers for the past months."""
+    now = utcnow()
+    month = 1 + (12 + now.month - months_ago - 1) % 12
+    year = now.year if now.month > month else now.year - 1
+    filter_date = datetime.datetime(year, month, 1)
+    # lab instances
+    labs = LabInstances.query.filter(
+        LabInstances.is_deleted==True, LabInstances.created_at >= filter_date
+    ).order_by(LabInstances.created_at.asc()).all()
+    labs_by_month = {}
+    for lab in labs:
+        idx = f"{lab.created_at.year}-{lab.created_at.month}"
+        labs_by_month.setdefault(idx, 0)
+        labs_by_month[idx] += 1
+    # lab answers
+    answers = LabAnswers.query.filter(
+        LabAnswers.created_at >= filter_date
+    ).order_by(LabAnswers.created_at.asc()).all()
+    answers_by_month = {}
+    for answer in answers:
+        idx = f"{answer.created_at.year}-{answer.created_at.month}"
+        answers_by_month.setdefault(idx, 0)
+        answers_by_month[idx] += len(answer.answers_dict)
+    # merge stats all together
+    stats = {"months": [], "labs": [], "answers": [], "total_labs": 0, "total_answers": 0}
+    for _ in range(6):
+        stats["months"].append(f"{MONTH_SHORT[month-1]}-{year}")
+        stats["labs"].append(labs_by_month.get(f"{year}-{month}", 0))
+        stats["answers"].append(answers_by_month.get(f"{year}-{month}", 0))
+        stats["total_labs"] += labs_by_month.get(f"{year}-{month}", 0)
+        stats["total_answers"] += answers_by_month.get(f"{year}-{month}", 0)
+        month += 1
+        if month > 12:
+            month = 1
+            year += 1
     return stats
 
 
@@ -117,20 +158,7 @@ def datetime_from_ts(timestamp):
         dt = datetime.datetime.fromtimestamp(timestamp, tz=datetime.timezone.utc)
         return dt.isoformat()
     except:
-        return None    
-    
-def shift_month_start(date, offset):
-    total_month = (date.year * 12 + (date.month - 1)) + offset
-    year = total_month // 12
-    month = (total_month % 12) + 1
-    return datetime.datetime(year, month, 1)
-
-
-def count_between(model, field, start, end, extra_filters=None):
-    filters = [field >= start, field < end]
-    if extra_filters:
-        filters.extend(extra_filters)
-    return db.session.query(func.count()).filter(*filters).scalar() or 0
+        return None
 
 
 def secure_filename(filename: str) -> str:

@@ -8,87 +8,6 @@ $(function () {
    * Here we will create a few charts using ChartJS
    */
 
-  //-----------------------
-  // - MONTHLY SALES CHART -
-  //-----------------------
-
-  // Get context with jQuery - using jQuery's .get() method.
-
-  $.get('/api/lab/usage_stats', function(data) {
-    console.log('Dashboard stats data:', data);
-
-    const salesChartCanvas = $('#salesChart').get(0).getContext('2d')
-    const salesChartData = {
-      labels: data.months,
-      datasets: [
-        {
-          label: 'Lab Instances',
-          backgroundColor: 'rgba(60,141,188,0.9)',
-          borderColor: 'rgba(60,141,188,0.8)',
-          pointRadius: false,
-          pointColor: '#3b8bba',
-          pointStrokeColor: 'rgba(60,141,188,1)',
-          pointHighlightFill: '#fff',
-          pointHighlightStroke: 'rgba(60,141,188,1)',
-          data: data.labs_executed_counts
-        }
-      ]
-    }
-
-    const salesChartOptions = {
-      maintainAspectRatio: true,
-      responsive: true,
-      legend: {
-        display: true
-      },
-      scales: {
-        xAxes: [{
-          gridLines: {
-            display: false
-          }
-        }],
-        yAxes: [{
-          gridLines: {
-            display: false
-          }
-        }]
-      },
-      tooltips: {
-        mode: 'index',
-        intersect: false
-      },
-      hover: {
-        mode: 'index',
-        intersect: false
-      }
-    }
-
-    new Chart(salesChartCanvas, {
-      type: 'line',
-      data: salesChartData,
-      options: salesChartOptions
-    })
-
-    $('#current-month-completed-labs').text(data.completed_labs_from_current_month)
-    $('#current-month-answers-questions').text(data.answered_questions_from_current_month)
-    $('#current-month-completed-challenges').text(data.completed_challenges_from_current_month)
-
-    const labInstancesCreatedInterval = document.getElementById('lab-instances-created-interval');
-    labInstancesCreatedInterval.innerHTML = `<strong>Lab instances created: ${data.start_date} - ${data.end_date}</strong>`;
-
-    $('#completed-labs-last-six-months').text(data.completed_labs_from_last_six_months);
-    $('#answered-questions-last-six-months').text(data.answered_questions_from_last_six_months);
-    $('#solved-challenges-last-six-months').text(data.completed_challenges_from_last_six_months);
-
-    updateGrowthAmount('completed-labs-growth', data.completed_labs_growth);
-    updateGrowthAmount('completed-challenges-growth', data.completed_challenges_growth);
-    updateGrowthAmount('answered-questions-growth', data.answered_questions_growth);
-  })
-
-  //---------------------------
-  // - END MONTHLY SALES CHART -
-  //---------------------------
-
   /* Leaflet Map
    * ------------
    * Create a world map with markers using parametrized config
@@ -109,7 +28,6 @@ $(function () {
     
     try {
       var mapPoints = window.mapConfig ? window.mapConfig.points : [];
-      console.log('Map points from global config:', mapPoints);
       
       if (Array.isArray(mapPoints) && mapPoints.length > 0) {
         mapPoints.forEach(function(point) {
@@ -192,13 +110,4 @@ $(function () {
     };
     setTimeout(updateMap, 50);
   }
-
-  const updateGrowthAmount = (elementId, growthValue) => {
-    const element = document.getElementById(elementId);
-    if (growthValue > 0) {
-      element.innerHTML = `<span class="description-percentage text-success"><i class="fas fa-caret-up"></i> ${growthValue}</span>`;
-    } else if (growthValue < 0) {
-      element.innerHTML = `<span class="description-percentage text-danger"><i class="fas fa-caret-down"></i> ${Math.abs(growthValue)}</span>`;
-    }
-  };
 })
