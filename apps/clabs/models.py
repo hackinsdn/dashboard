@@ -3,14 +3,6 @@ from apps import db
 
 class Clab(db.Model):
     __tablename__ = "clabs"
-    __table_args__ = (
-        db.Index(
-            "ix_clabs_namespace_title_unique",
-            "namespace_default",
-            "title",
-            unique=True,
-        ),
-    )
 
     id = db.Column(db.String(36), primary_key=True) 
     title = db.Column(db.String(255), nullable=False)
@@ -27,62 +19,35 @@ class Clab(db.Model):
         db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
     )
 
-    groups = db.relationship(
-        "Groups",
-        secondary="clab_groups",
-        lazy="selectin",
-        backref=db.backref("clabs", lazy="selectin"),
-    )
-
-    categories = db.relationship(
-        "LabCategories",
-        secondary="clab_categories_association",
-        lazy="selectin",
-        backref=db.backref("clabs", lazy="selectin"),
-    )
-
-    instances = db.relationship(
-        "ClabInstance",
-        back_populates="clab",
-        cascade="all, delete-orphan",
-        lazy="selectin",
-    )
-
     def __repr__(self):
         return f"<Clab {self.id} {self.title}>"
 
 class ClabInstance(db.Model):
     __tablename__ = "clab_instances"
 
-    id = db.Column(db.String(24), primary_key=True)  
+    # identidade / vínculo
+    id = db.Column(db.String(24), primary_key=True)  # id curto, similar ao LabInstances
     token = db.Column(db.String(64), unique=True, index=True, nullable=False)
 
     owner_user_id = db.Column(db.Integer, db.ForeignKey("users.id"), index=True, nullable=False)
     clab_id = db.Column(db.String(36), db.ForeignKey("clabs.id"), index=True, nullable=False)
 
+    # ciclo de vida
     is_deleted = db.Column(db.Boolean, default=False, nullable=False)
-    expiration_ts = db.Column(db.DateTime, index=True)  
+    expiration_ts = db.Column(db.DateTime, index=True)  # definido em lógica de criação
     finish_reason = db.Column(db.String(64))
 
-    _clab_resources = db.Column(db.Text)             
-    namespace_effective = db.Column(db.String(128)) 
+    # recursos materializados e namespace efetivo
+    _clab_resources = db.Column(db.Text)              # JSON/texto
+    namespace_effective = db.Column(db.String(128))   # opcional
 
+    # auditoria
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
-    clab = db.relationship(
-        "Clab",
-        back_populates="instances",
-        lazy="selectin",
-    )
-
-    owner = db.relationship(
-        "Users",
-        lazy="selectin",
-    )
-
     def __repr__(self):
         return f"<ClabInstance {self.id} of {self.clab_id}>"
+    
 
 clab_groups = db.Table(
     "clab_groups",
