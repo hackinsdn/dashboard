@@ -94,6 +94,10 @@
         "tempusdominus-bootstrap-4": "^5.39.0",
         "toastr": "^2.1.4",
 	"@mojs/core": "^1.7.1",
-        "uplot": "^1.6.15"
+        "uplot": "^1.6.15",
+        "@xterm/addon-fit": "^0.10.0",
+        "@xterm/addon-search": "^0.15.0",
+        "@xterm/addon-web-links": "^0.11.0",
+        "@xterm/xterm": "^5.5.0"
     }
 }
