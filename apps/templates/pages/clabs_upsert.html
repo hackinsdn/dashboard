@@ -219,13 +219,25 @@
                   <p>Or you can upload here your ContainerLab topology and additional files.</p>
                   <div class="col-md-12">
                     <div class="form-group">
-                        <label>Upload Area</label>
+                        <div class="d-flex align-items-center justify-content-between mb-1">
+                            <label>Upload Area</label>
+                            <div class="btn-group btn-group-sm" role="group" aria-label="Upload actions">
+                                <button id="btnAddFile" type="button" class="btn btn-outline-dark mx-2 rounded">
+                                    <i class="icon far fa-file mr-1"></i> Add File
+                                </button>
+                                <button id="btnAddDirectory" type="button"
+                                    class="btn btn-outline-dark mx-2 rounded">
+                                    <i class="icon far fa-folder mr-1"></i> Add Directory
+                                </button>
+                            </div>
+                        </div>
                         <div id="dropzone" class="dropzone">
                             <i class="fas fa-cloud-upload-alt"></i>
                             <div>Drag & drop files here, or click to select</div>
                             <small>Accepted: multiple files</small>
                         </div>
-                        <input id="clab_files" name="clab_files" type="file" webkitdirectory directory multiple class="d-none">
+                        <input id="clab_files" name="clab_files" type="file" multiple class="d-none">
+                        <input id="clab_folders" name="clab_folders" type="file" webkitdirectory class="d-none">
                         <div class="file-list mt-2" id="files_list"></div>
                     </div>
                   </div>
@@ -387,6 +399,9 @@
         // ------- elementos -------
         var drop = document.getElementById('dropzone');
         var fileInput = document.getElementById('clab_files');
+        var folderInput = document.getElementById('clab_folders');
+        var btnAddFile = document.getElementById('btnAddFile');
+        var btnAddDirectory = document.getElementById('btnAddDirectory');
         var filesList = document.getElementById('files_list');
         var btn = document.getElementById('btnSubmit');
         var form = document.getElementById('clab-form');
@@ -398,6 +413,14 @@
         var seenPaths = new Set();
 
         drop && drop.addEventListener('click', function () { fileInput && fileInput.click(); });
+
+        btnAddFile && btnAddFile.addEventListener('click', function () {
+            fileInput && fileInput.click();
+        });
+
+        btnAddDirectory && btnAddDirectory.addEventListener('click', function () {
+            folderInput && folderInput.click();
+        });
 
         ['dragover', 'drop'].forEach(function (evt) {
             document.addEventListener(evt, function (e) { e.preventDefault(); }, false);
@@ -586,6 +609,13 @@
 
         if (fileInput) {
             fileInput.addEventListener('change', function (e) {
+                addFiles(e.target.files);
+            });
+        }
+
+        if (folderInput) {
+            folderInput.addEventListener('change', function (e) {
+                console.log("btnAddDirectory");
                 addFiles(e.target.files);
             });
         }
