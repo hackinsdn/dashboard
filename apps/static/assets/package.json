@@ -26,7 +26,6 @@
         "gulp-autoprefixer": "^8.0.0",
         "gulp-clean-css": "^4.3.0",
         "gulp-cssbeautify": "^3.0.0",
-        "node-sass": "^6.0.1",
         "gulp-file-include": "^2.3.0",
         "gulp-header": "^2.0.9",
         "gulp-htmlmin": "^5.0.1",
@@ -64,7 +63,6 @@
         "datatables.net-searchbuilder-bs4": "^1.2.0",
         "datatables.net-searchpanes-bs4": "^1.4.0",
         "datatables.net-select-bs4": "^1.3.3",
-        "daterangepicker": "^3.1.0",
         "dropzone": "^5.9.2",
         "ekko-lightbox": "^5.3.0",
         "fastclick": "^1.0.6",
@@ -76,11 +74,11 @@
         "icheck-bootstrap": "^3.0.1",
         "inputmask": "^5.0.6",
         "ion-rangeslider": "^2.3.1",
-        "jquery": "^3.6.0",
+        "jquery": "^3.7.1",
         "jquery-knob-chif": "^1.2.13",
         "jquery-mapael": "^2.2.0",
         "jquery-mousewheel": "^3.1.13",
-        "jquery-ui-dist": "^1.12.1",
+        "jquery-ui-dist": "^1.13.3",
         "jquery-validation": "^1.19.3",
         "jqvmap-novulnerability": "^1.5.1",
         "jsgrid": "^1.5.3",
@@ -96,6 +94,10 @@
         "tempusdominus-bootstrap-4": "^5.39.0",
         "toastr": "^2.1.4",
 	"@mojs/core": "^1.7.1",
-        "uplot": "^1.6.15"
+        "uplot": "^1.6.15",
+        "@xterm/addon-fit": "^0.10.0",
+        "@xterm/addon-search": "^0.15.0",
+        "@xterm/addon-web-links": "^0.11.0",
+        "@xterm/xterm": "^5.5.0"
     }
 }

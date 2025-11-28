@@ -30,6 +30,15 @@ class Config(object):
     # Assets Management
     ASSETS_ROOT = os.getenv('ASSETS_ROOT', '/static/assets')
 
+    # --- Logo Header ---
+    LOGO_HEADER_URL = os.getenv('LOGO_HEADER_URL', '/static/assets/img/hackinsdn.png')
+    LOGO_HEADER_ALT = os.getenv('LOGO_HEADER_ALT', 'HackInSDN')
+    LOGO_HEADER_HREF = os.getenv('LOGO_HEADER_HREF', '/')
+
+    # --- Sidebar Branding (Logo) ---
+    LOGO_SIDEBAR_URL = os.getenv('LOGO_SIDEBAR_URL', '/static/assets/img/hackersdobem.png')
+    LOGO_SIDEBAR_ALT = os.getenv('LOGO_SIDEBAR_ALT', 'HackInSDN')
+
     # Set up the App SECRET_KEY
     SECRET_KEY  = os.getenv('SECRET_KEY', "")
     if not SECRET_KEY:

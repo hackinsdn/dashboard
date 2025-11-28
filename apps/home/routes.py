@@ -17,7 +17,7 @@ from flask_login import login_required, current_user
 from jinja2 import TemplateNotFound
 from apps.audit_mixin import get_remote_addr, check_user_category
 from apps.authentication.forms import GroupForm
-from apps.utils import update_running_labs_stats, parse_lab_expiration, datetime_from_ts
+from apps.utils import update_running_labs_stats, parse_lab_expiration, datetime_from_ts, update_category_stats
 from sqlalchemy import desc
 
 
@@ -43,12 +43,14 @@ def index():
             current_app.logger.error(f"Failed to retrieve Kubernetes data: {e}")
         stats_data["lab_instances"] = LabInstances.query.filter_by(is_deleted=True).count()
         stats_data["users"] = Users.query.filter_by(is_deleted=False).count()
-        stats_data["labs"] = Labs.query.count()
+        stats_data["labs"] = Labs.query.order_by(Labs.created_at.desc()).all()
+        stats_data["lab_categories"] = update_category_stats()
         cache.set("stats_data", stats_data)
 
     stats = {
         "lab_instances": stats_data.get("lab_instances", 0),
-        "registered_labs": stats_data.get("labs", 0),
+        "registered_labs": stats_data.get("labs", []),
+        "lab_categories": stats_data.get("lab_categories", {}),
         "likes": user_likes,
         "has_liked": UserLikes.query.get(current_user.id),
         "users": stats_data.get("users", 0),
@@ -499,6 +501,7 @@ def view_labs(lab_id=None):
         user_labs_status.setdefault(lab.lab_id, {"is_running": False, "is_completed": False})
         if not lab.is_deleted:
             user_labs_status[lab.lab_id]["is_running"] = True
+            user_labs_status[lab.lab_id]["running_id"] = lab.id
         if lab.is_deleted and lab.finish_reason is not None:
             user_labs_status[lab.lab_id]["is_completed"] = True
     return render_template("pages/labs_view.html", labs=labs, lab_categories=lab_categories, user_labs_status=user_labs_status, segment="/labs/view")

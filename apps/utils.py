@@ -12,7 +12,7 @@ from flask_login import current_user
 
 from apps import cache, db
 from sqlalchemy import func
-from apps.home.models import LabInstances
+from apps.home.models import LabInstances, LabCategories, lab_categories
 
 _filename_ascii_strip_re = re.compile(r"[^A-Za-z0-9_.-]")
 
@@ -33,6 +33,28 @@ def update_running_labs_stats():
         running_labs = running_labs.count()
         cache.set(f"running_labs-{user_id}", running_labs)
     g.running_labs = running_labs
+
+
+def update_category_stats():
+    count_query = db.session.query(
+        lab_categories.c.category_id, db.func.count(lab_categories.c.lab_id)
+    ).group_by(lab_categories.c.category_id)
+    count = {cat_id: cat_count for cat_id, cat_count in count_query.all()}
+    categories = LabCategories.query.filter(
+        LabCategories.category != "All"
+    ).order_by(LabCategories.category).all()
+    stats = {
+        "name_cls": {},
+        "category_names": [],
+        "category_colors": [],
+        "usage_counts": [],
+    }
+    for category in categories:
+        stats["name_cls"][category.category] = category.color_cls
+        stats["category_names"].append(category.category)
+        stats["category_colors"].append(category.color_hex)
+        stats["usage_counts"].append(count.get(category.id, 0))
+    return stats
 
 
 def format_duration(delta: datetime.timedelta) -> str:

@@ -31,7 +31,7 @@ def upsert(clab_id="new"):
 
     if clab_id != "new":
         clab = Labs.query.get(clab_id)
-        if not clab or clab.is_deleted:
+        if not clab:
             return render_template("pages/clabs_upsert.html", clab=None, msg_fail="ContainerLab not found")
         if not clab.is_clab:
             return redirect(url_for('home_blueprint.edit_lab', lab_id=clab_id))

@@ -1,11 +1,11 @@
   <!-- Main Sidebar Container sidebar-dark-primary / sidebar-light-navy -->
   <aside class="main-sidebar sidebar-dark-primary elevation-4">
     <!-- Brand Logo -->
-    <a href="/" class="brand-link">
-      <img src="/static/assets/img/hackinsdn.png" alt="HackInSDN" class="brand-image img-circle elevation-3" style="opacity: .8">
-      <span class="brand-text font-weight-light">HackInSDN</span>
+    <a href="{{ config.LOGO_HEADER_HREF }}" class="brand-link">
+      <img src="{{ config.LOGO_HEADER_URL }}" alt="{{ config.LOGO_HEADER_ALT }}" class="brand-image img-circle elevation-3" style="opacity: .8">
+      <span class="brand-text font-weight-light">{{ config.LOGO_HEADER_ALT }}</span>
     </a>
-    <img src="/static/assets/img/hackersdobem.png" alt="HackInSDN" class="img-fluid">
+    <img src="{{ config.LOGO_SIDEBAR_URL }}" alt="{{ config.LOGO_SIDEBAR_ALT }}" class="img-fluid">
 
     <!-- Sidebar -->
     <div class="sidebar">
