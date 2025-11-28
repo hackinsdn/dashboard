@@ -5,6 +5,7 @@ import re
 from collections import OrderedDict, defaultdict
 from flask import render_template, redirect, url_for, request, jsonify, current_app
 from flask_login import current_user, login_required
+<<<<<<< HEAD
 from apps.controllers import c9s, k8s
 from apps import db
 from apps.authentication.models import Groups
@@ -13,6 +14,10 @@ from apps.audit_mixin import get_remote_addr, check_user_category
 from apps.home.models import Labs, LabCategories, LabMetadata, HomeLogging
 from apps.utils import secure_filename, list_files
 
+=======
+from apps.controllers.clabernetes import C9sController
+import yaml
+>>>>>>> 9f72588 (Revert "feat(clabs): migrate containerlabs to DB with serialization helpers")
 
 # PORT_RE: regex to match ports published on ContainerLab Topology
 # CLab node ports are similar to Docker ports and accept the following cases:
@@ -30,6 +35,7 @@ def _is_admin_or_teacher() -> bool:
 def _owner_identity() -> str:
     return getattr(current_user, "username", None) or getattr(current_user, "email", None) or "anonymous"
 
+<<<<<<< HEAD
 # -------- Serialization helpers (DB → UI/API) --------
 def _row_from_db(ci: ClabInstance) -> dict:
     """Linha para /running e /api/list."""
@@ -68,6 +74,28 @@ def _detail_from_db(ci: ClabInstance) -> dict:
     clab_uuid = clab_md.get_short_uuid()
     clab_dir = os.path.join(current_app.config['CLABS_DIR'], clab_uuid)
     current_files = list_files(clab_dir, ignore_prefix=clab_uuid)
+=======
+# ----------------- Views -----------------
+@blueprint.route("/running")
+@login_required
+def running():
+    """List running labs. Admin/teacher sees all; users see only their labs."""
+    if _is_admin_or_teacher():
+        items = ctrl().list()
+    else:
+        items = ctrl().list(user=_owner_identity())
+    return render_template("clabs/running.html", labs=items)
+
+@blueprint.route("/open/<clab_id>")
+@login_required
+def open_clab(clab_id):
+    lab = ctrl().get(clab_id)
+    if not lab:
+        return render_template("pages/error.html", title="Open CLab", msg="CLab not found")
+    if (not _is_admin_or_teacher()) and (lab.get("user") != _owner_identity()):
+        return render_template("pages/error.html", title="Open CLab", msg="Forbidden"), 403
+    return render_template("clabs/open.html", lab=lab)
+>>>>>>> 9f72588 (Revert "feat(clabs): migrate containerlabs to DB with serialization helpers")
 
     if request.method == "GET":
         return render_template("pages/clabs_upsert.html", clab=clab, lab_categories=lab_categories, groups=groups, current_files=current_files)
@@ -149,7 +177,6 @@ def _detail_from_db(ci: ClabInstance) -> dict:
 
         clab.manifest = result
 
-    # 1) usa o controller PoC para validar YAML e montar o "detail" compatível
     try:
         db.session.add(clab)
         db.session.add(clab_md)
