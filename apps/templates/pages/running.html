@@ -186,81 +186,27 @@
   <!-- Page Script -->
   <script>
     $(function () {
-      // === KEYS de storage (Running Labs)
-      var RUNNING_LIST_SEARCH_KEY = 'runninglabs:list:v1:query';
-      var RUNNING_LIST_ORDER_KEY  = 'runninglabs:list:v1:order';
-      var RUNNING_LIST_PAGE_KEY   = 'runninglabs:list:v1:page';
-      var RUNNING_LIST_LEN_KEY    = 'runninglabs:list:v1:length';
-
-      // === Helpers
-      function getLS(key, fallback) {
-        try {
-          var v = localStorage.getItem(key);
-          return (v === null ? fallback : v);
-        } catch (e) { return fallback; }
-      }
-      function setLS(key, value) {
-        try {
-          if (value === '' || value === null || typeof value === 'undefined') {
-            localStorage.removeItem(key);
-          } else {
-            localStorage.setItem(key, value);
-          }
-        } catch (e) { }
-      }
-
-      // === “Harden” do input de busca
-      function hardenSearchInputEl($input, savedQuery) {
-        if (!$input || !$input.length) return;
-        $input
-          .attr('type', 'search')
-          .attr('autocomplete', 'off')
-          .attr('autocorrect', 'off')
-          .attr('autocapitalize', 'none')
-          .attr('spellcheck', 'false')
-          .prop('spellcheck', false)
-          .attr('data-gramm', 'false')
-          .attr('data-gramm_editor', 'false')
-          .attr('data-lt-active', 'false')
-          .attr('data-ms-editor', 'false')
-          .attr('lang', 'zxx');
-        if (savedQuery) { $input.val(savedQuery); }
-      }
-      function getDtFilterInput(dt) {
-        return $(dt.table().container()).find('div.dataTables_filter input[type="search"]');
-      }
-
-      // === Estado salvo
-      var savedQuery = getLS(RUNNING_LIST_SEARCH_KEY, '');
-      var savedOrder;
-      try {
-        savedOrder = JSON.parse(getLS(RUNNING_LIST_ORDER_KEY, '[[2,"asc"]]'));
-      } catch (e) {
-        savedOrder = [[2, 'asc']];
-        setLS(RUNNING_LIST_ORDER_KEY, JSON.stringify(savedOrder));
-      }
-      var savedLength = parseInt(getLS(RUNNING_LIST_LEN_KEY, '10'), 10);
-      if (isNaN(savedLength) || savedLength <= 0) savedLength = 10;
-      var savedPage = parseInt(getLS(RUNNING_LIST_PAGE_KEY, '0'), 10);
-      if (isNaN(savedPage) || savedPage < 0) savedPage = 0;
-
-      // === DataTable (com persistência)
-      var $tableEl = $("#tableLabs");
-      var table = $tableEl.DataTable({
+      // config DataTable
+      var table = $("#tableLabs").DataTable({
         responsive: false,
         autoWidth: false,
-        language: { emptyTable: 'No running labs' },
+        language: {
+          emptyTable: 'No running labs',
+        },
         columns: [
-          { orderable: false, name: 'select' },
+          {
+            orderable: false,
+            name: 'select',
+          },
           { name: 'user' },
           { name: 'lab' },
           { name: 'created' },
-          { orderable: false, name: 'actions' },
+          {
+            orderable: false,
+            name: 'actions',
+          },
         ],
-        search:       { search: savedQuery },
-        order:        savedOrder,
-        pageLength:   savedLength,
-        displayStart: savedPage * savedLength
+        order: [[2, 'asc']]
       });
       $('#tableLabs').on('change', 'input[type="checkbox"]', function() {
         table.state.save();
@@ -305,38 +251,37 @@
         });
         sessionStorage.removeItem('msgFail');
       }
-
+      //Enable check and uncheck all functionality
       $('#delete-labs').click(function () {
-        var table = $("#tableLabs").DataTable();
         var rows = $('#tableLabs tr').filter(':has(:checkbox:checked)');
         $("#delete-labs").html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Deleting ' + table.rows(rows).data().length + ' row(s)...');
         $("#delete-labs").prop('disabled', true);
         var items = [];
-        table.rows(rows).each(function (index) {
-          var row = table.row(index);
+        table.rows(rows).each( function ( index ) {
+          var row = table.row( index );
           items.push(row.id());
         });
         var delete_url = '/api/labs';
-        if (items.length === 1) delete_url = '/api/lab/' + items[0];
-        $.ajax({
+        if (items.length === 1) {
+          delete_url = '/api/lab/' + items[0];
+        }
+        var request = $.ajax({
           url: delete_url,
           type: "DELETE",
           dataType: "json",
           data: JSON.stringify(items),
           contentType: "application/json",
-        })
-        .done(function(data) {
+        });
+        request.done(function(data) {
           sessionStorage.setItem('msgSuccess', data.result);
           location.reload();
-        })
-        .fail(function(xhr) {
+        });
+        request.fail(function(xhr) {
           sessionStorage.setItem('msgFail', xhr.responseText);
           location.reload();
         });
       });
-
-      $('#modal-default').on('show.bs.modal', function () {
-        var table = $("#tableLabs").DataTable();
+      $('#modal-default').on('show.bs.modal', function (e) {
         var rows = $('#tableLabs tr').filter(':has(:checkbox:checked)');
         var data = table.rows(rows).data();
         var items = $("#modal-default-items");
@@ -347,24 +292,25 @@
           $("#delete-labs").prop('disabled', true);
           return;
         }
-        data.each(function (value) {
+        data.each(function (value, index) {
           items.append(`<li>${value[2]} - ${value[3]}</li>`);
         });
-      });
-
+      })
+      //Enable check and uncheck all functionality
       $('.checkbox-toggle').click(function () {
-        var clicks = $(this).data('clicks');
+        var clicks = $(this).data('clicks')
         if (clicks) {
-          $('.lab-items input[type="checkbox"]').prop('checked', false);
-          $('.checkbox-toggle .far.fa-check-square').removeClass('fa-check-square').addClass('fa-square');
+          //Uncheck all checkboxes
+          $('.lab-items input[type=\'checkbox\']').prop('checked', false)
+          $('.checkbox-toggle .far.fa-check-square').removeClass('fa-check-square').addClass('fa-square')
         } else {
-          $('.lab-items input[type="checkbox"]').prop('checked', true);
-          $('.checkbox-toggle .far.fa-square').removeClass('fa-square').addClass('fa-check-square');
+          //Check all checkboxes
+          $('.lab-items input[type=\'checkbox\']').prop('checked', true)
+          $('.checkbox-toggle .far.fa-square').removeClass('fa-square').addClass('fa-check-square')
         }
-        $(this).data('clicks', !clicks);
-      });
-
-    });
+        $(this).data('clicks', !clicks)
+      })
+    })
   </script>
   <!-- AdminLTE for demo purposes -->
   <script src="/static/assets/js/demo.js"></script>
