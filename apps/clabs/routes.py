@@ -99,9 +99,11 @@ def upsert(clab_id="new"):
     if changed_files:
         topo_status, topo_data = c9s.process_clab_topology(clab_dir, clab_uuid=clab_uuid)
         if not topo_status:
-            msg = f"Failed to parse ContainerLab topology: {topo_data}"
-            current_app.logger.error(msg + f" Will remove files from {clab_dir}")
-            shutil.rmtree(clab_dir)
+            msg = f"Failed to parse ContainerLab topology from {clab_dir}: {topo_data}"
+            current_app.logger.error(msg)
+            if clab_id == "new":
+                current_app.logger.info(f"Remove files from {clab_dir}")
+                shutil.rmtree(clab_dir)
             return jsonify({"ok": False, "result": msg}), 400
 
         published_ports = defaultdict(dict)
@@ -121,8 +123,10 @@ def upsert(clab_id="new"):
         )
 
         if not convert_status:
-            current_app.logger.error(f"Clabverter failed for clab.uuid={clab_uuid}: {result}. Will remove files from {clab_dir}")
-            shutil.rmtree(clab_dir)
+            current_app.logger.error(f"Clabverter failed for clab.uuid={clab_uuid}: {result}.")
+            if clab_id == "new":
+                current_app.logger.info(f"Remove files from {clab_dir}")
+                shutil.rmtree(clab_dir)
             return jsonify({"ok": False, "result": result}), 400
 
         clab.manifest = result
