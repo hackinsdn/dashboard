@@ -2,6 +2,7 @@
 
 from .kubernetes import K8sController
 from .clabernetes import C9sController
+from .git import GitController
 
 class _LazyProxy:
     def __init__(self, factory):
@@ -19,5 +20,6 @@ class _LazyProxy:
 # lazy proxies are only instantiated when someone uses it
 k8s = _LazyProxy(lambda: K8sController())
 c9s = _LazyProxy(lambda: C9sController())
+git = _LazyProxy(lambda: GitController())
 
-__all__ = ["K8sController", "C9sController", "k8s", "c9s"]
+__all__ = ["K8sController", "C9sController", "k8s", "c9s", "git"]
