@@ -97,18 +97,17 @@ def upsert(clab_id="new"):
         changed_files = True
 
     if changed_files:
-        topo_status, topo_data = c9s.parse_clab_topology(clab_dir)
+        topo_status, topo_data = c9s.process_clab_topology(clab_dir, clab_uuid=clab_uuid)
         if not topo_status:
-            msg = f"Failed to parse ContainerLab topology: {topo_data}"
+            msg = f"Failed to parse ContainerLab topology from {clab_dir}: {topo_data}"
             current_app.logger.error(msg)
+            if clab_id == "new":
+                current_app.logger.info(f"Remove files from {clab_dir}")
+                shutil.rmtree(clab_dir)
             return jsonify({"ok": False, "result": msg}), 400
 
-        try:
-            nodes = topo_data["topology"]["nodes"]
-        except:
-            nodes = {}
         published_ports = defaultdict(dict)
-        for node_name, node in nodes.items():
+        for node_name, node in topo_data["topology"]["nodes"].items():
             for port in node.get("ports", []):
                 if match := PORT_RE.match(port):
                     published_ports[node_name][match.group("port")] = port
@@ -120,13 +119,14 @@ def upsert(clab_id="new"):
 
         convert_status, result = c9s.convert_clab(
             clab_dir,
-            clab_uuid=clab_uuid,
             destination_namespace=current_app.config["K8S_NAMESPACE"],
         )
 
-        #shutil.rmtree(clab_dir)
         if not convert_status:
-            current_app.logger.error(f"Clabverter failed for clab.uuid={clab_uuid}: {result}")
+            current_app.logger.error(f"Clabverter failed for clab.uuid={clab_uuid}: {result}.")
+            if clab_id == "new":
+                current_app.logger.info(f"Remove files from {clab_dir}")
+                shutil.rmtree(clab_dir)
             return jsonify({"ok": False, "result": result}), 400
 
         clab.manifest = result
@@ -149,6 +149,6 @@ def upsert(clab_id="new"):
     db.session.add(upsert_clab_log)
     db.session.commit()
 
-    current_app.logger.info(f"upsert_clab clab_id={clab_id} id={clab.id} status={status} user_id={current_user.id} files={relative_paths}")
+    current_app.logger.info(f"upsert_clab {clab_id=} {clab.id=} {clab_uuid=} {status=} {current_user.id=} files={relative_paths}")
 
     return jsonify({"ok": status, "result": msg, "clab_id": clab.id}), status_code
