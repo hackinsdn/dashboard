@@ -90,10 +90,10 @@
                   <td>{{ user.category }}</td>
                   <td>{{ user.issuer|default('LOCAL', true) }}</td>
                   <td
-                    {% if user.last_login_at %}data-order="{{ user.last_login_at.isoformat() }}"{% else %}data-order=""{% endif %}
-                    title="{% if user.last_login_at %}{{ user.last_login_at.isoformat() }}{% else %}—{% endif %}"
+                    {% if user.last_login %}data-order="{{ user.last_login.isoformat() }}"{% else %}data-order=""{% endif %}
+                    title="{% if user.last_login %}{{ user.last_login.isoformat() }}{% else %}—{% endif %}"
                   >
-                    {% if user.last_login_at %}{{ user.last_login_at.strftime('%d/%m/%Y %H:%M') }}{% else %}&mdash;{% endif %}
+                    {% if user.last_login %}{{ user.last_login.strftime('%d/%m/%Y %H:%M') }}{% else %}&mdash;{% endif %}
                   </td>
 
                   <td
