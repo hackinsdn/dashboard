@@ -212,6 +212,7 @@
                         </select>
                         <div class="input-group-append">
                           <button class="btn btn-outline-secondary" type="button" id="load-template-btn">Load Template</button>
+                          <button class="btn btn-outline-secondary" type="button" id="force-refresh-btn">Force Refresh</button>
                         </div>
                       </div>
                     </div>
@@ -590,6 +591,20 @@
         }
       });
 
+      $("#force-refresh-btn").on("click", function () {
+        $.get("/api/templates/list?force_refresh=true")
+          .done(function (data) {
+            if (data.status === "ok") {
+              loadTemplates();
+              alert("Templates refreshed successfully!");
+            } else {
+              alert("Failed to refresh templates: " + (data.result || "Unknown error"));
+            }
+          })
+          .fail(function () {
+            alert("Failed to refresh templates (server error).");
+          });
+      });
   </script>
 
 {% endblock javascripts %}
