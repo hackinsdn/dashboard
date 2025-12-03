@@ -94,7 +94,7 @@ This approach ensures that the list of available templates is always synchronize
 
 During the application's startup process, a dedicated function is executed to:
 
-1. **Check the environment variables** (`LAB_TEMPLATES_GIT_REPO` and `GIT_PAT`).
+1. **Check the environment variables** (`LAB_TEMPLATES_GIT_URL`).
 2. **Clone the Git repository** to the path specified by `LAB_TEMPLATES_DIR` (inside the container).
 3. **Update the repository** if it already exists (via `git pull`).
 
@@ -105,10 +105,13 @@ After loading, the **Lab editing interface** accesses this cloned directory to d
 ## Lab Templates Configuration (Git)
 
 These variables are used by the application's initialization function to clone and keep the Kubernetes manifest repository (`.yaml` files) updated.  
-This repository serves as the source for creating new Labs.
+This repository serves as the source for creating and refreshing Labs.
 
 | Variable | Description | Example Value | Required |
-|-----------|--------------|----------------|-----------|
-| `LAB_TEMPLATES_GIT_REPO` | The URL of the Git repository containing the templates, excluding the `https://` protocol. | `github.com/user/lab-templates.git` | Yes |
-| `GIT_PAT` | The Personal Access Token (PAT) for Git. Essential for accessing private repositories. | `ghp_your_pat_here_1234567890` | Yes (for Private Repos) |
-| `LAB_TEMPLATES_DIR` | The absolute or relative path where the templates repository will be cloned inside the container. | `/app/apps/data/templates-test` | No (uses default value) |
+|----------|-------------|---------------|-----------|
+| `LAB_TEMPLATES_GIT_URL` | The full URL of the Git repository containing the templates. For private repositories, include the Git Personal Access Token (PAT) directly in the URL as `https://<PAT>@github.com/user/lab-templates.git`. | `https://ghp_your_pat_here_1234567890@github.com/user/lab-templates.git` | Yes |
+| `LAB_TEMPLATES_DIR` | The directory inside the `data` folder where the templates repository will be saved. | `apps/data/lab_templates` | Yes (default value is apps/data/lab_templates) |
+| `LAB_TEMPLATES_REFRESH` | Time interval in seconds between automatic repository refreshes. | `3600` | Yes (default is 3600 seconds / 1 hour) |
+
+By default, the templates repository is automatically refreshed every hour.  
+Additionally, a manual refresh can be triggered at any time using the **force-refresh** button in the application interface.
