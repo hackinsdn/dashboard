@@ -27,7 +27,7 @@ def set_winsize(fd, row, col, xpix=0, ypix=0):
     fcntl.ioctl(fd, termios.TIOCSWINSZ, winsize)
 
 
-def read_and_forward_pty_output(session_id, fd):
+def read_and_forward_pty_output(session_id, fd, pid):
     max_read_bytes = 1024 * 20
     while True:
         socketio.sleep(0.01)
@@ -42,10 +42,22 @@ def read_and_forward_pty_output(session_id, fd):
             output = os.read(fd, max_read_bytes).decode(
                 errors="ignore"
             )
+            socketio.emit("pty-output", {"output": output}, namespace="/pty", to=session_id)
         except Exception as exc:
             break
-        socketio.emit("pty-output", {"output": output}, namespace="/pty", to=session_id)
-    socketio.emit("server-disconnected", namespace="/pty", to=session_id)
+    start_time = time.time()
+    while time.time() - start_time < 5:
+        pid_returned, status = os.waitpid(pid, os.WNOHANG)
+        if pid_returned == pid:
+            status = os.waitstatus_to_exitcode(status)
+            break
+    else:
+        try:
+            os.kill(pid, 9)
+        except:
+            pass
+        status = 255
+    socketio.emit("server-disconnected", {"returncode": status}, namespace="/pty", to=session_id)
 
 
 @socketio.on("pty-input", namespace="/pty")
@@ -92,14 +104,14 @@ def pty_connect(auth):
         # change default env vars to avoid massive logs when DEBUG is enabled
         myenv = dict(os.environ)
         myenv.update({"DEBUG": ""})
-        subprocess.run(['kubectl', 'exec', '-it', f"{kind}/{pod}", '--container', container, '--', 'sh', '-c', start_script], env=myenv)
-        os._exit(os.EX_OK)
+        p = subprocess.run(['kubectl', 'exec', '-it', f"{kind}/{pod}", '--container', container, '--', 'sh', '-c', start_script], env=myenv)
+        os._exit(p.returncode)
     else:
         # this is the parent process fork.
         # store child fd and pid
         xterm_clients[session_id] = (fd, child_pid)
         set_winsize(fd, 50, 50)
-        socketio.start_background_task(read_and_forward_pty_output, session_id, fd)
+        socketio.start_background_task(read_and_forward_pty_output, session_id, fd, child_pid)
         current_app.logger.info(f"client added to xterm_clients {session_id=} {fd=} {child_pid=}")
 
 
