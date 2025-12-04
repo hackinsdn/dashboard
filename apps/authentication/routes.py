@@ -69,6 +69,7 @@ def login():
         # Check the password
         if user and not user.is_deleted and user.password and verify_pass(password, user.password):
             _check_pre_approved(user)
+            user.last_login = utcnow()
             login_user(user)
             app.logger.info(f"Successful login ipaddr={get_remote_addr()} login={identifier} auth_provider=local")
             login_log = LoginLogging(ipaddr=get_remote_addr(), login=identifier, auth_provider="local", success=True)
@@ -123,6 +124,7 @@ def callback():
         db.session.add(user)
 
     _check_pre_approved(user)
+    user.last_login = utcnow()
     app.logger.info(f"Successful login ipaddr={get_remote_addr()} login={subject} auth_provider={issuer} email={email}")
     login_log = LoginLogging(ipaddr=get_remote_addr(), login=subject, auth_provider=issuer, success=True)
     db.session.add(login_log)
