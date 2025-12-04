@@ -129,7 +129,7 @@
                 {% endif %}
                 <a class="btn btn-outline-dark mx-2" href="{{url_for('home_blueprint.view_labs', lab_id=lab.id)}}" role="button"><i class="fas fa-eye"></i> View Lab</a>
                 <a class="btn btn-outline-dark mx-2" href="{{url_for(route, lab_id=lab_id)}}" role="button"><i class="far fa-play-circle"></i> {{link_text}}</a>
-                {% if current_user.category == "admin" or current_user.category == "teacher" %}
+                {% if current_user.category == "admin" or current_user.category == "teacher" or (current_user.category == "labcreator" and lab.updated_by == current_user.id)%}
 		<a class="btn btn-outline-dark mx-2" href="{{url_for('home_blueprint.edit_lab', lab_id=lab.id) if not config.get("ENABLE_CLABS") or not lab.is_clab else url_for('clabs_blueprint.upsert', clab_id=lab.id)}}" role="button"><i class="fas fa-edit"></i> Update {{"Lab" if not config.get("ENABLE_CLABS") or not lab.is_clab else "ContainerLab"}}</a>
                 {% endif %}
               </div>
