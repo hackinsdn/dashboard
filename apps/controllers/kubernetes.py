@@ -528,7 +528,10 @@ class K8sController():
             raise Exception(f"Failed to get k8s resource: {exc} -- {exc.stderr}")
         except Exception as exc:
             raise Exception(f"Failed to get k8s resource: {exc}")
-        result["is_ok"] = True
+        if resource["kind"] == "Topology":
+            result["is_ok"] = result.get("status", {}).get("topologyReady", False)
+        else:
+            result["is_ok"] = True
         return result
 
     def create_k8s_resource(self, resource):
