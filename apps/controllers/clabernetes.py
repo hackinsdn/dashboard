@@ -24,13 +24,14 @@ class C9sController:
                 return file
         return filename
 
-    def process_clab_topology(self, topology_dir, clab_uuid=None):
+    def process_clab_topology(self, topology_dir, clab_uuid=None, secrets={}):
         """Process ContainerLab topology before running clabverter.
 
         As part of the processing phase, we execute the following steps:
-        1. Basic validation on loading the file name. We expect to have a file named '*.clab.y*ml'
-        2. Handling absolute paths for startup-config and binds
-        3. Rename the topology file into clab_uuid to guarantee uniqueness
+        - Basic validation on loading the file name. We expect to have a file named '*.clab.y*ml'
+        - Handling absolute paths for startup-config and binds
+        - Rename imagePullSecrets to kubernetes name to make sure they are unique and correct
+        - Rename the topology file into clab_uuid to guarantee uniqueness
         """
         clab_files = glob.glob(f"{topology_dir}/*.clab.y*ml")
         if len(clab_files) != 1:
@@ -46,7 +47,7 @@ class C9sController:
 
         uploaded_files = glob.glob("**/*", recursive=True, root_dir=topology_dir)
 
-        # 2. Handle absolute paths
+        # Handle absolute paths
         for node in topology["topology"]["nodes"].values():
             if node.get("startup-config"):
                 node["startup-config"] = self.filename_from_uploads(node["startup-config"], uploaded_files)
@@ -60,8 +61,31 @@ class C9sController:
                     bind_opts.append(bind_opts[0])
                 bind_opts[0] = filename
                 node["binds"][i] = ":".join(bind_opts)
+        # TODO: try to handle topology.kinds and topology.defaults if we have that file in the uploaded_files or one common absolute path
 
-        # 3. force rename
+        # Handle imagePullSecrets
+        failed_secrets = []
+        for node_name, node in topology["topology"]["nodes"].items():
+            for s_idx, s_name in enumerate(node.get("imagePullSecrets", [])):
+                if s_name in secrets:
+                    node["imagePullSecrets"][s_idx] = secrets[s_name]
+                else:
+                    failed_secrets.append(f"imagePullSecrets '{s_name}' for node={node_name} not defined!")
+        for s_idx, s_name in enumerate(topology["topology"].get("defaults", {}).get("imagePullSecrets", [])):
+            if s_name in secrets:
+                topology["topology"]["defaults"]["imagePullSecrets"][s_idx] = secrets[s_name]
+            else:
+                failed_secrets.append(f"imagePullSecrets '{s_name}' for topology.defaults not defined!")
+        for kind_name, kind in topology["topology"].get("kinds", {}).items():
+            for s_idx, s_name in enumerate(kind.get("imagePullSecrets", [])):
+                if s_name in secrets:
+                    kind["imagePullSecrets"][s_idx] = secrets[s_name]
+                else:
+                    failed_secrets.append(f"imagePullSecrets '{s_name}' for kind={kind_name} not defined!")
+        if failed_secrets:
+            return False, f"Failed to find imagePullSecrets for topology: {failed_secrets}"
+
+        # Force renaming the topology file with clab_uuid to guarantee uniqueness
         try:
             with open(f"{topology_dir}/clab-{clab_uuid}.clab.yaml", 'w') as file:
                 yaml.dump(topology, file)

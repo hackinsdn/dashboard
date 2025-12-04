@@ -93,6 +93,12 @@ class Labs(db.Model, AuditMixin):
     def is_clab(self):
         return self.lab_metadata and self.lab_metadata.is_clab
 
+    @property
+    def secret_names(self):
+        if not self.lab_metadata:
+            return []
+        return list(self.lab_metadata.md.get("secrets", {}).get("name", {}).keys())
+
 
 class LabInstances(db.Model, AuditMixin):
     __tablename__ = 'lab_instances'
