@@ -12,6 +12,7 @@ import datetime
 import uuid
 import random
 import subprocess
+import base64
 
 from kubernetes import config, client
 from kubernetes.stream import stream
@@ -641,6 +642,39 @@ class K8sController():
 
         return True, results
 
+    def create_registry_secret(self, name, server, username, password):
+        """Create to pull an image from a private container image registry or repository."""
+        auth = base64.b64encode(f"{username}:{password}".encode("utf-8")).decode("utf-8")
+        docker_config_dict = {
+            "auths": {
+                server: {
+                    "username": username,
+                    "password": password,
+                    "auth": auth,
+                }
+            }
+        }
+        docker_config = base64.b64encode(
+            json.dumps(docker_config_dict).encode("utf-8")
+        ).decode("utf-8")
+        try:
+            self.v1_api.create_namespaced_secret(
+                namespace=self.namespace,
+                body=client.V1Secret(
+                    metadata=client.V1ObjectMeta(
+                        name=name,
+                    ),
+                    type="kubernetes.io/dockerconfigjson",
+                    data={".dockerconfigjson": docker_config},
+                ),
+            )
+        except Exception as exc:
+            msg = f"Failed to create secret: {exc}"
+            err = traceback.format_exc().replace("\n", ", ")
+            current_app.logger.error(msg + " -- " + err)
+            return False, msg
+        return True, "secret cretated"
+
     def validate_token(self, token):
         """Check if this token is authorized to access the API."""
         return True
@@ -745,6 +779,18 @@ class K8sController():
             return False
         return True
 
+    def delete_secret_by_name(self, secret):
+        """Delete secret by its name."""
+        name = secret["name"] if isinstance(secret, dict) else secret
+        try:
+            self.v1_api.delete_namespaced_secret(
+                name=name, namespace=self.namespace
+            )
+        except Exception as exc:
+            current_app.logger.warning(f"Failed to delete secret {name}: {exc}")
+            return False
+        return True
+
     def delete_resources_by_name(self, resources):
         """Delete resources by their name and kind."""
         results = []
@@ -757,6 +803,8 @@ class K8sController():
                 results.append(self.delete_deployment_by_name(resource))
             elif resource["kind"] == "ConfigMap":
                 results.append(self.delete_config_map_by_name(resource))
+            elif resource["kind"] == "Secret":
+                results.append(self.delete_secret_by_name(resource))
             else:
                 results.append(self.delete_k8s_resource(resource))
         return results

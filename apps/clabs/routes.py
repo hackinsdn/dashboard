@@ -79,6 +79,50 @@ def upsert(clab_id="new"):
     if not clab.manifest and not giturl and len(files) == 0:
         return jsonify({"ok": False, "result": "Provide GIT URL or files"}), 400
 
+    md = clab_md.md
+    if not (secrets := md.get("secrets")):
+        secrets = {"next_id": 1, "name": {}, "k8s_name": {}}
+    secrets_to_delete = set(secrets["name"].keys())
+    changed_secrets = False
+    for s_name, s_server, s_user, s_pass in zip(
+        request.form.getlist("secret-name") or [],
+        request.form.getlist("secret-server") or [],
+        request.form.getlist("secret-user") or [],
+        request.form.getlist("secret-pass") or [],
+    ):
+        current_app.logger.info(f"Secrets: {s_name=} {s_server=} {s_user}")
+        if not s_name:
+            continue
+        if s_name in secrets_to_delete:
+            # existing secret that will be kept
+            secrets_to_delete.remove(s_name)
+            continue
+        changed_secrets = True
+        if k8s_name := secrets["name"].get(s_name):
+            # existing secret and it will be updated
+            k8s.delete_secret_by_name(k8s_name)
+        else:
+            k8s_name = f"clab-secret-{clab_uuid}-{secrets['next_id']}"
+        status, msg = k8s.create_registry_secret(
+            name=k8s_name,
+            server=s_server,
+            username=s_user,
+            password=s_pass
+        )
+        if not status:
+            current_app.logger.error(f"Failed to create secret {s_name=} for lab {clab_uuid=} {clab_id=}: {msg}")
+            continue
+        secrets["name"][s_name] = k8s_name
+        secrets["k8s_name"][k8s_name] = s_name
+        secrets["next_id"] += 1
+    for s_name in secrets_to_delete:
+        changed_secrets = True
+        k8s_name = secrets["name"].pop(s_name, None)
+        if secrets["k8s_name"].pop(k8s_name, None):
+            k8s.delete_secret_by_name(k8s_name)
+    md["secrets"] = secrets
+    clab_md.md = md
+
     max_files = current_app.config["CLABS_UPLOAD_MAX_FILES"]
     if len(files) > max_files:
         return jsonify({
@@ -96,8 +140,8 @@ def upsert(clab_id="new"):
         file.save(full_path)
         changed_files = True
 
-    if changed_files:
-        topo_status, topo_data = c9s.process_clab_topology(clab_dir, clab_uuid=clab_uuid)
+    if changed_files or changed_secrets:
+        topo_status, topo_data = c9s.process_clab_topology(clab_dir, clab_uuid=clab_uuid, secrets=secrets["name"])
         if not topo_status:
             msg = f"Failed to parse ContainerLab topology from {clab_dir}: {topo_data}"
             current_app.logger.error(msg)
@@ -113,7 +157,6 @@ def upsert(clab_id="new"):
                     published_ports[node_name][match.group("port")] = port
 
         md = clab_md.md
-        md["clab"] = topo_data
         md["ports"] = published_ports
         clab_md.md = md
 
