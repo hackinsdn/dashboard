@@ -11,7 +11,7 @@ from apps.authentication.models import Users, Groups, DeletedGroupUsers, group_m
 from flask import request, current_app
 from flask_login import login_required, current_user
 from datetime import timedelta, datetime, timezone
-from apps.utils import datetime_from_ts, parse_lab_expiration
+from apps.utils import datetime_from_ts, parse_lab_expiration, check_pre_approved
 
 @blueprint.route('/pods/<lab_id>', methods=["GET"])
 @login_required
@@ -39,7 +39,7 @@ def get_lab_status(lab_id):
     if not lab:
         return {"status": "fail", "result": "Lab instance not found"}, 404
     
-    if current_user.category == "student" and lab.user_id != current_user.id:
+    if lab.user_id != current_user.id:
         return {"status": "fail", "result": "Unauthorized access to this lab"}, 401
 
     try:
@@ -332,6 +332,9 @@ def join_group(group_id):
     except Exception as exc:
         current_app.logger.error(f"Failed to join group {group_id}: {exc}")
         return {"status": "fail", "result": "Failed to join group"}, 400
+
+    if check_pre_approved(current_user):
+        db.session.commit()
 
     return {"status": "ok", "result": "Joint group successfully! Click on 'Reload profile' to update your authorization."}, 200
 

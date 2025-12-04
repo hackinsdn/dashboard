@@ -12,6 +12,7 @@ from flask_login import current_user
 
 from apps import cache, db
 from apps.home.models import LabAnswers, LabInstances, LabCategories, lab_categories
+from apps.authentication.models import Groups
 
 _filename_ascii_strip_re = re.compile(r"[^A-Za-z0-9_.-]")
 MONTH_SHORT = [
@@ -21,6 +22,25 @@ MONTH_SHORT = [
 
 def utcnow():
     return datetime.datetime.now(datetime.timezone.utc)
+
+
+def check_pre_approved(user):
+    """Given an user, check if this is user is on the list of pre-approved users or member of any group"""
+    if user.category != "user":
+        return
+    for group in user.member_of_groups:
+        if group.organization == "SYSTEM":
+            continue
+        user.category = "student"
+        return True
+    added_group = False
+    groups = Groups.query.filter(Groups.is_deleted==False, Groups.approved_users!="").all()
+    for group in groups:
+        if user.email in group.approved_users_list:
+            user.category = "student"
+            group.members.append(user)
+            added_group = True
+    return added_group
 
 
 def update_running_labs_stats():

@@ -27,7 +27,7 @@ def get_info_before_request():
 
 @blueprint.route('/index')
 @login_required
-@check_user_category(["admin", "teacher", "student"])
+@check_user_category(["admin", "teacher", "labcreator", "student"])
 def index():
     user_likes = cache.get("user_likes")
     if user_likes is None:
@@ -84,7 +84,7 @@ def index():
 
 @blueprint.route('/running/')
 @login_required
-@check_user_category(["admin", "teacher", "student"])
+@check_user_category(["admin", "teacher", "labcreator", "student"])
 def running_labs():
     filter_group = request.args.get("filter_group", "")
     filter_members = {}
@@ -164,7 +164,7 @@ def running_labs():
 
 @blueprint.route('/run_lab/<lab_id>', methods=["GET", "POST"])
 @login_required
-@check_user_category(["admin", "teacher", "student"])
+@check_user_category(["admin", "teacher", "labcreator", "student"])
 def run_lab(lab_id):
 
     msg_error = ""
@@ -229,7 +229,7 @@ def run_lab(lab_id):
 
 @blueprint.route('/lab_status/<lab_id>', methods=["GET"])
 @login_required
-@check_user_category(["admin", "teacher", "student"])
+@check_user_category(["admin", "teacher", "labcreator", "student"])
 def check_lab_status(lab_id):
 
     msg_error = ""
@@ -237,19 +237,19 @@ def check_lab_status(lab_id):
     if not lab:
         return render_template("pages/error.html", title="Error checking lab status", msg="Lab not found")
     
-    if(current_user.category == "student" and (lab.user_id != current_user.id)):
+    if lab.user_id != current_user.id:
         return render_template("pages/error.html", title="Error checking lab status", msg="You are not authorized to run this lab")
 
     return render_template("pages/run_lab_status.html", resources=lab.k8s_resources, lab_instance_id=lab_id)
 
 @blueprint.route('/xterm/<lab_id>/<kind>/<pod>/<container>', methods=["GET"])
 @login_required
-@check_user_category(["admin", "teacher", "student"])
+@check_user_category(["admin", "teacher", "labcreator", "student"])
 def xterm(lab_id, kind, pod, container):
     lab = LabInstances.query.get(lab_id)
     if not lab:
         return render_template("pages/error.html", title="Error checking lab status", msg="Lab not found")
-    if(current_user.category == "student" and (lab.user_id != current_user.id)):
+    if (current_user.category in ["student", "labcreator"] and (lab.user_id != current_user.id)):
         return render_template("pages/error.html", title="Error checking lab status", msg="You are not authorized to run this lab")
 
     return render_template('pages/xterm.html', host=f"{kind}/{pod}/{container}", container=container), 200
@@ -258,7 +258,7 @@ def xterm(lab_id, kind, pod, container):
 @blueprint.route('/users/<int:user_id>', methods=["GET", "POST"])
 @blueprint.route('/profile', methods=["GET", "POST"])
 @login_required
-@check_user_category(["admin", "teacher", "student"])
+@check_user_category(["admin", "teacher", "labcreator", "student"])
 def edit_user(user_id=None):
 
     return_path = "home_blueprint.view_users"
@@ -321,7 +321,7 @@ def edit_user(user_id=None):
 
 @blueprint.route('/lab_instance/view/<lab_id>', methods=["GET"])
 @login_required
-@check_user_category(["admin", "teacher", "student"])
+@check_user_category(["admin", "teacher", "labcreator", "student"])
 def view_lab_instance(lab_id):
 
     lab_instance = LabInstances.query.get(lab_id)
@@ -397,13 +397,19 @@ def view_lab_instance(lab_id):
 
 @blueprint.route('/labs/edit/<lab_id>', methods=["GET", "POST"])
 @login_required
-@check_user_category(["admin", "teacher"])
+@check_user_category(["admin", "teacher", "labcreator"])
 def edit_lab(lab_id):
 
     if lab_id != "new":
         lab = Labs.query.get(lab_id)
         if not lab:
             return render_template("pages/labs_edit.html", lab=None, segment="/labs/edit", msg_fail="Lab not found")
+        if current_user.category == "labcreator" and lab.updated_by != current_user.id:
+            return render_template(
+                "pages/error.html",
+                title="Unauthorized access",
+                msg="You don't have permission to edit this Lab."
+            )
     else:
         lab = Labs()
 
@@ -480,7 +486,7 @@ def view_users():
 @blueprint.route('/labs/view', methods=["GET"])
 @blueprint.route('/labs/view/<lab_id>', methods=["GET"])
 @login_required
-@check_user_category(["admin", "teacher", "student"])
+@check_user_category(["admin", "teacher", "labcreator", "student"])
 def view_labs(lab_id=None):
 
     lab_categories = {cat.id: cat for cat in LabCategories.query.all()}
@@ -490,9 +496,10 @@ def view_labs(lab_id=None):
     if current_user.category == "admin":
         labs = Labs.query
     else:
-        labs = Labs.query.filter(
-            Labs.allowed_groups.any(Groups.id.in_(current_user.all_group_ids))
-        )
+        labs = Labs.query.filter(db.or_(
+            Labs.allowed_groups.any(Groups.id.in_(current_user.all_group_ids)),
+            Labs.updated_by == current_user.id,
+        ))
 
     if lab_id:
         labs = labs.filter(Labs.id == lab_id)
@@ -524,7 +531,7 @@ def list_groups():
 
 @blueprint.route('/groups/edit/<group_id>', methods=["GET", "POST"])
 @login_required
-@check_user_category(["admin", "teacher", "student"])
+@check_user_category(["admin", "teacher", "labcreator", "student"])
 def edit_group(group_id):
 
     if group_id == "new":
@@ -869,7 +876,7 @@ def hide_feedback():
 
 @blueprint.route('/finished_labs', methods=["GET"])
 @login_required
-@check_user_category(["admin", "teacher", "student"])
+@check_user_category(["admin", "teacher", "labcreator", "student"])
 def view_finished_labs():
     filter_group = request.args.get("filter_group", "")
     filter_members = {}

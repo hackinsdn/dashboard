@@ -68,7 +68,7 @@
                   <p>View Labs</p>
                 </a>
               </li>
-              {% if current_user.category == "admin" or current_user.category == "teacher" %}
+              {% if current_user.category == "admin" or current_user.category == "teacher" or current_user.category == "labcreator" %}
               <li class="nav-item">
                 <a href="{{url_for('home_blueprint.edit_lab', lab_id='new')}}" class="nav-link {% if request.url_rule.endpoint == 'home_blueprint.edit_lab' %} active {% endif %}">
                   <i class="far fa-circle nav-icon"></i>
