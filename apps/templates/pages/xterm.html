@@ -181,14 +181,15 @@ body {
       });
 
       socket.on("server-disconnected", function (data) {
-        term.writeln("");
-        term.writeln("------------------");
-        term.writeln("Server disconnected! Window will close in 3 seconds...");
-        term.writeln("(if it does not close automatically, please close it)");
-        setTimeout(() => {
+        if (typeof data.returncode !== 'undefined' && data.returncode !== null && data.returncode === 0) {
           window.close();
           term.dispose();
-	}, 3000);
+          return;
+        }
+        term.writeln("");
+        term.writeln("------------------");
+        term.writeln(`Server disconnected with exit-code=${data.returncode})`);
+        term.writeln("(you can close this window or reload it to reconnect)");
       });
 
       socket.on("connect", () => {
