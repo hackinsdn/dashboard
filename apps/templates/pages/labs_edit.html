@@ -525,29 +525,35 @@
       });
     });
 
-    async function loadTemplates() {
-        const templateSelect = document.getElementById('template-select');
-        try {
-          const response = await fetch('/api/templates/list');
-          if (!response.ok) {
-            throw new Error('Fail to load the list of templates.');
-          }
-          const templates = await response.json();
+    async function loadTemplates(force = false) {
+      const templateSelect = document.getElementById('template-select');
+      const url = force ? '/api/templates/list?force_refresh=true' : '/api/templates/list';
 
-          templateSelect.innerHTML = '';
-          
-          const defaultOption = document.createElement('option');
-          defaultOption.value = '';
-          defaultOption.text = '--';
-          templateSelect.appendChild(defaultOption);
+      try {
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error('Fail to load the list of templates.');
+        }
+        const templates = await response.json();
 
-          templates.result.forEach(templateName => {
-            const option = document.createElement('option');
-            option.value = templateName;
-            option.text = templateName.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-            templateSelect.appendChild(option);
-          });
+        templateSelect.innerHTML = '';
 
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.text = '--';
+        templateSelect.appendChild(defaultOption);
+
+        templates.result.forEach(templateName => {
+          const option = document.createElement('option');
+          option.value = templateName;
+          option.text = templateName
+            .replace(/_/g, ' ')
+            .replace(/\b\w/g, c => c.toUpperCase());
+          templateSelect.appendChild(option);
+        });
+
+        return templates; 
+        
       } catch (error) {
         console.error(error);
         templateSelect.innerHTML = '<option value="">Failed to load</option>';
@@ -591,19 +597,15 @@
         }
       });
 
-      $("#force-refresh-btn").on("click", function () {
-        $.get("/api/templates/list?force_refresh=true")
-          .done(function (data) {
-            if (data.status === "ok") {
-              loadTemplates();
-              alert("Templates refreshed successfully!");
-            } else {
-              alert("Failed to refresh templates: " + (data.result || "Unknown error"));
-            }
-          })
-          .fail(function () {
-            alert("Failed to refresh templates (server error).");
-          });
+      $("#force-refresh-btn").on("click", async function () {
+        const data = await loadTemplates(true);
+        !data
+        ? alert("Failed to refresh templates (server error).")
+        : alert(
+            data.status === "ok"
+              ? "Templates refreshed successfully!"
+              : "Failed to refresh templates: " + (data.result || "Unknown error")
+          );
       });
   </script>
 
