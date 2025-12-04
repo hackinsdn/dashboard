@@ -70,9 +70,9 @@
                     <th>E-mail</th>
                     <th>Category</th>
                     <th>Issuer</th>
-                    <th>Last login</th>
+                    <th>Last loginss</th>
                     <th>Created at</th>
-                    <th>Actions</th>
+                    <th>Actions kkkk</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -89,20 +89,21 @@
                   <td>{{ user.email|default('', true) }}</td>
                   <td>{{ user.category }}</td>
                   <td>{{ user.issuer|default('LOCAL', true) }}</td>
-                  <td
-                    {% if user.last_login %}data-order="{{ user.last_login.isoformat() }}"{% else %}data-order=""{% endif %}
-                    title="{% if user.last_login %}{{ user.last_login.isoformat() }}{% else %}—{% endif %}"
-                  >
-                    {% if user.last_login %}{{ user.last_login.strftime('%d/%m/%Y %H:%M') }}{% else %}&mdash;{% endif %}
+                  {% if user.last_login %}
+                  <td data-order="{{ user.last_login.isoformat() }}" title="{{ user.last_login.isoformat() }}">
+                    {{ user.last_login.strftime('%d/%m/%Y %H:%M') }}
                   </td>
+                  {% else %}
+                  <td data-order="" title="—">&mdash;</td>
+                  {% endif %}
 
-                  <td
-                    {% if user.created_at %}data-order="{{ user.created_at.isoformat() }}"{% else %}data-order=""{% endif %}
-                    title="{% if user.created_at %}{{ user.created_at.isoformat() }}{% else %}—{% endif %}"
-                  >
-                    {% if user.created_at %}{{ user.created_at.strftime('%d/%m/%Y %H:%M') }}{% else %}&mdash;{% endif %}
+                  {% if user.created_at %}
+                  <td data-order="{{ user.created_at.isoformat() }}" title="{{ user.created_at.isoformat() }}">
+                    {{ user.created_at.strftime('%d/%m/%Y %H:%M') }}
                   </td>
-                  
+                  {% else %}
+                  <td data-order="" title="—">&mdash;</td>
+                  {% endif %}
                   <td><a href="{{url_for('home_blueprint.edit_user', user_id=user.id)}}" class="btn btn-outline-dark" role="button" aria-pressed="true"><i class="fa fa-pen"></i> Edit</a></td>
                 </tr>
                 {% endfor %}
@@ -200,159 +201,92 @@
   <script src="/static/assets/js/adminlte.min.js"></script>
   <!-- Page Script -->
   <script>
-    $(function () {
-      // === KEYS de storage
-      var USERS_LIST_SEARCH_KEY = 'users:list:v2:query';
-      var USERS_LIST_ORDER_KEY  = 'users:list:v2:order';
-      var USERS_LIST_PAGE_KEY   = 'users:list:v2:page';
-      var USERS_LIST_LEN_KEY    = 'users:list:v2:length';
-
-      // === Helpers de storage
-      function getLS(key, fallback) {
-        try {
-          var v = localStorage.getItem(key);
-          return (v === null ? fallback : v);
-        } catch (e) { return fallback; }
-      }
-      function setLS(key, value) {
-        try {
-          if (value === '' || value === null || typeof value === 'undefined') {
-            localStorage.removeItem(key);
-          } else {
-            localStorage.setItem(key, value);
-          }
-        } catch (e) { }
-      }
-
-      function hardenSearchInputEl($input, savedQuery) {
-        if (!$input || !$input.length) return;
-        $input
-          .attr('type', 'search')
-          .attr('autocomplete', 'off')
-          .attr('autocorrect', 'off')
-          .attr('autocapitalize', 'none')
-          .attr('spellcheck', 'false')
-          .prop('spellcheck', false)
-          .attr('data-gramm', 'false')
-          .attr('data-gramm_editor', 'false')
-          .attr('data-lt-active', 'false')
-          .attr('data-ms-editor', 'false')
-          .attr('lang', 'zxx');
-
-        if (savedQuery) { $input.val(savedQuery); }
-      }
-
-      // === Estado salvo 
-      var savedQuery = getLS(USERS_LIST_SEARCH_KEY, '');
-      var savedOrder;
-        try {
-          savedOrder = JSON.parse(getLS(USERS_LIST_ORDER_KEY, '[[1,"asc"]]'));
-        } catch (e) {
-          savedOrder = [[1, 'asc']]; // fallback seguro (coluna Username)
-          setLS(USERS_LIST_ORDER_KEY, JSON.stringify(savedOrder));
-        }
-      var savedLength = parseInt(getLS(USERS_LIST_LEN_KEY, '10'), 10);
-      if (isNaN(savedLength) || savedLength <= 0) savedLength = 10;
-      var savedPage = parseInt(getLS(USERS_LIST_PAGE_KEY, '0'), 10);
-      if (isNaN(savedPage) || savedPage < 0) savedPage = 0;
-
-      // === DataTable
-      var $tableEl = $("#tableUsers");
-      var table = $tableEl.DataTable({
-        responsive: true,
-        autoWidth: false,
-        language: { emptyTable: 'No user' },
-        columns: [
-          { orderable: false, name: 'select' },
-          { name: 'username' },
-          { name: 'name' },
-          { name: 'email' },
-          { name: 'category' },
-          { name: 'issuer' },
-          { name: 'last_login' },
-          { name: 'created_at' },
-          { orderable: false, name: 'actions' },
-        ],
-
-        search: { search: savedQuery },
-        order: savedOrder,
-        pageLength: savedLength,
-        displayStart: savedPage * savedLength,
-
-        /* stateSave: true,
-        stateDuration: -1 */
-      });
-
-      (function applyNoSpellcheck(dt, savedQuery) {
-        var $input = $(dt.table().container()).find('div.dataTables_filter input');
-        hardenSearchInputEl($input, savedQuery);
-      })(table, savedQuery);
-
-      function getDtFilterInput(dt) {
-        return $(dt.table().container()).find('div.dataTables_filter input[type="search"]');
-      }
-
-      table.on('init.dt', function () {
-        var $input = getDtFilterInput(table);
-        if ($input.length === 0) {
-          console.warn('DataTables search input não encontrado');
-          return;
+      $(function () {
+        function hardenSearchInputEl($input) {
+          if (!$input || !$input.length) return;
+          $input
+            .attr('type', 'search')
+            .attr('autocomplete', 'off')
+            .attr('autocorrect', 'off')
+            .attr('autocapitalize', 'none')
+            .attr('spellcheck', 'false')
+            .prop('spellcheck', false)
+            .attr('data-gramm', 'false')
+            .attr('data-gramm_editor', 'false')
+            .attr('data-lt-active', 'false')
+            .attr('data-ms-editor', 'false')
+            .attr('lang', 'zxx');
         }
 
-        hardenSearchInputEl($input, savedQuery);
+        // === DataTable
+        var $tableEl = $("#tableUsers");
+        var table = $tableEl.DataTable({
+          responsive: true,
+          autoWidth: false,
+          language: { emptyTable: 'No user' },
+          columns: [
+            { orderable: false, name: 'select' },
+            { name: 'username' },
+            { name: 'name' },
+            { name: 'email' },
+            { name: 'category' },
+            { name: 'issuer' },
+            { name: 'last_login' },
+            { name: 'created_at' },
+            { orderable: false, name: 'actions' },
+          ],
 
-        var $filter = $input.closest('div.dataTables_filter');
-        if ($filter.find('.btn-clear-filter').length === 0) {
-          $('<button type="button" class="btn btn-sm btn-outline-secondary ml-2 btn-clear-filter">Limpar</button>')
-            .appendTo($filter)
-            .on('click', function () {
-              table.search('').draw();
-              $input.val('');
+          order: [[1, 'asc']],
 
-              // limpar chaves v2
-              setLS(USERS_LIST_SEARCH_KEY, null);
-              setLS(USERS_LIST_PAGE_KEY, '0');
-              setLS(USERS_LIST_ORDER_KEY, JSON.stringify([[1, 'asc']]));
-              setLS(USERS_LIST_LEN_KEY, String(10));
-
-              // refletir no DataTables
-              table.order([[1, 'asc']]).page.len(10).page(0).draw(false);
-            });
-        }
-
-        $input.on('input change blur', function () {
-          var q = $(this).val() || '';
-          if (q !== table.search()) {
-            table.search(q).draw();
-          }
-          q.trim() === '' ? setLS(USERS_LIST_SEARCH_KEY, null) : setLS(USERS_LIST_SEARCH_KEY, q);
+          stateSave: true,
+          stateDuration: -1,
         });
-      });
 
-      table.on('draw.dt', function () {
-        hardenSearchInputEl(getDtFilterInput(table));
-      });
+        (function applyNoSpellcheck(dt) {
+          var $input = $(dt.table().container()).find('div.dataTables_filter input');
+          hardenSearchInputEl($input);
+        })(table);
 
-      $(table.table().container())
-        .off('.inputfix')
-        .on('focus.inputfix input.inputfix', 'div.dataTables_filter input[type="search"]', function () {
-          hardenSearchInputEl($(this));
-      });
+        function getDtFilterInput(dt) {
+          return $(dt.table().container()).find('div.dataTables_filter input[type="search"]');
+        }
 
-      $tableEl.on('search.dt', function () {
-        var q = table.search() || '';
-        q.trim() === '' ? setLS(USERS_LIST_SEARCH_KEY, null) : setLS(USERS_LIST_SEARCH_KEY, q);
-      });
-      $tableEl.on('order.dt', function () {
-        setLS(USERS_LIST_ORDER_KEY, JSON.stringify(table.order()));
-      });
-      $tableEl.on('length.dt', function (e, settings, len) {
-        setLS(USERS_LIST_LEN_KEY, String(len));
-        setLS(USERS_LIST_PAGE_KEY, String(table.page.info().page));
-      });
-      $tableEl.on('page.dt', function () {
-        setLS(USERS_LIST_PAGE_KEY, String(table.page.info().page));
-      });
+        table.on('init.dt', function () {
+          var $input = getDtFilterInput(table);
+          if ($input.length === 0) {
+            console.warn('DataTables search input não encontrado');
+            return;
+          }
+
+          hardenSearchInputEl($input);
+
+          var $filter = $input.closest('div.dataTables_filter');
+          if ($filter.find('.btn-clear-filter').length === 0) {
+            $('<button type="button" class="btn btn-sm btn-outline-secondary ml-2 btn-clear-filter">Limpar</button>')
+              .appendTo($filter)
+              .on('click', function () {
+                table.search('').draw();
+                $input.val('');
+              });
+          }
+
+          $input.on('input change blur', function () {
+            var q = $(this).val() || '';
+            if (q !== table.search()) {
+              table.search(q).draw();
+            }
+          });
+        });
+
+        table.on('draw.dt', function () {
+          hardenSearchInputEl(getDtFilterInput(table));
+        });
+
+        $(table.table().container())
+          .off('.inputfix')
+          .on('focus.inputfix input.inputfix', 'div.dataTables_filter input[type="search"]', function () {
+            hardenSearchInputEl($(this));
+          });
 
       // === Toasts
       if (sessionStorage.getItem('msgSuccess')) {

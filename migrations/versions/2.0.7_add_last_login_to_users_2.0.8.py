@@ -21,6 +21,21 @@ def upgrade():
         sa.Column("last_login", sa.DateTime(), nullable=True),
     )
 
+    connection = op.get_bind()
+
+    result = connection.execute(sa.text("""
+        SELECT u.id AS user_id, MAX(l.datetime) AS last_login
+        FROM users u
+        JOIN login_logging l
+          ON l.login = u.username OR l.login = u.email
+        GROUP BY u.id
+    """))
+
+    for user_id, last_login in result:
+        connection.execute(
+            sa.text("UPDATE users SET last_login = :last_login WHERE id = :user_id"),
+            {"user_id": user_id, "last_login": last_login},
+        )
 
 def downgrade():
     op.drop_column("users", "last_login")
