@@ -554,38 +554,42 @@
 
         // ====== Adição / deduplicação de arquivos ao store ======
         function addFiles(fileList) {
-            if (!fileList || !fileList.length) return;
-            for (let i = 0; i < fileList.length; i++) {
-                let f = fileList[i];
-                var key = f.webkitRelativePath || f.name || f.fileName || f.path || (i + ':' + f.size);
+          if (!fileList || !fileList.length) return;
 
-                if (seenPaths.has(key)) {
-                    var newStore = new DataTransfer();
-                    for (let j = 0; j < store.files.length; j++) {
-                        var existing = store.files[j];
-                        var existingKey = existing.webkitRelativePath || existing.name || existing.fileName || existing.path || (j + ':' + existing.size);
-                        if (existingKey !== key) {
-                            try {
-                                newStore.items.add(existing);
-                            } catch (e) {
-                                console.warn('Could not re-add file to DataTransfer:', e, existing);
-                            }
-                        }
-                    }
-                    store = newStore;
-                    seenPaths.delete(key);
-                }
+          for (let i = 0; i < fileList.length; i++) {
+              let f = fileList[i];
+              var key = f.webkitRelativePath || f.name || f.fileName || f.path || (i + ':' + f.size);
 
-                seenPaths.add(key);
-                try {
-                    store.items.add(f);
-                } catch (e) {
-                    console.warn('Could not add file to DataTransfer:', e, f);
-                }
-            }
-            try { fileInput.files = store.files; } catch (e) { /* some browsers don't allow */ }
-            renderFilesList();
-        }
+              for (let j = 0; j < store.files.length; j++) {
+                  var existing = store.files[j];
+                  var existingKey = existing.webkitRelativePath || existing.name || existing.fileName || existing.path || (j + ':' + existing.size);
+
+                  if (existingKey === key) {
+                      try {
+                          store.items.remove(j);
+                      } catch (e) {
+                          console.warn('Could not remove file from DataTransfer:', e, existing);
+                      }
+                      break;
+                  }
+              }
+
+              seenPaths.add(key);
+
+              try {
+                  store.items.add(f);
+              } catch (e) {
+                  console.warn('Could not add file to DataTransfer:', e, f);
+              }
+          }
+
+          try {
+              fileInput.files = store.files;
+          } catch (e) {}
+
+          renderFilesList();
+      }
+
 
         function traverseFileTree(entry, path) {
             return new Promise(function (resolve) {
@@ -717,35 +721,30 @@
                   method: 'POST',
                   body: fd
               });
-
-              var rawText = '';
-              try {
-                  rawText = await resp.text();
-              } catch (e) {
-                  rawText = '';
-              }
-
-              var data = null;
-              try {
-                  data = rawText ? JSON.parse(rawText) : null;
-              } catch (e) {
-                  data = null; 
-              }
-
               if (!resp.ok) {
-                  var errMsg = (data && (data.result || data.error || data.message)) || rawText || ('HTTP Error ' + resp.status);
-                  throw new Error(errMsg);
+                  const errorText = await resp.text();
+                  throw new Error(`HTTP Error ${resp.status}, Message: ${errorText}`);
               }
 
-              var resultText = (data && (data.result || data.message)) || rawText || 'CLab created.';
-              if (data && data.clab_id) {
+              var resultText;
+              try {
+                  var j = await resp.json();
+                  if (!resp.ok) {
+                      console.error('Server error:', j);
+                      throw (j && j.result) || 'Failed';
+                  }
+                  resultText = j.result || 'CLab created (mock).';
                   sessionStorage.setItem('msgSuccess', resultText);
-                  window.location = '{{ url_for("home_blueprint.view_labs") }}/' + data.clab_id;
-              } else {
-                  sessionStorage.setItem('msgSuccess', resultText);
-                  window.location = '{{ url_for("home_blueprint.view_labs") }}';
+                  window.location = '{{ url_for("home_blueprint.view_labs") }}/' + j.clab_id;
+              } catch (innerErr) {
+                  if (!resp.ok) {
+                      throw innerErr;
+                  } else {
+                      resultText = await resp.text();
+                      sessionStorage.setItem('msgSuccess', resultText || 'CLab created.');
+                      window.location = '{{ url_for("home_blueprint.view_labs") }}';
+                  }
               }
-
           } catch (err) {
               showToast('bg-danger', 'Failure', `Failed to create ContainerLab: ${err.name}: ${err.message}`);
           } finally {
