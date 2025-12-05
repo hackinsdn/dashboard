@@ -558,7 +558,24 @@
             for (let i = 0; i < fileList.length; i++) {
                 let f = fileList[i];
                 var key = f.webkitRelativePath || f.name || f.fileName || f.path || (i + ':' + f.size);
-                if (seenPaths.has(key)) continue;
+
+                if (seenPaths.has(key)) {
+                    var newStore = new DataTransfer();
+                    for (let j = 0; j < store.files.length; j++) {
+                        var existing = store.files[j];
+                        var existingKey = existing.webkitRelativePath || existing.name || existing.fileName || existing.path || (j + ':' + existing.size);
+                        if (existingKey !== key) {
+                            try {
+                                newStore.items.add(existing);
+                            } catch (e) {
+                                console.warn('Could not re-add file to DataTransfer:', e, existing);
+                            }
+                        }
+                    }
+                    store = newStore;
+                    seenPaths.delete(key);
+                }
+
                 seenPaths.add(key);
                 try {
                     store.items.add(f);
@@ -673,69 +690,71 @@
         }
 
         async function handleSubmit() {
-            var btnText = btn.querySelector('.btn-text');
-            var spinner = btn.querySelector('.spinner-border');
-            btn.disabled = true; btnText.classList.add('d-none'); spinner.classList.remove('d-none');
+          var btnText = btn.querySelector('.btn-text');
+          var spinner = btn.querySelector('.spinner-border');
+          btn.disabled = true; btnText.classList.add('d-none'); spinner.classList.remove('d-none');
 
-            if (typeof CodeMirror !== 'undefined' && cm) { cm.save(); }
-            if (editorLabGuide) { editorLabGuide.save(); }
+          if (typeof CodeMirror !== 'undefined' && cm) { cm.save(); }
+          if (editorLabGuide) { editorLabGuide.save(); }
 
-            var fd = new FormData(form);
+          var fd = new FormData(form);
 
-            var hasYaml = (fd.get('clab_yaml') || '').trim().length > 0;
-            var filesLen = fileInput.files.length;
-            if (!hasYaml && filesLen === 0) {
-                showToast('bg-danger', 'Failure', 'Provide YAML and/or files');
-                btn.disabled = false;
-                btnText.classList.remove('d-none');
-                spinner.classList.add('d-none');
-                return;
-            }
-            for (const file of fileInput.files) {
-              fd.append("relative_paths", file.webkitRelativePath || file.name);
-            }
+          var hasYaml = (fd.get('clab_yaml') || '').trim().length > 0;
+          var filesLen = fileInput.files.length;
+          if (!hasYaml && filesLen === 0) {
+              showToast('bg-danger', 'Failure', 'Provide YAML and/or files');
+              btn.disabled = false;
+              btnText.classList.remove('d-none');
+              spinner.classList.add('d-none');
+              return;
+          }
+          for (const file of fileInput.files) {
+            fd.append("relative_paths", file.webkitRelativePath || file.name);
+          }
 
-            try {
-                var resp = await fetch('{{ url_for("clabs_blueprint.upsert", clab_id=clab.id|default('new', true)) }}', {
-                    method: 'POST',
-                    body: fd
-                });
-                if (!resp.ok) {
-                    const errorText = await resp.text();
-                    throw new Error(`HTTP Error ${resp.status}, Message: ${errorText}`);
-                }
+          try {
+              var resp = await fetch('{{ url_for("clabs_blueprint.upsert", clab_id=clab.id|default("new", true)) }}', {
+                  method: 'POST',
+                  body: fd
+              });
 
-                var resultText;
-                try {
-                    var j = await resp.json();
-                    if (!resp.ok) {
-                        console.error('Server error:', j);
-                        throw (j && j.result) || 'Failed';
-                    }
-                    resultText = j.result || 'CLab created (mock).';
-                    sessionStorage.setItem('msgSuccess', resultText);
-                    window.location = '{{ url_for("home_blueprint.view_labs") }}/' + j.clab_id;
-                } catch (innerErr) {
-                    if (!resp.ok) {
-                        throw innerErr;
-                    } else {
-                        resultText = await resp.text();
-                        sessionStorage.setItem('msgSuccess', resultText || 'CLab created.');
-                        //showToast('bg-success', 'Success', sessionStorage.getItem('msgSuccess'));
-                        window.location = '{{ url_for("home_blueprint.view_labs") }}';
-                    }
-                }
-            } catch (err) {
-                //sessionStorage.setItem('msgFail', `Failed to create ContainerLab: ${err.name}: ${err.message}`);
-                showToast('bg-danger', 'Failure', `Failed to create ContainerLab: ${err.name}: ${err.message}`);
-                //window.location = '{{ url_for("home_blueprint.view_labs") }}';
-            } finally {
-                btn.disabled = false;
-                btnText.classList.remove('d-none');
-                spinner.classList.add('d-none');
-                renderFilesList();
-            }
-        }
+              var rawText = '';
+              try {
+                  rawText = await resp.text();
+              } catch (e) {
+                  rawText = '';
+              }
+
+              var data = null;
+              try {
+                  data = rawText ? JSON.parse(rawText) : null;
+              } catch (e) {
+                  data = null; 
+              }
+
+              if (!resp.ok) {
+                  var errMsg = (data && (data.result || data.error || data.message)) || rawText || ('HTTP Error ' + resp.status);
+                  throw new Error(errMsg);
+              }
+
+              var resultText = (data && (data.result || data.message)) || rawText || 'CLab created.';
+              if (data && data.clab_id) {
+                  sessionStorage.setItem('msgSuccess', resultText);
+                  window.location = '{{ url_for("home_blueprint.view_labs") }}/' + data.clab_id;
+              } else {
+                  sessionStorage.setItem('msgSuccess', resultText);
+                  window.location = '{{ url_for("home_blueprint.view_labs") }}';
+              }
+
+          } catch (err) {
+              showToast('bg-danger', 'Failure', `Failed to create ContainerLab: ${err.name}: ${err.message}`);
+          } finally {
+              btn.disabled = false;
+              btnText.classList.remove('d-none');
+              spinner.classList.add('d-none');
+              renderFilesList();
+          }
+      }
 
         if (btn) btn.addEventListener('click', handleSubmit);
 
