@@ -1,7 +1,6 @@
 # -*- encoding: utf-8 -*-
 import os
 import shutil
-import re
 from collections import OrderedDict, defaultdict
 from flask import render_template, redirect, url_for, request, jsonify, current_app
 from flask_login import current_user, login_required
@@ -12,14 +11,6 @@ from apps.clabs import blueprint
 from apps.audit_mixin import get_remote_addr, check_user_category
 from apps.home.models import Labs, LabCategories, LabMetadata, HomeLogging
 from apps.utils import secure_filename, list_files
-
-
-# PORT_RE: regex to match ports published on ContainerLab Topology
-# CLab node ports are similar to Docker ports and accept the following cases:
-# ["8080:80", "80", "192.168.1.100:8080:80", "8080:80/udp", "8080:80/tcp",
-#  "[::1]:8080:80", "127.0.0.1:80/tcp", "[2001:db8:100:200::1]:80",
-#  "127.0.0.1:80:8080/tcp", "8080/tcp"]
-PORT_RE = re.compile(r"(\d+.\d+.\d+.\d+:|\[[0-9a-fA-F:]+\]:)?(\d+:)?(?P<port>\d+)(/\w+)?")
 
 
 @blueprint.route("/upsert/", methods=["GET", "POST"])
@@ -150,14 +141,9 @@ def upsert(clab_id="new"):
                 shutil.rmtree(clab_dir)
             return jsonify({"ok": False, "result": msg}), 400
 
-        published_ports = defaultdict(dict)
-        for node_name, node in topo_data["topology"]["nodes"].items():
-            for port in node.get("ports", []):
-                if match := PORT_RE.match(port):
-                    published_ports[node_name][match.group("port")] = port
-
         md = clab_md.md
-        md["ports"] = published_ports
+        md["ports"] = topo_data.pop("ports", {})
+        md["topology"] = topo_data
         clab_md.md = md
 
         convert_status, result = c9s.convert_clab(
@@ -165,11 +151,9 @@ def upsert(clab_id="new"):
             destination_namespace=current_app.config["K8S_NAMESPACE"],
         )
 
+        shutil.rmtree(clab_dir)
         if not convert_status:
             current_app.logger.error(f"Clabverter failed for clab.uuid={clab_uuid}: {result}.")
-            if clab_id == "new":
-                current_app.logger.info(f"Remove files from {clab_dir}")
-                shutil.rmtree(clab_dir)
             return jsonify({"ok": False, "result": result}), 400
 
         clab.manifest = result

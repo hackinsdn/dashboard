@@ -151,7 +151,7 @@ word-break: break-all;
                         {%   endif %}
                         <a class="btn btn-outline-dark mr-1 btn-terminal" href="{{link_href}}" target="_blank" role="button"><i class="fas fa-{{link_icon}}"></i> {{link_name}}</a>
                         {% endfor %}
-                        {% if lab['is_clab'] %}
+                        {% if lab['is_clab'] and 'clabernetes/topologyNode' in resource['labels'] %}
                         {%   set link_href = url_for('home_blueprint.xterm', lab_id=lab['lab_instance_id'], kind='clab', pod=resource['name'], container=resource['display_name'])  %}
                         <a class="btn btn-outline-dark mr-1 btn-terminal" href="{{link_href}}" target="_blank" role="button"><i class="fas fa-server"></i> {{resource['display_name']}} (ssh)</a>
                         {% endif %}
