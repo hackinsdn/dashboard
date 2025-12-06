@@ -213,7 +213,9 @@ class K8sController():
                 container.name for container in pod.spec.containers
             ]
             display_name = pod.metadata.name
-            if "clabernetes/topologyNode" in pod_labels:
+            if "hackinsdn/displayName" in pod_labels:
+                display_name = pod_labels["hackinsdn/displayName"]
+            elif "clabernetes/topologyNode" in pod_labels:
                 display_name = pod_labels["clabernetes/topologyNode"]
             pod_names[pod.metadata.uid] = display_name
             labs.append({
@@ -228,6 +230,7 @@ class K8sController():
                 "containers": containers,
                 "services": pod_services[pod.metadata.uid],
                 "phase": pod.status.phase,
+                "labels": pod_labels,
                 "more": str(pod),
             })
 
@@ -249,7 +252,7 @@ class K8sController():
             for port in srv.spec.ports:
                 port_name = port.name if port.name else f"{port.port}/{port.protocol}"
                 for pod in pods:
-                    if str(port.port) not in published_ports.get(pod_names[pod.metadata.uid], []):
+                    if "clabernetes/topologyServiceType" in srv_labels and str(port.port) not in published_ports.get(pod_names[pod.metadata.uid], []):
                         continue
                     node_ip = self.get_node_ip(pod.spec.node_name)
                     service_link = [

@@ -65,7 +65,7 @@
                       <div id="loading" class="overlay"><i class="fas fa-3x fa-sync-alt fa-spin"></i><div class="text-bold pt-2">Loading...</div></div>
                       <ul>
                         {% for resource in resources %}
-                        <li><span id="{{resource['name']}}" class="badge badge-secondary status-badge">Unknown</span> {{resource['kind']}}/{{resource['name']}}</li>
+                        <li><span id="{{resource['kind'] + '__' + resource['name']}}" class="badge badge-secondary status-badge">Unknown</span> {{resource['kind']}}/{{resource['name']}}</li>
                         {% endfor %}
                       </ul>
                       <p id="statusText"></p>
@@ -118,13 +118,14 @@
             return;
           }
           var allOk = true;
-          $.each(data.result, function(name, status) {
-            if (status != "ok") {
+          $.each(data.result, function(idx, resource) {
+            if (resource.status != "ok") {
               allOk = false;
+              $(`#${resource.name}`).text(resource.status);
             } else {
-              $(`#${name}`).text("Ready");
-              $(`#${name}`).removeClass("badge-secondary");
-              $(`#${name}`).addClass("badge-success");
+              $(`#${resource.name}`).text("Ready");
+              $(`#${resource.name}`).removeClass("badge-secondary");
+              $(`#${resource.name}`).addClass("badge-success");
             }
           });
           if (allOk) {

@@ -50,7 +50,10 @@ def get_lab_status(lab_id):
 
     statuses = []
     for resource in resources:
-        statuses.append("ok" if resource.get("is_ok") else "not-ok")
+        statuses.append({
+            "name": f"{resource['kind']}__{resource['metadata']['name']}",
+            "status": "ok" if resource.get("is_ok") else "not-ok",
+        })
     return {"status": "ok", "result": statuses}, 200
 
 @blueprint.route('/lab/<lab_id>', methods=["DELETE"])

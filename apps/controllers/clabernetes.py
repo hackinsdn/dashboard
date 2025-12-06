@@ -3,12 +3,81 @@ import os
 import subprocess
 import yaml
 import glob
+import re
 
 
 CLABVERTER_BIN = "/usr/local/bin/clabverter"
 
 if not os.path.exists(CLABVERTER_BIN) or not os.access(CLABVERTER_BIN, os.X_OK):
     raise ValueError("Missing executable 'clabverter'. Please install it from https://github.com/srl-labs/clabernetes/releases/latest")
+
+# PORT_RE: regex to match ports published on ContainerLab Topology
+# CLab node ports are similar to Docker ports and accept the following cases:
+# ["8080:80", "80", "192.168.1.100:8080:80", "8080:80/udp", "8080:80/tcp",
+#  "[::1]:8080:80", "127.0.0.1:80/tcp", "[2001:db8:100:200::1]:80",
+#  "127.0.0.1:80:8080/tcp", "8080/tcp"]
+PORT_RE = re.compile(r"(\d+.\d+.\d+.\d+:|\[[0-9a-fA-F:]+\]:)?(\d+:)?(?P<port>\d+)(/\w+)?")
+
+TOPO_VIEW_DEPLOYMENT="""
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: topo-viewer-clab-%CLAB_UUID%
+  labels:
+    app: topo-viewer-clab-%CLAB_UUID%
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: topo-viewer-clab-%CLAB_UUID%
+  template:
+    metadata:
+      name: topo-viewer-clab-%CLAB_UUID%
+      labels:
+        app: topo-viewer-clab-%CLAB_UUID%
+        hackinsdn/displayName: topology-visualizer
+    spec:
+      containers:
+      - name: topology-visualizer
+        image: ghcr.io/srl-labs/clabernetes/clabernetes-launcher:latest
+        ports:
+        - containerPort: 50080
+        command: ["sh", "-c"]
+        args:
+        - |
+          service docker start
+          until [ -s /topology-data.yaml ]; do sleep 1; done
+          cat /topology-data.yaml
+          clab graph --offline --topo /topology-data.yaml
+        volumeMounts:
+        - name: clab-topology-data
+          mountPath: /topology-data.yaml
+          readOnly: true
+          subPath: topology-data.yaml
+        securityContext:
+          privileged: true
+      volumes:
+      - name: clab-topology-data
+        configMap:
+          defaultMode: 0640
+          name: topology-data-clab-%CLAB_UUID%
+"""
+TOPO_VIEW_SERVICE="""
+apiVersion: v1
+kind: Service
+metadata:
+  name: topo-viewer-clab-%CLAB_UUID%
+  labels:
+    app: topo-viewer-clab-%CLAB_UUID%
+spec:
+  type: NodePort
+  ports:
+  - port: 50080
+    targetPort: 50080
+    name: http-topology-visualizer
+  selector:
+    app: topo-viewer-clab-%CLAB_UUID%
+"""
 
 
 class C9sController:
@@ -29,6 +98,8 @@ class C9sController:
 
         As part of the processing phase, we execute the following steps:
         - Basic validation on loading the file name. We expect to have a file named '*.clab.y*ml'
+        - Change topology name to avoid invalid characters (it will become subdomain in Kubernetes)
+        - Extract published ports
         - Handling absolute paths for startup-config and binds
         - Rename imagePullSecrets to kubernetes name to make sure they are unique and correct
         - Rename the topology file into clab_uuid to guarantee uniqueness
@@ -47,7 +118,11 @@ class C9sController:
 
         uploaded_files = glob.glob("**/*", recursive=True, root_dir=topology_dir)
 
-        # Handle absolute paths
+        # Change topology name to avoid invalid characters
+        topology["name"] = f"clab-{clab_uuid}"
+
+        # Handle absolute paths, extract ports and parse topology for visualizer
+        published_ports = {}
         for node in topology["topology"]["nodes"].values():
             if node.get("startup-config"):
                 node["startup-config"] = self.filename_from_uploads(node["startup-config"], uploaded_files)
@@ -61,7 +136,15 @@ class C9sController:
                     bind_opts.append(bind_opts[0])
                 bind_opts[0] = filename
                 node["binds"][i] = ":".join(bind_opts)
+            # extract ports
+            for port in node.get("ports", []):
+                if match := PORT_RE.match(port):
+                    published_ports.setdefault(node_name, {})
+                    published_ports[node_name][match.group("port")] = port
+
         # TODO: try to handle topology.kinds and topology.defaults if we have that file in the uploaded_files or one common absolute path
+
+        topology["ports"] = published_ports
 
         # Handle imagePullSecrets
         failed_secrets = []
@@ -93,6 +176,16 @@ class C9sController:
         except Exception as e:
             return False, f"An error occurred saving ContainerLab topology file: {e}"
 
+        # remove binds from topology to be consumed by visualizer
+        if "defaults" in topology["topology"]:
+            topology["topology"]["defaults"].pop("binds", None)
+        for kind in topology["topology"].get("kinds", {}).values():
+            kind.pop("binds", None)
+        for group in topology["topology"].get("groups", {}).values():
+            group.pop("binds", None)
+        for node in topology["topology"]["nodes"].values():
+            node.pop("binds", None)
+
         return True, topology
 
     def convert_clab(self, topology_dir, destination_namespace=None):
@@ -106,7 +199,7 @@ class C9sController:
                 check=True
             )
         except subprocess.CalledProcessError as exc:
-            return False, f"Convert ContainerLab failed: {exc} -- {exc.stderr}"
+            return False, f"Convert ContainerLab failed: {exc.stderr}"
         except Exception as exc:
             return False, f"Convert ContainerLab failed: {exc}"
         docs = result.stdout.split("---\n")
@@ -124,3 +217,18 @@ class C9sController:
 
         return True, "---\n".join(docs)
 
+    def get_topology_visualizer_manifest(self, clab_uuid, topology):
+        docs = []
+        docs.append(TOPO_VIEW_DEPLOYMENT.replace("%CLAB_UUID%", clab_uuid))
+        docs.append(TOPO_VIEW_SERVICE.replace("%CLAB_UUID%", clab_uuid))
+        docs.append(
+            yaml.dump({
+                "apiVersion": "v1",
+                "kind": "ConfigMap",
+                "metadata": {"name": f"topology-data-clab-{clab_uuid}"},
+                "data": {
+                    "topology-data.yaml": yaml.dump(topology),
+                },
+            })
+        )
+        return "---\n".join(docs)
