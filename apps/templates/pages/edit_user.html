@@ -12,11 +12,6 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
   <!-- Font Awesome -->
   <link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
-  <!-- daterange picker -->
-  <link rel="stylesheet" href="/static/assets/plugins/daterangepicker/daterangepicker.css">
-  <!-- Select2 -->
-  <link rel="stylesheet" href="/static/assets/plugins/select2/css/select2.min.css">
-  <link rel="stylesheet" href="/static/assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
   <!-- Theme style -->
   <link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
 
@@ -104,6 +99,7 @@
                   <select name="user_category" class="form-control">
                     <option {{'selected' if user.category == 'user' else ''}}>user</option>
                     <option {{'selected' if user.category == 'student' else ''}}>student</option>
+                    <option {{'selected' if user.category == 'labcreator' else ''}} value="labcreator">lab creator</option>
                     <option {{'selected' if user.category == 'teacher' else ''}}>teacher</option>
                     <option {{'selected' if user.category == 'admin' else ''}}>admin</option>
                   </select>
@@ -169,16 +165,12 @@
   <script src="/static/assets/plugins/jquery/jquery.min.js"></script>
   <!-- Bootstrap 4 -->
   <script src="/static/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <!-- Select2 -->
-  <script src="/static/assets/plugins/select2/js/select2.full.min.js"></script>
   <!-- jquery-validation -->
   <script src="/static/assets/plugins/jquery-validation/jquery.validate.min.js"></script>
   <script src="/static/assets/plugins/jquery-validation/additional-methods.min.js"></script>
   <!-- InputMask -->
   <script src="/static/assets/plugins/moment/moment.min.js"></script>
   <script src="/static/assets/plugins/inputmask/jquery.inputmask.min.js"></script>
-  <!-- date-range-picker -->
-  <script src="/static/assets/plugins/daterangepicker/daterangepicker.js"></script>
   <!-- Tempusdominus Bootstrap 4 -->
   <script src="/static/assets/plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js"></script>
   <!-- AdminLTE App -->
@@ -211,51 +203,6 @@
           $(element).removeClass('is-invalid');
         }
       });
-      //Initialize Select2 Elements
-      $('.select2').select2()
-
-      //Initialize Select2 Elements
-      $('.select2bs4').select2({
-        theme: 'bootstrap4'
-      })
-
-      //Date range picker
-      $('#reservationdate').datetimepicker({
-          format: 'L'
-      });
-      //Date range picker
-      $('#reservation').daterangepicker()
-      //Date range picker with time picker
-      $('#reservationtime').daterangepicker({
-        timePicker: true,
-        timePickerIncrement: 30,
-        locale: {
-          format: 'DD/MM/YYYY HH:mm'
-        }
-      })
-      //Date range as a button
-      $('#daterange-btn').daterangepicker(
-        {
-          ranges   : {
-            'Today'       : [moment(), moment()],
-            'Yesterday'   : [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
-            'Last 7 Days' : [moment().subtract(6, 'days'), moment()],
-            'Last 30 Days': [moment().subtract(29, 'days'), moment()],
-            'This Month'  : [moment().startOf('month'), moment().endOf('month')],
-            'Last Month'  : [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
-          },
-          startDate: moment().subtract(29, 'days'),
-          endDate  : moment()
-        },
-        function (start, end) {
-          $('#reportrange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'))
-        }
-      )
-
-      //Timepicker
-      $('#timepicker').datetimepicker({
-        format: 'LT'
-      })
     })
   </script>
 

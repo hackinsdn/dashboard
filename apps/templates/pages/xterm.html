@@ -1,16 +1,70 @@
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0" />
     <title>{{container}} - xterm</title>
     <link rel="icon" href="/static/assets/favicon.ico">
     <style>
-      html {
-        font-family: arial;
-      }
+html {
+  font-family: arial;
+}
+body {
+  width: 100vw;
+  height: 100vh;
+}
+#terminal {
+  width: 100%;
+  height: calc(100% - 100px);
+}
+.menucontrols {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  justify-content: flex-end;
+  /* top | right | bottom | left */
+  margin: auto auto auto 0;
+  padding: 0;
+}
+.menucontrols button {
+  color: #444444;
+  font-weight: bolder !important;
+  font-size: 1rem !important;
+  height: 2rem !important;
+  background-color: lightgray;
+}
+@media only screen and (max-width: 600px) {
+  .menucontrols button {
+    font-size: 1rem !important;
+    height: 2rem !important;
+  }
+}
     </style>
-    <link rel="stylesheet" href="https://unpkg.com/xterm@4.11.0/css/xterm.css"/>
+    <link rel="stylesheet" href="/static/assets/plugins/xterm/xterm/css/xterm.css"/>
   </head>
   <body>
+    <div style="display: flex;">
+      <a href="https://hackinsdn.ufba.br" target="_blank" style="font-size: 1.4em; text-decoration: none; color:black"><img style="height: 50px" src="/static/assets/img/hackinsdn-horizontal.png" /></a>
+        <span style="font-size: small; display: flex; flex-wrap: wrap; gap: .1em; justify-content: flex-end; margin: auto 0 auto auto;">
+          status:
+          <span style="font-size: small" id="status">connecting...</span>
+        </span>
+    </div>
+    <div id="terminal"></div>
+    <div style="display: flex;">
+      <div class="menucontrols">
+        <button id="esc"  type="button">esc</button>
+        <button id="tab"  type="button">tab</button>
+        <button id="ctrl" type="button">ctrl</button>
+        <button id="alt"  type="button">alt</button>
+        <button id="larr" type="button">&larr;</button>
+        <button id="uarr" type="button">&uarr;</button>
+        <button id="darr" type="button">&darr;</button>
+        <button id="rarr" type="button">&rarr;</button>
+        <button id="themeButton" type="button"></button>
+      </div>
+    </div>
+
     <!-- Analytics measurements -->
     {% if config.ANALYTICS_JSFILE %}
     <script async src="{{config.ANALYTICS_JSFILE}}"></script>
@@ -20,19 +74,68 @@
     {{config.ANALYTICS_SCRIPT|safe}}
     </script>
     {% endif %}
-    <div style="width: 100%; height: calc(100% - 50px)" id="terminal"></div>
     <!-- xterm -->
-    <script src="https://unpkg.com/xterm@4.11.0/lib/xterm.js"></script>
-    <script src="https://unpkg.com/xterm-addon-fit@0.5.0/lib/xterm-addon-fit.js"></script>
-    <script src="https://unpkg.com/xterm-addon-web-links@0.4.0/lib/xterm-addon-web-links.js"></script>
-    <script src="https://unpkg.com/xterm-addon-search@0.8.0/lib/xterm-addon-search.js"></script>
+    <script src="/static/assets/plugins/xterm/xterm/lib/xterm.js"></script>
+    <script src="/static/assets/plugins/xterm/addon-fit/lib/addon-fit.js"></script>
+    <script src="/static/assets/plugins/xterm/addon-web-links/lib/addon-web-links.js"></script>
+    <script src="/static/assets/plugins/xterm/addon-search/lib/addon-search.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.min.js"></script>
 
     <script>
+      function getLS(key, fallback) {
+        try {
+          var v = localStorage.getItem(key);
+          return (v === null ? fallback : v);
+        } catch (e) { return fallback; }
+      }
+      function setLS(key, value) {
+        try {
+          if (value === '' || value === null || typeof value === 'undefined') {
+            localStorage.removeItem(key);
+          } else {
+            localStorage.setItem(key, value);
+          }
+        } catch (e) { }
+      }
+      let ctrlPressed = false;
+      let altPressed = false;
+      const specialKeyMap = {
+        uarr: String.fromCharCode(27, 91, 65),
+        darr: String.fromCharCode(27, 91, 66),
+        rarr: String.fromCharCode(27, 91, 67),
+        larr: String.fromCharCode(27, 91, 68),
+        esc:  String.fromCharCode(27),
+        tab:  String.fromCharCode(9),
+      }
+      let fontSize = 16;
+      if (window.matchMedia("(max-width: 600px)").matches) {
+        fontSize = 10;
+      }
+      const xtermTheme = {
+        dark: {
+          background: '#000000',
+          foreground: '#FFFFFF',
+          cursor: '#FFFFFF',
+          selectionBackground: '#FFFFFF',
+          selectionForeground: '#000000',
+        },
+        light: {
+          background: '#D3D3D3',
+          foreground: '#000000',
+          cursor: '#000000',
+          selectionBackground: '#000000',
+          selectionForeground: '#FFFFFF',
+        },
+      };
+      let user_theme = getLS('hackinsdn_xterm_theme', 'dark');
+      themeButton.textContent = user_theme === 'dark' ? '☀' : '❨';
       const term = new Terminal({
         cursorBlink: true,
         macOptionIsMeta: true,
         scrollback: 999999,
+        fontSize: fontSize,
+        theme: xtermTheme[user_theme],
+        fontFamily: 'monospace',
       });
       term.attachCustomKeyEventHandler(customKeyEventHandler);
       // https://github.com/xtermjs/xterm.js/issues/2941
@@ -53,7 +156,21 @@
       term.writeln('')
       term.focus();
       term.onData((data) => {
+        let shouldClear = false;
+        if (ctrlPressed && altPressed) {
+          data = String.fromCharCode(27, data.codePointAt(0) % 32);
+          shouldClear = true;
+        } else if (ctrlPressed) {
+          data = String.fromCharCode(data.codePointAt(0) % 32);
+          shouldClear = true;
+        } else if (altPressed) {
+          data = String.fromCharCode(27, data.codePointAt(0));
+          shouldClear = true;
+        }
         socket.emit("pty-input", { input: data, host: "{{host}}" });
+        if (shouldClear) {
+          clearVirtualKeyboard();
+        }
       });
 
       const socket = io.connect("/pty?host={{host}}");
@@ -64,21 +181,32 @@
       });
 
       socket.on("server-disconnected", function (data) {
-        console.log("server-disconnected {{host}}");
-        window.close();
-        term.dispose();
-        //socket.disconnect();
+        if (typeof data.returncode !== 'undefined' && data.returncode !== null && data.returncode === 0) {
+          window.close();
+          term.dispose();
+          return;
+        }
+        term.writeln("");
+        term.writeln("------------------");
+        term.writeln(`Server disconnected with exit-code=${data.returncode})`);
+        term.writeln("(you can close this window or reload it to reconnect)");
       });
 
       socket.on("connect", () => {
         fitToscreen();
+        status.innerHTML = '<span style="background-color: lightgreen;">connected</span>';
       });
 
       socket.on("disconnect", () => {
-        console.log("disconnected {{host}}");
+        status.innerHTML =
+          '<span style="background-color: #ff8383;">disconnected</span>';
       });
 
       function fitToscreen() {
+        if (window.visualViewport) {
+          document.body.style.width = `${parseInt(window.visualViewport.width) - 16}px`;
+          document.body.style.height = window.visualViewport.height + "px";
+        }
         fit.fit();
         const dims = { cols: term.cols, rows: term.rows };
         socket.emit("resize", { dims: dims, host: "{{host}}" });
@@ -132,8 +260,45 @@
         return true;
       }
 
+      /* Handle virtual keyboard useful for mobile devices
+       */
+      const ctrlButton = document.querySelector("#ctrl");
+      const altButton = document.querySelector("#alt");
+      document.querySelectorAll(".menucontrols > button").forEach((el) => {
+        el.addEventListener("mousedown", handleVirtualKeyboard);
+        el.addEventListener("touchend", handleVirtualKeyboard);
+      });
+      function handleVirtualKeyboard(evt) {
+        evt.preventDefault();
+        if (evt.target.id in specialKeyMap) {
+          socket.emit("pty-input", { input: specialKeyMap[evt.target.id], host: "{{host}}" });
+          clearVirtualKeyboard();
+        } else if (evt.target.id === "ctrl") {
+          ctrlButton.style.backgroundColor = "lightblue";
+          ctrlPressed = true;
+        } else if (evt.target.id === "alt") {
+          altButton.style.backgroundColor = "lightblue";
+          altPressed = true;
+        } else if (evt.target.id === "themeButton") {
+          user_theme = user_theme === 'light' ? 'dark' : 'light';
+          term.options.theme = xtermTheme[user_theme];
+          setLS('hackinsdn_xterm_theme', user_theme);
+          themeButton.textContent = user_theme === 'dark' ? '☀' : '❨';
+        }
+      }
+      function clearVirtualKeyboard() {
+        ctrlButton.style.backgroundColor = "lightgray";
+        altButton.style.backgroundColor = "lightgray";
+        ctrlPressed = false;
+        altPressed = false;
+      }
+
       const wait_ms = 50;
-      window.onresize = debounce(fitToscreen, wait_ms);
+      if (window.visualViewport) {
+        window.visualViewport.onresize = debounce(fitToscreen, wait_ms);
+      } else {
+        window.onresize = debounce(fitToscreen, wait_ms);
+      }
 
       window.onbeforeunload = function () {
         socket.emit('disconnect', {'host': "{{host}}"});

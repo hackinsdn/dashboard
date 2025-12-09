@@ -1,7 +1,6 @@
 # -*- encoding: utf-8 -*-
 import os
 import shutil
-import re
 from collections import OrderedDict, defaultdict
 from flask import render_template, redirect, url_for, request, jsonify, current_app
 from flask_login import current_user, login_required
@@ -14,14 +13,6 @@ from apps.home.models import Labs, LabCategories, LabMetadata, HomeLogging
 from apps.utils import secure_filename, list_files
 
 
-# PORT_RE: regex to match ports published on ContainerLab Topology
-# CLab node ports are similar to Docker ports and accept the following cases:
-# ["8080:80", "80", "192.168.1.100:8080:80", "8080:80/udp", "8080:80/tcp",
-#  "[::1]:8080:80", "127.0.0.1:80/tcp", "[2001:db8:100:200::1]:80",
-#  "127.0.0.1:80:8080/tcp", "8080/tcp"]
-PORT_RE = re.compile(r"(\d+.\d+.\d+.\d+:|\[[0-9a-fA-F:]+\]:)?(\d+:)?(?P<port>\d+)(/\w+)?")
-
-
 @blueprint.route("/upsert/", methods=["GET", "POST"])
 @blueprint.route("/upsert/<clab_id>", methods=["GET", "POST"])
 @login_required
@@ -31,7 +22,7 @@ def upsert(clab_id="new"):
 
     if clab_id != "new":
         clab = Labs.query.get(clab_id)
-        if not clab or clab.is_deleted:
+        if not clab:
             return render_template("pages/clabs_upsert.html", clab=None, msg_fail="ContainerLab not found")
         if not clab.is_clab:
             return redirect(url_for('home_blueprint.edit_lab', lab_id=clab_id))
@@ -79,6 +70,50 @@ def upsert(clab_id="new"):
     if not clab.manifest and not giturl and len(files) == 0:
         return jsonify({"ok": False, "result": "Provide GIT URL or files"}), 400
 
+    md = clab_md.md
+    if not (secrets := md.get("secrets")):
+        secrets = {"next_id": 1, "name": {}, "k8s_name": {}}
+    secrets_to_delete = set(secrets["name"].keys())
+    changed_secrets = False
+    for s_name, s_server, s_user, s_pass in zip(
+        request.form.getlist("secret-name") or [],
+        request.form.getlist("secret-server") or [],
+        request.form.getlist("secret-user") or [],
+        request.form.getlist("secret-pass") or [],
+    ):
+        current_app.logger.info(f"Secrets: {s_name=} {s_server=} {s_user}")
+        if not s_name:
+            continue
+        if s_name in secrets_to_delete:
+            # existing secret that will be kept
+            secrets_to_delete.remove(s_name)
+            continue
+        changed_secrets = True
+        if k8s_name := secrets["name"].get(s_name):
+            # existing secret and it will be updated
+            k8s.delete_secret_by_name(k8s_name)
+        else:
+            k8s_name = f"clab-secret-{clab_uuid}-{secrets['next_id']}"
+        status, msg = k8s.create_registry_secret(
+            name=k8s_name,
+            server=s_server,
+            username=s_user,
+            password=s_pass
+        )
+        if not status:
+            current_app.logger.error(f"Failed to create secret {s_name=} for lab {clab_uuid=} {clab_id=}: {msg}")
+            continue
+        secrets["name"][s_name] = k8s_name
+        secrets["k8s_name"][k8s_name] = s_name
+        secrets["next_id"] += 1
+    for s_name in secrets_to_delete:
+        changed_secrets = True
+        k8s_name = secrets["name"].pop(s_name, None)
+        if secrets["k8s_name"].pop(k8s_name, None):
+            k8s.delete_secret_by_name(k8s_name)
+    md["secrets"] = secrets
+    clab_md.md = md
+
     max_files = current_app.config["CLABS_UPLOAD_MAX_FILES"]
     if len(files) > max_files:
         return jsonify({
@@ -96,37 +131,29 @@ def upsert(clab_id="new"):
         file.save(full_path)
         changed_files = True
 
-    if changed_files:
-        topo_status, topo_data = c9s.parse_clab_topology(clab_dir)
+    if changed_files or changed_secrets:
+        topo_status, topo_data = c9s.process_clab_topology(clab_dir, clab_uuid=clab_uuid, secrets=secrets["name"])
         if not topo_status:
-            msg = f"Failed to parse ContainerLab topology: {topo_data}"
+            msg = f"Failed to parse ContainerLab topology from {clab_dir}: {topo_data}"
             current_app.logger.error(msg)
+            if clab_id == "new":
+                current_app.logger.info(f"Remove files from {clab_dir}")
+                shutil.rmtree(clab_dir)
             return jsonify({"ok": False, "result": msg}), 400
 
-        try:
-            nodes = topo_data["topology"]["nodes"]
-        except:
-            nodes = {}
-        published_ports = defaultdict(dict)
-        for node_name, node in nodes.items():
-            for port in node.get("ports", []):
-                if match := PORT_RE.match(port):
-                    published_ports[node_name][match.group("port")] = port
-
         md = clab_md.md
-        md["clab"] = topo_data
-        md["ports"] = published_ports
+        md["ports"] = topo_data.pop("ports", {})
+        md["topology"] = topo_data
         clab_md.md = md
 
         convert_status, result = c9s.convert_clab(
             clab_dir,
-            clab_uuid=clab_uuid,
             destination_namespace=current_app.config["K8S_NAMESPACE"],
         )
 
-        #shutil.rmtree(clab_dir)
+        shutil.rmtree(clab_dir)
         if not convert_status:
-            current_app.logger.error(f"Clabverter failed for clab.uuid={clab_uuid}: {result}")
+            current_app.logger.error(f"Clabverter failed for clab.uuid={clab_uuid}: {result}.")
             return jsonify({"ok": False, "result": result}), 400
 
         clab.manifest = result
@@ -149,6 +176,6 @@ def upsert(clab_id="new"):
     db.session.add(upsert_clab_log)
     db.session.commit()
 
-    current_app.logger.info(f"upsert_clab clab_id={clab_id} id={clab.id} status={status} user_id={current_user.id} files={relative_paths}")
+    current_app.logger.info(f"upsert_clab {clab_id=} {clab.id=} {clab_uuid=} {status=} {current_user.id=} files={relative_paths}")
 
     return jsonify({"ok": status, "result": msg, "clab_id": clab.id}), status_code

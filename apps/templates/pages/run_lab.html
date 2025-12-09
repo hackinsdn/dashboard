@@ -12,8 +12,6 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
   <!-- Font Awesome -->
   <link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
-  <!-- daterange picker -->
-  <link rel="stylesheet" href="/static/assets/plugins/daterangepicker/daterangepicker.css">
   <!-- Select2 -->
   <link rel="stylesheet" href="/static/assets/plugins/select2/css/select2.min.css">
   <link rel="stylesheet" href="/static/assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
@@ -132,7 +130,7 @@
             </div>
             <!-- /.row -->
             <div class="row">
-              <button class="btn btn-primary btn-flat" type="submit">Run</button>
+              <button class="btn btn-primary btn-flat" type="submit" id="btn-run-lab">Run</button>
             </div>
             <!-- /.row -->
           </form>
@@ -162,8 +160,6 @@
   <!-- InputMask -->
   <script src="/static/assets/plugins/moment/moment.min.js"></script>
   <script src="/static/assets/plugins/inputmask/jquery.inputmask.min.js"></script>
-  <!-- date-range-picker -->
-  <script src="/static/assets/plugins/daterangepicker/daterangepicker.js"></script>
   <!-- Tempusdominus Bootstrap 4 -->
   <script src="/static/assets/plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js"></script>
   <!-- AdminLTE App -->
@@ -178,46 +174,10 @@
       //$('.select2bs4').select2({
       //  theme: 'bootstrap4'
       //})
-
-      ////Date range picker
-      //$('#reservationdate').datetimepicker({
-      //    format: 'L'
-      //});
-      ////Date range picker
-      //$('#reservation').daterangepicker()
-      ////Date range picker with time picker
-      //$('#reservationtime').daterangepicker({
-      //  timePicker: true,
-      //  timePickerIncrement: 30,
-      //  startDate: moment(),
-      //  endDate: moment().add(1, 'days'),
-      //  locale: {
-      //    format: 'YYYY-MM-DD HH:mm Z'
-      //  }
-      //})
-      ////Date range as a button
-      //$('#daterange-btn').daterangepicker(
-      //  {
-      //    ranges   : {
-      //      'Today'       : [moment(), moment()],
-      //      'Yesterday'   : [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
-      //      'Last 7 Days' : [moment().subtract(6, 'days'), moment()],
-      //      'Last 30 Days': [moment().subtract(29, 'days'), moment()],
-      //      'This Month'  : [moment().startOf('month'), moment().endOf('month')],
-      //      'Last Month'  : [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
-      //    },
-      //    startDate: moment().subtract(29, 'days'),
-      //    endDate  : moment()
-      //  },
-      //  function (start, end) {
-      //    $('#reportrange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'))
-      //  }
-      //)
-
-      ////Timepicker
-      //$('#timepicker').datetimepicker({
-      //  format: 'LT'
-      //})
+      $('#btn-run-lab').on('click', function () {
+        $("#btn-run-lab").html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Starting lab...');
+        $("#btn-run-lab").css("pointer-events", "none");
+      });
     })
   </script>
 

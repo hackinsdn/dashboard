@@ -12,6 +12,7 @@ import datetime
 import uuid
 import random
 import subprocess
+import base64
 
 from kubernetes import config, client
 from kubernetes.stream import stream
@@ -212,7 +213,9 @@ class K8sController():
                 container.name for container in pod.spec.containers
             ]
             display_name = pod.metadata.name
-            if "clabernetes/topologyNode" in pod_labels:
+            if "hackinsdn/displayName" in pod_labels:
+                display_name = pod_labels["hackinsdn/displayName"]
+            elif "clabernetes/topologyNode" in pod_labels:
                 display_name = pod_labels["clabernetes/topologyNode"]
             pod_names[pod.metadata.uid] = display_name
             labs.append({
@@ -227,6 +230,7 @@ class K8sController():
                 "containers": containers,
                 "services": pod_services[pod.metadata.uid],
                 "phase": pod.status.phase,
+                "labels": pod_labels,
                 "more": str(pod),
             })
 
@@ -248,7 +252,7 @@ class K8sController():
             for port in srv.spec.ports:
                 port_name = port.name if port.name else f"{port.port}/{port.protocol}"
                 for pod in pods:
-                    if str(port.port) not in published_ports.get(pod_names[pod.metadata.uid], []):
+                    if "clabernetes/topologyServiceType" in srv_labels and str(port.port) not in published_ports.get(pod_names[pod.metadata.uid], []):
                         continue
                     node_ip = self.get_node_ip(pod.spec.node_name)
                     service_link = [
@@ -481,6 +485,7 @@ class K8sController():
         user_uid=None,
         pod_hash=None,
         allowed_nodes=None,
+        dry_run=False,
     ):
         try:
             tmpl = string.Template(manifest)
@@ -526,7 +531,10 @@ class K8sController():
             raise Exception(f"Failed to get k8s resource: {exc} -- {exc.stderr}")
         except Exception as exc:
             raise Exception(f"Failed to get k8s resource: {exc}")
-        result["is_ok"] = True
+        if resource["kind"] == "Topology":
+            result["is_ok"] = result.get("status", {}).get("topologyReady", False)
+        else:
+            result["is_ok"] = True
         return result
 
     def create_k8s_resource(self, resource):
@@ -584,7 +592,11 @@ class K8sController():
         data = manifest
         if replace_identifiers:
             status, result = self.substitute_identifiers(
-                manifest, user_uid=user_uid, pod_hash=pod_hash, allowed_nodes=allowed_nodes
+                manifest,
+                user_uid=user_uid,
+                pod_hash=pod_hash,
+                dry_run=dry_run,
+                allowed_nodes=allowed_nodes,
             )
             if not status:
                 return status, result
@@ -635,6 +647,39 @@ class K8sController():
             return False, msg_fail
 
         return True, results
+
+    def create_registry_secret(self, name, server, username, password):
+        """Create to pull an image from a private container image registry or repository."""
+        auth = base64.b64encode(f"{username}:{password}".encode("utf-8")).decode("utf-8")
+        docker_config_dict = {
+            "auths": {
+                server: {
+                    "username": username,
+                    "password": password,
+                    "auth": auth,
+                }
+            }
+        }
+        docker_config = base64.b64encode(
+            json.dumps(docker_config_dict).encode("utf-8")
+        ).decode("utf-8")
+        try:
+            self.v1_api.create_namespaced_secret(
+                namespace=self.namespace,
+                body=client.V1Secret(
+                    metadata=client.V1ObjectMeta(
+                        name=name,
+                    ),
+                    type="kubernetes.io/dockerconfigjson",
+                    data={".dockerconfigjson": docker_config},
+                ),
+            )
+        except Exception as exc:
+            msg = f"Failed to create secret: {exc}"
+            err = traceback.format_exc().replace("\n", ", ")
+            current_app.logger.error(msg + " -- " + err)
+            return False, msg
+        return True, "secret cretated"
 
     def validate_token(self, token):
         """Check if this token is authorized to access the API."""
@@ -740,6 +785,18 @@ class K8sController():
             return False
         return True
 
+    def delete_secret_by_name(self, secret):
+        """Delete secret by its name."""
+        name = secret["name"] if isinstance(secret, dict) else secret
+        try:
+            self.v1_api.delete_namespaced_secret(
+                name=name, namespace=self.namespace
+            )
+        except Exception as exc:
+            current_app.logger.warning(f"Failed to delete secret {name}: {exc}")
+            return False
+        return True
+
     def delete_resources_by_name(self, resources):
         """Delete resources by their name and kind."""
         results = []
@@ -752,6 +809,8 @@ class K8sController():
                 results.append(self.delete_deployment_by_name(resource))
             elif resource["kind"] == "ConfigMap":
                 results.append(self.delete_config_map_by_name(resource))
+            elif resource["kind"] == "Secret":
+                results.append(self.delete_secret_by_name(resource))
             else:
                 results.append(self.delete_k8s_resource(resource))
         return results

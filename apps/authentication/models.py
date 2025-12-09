@@ -101,7 +101,7 @@ class Users(db.Model, UserMixin, AuditMixin):
 
     @validates("category")
     def validate_category(self, key, value):
-        allowed = ["admin", "teacher", "student", "user"]
+        allowed = ["admin", "teacher", "labcreator", "student", "user"]
         if value not in allowed:
             raise ValueError(f"Invalid user category: {value} -- {allowed}")
         return value

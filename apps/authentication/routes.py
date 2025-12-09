@@ -17,7 +17,8 @@ from apps.config import app_config
 from apps.audit_mixin import get_remote_addr, utcnow
 from apps.authentication import blueprint
 from apps.authentication.forms import LoginForm, CreateAccountForm, ConfirmAccountForm, ResetPasswordForm, ResetPasswordConfirmForm
-from apps.authentication.models import Users, Groups, LoginLogging
+from apps.authentication.models import Users, LoginLogging
+from apps.utils import check_pre_approved
 from flask_mail import Message
 import uuid
 from datetime import timedelta
@@ -26,25 +27,6 @@ import secrets
 from apps import cache
 
 from apps.authentication.util import verify_pass
-
-
-def _check_pre_approved(user):
-    """Given an user, check if this is user is on the list of pre-approved users or member of any group"""
-    if user.category != "user":
-        return
-    for group in user.member_of_groups:
-        if group.organization == "SYSTEM":
-            continue
-        user.category = "student"
-        return True
-    added_group = False
-    groups = Groups.query.filter(Groups.is_deleted==False, Groups.approved_users!="").all()
-    for group in groups:
-        if user.email in group.approved_users_list:
-            user.category = "student"
-            group.members.append(user)
-            added_group = True
-    return added_group
 
 
 @blueprint.route('/')
@@ -68,7 +50,7 @@ def login():
 
         # Check the password
         if user and not user.is_deleted and user.password and verify_pass(password, user.password):
-            _check_pre_approved(user)
+            check_pre_approved(user)
             login_user(user)
             app.logger.info(f"Successful login ipaddr={get_remote_addr()} login={identifier} auth_provider=local")
             login_log = LoginLogging(ipaddr=get_remote_addr(), login=identifier, auth_provider="local", success=True)
@@ -122,7 +104,7 @@ def callback():
         user = Users(subject=subject, issuer=issuer, given_name=given_name, family_name=family_name, email=email)
         db.session.add(user)
 
-    _check_pre_approved(user)
+    check_pre_approved(user)
     app.logger.info(f"Successful login ipaddr={get_remote_addr()} login={subject} auth_provider={issuer} email={email}")
     login_log = LoginLogging(ipaddr=get_remote_addr(), login=subject, auth_provider=issuer, success=True)
     db.session.add(login_log)
@@ -330,7 +312,7 @@ def logout():
 @blueprint.route('/profile/reload')
 @login_required
 def reload_profile():
-    if _check_pre_approved(current_user):
+    if check_pre_approved(current_user):
         db.session.commit()
     return redirect(url_for('authentication_blueprint.route_default'))
 

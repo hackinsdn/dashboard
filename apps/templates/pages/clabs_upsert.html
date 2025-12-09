@@ -219,13 +219,25 @@
                   <p>Or you can upload here your ContainerLab topology and additional files.</p>
                   <div class="col-md-12">
                     <div class="form-group">
-                        <label>Upload Area</label>
+                        <div class="d-flex align-items-center justify-content-between mb-1">
+                            <label>Upload Area</label>
+                            <div class="btn-group btn-group-sm" role="group" aria-label="Upload actions">
+                                <button id="btnAddFile" type="button" class="btn btn-outline-dark mx-2 rounded">
+                                    <i class="icon far fa-file mr-1"></i> Add File
+                                </button>
+                                <button id="btnAddDirectory" type="button"
+                                    class="btn btn-outline-dark mx-2 rounded">
+                                    <i class="icon far fa-folder mr-1"></i> Add Directory
+                                </button>
+                            </div>
+                        </div>
                         <div id="dropzone" class="dropzone">
                             <i class="fas fa-cloud-upload-alt"></i>
                             <div>Drag & drop files here, or click to select</div>
                             <small>Accepted: multiple files</small>
                         </div>
-                        <input id="clab_files" name="clab_files" type="file" webkitdirectory directory multiple class="d-none">
+                        <input id="clab_files" name="clab_files" type="file" multiple class="d-none">
+                        <input id="clab_folders" name="clab_folders" type="file" webkitdirectory class="d-none">
                         <div class="file-list mt-2" id="files_list"></div>
                     </div>
                   </div>
@@ -237,6 +249,46 @@
                     <textarea name="clab_yaml" id="clab_yaml" class="textarea" placeholder="Place some text here" rows="16">{{clab.manifest|default('', true)}}</textarea>
                   </div>
 		</div>
+		<div class="row">
+                  <div class="col-md-12">
+                    <p><b>Image Secrets</b></p>
+                    <p>In this section you can define <b>imagePullSecrets</b> to use a K8s Secret to pull an image from a private container image registry or repository. The name of the secret must match the name defined on your Clab topology.</p>
+                    <table id="tableSecrets" class="table table-striped display">
+                      <thead>
+                        <tr>
+                          <th>Secret Name</th>
+                          <th>Server</th>
+                          <th>Username</th>
+                          <th>Password/Token</th>
+                        </tr>
+                      </thead>
+                      <tbody id="table-body-secrets">
+                      {% for secret in clab.secret_names %}
+		      <tr id="row-secret-{{secret}}">
+                        <td><input class="form-control" type="text" name="secret-name" value="{{secret}}" disabled></td>
+                        <td><input class="form-control d-none" type="text" name="secret-server" value="" disabled></td>
+                        <td><input class="form-control d-none" type="text" name="secret-user" value="" disabled></td>
+			<td>
+                          <input class="form-control d-none" type="password" name="secret-pass" value="" disabled>
+			  <button type="button" class="btn btn-xs btn-outline-danger float-right" onclick="deleteSecretRow('{{secret}}')"><i class="fas fa-times"></i></button>
+                        </td>
+                      </tr>
+                      {% endfor %}
+	              <tr id="copy-secret-row">
+                        <td><input class="form-control" type="text" name="secret-name"></td>
+                        <td><input class="form-control" type="text" name="secret-server"></td>
+                        <td><input class="form-control" type="text" name="secret-user"></td>
+                        <td><input class="form-control" type="password" name="secret-pass"></td>
+	              </tr>
+                      </tbody>
+	              <tfoot>
+                        <tr><td colspan='4'>
+                          <button type="button" class="btn btn-secondary add-more-secret"><i class="fa fa-plus"></i> Add secret</button>
+                        </td></tr>
+                      </tfoot>
+                    </table>
+		  </div> <!-- /.col -->
+		</div>  <!-- /.row -->
               </div>
             </div>
           </div>
@@ -302,6 +354,12 @@
 <!-- Select2 -->
 <script src="/static/assets/plugins/select2/js/select2.full.min.js"></script>
 <script>
+    function deleteSecretRow(secret) {
+      const rowToDelete = document.getElementById(`row-secret-${secret}`);
+      if (rowToDelete) {
+        rowToDelete.remove(); // Removes the element from the DOM
+      }
+    }
     (function () {
         // ------- Bootstrap Duallistbox --------
         $('.duallistbox').bootstrapDualListbox({
@@ -355,6 +413,13 @@
           mode: 'markdown',
         });
         editorLabGuide.setSize("100%", 600);
+        // ------- Add secrets -------
+        $(".add-more-secret").on('click', function(){
+            //$("#copy-secret-row").clone().appendTo("#table-body-secrets");
+            var secretRow = '<tr id="copy-secret-row"><td><input class="form-control" type="text" name="secret-name"></td><td><input class="form-control" type="text" name="secret-server"></td><td><input class="form-control" type="text" name="secret-user"></td><td><input class="form-control" type="password" name="secret-pass"></td></tr>';
+            var $e = $('<div/>').html(secretRow).contents();
+            $('#table-body-secrets').append($e);
+        });
         // ------- helpers para UI/Toasts -------
         function showToast(type, title, body) {
             if (window.$ && $(document).Toasts) {
@@ -387,6 +452,9 @@
         // ------- elementos -------
         var drop = document.getElementById('dropzone');
         var fileInput = document.getElementById('clab_files');
+        var folderInput = document.getElementById('clab_folders');
+        var btnAddFile = document.getElementById('btnAddFile');
+        var btnAddDirectory = document.getElementById('btnAddDirectory');
         var filesList = document.getElementById('files_list');
         var btn = document.getElementById('btnSubmit');
         var form = document.getElementById('clab-form');
@@ -398,6 +466,14 @@
         var seenPaths = new Set();
 
         drop && drop.addEventListener('click', function () { fileInput && fileInput.click(); });
+
+        btnAddFile && btnAddFile.addEventListener('click', function () {
+            fileInput && fileInput.click();
+        });
+
+        btnAddDirectory && btnAddDirectory.addEventListener('click', function () {
+            folderInput && folderInput.click();
+        });
 
         ['dragover', 'drop'].forEach(function (evt) {
             document.addEventListener(evt, function (e) { e.preventDefault(); }, false);
@@ -586,6 +662,12 @@
 
         if (fileInput) {
             fileInput.addEventListener('change', function (e) {
+                addFiles(e.target.files);
+            });
+        }
+
+        if (folderInput) {
+            folderInput.addEventListener('change', function (e) {
                 addFiles(e.target.files);
             });
         }

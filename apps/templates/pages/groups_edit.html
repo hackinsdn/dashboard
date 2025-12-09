@@ -94,7 +94,7 @@
                       <div class="form-group">
                         <label>Access Token</label>
 		        <p>Access token is a method of allowing <i>self enrolment/auto join</i> to a group. Users will be asked to supply the access token to be authorized as a member of the group.</p>
-                        <input name="accesstoken" type="text" class="form-control" value="{{ group.accesstoken|default("", true) }}"/>
+                        <input id="accesstoken" type="text" class="form-control" value="{{ group.accesstoken|default("", true) }}"/>
                         <button type="button" class="btn btn-secondary mt-2" onclick="generateAccessToken()">Generate Random Token</button>
                       </div>
                       <!-- /.form-group -->

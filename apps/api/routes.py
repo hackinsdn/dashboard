@@ -12,7 +12,8 @@ from apps.audit_mixin import check_user_category
 from flask import request, current_app
 from flask_login import login_required, current_user
 from datetime import timedelta, datetime
-from apps.utils import datetime_from_ts, parse_lab_expiration, secure_filename
+from apps.utils import datetime_from_ts, parse_lab_expiration, check_pre_approved, secure_filename
+
 
 @blueprint.route('/pods/<lab_id>', methods=["GET"])
 @login_required
@@ -40,7 +41,7 @@ def get_lab_status(lab_id):
     if not lab:
         return {"status": "fail", "result": "Lab instance not found"}, 404
     
-    if current_user.category == "student" and lab.user_id != current_user.id:
+    if lab.user_id != current_user.id:
         return {"status": "fail", "result": "Unauthorized access to this lab"}, 401
 
     try:
@@ -51,7 +52,10 @@ def get_lab_status(lab_id):
 
     statuses = []
     for resource in resources:
-        statuses.append("ok" if resource.get("is_ok") else "not-ok")
+        statuses.append({
+            "name": f"{resource['kind']}__{resource['metadata']['name']}",
+            "status": "ok" if resource.get("is_ok") else "not-ok",
+        })
     return {"status": "ok", "result": statuses}, 200
 
 @blueprint.route('/lab/<lab_id>', methods=["DELETE"])
@@ -333,6 +337,9 @@ def join_group(group_id):
     except Exception as exc:
         current_app.logger.error(f"Failed to join group {group_id}: {exc}")
         return {"status": "fail", "result": "Failed to join group"}, 400
+
+    if check_pre_approved(current_user):
+        db.session.commit()
 
     return {"status": "ok", "result": "Joint group successfully! Click on 'Reload profile' to update your authorization."}, 200
 

@@ -270,6 +270,10 @@ export MAIL_SENDTO=xxxx
 export MAIL_PASSWORD=xxxx
 ```
 
+## Customize the UI elements
+
+See [Customize UI][./UI-Customizations.md]
+
 ## Running a Hello World Lab
 
 Once you have set up the Dashboard, you can open your browser and type the IP address of your installation and port 8080 (protocol HTTP). You should be able to see the login page. Login with the admin user and the random password created above.

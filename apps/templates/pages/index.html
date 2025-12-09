@@ -209,12 +209,12 @@
                 <div class="row">
                   <div class="col-md-8">
                     <p class="text-center">
-                      <strong>Lab instances created: {{stats['lab_inst_period_report']}}</strong>
+                      <strong>Completed Labs in the past 6 months</strong>
                     </p>
 
                     <div class="chart">
                       <!-- Sales Chart Canvas -->
-                      <canvas id="salesChart" height="180" style="height: 180px;"></canvas>
+                      <canvas id="salesChart" height="100"></canvas>
                     </div>
                     <!-- /.chart-responsive -->
                   </div>
@@ -226,7 +226,7 @@
 
                     <div class="progress-group">
                       Completed Labs
-                      <span class="float-right"><b>{{stats['cpu_usage']}}</b>/{{stats['cpu_capacity']}}</span>
+                      <span class="float-right fw-bold" id="completed-labs-last-six-months">0</span>
                       <div class="progress progress-sm">
                         <div class="progress-bar bg-primary" style="width: 80%"></div>
                       </div>
@@ -234,17 +234,17 @@
                     <!-- /.progress-group -->
 
                     <div class="progress-group">
-                      Answred questions
-                      <span class="float-right"><b>310</b>/400</span>
+                      Answered questions
+                      <span class="float-right fw-bold" id="answered-questions-last-six-months">0</span>
                       <div class="progress progress-sm">
-                        <div class="progress-bar bg-danger" style="width: 75%"></div>
+                        <div class="progress-bar bg-danger" style="width: 60%"></div>
                       </div>
                     </div>
 
                     <!-- /.progress-group -->
                     <div class="progress-group">
                       <span class="progress-text">Solved Challenges</span>
-                      <span class="float-right"><b>480</b>/800</span>
+                      <span class="float-right fw-bold" id="solved-challenges-last-six-months">0</span>
                       <div class="progress progress-sm">
                         <div class="progress-bar bg-success" style="width: 60%"></div>
                       </div>
@@ -269,8 +269,10 @@
                 <div class="row">
                   <div class="col-sm-4 col-8">
                     <div class="description-block border-right">
-                      <span class="description-percentage text-success"><i class="fas fa-caret-up"></i> 17%</span>
-                      <h5 class="description-header">35</h5>
+                      <div id="completed-labs-growth">
+                        <span class="description-percentage text-warning"><i class="fas fa-caret-up"></i> 0</span>
+                      </div>
+                      <h5 class="description-header" id="current-month-completed-labs">0</h5>
                       <span class="description-text">LAST MONTH LAB COMPLETION</span>
                     </div>
                     <!-- /.description-block -->
@@ -278,8 +280,10 @@
                   <!-- /.col -->
                   <div class="col-sm-4 col-8">
                     <div class="description-block border-right">
-                      <span class="description-percentage text-warning"><i class="fas fa-caret-left"></i> 0%</span>
-                      <h5 class="description-header">10</h5>
+                      <div id="completed-challenges-growth">
+                        <span class="description-percentage text-warning"><i class="fas fa-caret-up"></i> 0%</span>
+                      </div>
+                      <h5 class="description-header" id="current-month-answers-questions">0</h5>
                       <span class="description-text">LAST MONTH ANSWRED QUESTIONS</span>
                     </div>
                     <!-- /.description-block -->
@@ -287,8 +291,10 @@
                   <!-- /.col -->
                   <div class="col-sm-4 col-8">
                     <div class="description-block border-right">
-                      <span class="description-percentage text-success"><i class="fas fa-caret-up"></i> 20%</span>
-                      <h5 class="description-header">5</h5>
+                      <div id="answered-questions-growth">
+                        <span class="description-percentage text-warning"><i class="fas fa-caret-up"></i> 0%</span>
+                      </div>
+                      <h5 class="description-header" id="current-month-completed-challenges">0</h5>
                       <span class="description-text">LAST MONTH SOLVED CHALLENGES</span>
                     </div>
                     <!-- /.description-block -->
@@ -461,7 +467,9 @@
   <!-- PAGE PLUGINS -->
   <!-- Leaflet -->
   <script src="/static/assets/plugins/leaflet/leaflet.js"></script>
+  {% if config.MAP_GEOJSON_JS %}
   <script src="/static/assets/plugins/leaflet/geojson/{{config.MAP_GEOJSON_JS}}"></script>
+  {% endif %}
   <!-- ChartJS -->
   <script src="/static/assets/plugins/chart.js/Chart.min.js"></script>
   <!-- Motion JS -->
@@ -626,6 +634,76 @@
           pieChartLegend.innerHTML += `<li><i class="fa fa-circle fa-border text-${categories[name]}"></i> ${name}</li>`;
       });
       // ------ END PIE CHART ------
+      // ------ Lab Usage BEGIN -----
+      const updateGrowthAmount = (elementId, growthValue) => {
+        const element = document.getElementById(elementId);
+        if (growthValue > 0) {
+           element.innerHTML = `<span class="description-percentage text-success"><i class="fas fa-caret-up"></i> ${growthValue}</span>`;
+        } else if (growthValue < 0) {
+          element.innerHTML = `<span class="description-percentage text-danger"><i class="fas fa-caret-down"></i> ${Math.abs(growthValue)}</span>`;
+        }
+      };
+      const salesChartCanvas = $('#salesChart').get(0).getContext('2d');
+      const labsData = {{stats.lab_usage.labs|safe}};
+      const answersData = {{stats.lab_usage.answers|safe}};
+      const salesChartData = {
+        labels: {{stats.lab_usage.months|safe}},
+        datasets: [
+          {
+             label: 'Lab Instances',
+            backgroundColor: 'rgba(60,141,188,0.9)',
+            borderColor: 'rgba(60,141,188,0.8)',
+            pointRadius: false,
+            pointColor: '#3b8bba',
+            pointStrokeColor: 'rgba(60,141,188,1)',
+            pointHighlightFill: '#fff',
+            pointHighlightStroke: 'rgba(60,141,188,1)',
+            data: labsData,
+          }
+        ]
+      };
+      const salesChartOptions = {
+        maintainAspectRatio: true,
+        responsive: true,
+        legend: {
+          display: true
+        },
+        scales: {
+          xAxes: [{
+            gridLines: {
+              display: false
+            }
+          }],
+          yAxes: [{
+            gridLines: {
+              display: false
+            }
+          }]
+        },
+        tooltips: {
+          mode: 'index',
+          intersect: false
+        },
+        hover: {
+          mode: 'index',
+          intersect: false
+        }
+      };
+      new Chart(salesChartCanvas, {
+        type: 'line',
+        data: salesChartData,
+        options: salesChartOptions
+      });
+      $('#current-month-completed-labs').text(labsData.at(-1));
+      $('#current-month-answers-questions').text(answersData.at(-1));
+      $('#current-month-completed-challenges').text(answersData.at(-1));
+      $('#completed-labs-last-six-months').text({{stats.lab_usage.total_labs}});
+      $('#answered-questions-last-six-months').text({{stats.lab_usage.total_answers}});
+      $('#solved-challenges-last-six-months').text({{stats.lab_usage.total_answers}});
+      updateGrowthAmount('completed-labs-growth', labsData.at(-1) - labsData.at(-2));
+      updateGrowthAmount('completed-challenges-growth', answersData.at(-1) - answersData.at(-2));
+      updateGrowthAmount('answered-questions-growth', answersData.at(-1) - answersData.at(-2));
+      // ------ Lab Usage END -----
     });
   </script>
 
