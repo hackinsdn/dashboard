@@ -478,11 +478,14 @@ def edit_lab(lab_id):
 @login_required
 @check_user_category(["admin", "teacher"])
 def view_users():
-    users_q = Users.query.filter_by(is_deleted=False)
+   
+    users = Users.query.filter_by(is_deleted=False)
     if current_user.category in ["teacher"]:
-        users_q = users_q.filter(Users.category == "user")
-    users = users_q.all()
+        users = users.filter(Users.category == "user")
+    users = users.all()
+
     return render_template("pages/users.html", users=users)
+
 
 @blueprint.route('/labs/view', methods=["GET"])
 @blueprint.route('/labs/view/<lab_id>', methods=["GET"])
