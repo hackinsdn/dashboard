@@ -206,7 +206,6 @@ def run_lab(lab_id):
         clab_md = lab.lab_metadata.md
         lab_manifest += "\n---\n" + c9s.get_topology_visualizer_manifest(pod_hash, clab_md["topology"])
 
-    current_app.logger.warning(f"creating manifest: {lab_manifest}")
     status, msg = k8s.create_lab(lab_id, lab_manifest, user_uid=current_user.uid, pod_hash=pod_hash, replace_identifiers=replace_identifiers)
 
     if status:
