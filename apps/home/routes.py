@@ -9,7 +9,7 @@ from collections import OrderedDict
 
 from apps import db, cache
 from apps.home import blueprint
-from apps.controllers import k8s
+from apps.controllers import k8s, c9s
 from apps.home.models import Labs, LabInstances, LabCategories, LabAnswers, LabAnswerSheet, HomeLogging, UserLikes, UserFeedbacks
 from apps.authentication.models import Users, Groups
 from flask import render_template, request, current_app, redirect, url_for, session
@@ -203,6 +203,8 @@ def run_lab(lab_id):
     if lab.is_clab:
         replace_identifiers = False
         lab_manifest = lab_manifest.replace(f"clab-{lab.lab_metadata.short_uuid}", f"clab-{pod_hash}")
+        clab_md = lab.lab_metadata.md
+        lab_manifest += "\n---\n" + c9s.get_topology_visualizer_manifest(pod_hash, clab_md["topology"])
 
     status, msg = k8s.create_lab(lab_id, lab_manifest, user_uid=current_user.uid, pod_hash=pod_hash, replace_identifiers=replace_identifiers)
 
@@ -389,6 +391,7 @@ def view_lab_instance(lab_id):
             "age": pod['age'],
             "node_name": pod.get("node_name", "--"),
             "pod_ip": pod.get("pod_ip", "--"),
+            "labels": pod["labels"],
         })
     if created:
         lab_dict["created"] = created.strftime('%Y-%m-%d %H:%M:%S')
