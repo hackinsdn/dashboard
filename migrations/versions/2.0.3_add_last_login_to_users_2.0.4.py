@@ -1,7 +1,7 @@
 """add last_login column on users
 
-Revision ID: 2.0.8
-Revises: 2.0.7
+Revision ID: 2.0.4
+Revises: 2.0.3
 Create Date: 2025-12-01
 """
 
@@ -9,8 +9,8 @@ from alembic import op
 import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
-revision = "2.0.8"
-down_revision = "2.0.7"
+revision = "2.0.4"
+down_revision = "2.0.3"
 branch_labels = None
 depends_on = None
 
