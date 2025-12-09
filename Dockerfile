@@ -12,7 +12,7 @@ RUN --mount=source=requirements.txt,target=/mnt/requirements.txt,type=bind \
 
 WORKDIR /app
 RUN --mount=source=.,target=/mnt,type=bind \
-    cd /mnt && cp -r apps dbinit.py docker-entrypoint.sh scripts run.py /app/
+    cd /mnt && cp -r apps dbinit.py docker-entrypoint.sh scripts run.py migrations /app/
 
 EXPOSE 3000
 
