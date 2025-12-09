@@ -204,7 +204,9 @@ def run_lab(lab_id):
         replace_identifiers = False
         lab_manifest = lab_manifest.replace(f"clab-{lab.lab_metadata.short_uuid}", f"clab-{pod_hash}")
         clab_md = lab.lab_metadata.md
-        lab_manifest += "\n---\n" + c9s.get_topology_visualizer_manifest(pod_hash, clab_md["topology"])
+        topology = clab_md.get("topology") or clab_md.get("clab")
+        if topology:
+            lab_manifest += "\n---\n" + c9s.get_topology_visualizer_manifest(pod_hash, topology)
 
     status, msg = k8s.create_lab(lab_id, lab_manifest, user_uid=current_user.uid, pod_hash=pod_hash, replace_identifiers=replace_identifiers)
 
