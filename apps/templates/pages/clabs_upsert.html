@@ -463,7 +463,7 @@
 
         var markedLines = [];
 
-        var seenPaths = new Set();
+        var seenPaths = {};
 
         drop && drop.addEventListener('click', function () { fileInput && fileInput.click(); });
 
@@ -499,17 +499,17 @@
                 btnRem.innerHTML = '<i class="fas fa-times"></i>';
                 btnRem.addEventListener('click', (function (index) {
                     return function () {
-                        var newStore = new DataTransfer();
-                        for (let j = 0; j < store.files.length; j++) {
-                            if (j !== index) newStore.items.add(store.files[j]);
+                        try {
+                            let file = store.items[index].getAsFile();
+                            store.items.remove(index);
+                            let key = file.webkitRelativePath || file.name;
+                            delete seenPaths[key];
+                        } catch (e) {
+                            console.warn('Could not remove file from DataTransfer:', e);
                         }
-                        // atualizar seenPaths
-                        seenPaths.clear();
-                        for (let k = 0; k < newStore.files.length; k++) {
-                            seenPaths.add(newStore.files[k].name);
-                        }
-                        store = newStore;
-                        fileInput.files = store.files;
+                        try {
+                            fileInput.files = store.files;
+                        } catch (e) {}
                         renderFilesList();
                     };
                 })(i));
@@ -552,20 +552,26 @@
         })();
 
 
-        // ====== Adição / deduplicação de arquivos ao store ======
+        // ====== Adding files into store and check for duplication ======
         function addFiles(fileList) {
             if (!fileList || !fileList.length) return;
+
             for (let i = 0; i < fileList.length; i++) {
                 let f = fileList[i];
-                var key = f.webkitRelativePath || f.name || f.fileName || f.path || (i + ':' + f.size);
-                if (seenPaths.has(key)) continue;
-                seenPaths.add(key);
+                let key = f.webkitRelativePath || f.name;
+                if (key in seenPaths) {
+                    store.items.remove(seenPaths[key]);
+                    delete seenPaths[key];
+                }
+
                 try {
+                    seenPaths[key] = store.items.length;
                     store.items.add(f);
                 } catch (e) {
                     console.warn('Could not add file to DataTransfer:', e, f);
                 }
             }
+
             try { fileInput.files = store.files; } catch (e) { /* some browsers don't allow */ }
             renderFilesList();
         }
@@ -691,12 +697,14 @@
                 spinner.classList.add('d-none');
                 return;
             }
+
+            // save relative paths to send to server side
             for (const file of fileInput.files) {
-              fd.append("relative_paths", file.webkitRelativePath || file.name);
+                fd.append("relative_paths", file.webkitRelativePath || file.name);
             }
 
             try {
-                var resp = await fetch('{{ url_for("clabs_blueprint.upsert", clab_id=clab.id|default('new', true)) }}', {
+                var resp = await fetch('{{ url_for("clabs_blueprint.upsert", clab_id=clab.id|default("new", true)) }}', {
                     method: 'POST',
                     body: fd
                 });
@@ -721,14 +729,11 @@
                     } else {
                         resultText = await resp.text();
                         sessionStorage.setItem('msgSuccess', resultText || 'CLab created.');
-                        //showToast('bg-success', 'Success', sessionStorage.getItem('msgSuccess'));
                         window.location = '{{ url_for("home_blueprint.view_labs") }}';
                     }
                 }
             } catch (err) {
-                //sessionStorage.setItem('msgFail', `Failed to create ContainerLab: ${err.name}: ${err.message}`);
                 showToast('bg-danger', 'Failure', `Failed to create ContainerLab: ${err.name}: ${err.message}`);
-                //window.location = '{{ url_for("home_blueprint.view_labs") }}';
             } finally {
                 btn.disabled = false;
                 btnText.classList.remove('d-none');
