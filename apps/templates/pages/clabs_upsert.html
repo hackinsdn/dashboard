@@ -463,6 +463,8 @@
 
         var markedLines = [];
 
+        var seenPaths = {};
+
         drop && drop.addEventListener('click', function () { fileInput && fileInput.click(); });
 
         btnAddFile && btnAddFile.addEventListener('click', function () {
@@ -498,7 +500,10 @@
                 btnRem.addEventListener('click', (function (index) {
                   return function () {
                       try {
+                          let file = store.items[index].getAsFile();
                           store.items.remove(index);
+                          let key = file.webkitRelativePath || file.name;
+                          delete seenPaths[key];
                       } catch (e) {
                           console.warn('Could not remove file from DataTransfer:', e);
                       }
@@ -547,36 +552,27 @@
         })();
 
 
-        // ====== Adição / deduplicação de arquivos ao store ======
+        // ====== Adding files into store and check for duplication ======
         function addFiles(fileList) {
             if (!fileList || !fileList.length) return;
 
             for (let i = 0; i < fileList.length; i++) {
                 let f = fileList[i];
                 let key = f.webkitRelativePath || f.name;
-
-                for (let j = store.items.length - 1; j >= 0; j--) {
-                    let existingItem = store.items[j];
-                    let existingFile = existingItem.getAsFile();
-                    
-                    if (existingFile) {
-                        let existingKey = existingFile.webkitRelativePath || existingFile.name;
-                        
-                        if (existingKey === key) {
-                            store.items.remove(j);
-                            break; 
-                        }
-                    }
+                if (key in seenPaths) {
+                    store.items.remove(seenPaths[key]);
+                    delete seenPaths[key];
                 }
 
                 try {
+                    seenPaths[key] = store.items.length;
                     store.items.add(f);
                 } catch (e) {
                     console.warn('Could not add file to DataTransfer:', e, f);
                 }
             }
 
-            try { fileInput.files = store.files; } catch (e) { /* browsers antigos */ }
+            try { fileInput.files = store.files; } catch (e) { /* old browsers */ }
             renderFilesList();
         }
 
@@ -683,68 +679,68 @@
         }
 
         async function handleSubmit() {
-          var btnText = btn.querySelector('.btn-text');
-          var spinner = btn.querySelector('.spinner-border');
-          btn.disabled = true; btnText.classList.add('d-none'); spinner.classList.remove('d-none');
+            var btnText = btn.querySelector('.btn-text');
+            var spinner = btn.querySelector('.spinner-border');
+            btn.disabled = true; btnText.classList.add('d-none'); spinner.classList.remove('d-none');
 
-          if (typeof CodeMirror !== 'undefined' && cm) { cm.save(); }
-          if (editorLabGuide) { editorLabGuide.save(); }
+            if (typeof CodeMirror !== 'undefined' && cm) { cm.save(); }
+            if (editorLabGuide) { editorLabGuide.save(); }
 
-          var fd = new FormData(form);
+            var fd = new FormData(form);
 
-          // adiciona os paths relativos de cada arquivo
-          for (const file of fileInput.files) {
-              fd.append("relative_paths", file.webkitRelativePath || file.name);
-          }
+            // adiciona os paths relativos de cada arquivo
+            for (const file of fileInput.files) {
+                fd.append("relative_paths", file.webkitRelativePath || file.name);
+            }
 
-          var hasYaml = (fd.get('clab_yaml') || '').trim().length > 0;
-          var filesLen = fileInput.files.length;
-          if (!hasYaml && filesLen === 0) {
-              showToast('bg-danger', 'Failure', 'Provide YAML and/or files');
-              btn.disabled = false;
-              btnText.classList.remove('d-none');
-              spinner.classList.add('d-none');
-              return;
-          }
+            var hasYaml = (fd.get('clab_yaml') || '').trim().length > 0;
+            var filesLen = fileInput.files.length;
+            if (!hasYaml && filesLen === 0) {
+                showToast('bg-danger', 'Failure', 'Provide YAML and/or files');
+                btn.disabled = false;
+                btnText.classList.remove('d-none');
+                spinner.classList.add('d-none');
+                return;
+            }
 
-          try {
-              var resp = await fetch('{{ url_for("clabs_blueprint.upsert", clab_id=clab.id|default("new", true)) }}', {
-                  method: 'POST',
-                  body: fd
-              });
-              if (!resp.ok) {
-                  const errorText = await resp.text();
-                  throw new Error(`HTTP Error ${resp.status}, Message: ${errorText}`);
-              }
+            try {
+                var resp = await fetch('{{ url_for("clabs_blueprint.upsert", clab_id=clab.id|default("new", true)) }}', {
+                    method: 'POST',
+                    body: fd
+                });
+                if (!resp.ok) {
+                    const errorText = await resp.text();
+                    throw new Error(`HTTP Error ${resp.status}, Message: ${errorText}`);
+                }
 
-              var resultText;
-              try {
-                  var j = await resp.json();
-                  if (!resp.ok) {
-                      console.error('Server error:', j);
-                      throw (j && j.result) || 'Failed';
-                  }
-                  resultText = j.result || 'CLab created (mock).';
-                  sessionStorage.setItem('msgSuccess', resultText);
-                  window.location = '{{ url_for("home_blueprint.view_labs") }}/' + j.clab_id;
-              } catch (innerErr) {
-                  if (!resp.ok) {
-                      throw innerErr;
-                  } else {
-                      resultText = await resp.text();
-                      sessionStorage.setItem('msgSuccess', resultText || 'CLab created.');
-                      window.location = '{{ url_for("home_blueprint.view_labs") }}';
-                  }
-              }
-          } catch (err) {
-              showToast('bg-danger', 'Failure', `Failed to create ContainerLab: ${err.name}: ${err.message}`);
-          } finally {
-              btn.disabled = false;
-              btnText.classList.remove('d-none');
-              spinner.classList.add('d-none');
-              renderFilesList();
-          }
-      }
+                var resultText;
+                try {
+                    var j = await resp.json();
+                    if (!resp.ok) {
+                        console.error('Server error:', j);
+                        throw (j && j.result) || 'Failed';
+                    }
+                    resultText = j.result || 'CLab created (mock).';
+                    sessionStorage.setItem('msgSuccess', resultText);
+                    window.location = '{{ url_for("home_blueprint.view_labs") }}/' + j.clab_id;
+                } catch (innerErr) {
+                    if (!resp.ok) {
+                        throw innerErr;
+                    } else {
+                        resultText = await resp.text();
+                        sessionStorage.setItem('msgSuccess', resultText || 'CLab created.');
+                        window.location = '{{ url_for("home_blueprint.view_labs") }}';
+                    }
+                }
+            } catch (err) {
+                showToast('bg-danger', 'Failure', `Failed to create ContainerLab: ${err.name}: ${err.message}`);
+            } finally {
+                btn.disabled = false;
+                btnText.classList.remove('d-none');
+                spinner.classList.add('d-none');
+                renderFilesList();
+            }
+        }
 
         if (btn) btn.addEventListener('click', handleSubmit);
 
