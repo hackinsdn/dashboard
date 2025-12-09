@@ -71,7 +71,9 @@
                     <th>E-mail</th>
                     <th>Category</th>
                     <th>Issuer</th>
-                    <th>Actions</th>
+                    <th>Last loginss</th>
+                    <th>Created at</th>
+                    <th>Actions kkkk</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -88,6 +90,21 @@
                   <td>{{ user.email|default('', true) }}</td>
                   <td>{{ user.category }}</td>
                   <td>{{ user.issuer|default('LOCAL', true) }}</td>
+                  {% if user.last_login %}
+                  <td data-order="{{ user.last_login.isoformat() }}" title="{{ user.last_login.isoformat() }}">
+                    {{ user.last_login.strftime('%d/%m/%Y %H:%M') }}
+                  </td>
+                  {% else %}
+                  <td data-order="" title="—">&mdash;</td>
+                  {% endif %}
+
+                  {% if user.created_at %}
+                  <td data-order="{{ user.created_at.isoformat() }}" title="{{ user.created_at.isoformat() }}">
+                    {{ user.created_at.strftime('%d/%m/%Y %H:%M') }}
+                  </td>
+                  {% else %}
+                  <td data-order="" title="—">&mdash;</td>
+                  {% endif %}
                   <td><a href="{{url_for('home_blueprint.edit_user', user_id=user.id)}}" class="btn btn-outline-dark" role="button" aria-pressed="true"><i class="fa fa-pen"></i> Edit</a></td>
                 </tr>
                 {% endfor %}
