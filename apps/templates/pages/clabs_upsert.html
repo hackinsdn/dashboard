@@ -498,21 +498,21 @@
                 btnRem.className = 'btn btn-xs btn-outline-danger ml-2';
                 btnRem.innerHTML = '<i class="fas fa-times"></i>';
                 btnRem.addEventListener('click', (function (index) {
-                  return function () {
-                      try {
-                          let file = store.items[index].getAsFile();
-                          store.items.remove(index);
-                          let key = file.webkitRelativePath || file.name;
-                          delete seenPaths[key];
-                      } catch (e) {
-                          console.warn('Could not remove file from DataTransfer:', e);
-                      }
-                      try {
-                          fileInput.files = store.files;
-                      } catch (e) {}
-                      renderFilesList();
-                  };
-              })(i));
+                    return function () {
+                        try {
+                            let file = store.items[index].getAsFile();
+                            store.items.remove(index);
+                            let key = file.webkitRelativePath || file.name;
+                            delete seenPaths[key];
+                        } catch (e) {
+                            console.warn('Could not remove file from DataTransfer:', e);
+                        }
+                        try {
+                            fileInput.files = store.files;
+                        } catch (e) {}
+                        renderFilesList();
+                    };
+                })(i));
                 li.appendChild(name);
                 li.appendChild(btnRem);
                 ul.appendChild(li);
@@ -572,7 +572,7 @@
                 }
             }
 
-            try { fileInput.files = store.files; } catch (e) { /* old browsers */ }
+            try { fileInput.files = store.files; } catch (e) { /* some browsers don't allow */ }
             renderFilesList();
         }
 
@@ -688,11 +688,6 @@
 
             var fd = new FormData(form);
 
-            // adiciona os paths relativos de cada arquivo
-            for (const file of fileInput.files) {
-                fd.append("relative_paths", file.webkitRelativePath || file.name);
-            }
-
             var hasYaml = (fd.get('clab_yaml') || '').trim().length > 0;
             var filesLen = fileInput.files.length;
             if (!hasYaml && filesLen === 0) {
@@ -701,6 +696,11 @@
                 btnText.classList.remove('d-none');
                 spinner.classList.add('d-none');
                 return;
+            }
+
+            // save relative paths to send to server side
+            for (const file of fileInput.files) {
+                fd.append("relative_paths", file.webkitRelativePath || file.name);
             }
 
             try {
