@@ -204,7 +204,12 @@ def run_lab(lab_id):
         replace_identifiers = False
         lab_manifest = lab_manifest.replace(f"clab-{lab.lab_metadata.short_uuid}", f"clab-{pod_hash}")
         clab_md = lab.lab_metadata.md
-        topology = clab_md.get("topology") or clab_md.get("clab")
+        topology = clab_md.get("topology")
+        if not topology:
+            # backwards compatibility: try with 'clab' which requires some clean up
+            topology = clab_md.get("clab")
+            if topology:
+                topology = c9s.clean_up_for_clab_graph(topology)
         if topology:
             lab_manifest += "\n---\n" + c9s.get_topology_visualizer_manifest(pod_hash, topology)
 

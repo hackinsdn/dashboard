@@ -99,6 +99,22 @@ class C9sController:
                 return file
         return filename
 
+    def clean_up_for_clab_graph(self, topology):
+        """We leverage 'clab graph' for topology visualization and it will fail
+        with 'no such file or directory' error if binds are defined but files
+        are not present. To avoid having to also mount files, we just remove
+        binds.
+        """
+        if "defaults" in topology["topology"]:
+            topology["topology"]["defaults"].pop("binds", None)
+        for kind in topology["topology"].get("kinds", {}).values():
+            kind.pop("binds", None)
+        for group in topology["topology"].get("groups", {}).values():
+            group.pop("binds", None)
+        for node in topology["topology"]["nodes"].values():
+            node.pop("binds", None)
+        return topology
+
     def process_clab_topology(self, topology_dir, clab_uuid=None, secrets={}):
         """Process ContainerLab topology before running clabverter.
 
@@ -183,14 +199,7 @@ class C9sController:
             return False, f"An error occurred saving ContainerLab topology file: {e}"
 
         # remove binds from topology to be consumed by visualizer
-        if "defaults" in topology["topology"]:
-            topology["topology"]["defaults"].pop("binds", None)
-        for kind in topology["topology"].get("kinds", {}).values():
-            kind.pop("binds", None)
-        for group in topology["topology"].get("groups", {}).values():
-            group.pop("binds", None)
-        for node in topology["topology"]["nodes"].values():
-            node.pop("binds", None)
+        topology = self.clean_up_for_clab_graph(topology)
 
         return True, topology
 
