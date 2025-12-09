@@ -71,6 +71,8 @@
                     <th>E-mail</th>
                     <th>Category</th>
                     <th>Issuer</th>
+                    <th>Last login (UTC)</th>
+                    <th>Created at (UTC)</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -88,6 +90,8 @@
                   <td>{{ user.email|default('', true) }}</td>
                   <td>{{ user.category }}</td>
                   <td>{{ user.issuer|default('LOCAL', true) }}</td>
+                  <td>{{ user.last_login.strftime('%Y-%m-%d %H:%M') if user.last_login else '--' }}</td>
+                  <td>{{ user.created_at.strftime('%Y-%m-%d %H:%M') if user.created_at else '--' }}</td>
                   <td><a href="{{url_for('home_blueprint.edit_user', user_id=user.id)}}" class="btn btn-outline-dark" role="button" aria-pressed="true"><i class="fa fa-pen"></i> Edit</a></td>
                 </tr>
                 {% endfor %}
