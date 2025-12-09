@@ -46,8 +46,14 @@ spec:
         args:
         - |
           service docker start
+          echo Waiting for Docker daemon to be ready...
+          until [ -S /var/run/docker.sock ]; do sleep 1; done
+          service docker status
+          docker info
+          echo Waiting for topology to be ready...
           until [ -s /topology-data.yaml ]; do sleep 1; done
           cat /topology-data.yaml
+          echo Starting clab graph...
           clab graph --offline --topo /topology-data.yaml
         volumeMounts:
         - name: clab-topology-data
