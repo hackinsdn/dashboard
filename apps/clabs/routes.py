@@ -45,7 +45,6 @@ def upsert(clab_id="new"):
     if request.method == "GET":
         return render_template("pages/clabs_upsert.html", clab=clab, lab_categories=lab_categories, groups=groups, current_files=current_files)
 
-    current_app.logger.info(f"clab_id={clab.id} short_uuid={clab_uuid} clab_guide={request.form['clab_guide']}")
     clab.title = request.form.get("clab_title", "").strip()
     clab.description = request.form.get("clab_desc", "").strip()
     clab.set_extended_desc(request.form["clab_extended_desc"])
@@ -136,9 +135,8 @@ def upsert(clab_id="new"):
         if not topo_status:
             msg = f"Failed to parse ContainerLab topology from {clab_dir}: {topo_data}"
             current_app.logger.error(msg)
-            if clab_id == "new":
-                current_app.logger.info(f"Remove files from {clab_dir}")
-                shutil.rmtree(clab_dir)
+            current_app.logger.info(f"Remove files from {clab_dir}")
+            shutil.rmtree(clab_dir)
             return jsonify({"ok": False, "result": msg}), 400
 
         md = clab_md.md
