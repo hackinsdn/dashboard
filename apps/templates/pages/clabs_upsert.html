@@ -463,8 +463,6 @@
 
         var markedLines = [];
 
-        var seenPaths = new Set();
-
         drop && drop.addEventListener('click', function () { fileInput && fileInput.click(); });
 
         btnAddFile && btnAddFile.addEventListener('click', function () {
@@ -498,21 +496,18 @@
                 btnRem.className = 'btn btn-xs btn-outline-danger ml-2';
                 btnRem.innerHTML = '<i class="fas fa-times"></i>';
                 btnRem.addEventListener('click', (function (index) {
-                    return function () {
-                        var newStore = new DataTransfer();
-                        for (let j = 0; j < store.files.length; j++) {
-                            if (j !== index) newStore.items.add(store.files[j]);
-                        }
-                        // atualizar seenPaths
-                        seenPaths.clear();
-                        for (let k = 0; k < newStore.files.length; k++) {
-                            seenPaths.add(newStore.files[k].name);
-                        }
-                        store = newStore;
-                        fileInput.files = store.files;
-                        renderFilesList();
-                    };
-                })(i));
+                  return function () {
+                      try {
+                          store.items.remove(index);
+                      } catch (e) {
+                          console.warn('Could not remove file from DataTransfer:', e);
+                      }
+                      try {
+                          fileInput.files = store.files;
+                      } catch (e) {}
+                      renderFilesList();
+                  };
+              })(i));
                 li.appendChild(name);
                 li.appendChild(btnRem);
                 ul.appendChild(li);
@@ -554,42 +549,37 @@
 
         // ====== Adição / deduplicação de arquivos ao store ======
         function addFiles(fileList) {
-          if (!fileList || !fileList.length) return;
+            if (!fileList || !fileList.length) return;
 
-          for (let i = 0; i < fileList.length; i++) {
-              let f = fileList[i];
-              var key = f.webkitRelativePath || f.name || f.fileName || f.path || (i + ':' + f.size);
+            for (let i = 0; i < fileList.length; i++) {
+                let f = fileList[i];
+                // Chave única do arquivo que está entrando
+                let key = f.webkitRelativePath || f.name;
 
-              for (let j = 0; j < store.files.length; j++) {
-                  var existing = store.files[j];
-                  var existingKey = existing.webkitRelativePath || existing.name || existing.fileName || existing.path || (j + ':' + existing.size);
+                for (let j = store.items.length - 1; j >= 0; j--) {
+                    let existingItem = store.items[j];
+                    let existingFile = existingItem.getAsFile();
+                    
+                    if (existingFile) {
+                        let existingKey = existingFile.webkitRelativePath || existingFile.name;
+                        
+                        if (existingKey === key) {
+                            store.items.remove(j);
+                            break; 
+                        }
+                    }
+                }
 
-                  if (existingKey === key) {
-                      try {
-                          store.items.remove(j);
-                      } catch (e) {
-                          console.warn('Could not remove file from DataTransfer:', e, existing);
-                      }
-                      break;
-                  }
-              }
+                try {
+                    store.items.add(f);
+                } catch (e) {
+                    console.warn('Could not add file to DataTransfer:', e, f);
+                }
+            }
 
-              seenPaths.add(key);
-
-              try {
-                  store.items.add(f);
-              } catch (e) {
-                  console.warn('Could not add file to DataTransfer:', e, f);
-              }
-          }
-
-          try {
-              fileInput.files = store.files;
-          } catch (e) {}
-
-          renderFilesList();
-      }
-
+            try { fileInput.files = store.files; } catch (e) { /* browsers antigos */ }
+            renderFilesList();
+        }
 
         function traverseFileTree(entry, path) {
             return new Promise(function (resolve) {
@@ -703,6 +693,11 @@
 
           var fd = new FormData(form);
 
+          // adiciona os paths relativos de cada arquivo
+          for (const file of fileInput.files) {
+              fd.append("relative_paths", file.webkitRelativePath || file.name);
+          }
+
           var hasYaml = (fd.get('clab_yaml') || '').trim().length > 0;
           var filesLen = fileInput.files.length;
           if (!hasYaml && filesLen === 0) {
@@ -711,9 +706,6 @@
               btnText.classList.remove('d-none');
               spinner.classList.add('d-none');
               return;
-          }
-          for (const file of fileInput.files) {
-            fd.append("relative_paths", file.webkitRelativePath || file.name);
           }
 
           try {
