@@ -115,6 +115,27 @@ class C9sController:
             node.pop("binds", None)
         return topology
 
+    def check_topology_secrets(self, topology, secrets):
+        failed_secrets = []
+        for node_name, node in topology["topology"]["nodes"].items():
+            for s_idx, s_name in enumerate(node.get("imagePullSecrets", [])):
+                if s_name in secrets:
+                    node["imagePullSecrets"][s_idx] = secrets[s_name]
+                else:
+                    failed_secrets.append(f"imagePullSecrets '{s_name}' for node={node_name} not defined!")
+        for s_idx, s_name in enumerate(topology["topology"].get("defaults", {}).get("imagePullSecrets", [])):
+            if s_name in secrets:
+                topology["topology"]["defaults"]["imagePullSecrets"][s_idx] = secrets[s_name]
+            else:
+                failed_secrets.append(f"imagePullSecrets '{s_name}' for topology.defaults not defined!")
+        for kind_name, kind in topology["topology"].get("kinds", {}).items():
+            for s_idx, s_name in enumerate(kind.get("imagePullSecrets", [])):
+                if s_name in secrets:
+                    kind["imagePullSecrets"][s_idx] = secrets[s_name]
+                else:
+                    failed_secrets.append(f"imagePullSecrets '{s_name}' for kind={kind_name} not defined!")
+        return failed_secrets
+
     def process_clab_topology(self, topology_dir, clab_uuid=None, secrets={}):
         """Process ContainerLab topology before running clabverter.
 
@@ -145,7 +166,7 @@ class C9sController:
 
         # Handle absolute paths, extract ports and parse topology for visualizer
         published_ports = {}
-        for node in topology["topology"]["nodes"].values():
+        for node_name, node in topology["topology"]["nodes"].items():
             if node.get("startup-config"):
                 node["startup-config"] = self.filename_from_uploads(node["startup-config"], uploaded_files)
             for i, bind in enumerate(node.get("binds", [])):
@@ -169,24 +190,7 @@ class C9sController:
         topology["ports"] = published_ports
 
         # Handle imagePullSecrets
-        failed_secrets = []
-        for node_name, node in topology["topology"]["nodes"].items():
-            for s_idx, s_name in enumerate(node.get("imagePullSecrets", [])):
-                if s_name in secrets:
-                    node["imagePullSecrets"][s_idx] = secrets[s_name]
-                else:
-                    failed_secrets.append(f"imagePullSecrets '{s_name}' for node={node_name} not defined!")
-        for s_idx, s_name in enumerate(topology["topology"].get("defaults", {}).get("imagePullSecrets", [])):
-            if s_name in secrets:
-                topology["topology"]["defaults"]["imagePullSecrets"][s_idx] = secrets[s_name]
-            else:
-                failed_secrets.append(f"imagePullSecrets '{s_name}' for topology.defaults not defined!")
-        for kind_name, kind in topology["topology"].get("kinds", {}).items():
-            for s_idx, s_name in enumerate(kind.get("imagePullSecrets", [])):
-                if s_name in secrets:
-                    kind["imagePullSecrets"][s_idx] = secrets[s_name]
-                else:
-                    failed_secrets.append(f"imagePullSecrets '{s_name}' for kind={kind_name} not defined!")
+        failed_secrets = self.check_topology_secrets(topology, secrets)
         if failed_secrets:
             return False, f"Failed to find imagePullSecrets for topology: {failed_secrets}"
 

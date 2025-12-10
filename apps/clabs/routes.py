@@ -80,19 +80,22 @@ def upsert(clab_id="new"):
         request.form.getlist("secret-user") or [],
         request.form.getlist("secret-pass") or [],
     ):
-        current_app.logger.info(f"Secrets: {s_name=} {s_server=} {s_user}")
         if not s_name:
             continue
         if s_name in secrets_to_delete:
             # existing secret that will be kept
             secrets_to_delete.remove(s_name)
+        if not s_server and not s_user:
             continue
+        current_app.logger.info(f"Adding/Updating secret {clab_id=} {s_name=} {s_server=} {s_user=}")
         changed_secrets = True
-        if k8s_name := secrets["name"].get(s_name):
+        if not (k8s_name := secrets["name"].get(s_name)):
+            k8s_name = f"clab-secret-{clab_uuid}-{secrets['next_id']}"
+        try:
             # existing secret and it will be updated
             k8s.delete_secret_by_name(k8s_name)
-        else:
-            k8s_name = f"clab-secret-{clab_uuid}-{secrets['next_id']}"
+        except:
+            pass
         status, msg = k8s.create_registry_secret(
             name=k8s_name,
             server=s_server,
@@ -102,11 +105,13 @@ def upsert(clab_id="new"):
         if not status:
             current_app.logger.error(f"Failed to create secret {s_name=} for lab {clab_uuid=} {clab_id=}: {msg}")
             continue
-        secrets["name"][s_name] = k8s_name
-        secrets["k8s_name"][k8s_name] = s_name
-        secrets["next_id"] += 1
+        if s_name not in secrets["name"]:
+            secrets["next_id"] += 1
+            secrets["name"][s_name] = k8s_name
+            secrets["k8s_name"][k8s_name] = s_name
     for s_name in secrets_to_delete:
         changed_secrets = True
+        current_app.logger.info(f"Delete secret {s_name=} {clab_id=}")
         k8s_name = secrets["name"].pop(s_name, None)
         if secrets["k8s_name"].pop(k8s_name, None):
             k8s.delete_secret_by_name(k8s_name)
@@ -130,13 +135,13 @@ def upsert(clab_id="new"):
         file.save(full_path)
         changed_files = True
 
-    if changed_files or changed_secrets:
+    if changed_files:
         topo_status, topo_data = c9s.process_clab_topology(clab_dir, clab_uuid=clab_uuid, secrets=secrets["name"])
         if not topo_status:
             msg = f"Failed to parse ContainerLab topology from {clab_dir}: {topo_data}"
             current_app.logger.error(msg)
             current_app.logger.info(f"Remove files from {clab_dir}")
-            shutil.rmtree(clab_dir)
+            shutil.rmtree(clab_dir, ignore_errors=True)
             return jsonify({"ok": False, "result": msg}), 400
 
         md = clab_md.md
@@ -149,12 +154,21 @@ def upsert(clab_id="new"):
             destination_namespace=current_app.config["K8S_NAMESPACE"],
         )
 
-        shutil.rmtree(clab_dir)
+        shutil.rmtree(clab_dir, ignore_errors=True)
         if not convert_status:
             current_app.logger.error(f"Clabverter failed for clab.uuid={clab_uuid}: {result}.")
             return jsonify({"ok": False, "result": result}), 400
 
         clab.manifest = result
+
+    if changed_secrets:
+        md = clab_md.md
+        if topology := md.get("topology"):
+            failed_secrets = c9s.check_topology_secrets(topology, secrets["k8s_name"])
+            if failed_secrets:
+                msg = f"Invalid secrets for topology clab.uuid={clab_uuid}: {failed_secrets}"
+                current_app.logger.error(msg)
+                return jsonify({"ok": False, "result": msg}), 400
 
     try:
         db.session.add(clab)
