@@ -76,7 +76,7 @@
                 </a>
               </li>
 	      {% endif %}
-              {% if config.get('ENABLE_CLABS') and (current_user.category == "admin" or current_user.category == "teacher") %}
+              {% if config.get('ENABLE_CLABS') and (current_user.category == "admin" or current_user.category == "teacher" or current_user.category == "labcreator") %}
               <li class="nav-item">
                 <a href="{{ url_for('clabs_blueprint.upsert') }}" class="nav-link {% if request.endpoint == 'clabs_blueprint.upsert' %} active {% endif %}">
                   <i class="far fa-circle nav-icon"></i>
