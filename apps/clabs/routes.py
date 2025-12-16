@@ -16,7 +16,7 @@ from apps.utils import secure_filename, list_files
 @blueprint.route("/upsert/", methods=["GET", "POST"])
 @blueprint.route("/upsert/<clab_id>", methods=["GET", "POST"])
 @login_required
-@check_user_category(["admin", "teacher"])
+@check_user_category(["admin", "teacher", "labcreator"])
 def upsert(clab_id="new"):
     """Update or Insert a ContainerLab."""
 
@@ -26,6 +26,12 @@ def upsert(clab_id="new"):
             return render_template("pages/clabs_upsert.html", clab=None, msg_fail="ContainerLab not found")
         if not clab.is_clab:
             return redirect(url_for('home_blueprint.edit_lab', lab_id=clab_id))
+        if current_user.category == "labcreator" and clab.updated_by != current_user.id:
+            return render_template(
+                "pages/error.html",
+                title="Unauthorized access",
+                msg="You don't have permission to edit this Lab."
+            )
     else:
         clab = Labs()
 
