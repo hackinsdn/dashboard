@@ -21,6 +21,8 @@
   <link rel="stylesheet" href="/static/assets/css/custom.css">
 {% endblock stylesheets %}
 
+{% include "includes/feedback_modal_involuntary.html" %}
+
 {% block content %}
 
   <!-- Content Wrapper. Contains page content -->
@@ -781,7 +783,7 @@
 
             const comment = commentInput.value.trim();
             const ratingData = {
-                rating: selectedRating,
+                stars: selectedRating,
                 comment: comment,
             };
 
@@ -854,5 +856,11 @@
         }
     });
     </script>
+    {% if show_feedback_modal %}
+    <script>
+      $(document).ready(function(){
+          $('#modal-feedback-involuntary').modal('show');
+      });
+    </script>
+    {% endif %}
 {% endblock javascripts %}
-
