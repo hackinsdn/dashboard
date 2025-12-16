@@ -409,7 +409,7 @@ def feedback():
         return {"status": "ok", "recent_feedbacks": user_feedbacks}, 200
 
     data = request.get_json()
-    stars = data.get("rating")
+    stars = data.get("stars")
     comment = data.get("comment", "")
 
     if not stars:
