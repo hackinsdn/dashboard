@@ -79,7 +79,7 @@ class Labs(db.Model, AuditMixin):
 
     def set_lab_guide_md(self, lab_guide_md):
         self.lab_guide_md = lab_guide_md.encode()
-        self.lab_guide_html = markdown2.markdown(lab_guide_md, extras=['cuddled-lists', 'fenced-code-blocks', 'alerts']).encode()
+        self.lab_guide_html = markdown2.markdown(lab_guide_md, extras=['cuddled-lists', 'fenced-code-blocks', 'alerts', 'tables']).encode()
 
     @property
     def lab_guide_html_str(self):
