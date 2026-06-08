@@ -47,6 +47,15 @@
             {{msg|default("Failed to run task.", true)}}
           </p>
         </div>
+        {% if additional_actions %}
+        <div class="error-content pt-5">
+          {% for action in additional_actions %}
+          <a href="{{action['href']}}" type="button" class="btn {{action['btn-class']}} btn-lg mr-2">
+            <i class="fas {{action['icon']}}"></i>  {{action['text']}}
+          </a>
+          {% endfor %}
+        </div>
+        {% endif %}
       </div>
       <!-- /.error-page -->
     </section>
