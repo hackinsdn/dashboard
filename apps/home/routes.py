@@ -288,8 +288,8 @@ def edit_user(user_id=None):
     if request.method == "GET":
         return render_template("pages/edit_user.html", user=user, return_path=return_path)
 
-    if not re.match(r"^[a-zA-Z0-9-]{1,30}$", request.form["username"]):
-        return render_template("pages/edit_user.html", msg_fail="Invalid username. Max size: 30. Allowed characters: a-z, A-Z, 0-9 or -", user=user, return_path=return_path)
+    if not re.match(r"^[a-zA-Z0-9_.-]{3,30}$", request.form["username"]):
+        return render_template("pages/edit_user.html", msg_fail="Invalid username. Max size: 30. Allowed characters: a-z, A-Z, 0-9, _, . or -", user=user, return_path=return_path)
 
     has_changed = False
     if current_user.category == "admin":
