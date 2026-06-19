@@ -138,6 +138,9 @@ class Config(object):
     MAP_ZOOM_LEVEL = int(os.getenv('MAP_ZOOM_LEVEL', "1"))
     MAP_POINTS = json.loads(os.getenv('MAP_POINTS', '[]'))
 
+    # message queue for socketio
+    MESSAGE_QUEUE = os.getenv("MESSAGE_QUEUE", None)
+
     # -------- Optional modules & feature flags --------
     # Canonical optional modules control (CSV -> list). Default includes "clabs".
     OPTIONAL_MODULES = [m.strip() for m in os.getenv("OPTIONAL_MODULES", "clabs").split(",") if m.strip()]

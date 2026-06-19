@@ -911,3 +911,19 @@ class K8sController():
             "total_pods": total_pods,
             "total_nodes": total_nodes,
         }
+
+    def get_pod_exec_stream(self, pod, container, start_script=None):
+        if start_script is None:
+            start_script = 'if [ -x /bin/bash ]; then exec /bin/bash; else exec /bin/sh; fi'
+        return stream(
+            self.v1_api.connect_get_namespaced_pod_exec,
+            pod,
+            self.namespace,
+            command=['sh', '-c', start_script],
+            container=container,
+            stderr=True,
+            stdin=True,
+            stdout=True,
+            tty=True,
+            _preload_content=False,
+        )
