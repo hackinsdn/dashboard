@@ -130,6 +130,12 @@ class Config(object):
 
     #Testbed infos
     TESTBED_TITLE = os.getenv("TESTBED_TITLE", "HackInSDN Testbed")
+    TESTBED_NODES_GEOTAG = {
+        "node1": {"lat": -16.67990, "lng": -49.2550},
+        "node2": {"lat":  -7.11532, "lng": -34.8610},
+    }
+    if os.getenv("TESTBED_NODES_GEOTAG"):
+        TESTBED_NODES_GEOTAG = json.loads(os.getenv("TESTBED_NODES_GEOTAG"))
 
     # Map configuration
     MAP_GEOJSON_JS = os.getenv("MAP_GEOJSON_JS", "")
