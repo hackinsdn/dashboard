@@ -23,8 +23,8 @@ def upgrade():
     op.create_table('lab_categories_association',
         sa.Column('lab_id', sa.String(40), nullable=False),
         sa.Column('category_id', sa.Integer(), nullable=False),
-        sa.ForeignKeyConstraint(['category_id'], ['lab_categories.id'], ),
-        sa.ForeignKeyConstraint(['lab_id'], ['labs.id'], ),
+        sa.ForeignKeyConstraint(['category_id'], ['lab_categories.id'], name="fk_lab_association_cat_id"),
+        sa.ForeignKeyConstraint(['lab_id'], ['labs.id'], name="fk_labs_lab_id"),
         sa.PrimaryKeyConstraint('lab_id', 'category_id')
     )
     
