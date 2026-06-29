@@ -17,7 +17,7 @@ from flask_login import login_required, current_user
 from jinja2 import TemplateNotFound
 from apps.audit_mixin import get_remote_addr, check_user_category
 from apps.authentication.forms import GroupForm
-from apps.utils import update_running_labs_stats, parse_lab_expiration, datetime_from_ts, update_category_stats, update_stats_lab_instances_answers
+from apps.utils import update_running_labs_stats, parse_lab_expiration, datetime_from_ts, update_category_stats, update_stats_lab_instances_answers, utcnow
 from sqlalchemy import desc
 
 
@@ -78,8 +78,17 @@ def index():
     }
 
     user_feedback = UserFeedbacks.query.filter_by(user_id=current_user.id).first()
+    show_feedback_modal = False
 
-    return render_template('pages/index.html', stats=stats, user_feedback=user_feedback, testbed_infos=testbed_infos, map_config=map_config)
+    if not user_feedback:
+        last_shown = cache.get(f"feedback_prompt_last_shown_{current_user.id}") or 0
+        now_ts = int(utcnow().timestamp())
+        if now_ts - last_shown > current_app.config["HIDE_FEEDBACK_SEC"]:
+            show_feedback_modal = True
+            cache.set(f"feedback_prompt_last_shown_{current_user.id}", now_ts)
+
+    return render_template('pages/index.html', stats=stats, user_feedback=user_feedback, show_feedback_modal=show_feedback_modal, testbed_infos=testbed_infos, map_config=map_config)
+
 
 
 @blueprint.route('/running/')

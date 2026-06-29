@@ -152,6 +152,10 @@ class Config(object):
     OPTIONAL_MODULES = [m.strip() for m in os.getenv("OPTIONAL_MODULES", "clabs").split(",") if m.strip()]
     ENABLE_CLABS = "clabs" in OPTIONAL_MODULES
 
+    # Hide Feedback Seconds: how many seconds to hide the involuntanry
+    # feedback modal, default to 1 day
+    HIDE_FEEDBACK_SEC = 1*24*60*60
+
 class ProductionConfig(Config):
     DEBUG = False
 
