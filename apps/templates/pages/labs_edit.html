@@ -506,22 +506,50 @@
           alert('Por favor, selecione pelo menos uma categoria para o lab.');
           return false;
         }
+        var questionCounter = 0;
+        var seenNames = {};
+        var duplicates = [];
+        $('#lab-guide').find(':input').each(function () {
+          // TODO
+          var name = $(this).attr("name");
+          questionCounter++;
+          if (!name) {
+           name = "question" + questionCounter;
+           $(this).attr("name", name);
+          }
+          if (seenNames[name] && this.type !== 'radio' && this.type !== 'checkbox') {
+            duplicates.push(name);
+          } else {
+            seenNames[name] = true;
+          }
+        });
+        if (duplicates.length > 0) {
+          e.preventDefault();
+          alert('Duplicated question name found:', [...new Set(duplicates)]);
+          return false;
+        }
       });
       
       $('#add-text-input-labguide').click(function () {
         var doc = editorLabGuide.getDoc();
         var cursor = doc.getCursor();
-        doc.replaceRange("<input type='text' name='xpto-foobar' placeholder='insert your text here'>", cursor);
+        var questions = $('#lab-guide').find(':input').length + 1;
+        doc.replaceRange("<input type='text' name='question"+questions+"' placeholder='insert your text here'>", cursor);
       });
       $('#add-select-input-labguide').click(function () {
         var doc = editorLabGuide.getDoc();
         var cursor = doc.getCursor();
-        doc.replaceRange("<input type='text' name='xpto-foobar' placeholder='insert your select here'>", cursor);
+        doc.replaceRange("<select name='question1'>\n<option value=''>--</option>\n<option>my answer 1</option>\n</select>", cursor);
       });
       $('#add-check-input-labguide').click(function () {
         var doc = editorLabGuide.getDoc();
         var cursor = doc.getCursor();
-        doc.replaceRange("<input type='text' name='xpto-foobar' placeholder='insert your check here'>", cursor);
+        doc.replaceRange(
+          "<input type='radio' name='question1' id='id1' value='my value 1'/> <label for='id1'>This is value 1.</label><br>" +
+          "<input type='radio' name='question1' id='id2' value='my value 2'/> <label for='id2'>This is value 2.</label><br>" +
+          "<input type='radio' name='question1' id='id3' value='my value 3'/> <label for='id3'>This is value 3.</label><br>",
+          cursor
+        );
       });
     });
 
