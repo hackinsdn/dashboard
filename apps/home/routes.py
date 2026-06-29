@@ -5,7 +5,6 @@ Copyright (c) 2019 - present AppSeed.us
 import traceback
 import uuid
 import re
-import random
 from collections import OrderedDict
 
 from apps import db, cache
@@ -18,8 +17,7 @@ from flask_login import login_required, current_user
 from jinja2 import TemplateNotFound
 from apps.audit_mixin import get_remote_addr, check_user_category
 from apps.authentication.forms import GroupForm
-from apps.utils import update_running_labs_stats, parse_lab_expiration, datetime_from_ts, update_category_stats, update_stats_lab_instances_answers
-from datetime import datetime
+from apps.utils import update_running_labs_stats, parse_lab_expiration, datetime_from_ts, update_category_stats, update_stats_lab_instances_answers, utcnow
 from sqlalchemy import desc
 
 
@@ -83,18 +81,11 @@ def index():
     show_feedback_modal = False
 
     if not user_feedback:
-        last_shown = cache.get(f"feedback_prompt_last_shown_{current_user.id}")
-        if last_shown:
-            today = datetime.utcnow()
-            days_since_shown = (today - last_shown).days
-            if days_since_shown < 7:
-                return render_template('pages/index.html', stats=stats, user_feedback=user_feedback,
-                                       show_feedback_modal=show_feedback_modal, testbed_infos=testbed_infos,
-                                       map_config=map_config)
-
-        if random.random() < 0.1:
+        last_shown = cache.get(f"feedback_prompt_last_shown_{current_user.id}") or 0
+        now_ts = int(utcnow().timestamp())
+        if now_ts - last_shown > current_app.config["HIDE_FEEDBACK_SEC"]:
             show_feedback_modal = True
-            cache.set(f"feedback_prompt_last_shown_{current_user.id}", datetime.utcnow())
+            cache.set(f"feedback_prompt_last_shown_{current_user.id}", now_ts)
 
     return render_template('pages/index.html', stats=stats, user_feedback=user_feedback, show_feedback_modal=show_feedback_modal, testbed_infos=testbed_infos, map_config=map_config)
 
@@ -306,8 +297,8 @@ def edit_user(user_id=None):
     if request.method == "GET":
         return render_template("pages/edit_user.html", user=user, return_path=return_path)
 
-    if not re.match(r"^[a-zA-Z0-9-]{1,30}$", request.form["username"]):
-        return render_template("pages/edit_user.html", msg_fail="Invalid username. Max size: 30. Allowed characters: a-z, A-Z, 0-9 or -", user=user, return_path=return_path)
+    if not re.match(r"^[a-zA-Z0-9_.-]{3,30}$", request.form["username"]):
+        return render_template("pages/edit_user.html", msg_fail="Invalid username. Max size: 30. Allowed characters: a-z, A-Z, 0-9, _, . or -", user=user, return_path=return_path)
 
     has_changed = False
     if current_user.category == "admin":
@@ -354,6 +345,8 @@ def view_lab_instance(lab_id):
     lab_instance = LabInstances.query.get(lab_id)
     if not lab_instance:
         return render_template("pages/error.html", title="Error accessing Lab Instance", msg="Lab not found")
+    if lab_instance.is_deleted:
+        return render_template("pages/error.html", title="Error accessing Lab Instance", msg="Lab finished")
 
     lab = Labs.query.get(lab_instance.lab_id)
     if not lab:
@@ -382,7 +375,15 @@ def view_lab_instance(lab_id):
     except Exception as exc:
         err = traceback.format_exc().replace("\n", ", ")
         current_app.logger.error(f"Failed to get resources for lab_id={lab.id} lab_instance_id={lab_instance.id} exception={exc} err={err}")
-        return render_template("pages/error.html", title="Failed to get Lab Resources", msg="No resource found for Lab Instance. Try again later and if the error persists, please contact the administrator.")
+        return render_template(
+            "pages/error.html",
+            title="Failed to get Lab Resources",
+            msg="No resource found for Lab Instance. Try again later and if the error persists, please contact the administrator.",
+            additional_actions=[
+                {"href": url_for("home_blueprint.view_lab_instance", lab_id=lab_instance.id), "btn-class": "btn-secondary", "icon": "fa-redo", "text": "Try again"},
+                {"href": url_for("home_blueprint.cancel_restart_lab_instance", lab_id=lab_instance.id), "btn-class": "btn-warning", "icon": "fa-redo", "text": "Cancel and Restart Lab"},
+            ],
+        )
 
     #if not running_labs or (lab_instance.lab_id, owner.uid) not in running_labs:
     #if not lab_resources:
@@ -422,6 +423,32 @@ def view_lab_instance(lab_id):
         lab_dict["created"] = created.strftime('%Y-%m-%d %H:%M:%S')
 
     return render_template("pages/lab_instance_view.html", lab=lab_dict, lab_guide=lab.lab_guide_html_str)
+
+@blueprint.route('/lab_instance/cancel/<lab_id>', methods=["GET"])
+@login_required
+@check_user_category(["admin", "teacher", "student"])
+def cancel_restart_lab_instance(lab_id):
+    lab_instance = LabInstances.query.get(lab_id)
+    if not lab_instance or lab_instance.is_deleted:
+        return render_template("pages/error.html", title="Error accessing Lab Instance", msg="Lab not found")
+
+    if lab_instance.user_id != current_user.id and current_user.category != "admin":
+        return render_template("pages/error.html", title="Error accessing Lab Instance", msg="Not authorized to access this Lab")
+
+    try:
+        results = k8s.delete_resources_by_name(lab_instance.k8s_resources)
+        assert sum(results) == len(lab_instance.k8s_resources), f"results={results} resources={lab_instance.k8s_resources}"
+    except Exception as exc:
+        current_app.logger.error(f"Failed to delete resources lab_instance_id={lab_instance.id}: {exc}")
+        return render_template("pages/error.html", title="Error removing Lab Instance", msg="Error removing Lab instance, please contact the administrator")
+
+    lab_instance.is_deleted = True
+    db.session.commit()
+
+    running_labs = LabInstances.query.filter_by(is_deleted=False, user_id=current_user.id).count()
+    cache.set(f"running_labs-{current_user.id}", running_labs)
+
+    return redirect(url_for("home_blueprint.run_lab", lab_id=lab_instance.lab_id))
 
 @blueprint.route('/labs/edit/<lab_id>', methods=["GET", "POST"])
 @login_required

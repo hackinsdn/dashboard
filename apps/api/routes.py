@@ -413,27 +413,33 @@ def feedback():
     comment = data.get("comment", "")
 
     if not stars:
-        return {"status": "fail", "result": "Stars mandatory"}, 400
+        return {"status": "fail", "result": "Stars/Rating mandatory"}, 400
 
-    existing_feedback = UserFeedbacks.query.filter_by(user_id=current_user.id).first()
-    if existing_feedback:
-        return {"status": "fail", "result": "Feedback already given!"}, 400
+    user_feedback = UserFeedbacks.query.filter_by(user_id=current_user.id).first()
+    is_new = False
+    if not user_feedback:
+        is_new = True
+        user_feedback = UserFeedbacks(user_id=current_user.id)
+        db.session.add(user_feedback)
 
+    user_feedback.stars = stars
+    user_feedback.comment = comment
     try:
-        new_feedback = UserFeedbacks(
-            user_id=current_user.id,
-            stars=stars,
-            comment=comment
-        )
-        db.session.add(new_feedback)
         db.session.commit()
     except Exception as exc:
         current_app.logger.error(f"Failed to save user feedback for {current_user.id}: {exc}")
         return {"status": "fail", "result": "Failed to save user feedback"}, 400
 
-    user_feedbacks.insert(0, new_feedback.as_dict())
-    if len(user_feedbacks) > 5:
-        user_feedbacks.pop(-1)
+    if is_new:
+        user_feedbacks.insert(0, user_feedback.as_dict())
+        if len(user_feedbacks) > 5:
+            user_feedbacks.pop(-1)
+    else:
+        for fb in user_feedbacks:
+            if fb["user_id"] == current_user.id:
+                fb["stars"] = stars
+                fb["comment"] = comment
+                break
     cache.set("user_feedbacks", user_feedbacks)
 
     return {
