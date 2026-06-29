@@ -15,6 +15,8 @@ from apps import socketio
 from apps.controllers import k8s
 from flask_login import login_required, current_user
 
+from apps.controllers import k8s
+
 xterm_clients = {}
 
 
@@ -25,6 +27,10 @@ def check_authorization(username, pod, container):
 def set_winsize(fd, row, col, xpix=0, ypix=0):
     winsize = struct.pack("HHHH", row, col, xpix, ypix)
     fcntl.ioctl(fd, termios.TIOCSWINSZ, winsize)
+
+
+def resize_terminal(client_stream, rows, cols):
+    client_stream.write_channel(4, '{"Width":%d,"Height":%d}' % (cols, rows))
 
 
 def read_and_forward_pty_output(session_id, fd, pid):
@@ -60,6 +66,22 @@ def read_and_forward_pty_output(session_id, fd, pid):
     socketio.emit("server-disconnected", {"returncode": status}, namespace="/pty", to=session_id)
 
 
+def read_and_forward_k8s_stream_output(session_id, client_stream):
+    max_read_bytes = 1024 * 20
+    while client_stream.is_open():
+        socketio.sleep(0.01)
+        try:
+            data = client_stream.read_stdout(max_read_bytes)
+        except Exception as exc:
+            break
+        if client_stream.is_open():
+            if len(data or "") > 0:
+                socketio.emit("pty-output", {"output": data}, namespace="/pty", to=session_id)
+        else:
+            break
+    socketio.emit("server-disconnected", namespace="/pty", to=session_id)
+
+
 @socketio.on("pty-input", namespace="/pty")
 @login_required
 def pty_input(data):
@@ -69,9 +91,9 @@ def pty_input(data):
     if not session_id or session_id not in xterm_clients:
         current_app.logger.info(f"Host not connected {session_id=}")
         return False
-    (fd, _) = xterm_clients[session_id]
-    if fd:
-        os.write(fd, data["input"].encode())
+    client_stream = xterm_clients[session_id]
+    if client_stream.is_open():
+        client_stream.write_stdin(data["input"].encode())
 
 
 @socketio.on("connect", namespace="/pty")
@@ -97,22 +119,10 @@ def pty_connect(auth):
     if kind == "clab":
         kind = "pod"
         start_script = f"ssh {container}"
-    # create child process attached to a pty we can read from and write to
-    (child_pid, fd) = pty.fork()
-    if child_pid == 0:
-        # this is the child process fork.
-        # change default env vars to avoid massive logs when DEBUG is enabled
-        myenv = dict(os.environ)
-        myenv.update({"DEBUG": ""})
-        p = subprocess.run(['kubectl', 'exec', '-it', f"{kind}/{pod}", '--container', container, '--', 'sh', '-c', start_script], env=myenv)
-        os._exit(p.returncode)
-    else:
-        # this is the parent process fork.
-        # store child fd and pid
-        xterm_clients[session_id] = (fd, child_pid)
-        set_winsize(fd, 50, 50)
-        socketio.start_background_task(read_and_forward_pty_output, session_id, fd, child_pid)
-        current_app.logger.info(f"client added to xterm_clients {session_id=} {fd=} {child_pid=}")
+    client_stream = k8s.get_pod_exec_stream(pod, container, start_script)
+    xterm_clients[session_id] = client_stream
+    socketio.start_background_task(read_and_forward_k8s_stream_output, session_id, client_stream)
+    current_app.logger.info(f"client added to xterm_clients {session_id=}")
 
 
 @socketio.on("resize", namespace="/pty")
@@ -124,24 +134,24 @@ def resize(data):
     if not session_id or session_id not in xterm_clients:
         current_app.logger.info(f"Host not connected {session_id=}")
         return False
-    (fd, _) = xterm_clients[session_id]
-    if fd:
-        set_winsize(fd, data["dims"]["rows"], data["dims"]["cols"])
+    client_stream = xterm_clients[session_id]
+    resize_terminal(client_stream, data["dims"]["rows"], data["dims"]["cols"])
 
 
 @socketio.on("disconnect", namespace="/pty")
 @login_required
-def pty_disconnect():
+def pty_disconnect(message=None):
     """client disconnected."""
     global xterm_clients
     session_id = request.sid
     if not session_id or session_id not in xterm_clients:
-        current_app.logger.info(f"Host not connected {session_id=} {xterm_clients=}")
+        current_app.logger.warning(f"Host not connected {session_id=} {xterm_clients=}")
         return False
-    (_, pid) = xterm_clients[session_id]
+    current_app.logger.info(f"pty_disconnect client={request.sid} message={message}")
+    client_stream = xterm_clients[session_id]
     try:
-        os.kill(pid, signal.SIGTERM)
+        client_stream.close()
     except Exception as exc:
-        print(f"Error terminating xterm child process for {session_id}: {exc}")
-    print(f"Client disconnected {session_id}")
+        current_app.logger.error(f"Error terminating xterm child process for {session_id}: {exc}")
+    current_app.logger.info(f"Client disconnected {session_id}")
     xterm_clients.pop(session_id, None)

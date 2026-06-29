@@ -362,7 +362,6 @@ def view_lab_instance(lab_id):
     #running_labs = k8s.get_labs_by_user(owner.uid, lab_instance.lab_id)
     try:
         lab_resources = k8s.get_lab_resources(lab_instance.k8s_resources, published_ports=ports)
-        assert lab_resources
     except Exception as exc:
         err = traceback.format_exc().replace("\n", ", ")
         current_app.logger.error(f"Failed to get resources for lab_id={lab.id} lab_instance_id={lab_instance.id} exception={exc} err={err}")

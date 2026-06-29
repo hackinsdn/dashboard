@@ -25,19 +25,6 @@ from collections import defaultdict
 from apps.config import app_config
 from apps.utils import format_duration
 
-RNP_TESTBED_NODES = {
-    "ids-go": {"lat": -16.67990, "lng": -49.2550},
-    "ids-pb": {"lat":  -7.11532, "lng": -34.8610},
-    "ids-pe": {"lat":  -8.05428, "lng": -34.8813},
-    "ids-rj": {"lat": -22.90350, "lng": -43.2096},
-    "ids-rn": {"lat":  -5.79448, "lng": -35.2110},
-    "vm1-ac": {"lat":  -9.97400, "lng": -67.8076},
-    "vm1-mt": {"lat": -15.59890, "lng": -56.0949},
-    "vm1-ro": {"lat":  -8.76183, "lng": -63.9020},
-    "whx-ba": {"lat": -12.97040, "lng": -38.5124},
-    "whx-pb": {"lat":  -7.23072, "lng": -35.8817},
-    "whx-rn": {"lat":  -5.18804, "lng": -37.3441},
-}
 
 class K8sController():
     """Kubernetes controller."""
@@ -58,6 +45,7 @@ class K8sController():
         self.apps_v1_api = client.AppsV1Api()
         self.k8s_client = client.ApiClient()
         self.k8s_avoid_nodes = set(app_config.K8S_AVOID_NODES)
+        self.k8s_nodes_geotag = app_config.TESTBED_NODES_GEOTAG
 
         self.identifiers = {
             "pod_hash": self.get_pod_hash,
@@ -838,8 +826,8 @@ class K8sController():
             result.append({
                 "name": name,
                 "status": "Ready" if name in self.ready_nodes else "NotReady",
-                "latitude": RNP_TESTBED_NODES.get(name, {}).get("lat", 0.0),
-                "longitude": RNP_TESTBED_NODES.get(name, {}).get("lng", 0.0),
+                "latitude": self.k8s_nodes_geotag.get(name, {}).get("lat", 0.0),
+                "longitude": self.k8s_nodes_geotag.get(name, {}).get("lng", 0.0),
             })
         return result
 
@@ -911,3 +899,19 @@ class K8sController():
             "total_pods": total_pods,
             "total_nodes": total_nodes,
         }
+
+    def get_pod_exec_stream(self, pod, container, start_script=None):
+        if start_script is None:
+            start_script = 'if [ -x /bin/bash ]; then exec /bin/bash; else exec /bin/sh; fi'
+        return stream(
+            self.v1_api.connect_get_namespaced_pod_exec,
+            pod,
+            self.namespace,
+            command=['sh', '-c', start_script],
+            container=container,
+            stderr=True,
+            stdin=True,
+            stdout=True,
+            tty=True,
+            _preload_content=False,
+        )

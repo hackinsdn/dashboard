@@ -18,11 +18,13 @@ from authlib.integrations.flask_client import OAuth
 from flask_mail import Mail
 from flask_caching import Cache
 
+from apps.config import app_config
+
 
 db = SQLAlchemy()
 login_manager = LoginManager()
 oauth = OAuth()
-socketio = SocketIO(cors_allowed_origins="*")
+socketio = SocketIO()
 mail = Mail()
 cache = Cache()
 migrate = Migrate()
@@ -32,7 +34,12 @@ def register_extensions(app):
     db.init_app(app)
     login_manager.init_app(app)
     oauth.init_app(app)
-    socketio.init_app(app)
+    socketio.init_app(
+        app,
+        cors_allowed_origins="*",
+        async_mode='gevent',
+        message_queue=app.config.get("MESSAGE_QUEUE", None),
+    )
     mail.init_app(app)
     cache.init_app(app)
     migrate.init_app(app, db)
@@ -90,9 +97,9 @@ def configure_log(app):
     for handler in app.logger.handlers:
         handler.setFormatter(logging.Formatter(fmt=app.config["LOG_FMT"]))
 
-def create_app(config):
+def create_app():
     app = Flask(__name__)
-    app.config.from_object(config)
+    app.config.from_object(app_config)
 
     register_extensions(app)
     register_blueprints(app)
