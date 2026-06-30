@@ -4,6 +4,7 @@ Copyright (c) 2019 - present AppSeed.us
 """
 import traceback
 import uuid
+import os
 import re
 from collections import OrderedDict
 
@@ -12,7 +13,7 @@ from apps.home import blueprint
 from apps.controllers import k8s, c9s
 from apps.home.models import Labs, LabInstances, LabCategories, LabAnswers, LabAnswerSheet, HomeLogging, UserLikes, UserFeedbacks
 from apps.authentication.models import Users, Groups
-from flask import render_template, request, current_app, redirect, url_for, session
+from flask import render_template, request, current_app, redirect, url_for, session, send_from_directory, jsonify
 from flask_login import login_required, current_user
 from jinja2 import TemplateNotFound
 from apps.audit_mixin import get_remote_addr, check_user_category
@@ -254,7 +255,7 @@ def check_lab_status(lab_id):
     lab = LabInstances.query.get(lab_id)
     if not lab:
         return render_template("pages/error.html", title="Error checking lab status", msg="Lab not found")
-    
+
     if lab.user_id != current_user.id:
         return render_template("pages/error.html", title="Error checking lab status", msg="You are not authorized to run this lab")
 
@@ -483,7 +484,7 @@ def edit_lab(lab_id):
 
     lab.title = request.form["lab_title"]
     lab.description = request.form["lab_description"]
-    
+
     selected_category_ids = request.form.getlist('lab_categories')
     invalid_lab_category = ""
     if selected_category_ids:
@@ -494,7 +495,7 @@ def edit_lab(lab_id):
                 invalid_lab_category = f"Invalid Lab Category ({c_id}). "
                 break
             lab.categories.append(category)
-    
+
     lab.set_extended_desc(request.form["lab_extended_desc"])
     lab.set_lab_guide_md(request.form["lab_guide"])
     lab.manifest = request.form["lab_manifest"]
@@ -504,7 +505,7 @@ def edit_lab(lab_id):
 
     if not lab.categories or invalid_lab_category:
         return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, msg_fail=invalid_lab_category+"Please select at least one category", segment="/labs/edit", groups=groups, allowed_groups=lab.allowed_groups)
-    
+
     try:
         db.session.add(lab)
         db.session.commit()
@@ -528,7 +529,6 @@ def edit_lab(lab_id):
 @login_required
 @check_user_category(["admin", "teacher"])
 def view_users():
-   
     users = Users.query.filter_by(is_deleted=False)
     if current_user.category in ["teacher"]:
         users = users.filter(Users.category == "user")
@@ -557,7 +557,7 @@ def view_labs(lab_id=None):
 
     if lab_id:
         labs = labs.filter(Labs.id == lab_id)
-    
+
     labs = labs.all()
     user_labs_status = {}
     for lab in LabInstances.query.filter_by(user_id=current_user.id).all():
@@ -1038,3 +1038,64 @@ def view_contact():
 @login_required
 def view_finished_lab_infos(lab_id):
     return render_template("pages/finished_lab_infos.html", lab_id=lab_id)
+
+
+@blueprint.route('/uploads/<path:filename>')
+@login_required
+def serve_upload(filename):
+    return send_from_directory(current_app.config['UPLOAD_DIR'], filename)
+
+
+@blueprint.route('/labs/upload-file', methods=['POST'])
+@login_required
+@check_user_category(["admin", "teacher", "labcreator"])
+def upload_lab_file():
+    if 'file' not in request.files:
+        return jsonify({"status": "fail", "result": "No file part in the request"}), 400
+
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"status": "fail", "result": "No file selected"}), 400
+
+    # Validate extension
+    allowed_exts = current_app.config['LAB_UPLOAD_ALLOWED_EXTENSIONS']
+    _, ext = os.path.splitext(file.filename)
+    if not ext or ext[1:].lower() not in allowed_exts:
+        # Also check for double extensions like .tar.gz if they exist in allowed_exts
+        is_allowed = False
+        lower_filename = file.filename.lower()
+        for allowed_ext in allowed_exts:
+            if lower_filename.endswith('.' + allowed_ext.lower()):
+                is_allowed = True
+                ext = '.' + allowed_ext
+                break
+        if not is_allowed:
+            return jsonify({"status": "fail", "result": f"File extension not allowed. Allowed: {', '.join(allowed_exts)}"}), 400
+
+    # Validate size
+    file.seek(0, os.SEEK_END)
+    size = file.tell()
+    file.seek(0) # reset pointer
+
+    max_size = current_app.config['LAB_UPLOAD_MAX_SIZE']
+    if size > max_size:
+        return jsonify({"status": "fail", "result": f"File exceeds maximum allowed size ({max_size // (1024*1024)}MB)"}), 400
+
+    # Save directory
+    upload_dir = current_app.config['UPLOAD_DIR']
+    os.makedirs(upload_dir, exist_ok=True)
+
+    # Generate unique filename using uuid
+    new_filename = f"{uuid.uuid4().hex}{ext.lower()}"
+
+    try:
+        file.save(os.path.join(upload_dir, new_filename))
+        url = url_for('home_blueprint.serve_upload', filename=new_filename)
+        return jsonify({
+            "status": "ok",
+            "url": url,
+            "filename": file.filename
+        }), 200
+    except Exception as exc:
+        current_app.logger.error(f"Failed to save uploaded file: {exc}")
+        return jsonify({"status": "fail", "result": "Failed to save file on server"}), 500

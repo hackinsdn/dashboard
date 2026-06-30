@@ -156,6 +156,10 @@ class Config(object):
     # feedback modal, default to 1 day
     HIDE_FEEDBACK_SEC = 1*24*60*60
 
+    # File upload configurations for lab editor
+    LAB_UPLOAD_MAX_SIZE = int(os.getenv("LAB_UPLOAD_MAX_SIZE", str(10 * 1024 * 1024))) # Default 10MB
+    LAB_UPLOAD_ALLOWED_EXTENSIONS = set(os.getenv("LAB_UPLOAD_ALLOWED_EXTENSIONS", "png,jpg,jpeg,gif,svg,webp,pdf,txt,zip,tar.gz").split(","))
+
 class ProductionConfig(Config):
     DEBUG = False
 

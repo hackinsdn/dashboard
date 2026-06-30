@@ -259,6 +259,8 @@
                         <button class="btn btn-outline-secondary" type="button" id="add-textarea-input-labguide">Add text area question</button>
                         <button class="btn btn-outline-secondary" type="button" id="add-select-input-labguide">Add select question</button>
                         <button class="btn btn-outline-secondary" type="button" id="add-check-input-labguide">Add checkbox question</button>
+                        <button class="btn btn-outline-secondary" type="button" id="upload-file-labguide-btn"><i class="fas fa-paperclip"></i> Paste, drop, or click to add files</button>
+                        <input type="file" id="labguide-file-input" style="display: none;">
                         <div class="mb-3">
                           <textarea name="lab_guide" id="lab-edit-guide" class="textarea" placeholder="Place some text here" rows="16">{{lab.lab_guide_md_str|default('', true)}}</textarea>
                         </div>
@@ -466,13 +468,43 @@
     $(function () {
       $('#lab-editor').summernote({
         height: 500,
-        maximumImageFileSize: 358400,
+        maximumImageFileSize: 10 * 1024 * 1024,
         callbacks: {
+          onImageUpload: function(files) {
+            for (var i = 0; i < files.length; i++) {
+              uploadSummernoteImage(files[i]);
+            }
+          },
           onImageUploadError: function(msg) {
-            alert('Image upload failed: ' + msg + ' (Maximum size: 350KB)');
+            alert('Image upload failed: ' + msg);
           }
         }
       });
+
+      function uploadSummernoteImage(file) {
+        var data = new FormData();
+        data.append("file", file);
+        $.ajax({
+          url: "/labs/upload-file",
+          cache: false,
+          contentType: false,
+          processData: false,
+          data: data,
+          type: "POST",
+          success: function(response) {
+            if (response.status === "ok") {
+              $('#lab-editor').summernote("insertImage", response.url, response.filename);
+            } else {
+              alert("Failed to upload image: " + response.result);
+            }
+          },
+          error: function(jqXHR, textStatus, errorThrown) {
+            var errorMsg = jqXHR.responseJSON && jqXHR.responseJSON.result ? jqXHR.responseJSON.result : errorThrown;
+            alert("Failed to upload image: " + errorMsg);
+          }
+        });
+      }
+
       bsCustomFileInput.init();
       //Bootstrap Duallistbox
       $('.duallistbox').bootstrapDualListbox({
@@ -486,9 +518,105 @@
       });
       var questionCounter = 0;
       editorLabGuide.setSize("100%", 600);
+
+      // Drag, Drop, Paste and Click handlers for Lab Guide file upload
+      $('#upload-file-labguide-btn').click(function() {
+        $('#labguide-file-input').click();
+      });
+
+      $('#labguide-file-input').change(function() {
+        if (this.files.length > 0) {
+          uploadLabGuideFile(this.files[0]);
+          this.value = ''; // Reset input so same file can be uploaded again if needed
+        }
+      });
+
+      var codeMirrorWrapper = editorLabGuide.getWrapperElement();
+
+      codeMirrorWrapper.addEventListener('paste', function(e) {
+        var items = (e.clipboardData || e.originalEvent.clipboardData).items;
+        for (var i = 0; i < items.length; i++) {
+          if (items[i].kind === 'file') {
+            var file = items[i].getAsFile();
+            uploadLabGuideFile(file);
+            e.preventDefault();
+            break;
+          }
+        }
+      });
+
+      codeMirrorWrapper.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+      });
+
+      codeMirrorWrapper.addEventListener('drop', function(e) {
+        var files = (e.dataTransfer || e.originalEvent.dataTransfer).files;
+        if (files.length > 0) {
+          uploadLabGuideFile(files[0]);
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      });
+
+      function uploadLabGuideFile(file) {
+        var uploadId = Math.random().toString(36).substring(2, 9);
+        var placeholder = "<!-- Uploading file (" + uploadId + ")... -->";
+
+        var doc = editorLabGuide.getDoc();
+        var cursor = doc.getCursor();
+        doc.replaceRange(placeholder, cursor);
+
+        var data = new FormData();
+        data.append("file", file);
+
+        $.ajax({
+          url: "/labs/upload-file",
+          type: "POST",
+          data: data,
+          contentType: false,
+          processData: false,
+          success: function(response) {
+            if (response.status === "ok") {
+              var ext = response.url.split('.').pop().toLowerCase();
+              var isImage = ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'].indexOf(ext) !== -1;
+
+              var replacement = "";
+              var cleanName = response.filename.replace(/\.[^/.]+$/, "");
+              if (isImage) {
+                replacement = "![" + cleanName + "](" + response.url + ")";
+              } else {
+                replacement = "[" + response.filename + "](" + response.url + ")";
+              }
+              replacePlaceholder(placeholder, replacement);
+            } else {
+              replacePlaceholder(placeholder, "<!-- Upload failed: " + response.result + " -->");
+              alert("Upload failed: " + response.result);
+            }
+          },
+          error: function(jqXHR, textStatus, errorThrown) {
+            var errorMsg = jqXHR.responseJSON && jqXHR.responseJSON.result ? jqXHR.responseJSON.result : errorThrown;
+            replacePlaceholder(placeholder, "<!-- Upload failed: " + errorMsg + " -->");
+            alert("Upload failed: " + errorMsg);
+          }
+        });
+      }
+
+      function replacePlaceholder(placeholder, replacement) {
+        var doc = editorLabGuide.getDoc();
+        var totalLines = doc.lineCount();
+        for (var i = 0; i < totalLines; i++) {
+          var lineText = doc.getLine(i);
+          var idx = lineText.indexOf(placeholder);
+          if (idx !== -1) {
+            doc.replaceRange(replacement, {line: i, ch: idx}, {line: i, ch: idx + placeholder.length});
+            return;
+          }
+        }
+      }
       //Initialize Select2 Elements
       $('.select2').select2();
-      
+
       $('select[name="lab_categories"]').select2({
         placeholder: 'Select one or more categories',
         allowClear: false,
@@ -497,10 +625,10 @@
           if (!option.id) {
             return option.text;
           }
-          
+
           var $option = $(option.element);
           var colorClass = $option.data('color') || 'secondary';
-          
+
           return $(
             '<span class="badge badge-' + colorClass + ' mr-2" style="font-size: 0.9em;">' + 
             option.text + 
@@ -511,10 +639,10 @@
           if (!option.id) {
             return option.text;
           }
-          
+
           var $option = $(option.element);
           var colorClass = $option.data('color') || 'secondary';
-          
+
           return $(
             '<span class="badge badge-' + colorClass + '" style="font-size: 0.8em; margin: 1px;">' + 
             option.text + 
@@ -561,7 +689,6 @@
       $('#custom-tabs-labguide-preview-tab').on('click', function (e) {
         parseLabGuide(e, false);
       });
-      
       $('#add-text-input-labguide').click(function () {
         parseLabGuide(null, false);
         questionCounter++;
@@ -625,7 +752,7 @@
         });
 
         return templates; 
-        
+
       } catch (error) {
         console.error(error);
         templateSelect.innerHTML = '<option value="">Failed to load</option>';
@@ -657,7 +784,6 @@
           const response = await fetch(`/api/templates/${templateName}`);
           if (response.ok) {
             const templateContent = await response.json();
-            
             cmEditor.setValue(templateContent.result);
             cmEditor.setSize("100%",600)
           } else {
