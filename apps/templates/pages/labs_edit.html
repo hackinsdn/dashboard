@@ -241,12 +241,33 @@
               <!-- /.card-header -->
               <div class="card-body">
                 <p>Add here the Lab instructions for students/experimenters to run this Lab (step-by-step) using Markdown format (<a href="https://www.markdownguide.org/basic-syntax/" target="_blank">read more about Markdown syntax</a>):</p>
-                <button class="btn btn-outline-secondary" type="button" id="add-text-input-labguide">Add text question</button>
-                <button class="btn btn-outline-secondary" type="button" id="add-select-input-labguide">Add select question</button>
-                <button class="btn btn-outline-secondary" type="button" id="add-check-input-labguide">Add checkbox question</button>
-                <div class="mb-3">
-                  <textarea name="lab_guide" id="lab-edit-guide" class="textarea" placeholder="Place some text here" rows="16">{{lab.lab_guide_md_str|default('', true)}}</textarea>
-                </div>
+		<div class="card card-primary card-outline card-outline-tabs">
+                  <div class="card-header p-0 border-bottom-0">
+                    <ul class="nav nav-tabs" id="custom-tabs-labguide-tab" role="tablist">
+                      <li class="nav-item">
+                        <a class="nav-link active" id="custom-tabs-labguide-editor-tab" data-toggle="pill" href="#custom-tabs-labguide-home" role="tab" aria-controls="custom-tabs-labguide-home" aria-selected="true">Editor</a>
+                      </li>
+                      <li class="nav-item">
+                        <a class="nav-link" id="custom-tabs-labguide-preview-tab" data-toggle="pill" href="#custom-tabs-labguide-preview" role="tab" aria-controls="custom-tabs-labguide-preview" aria-selected="false">Preview</a>
+                      </li>
+                    </ul>
+                  </div>
+                  <div class="card-body">
+                    <div class="tab-content" id="custom-tabs-labguide-tabContent">
+                      <div class="tab-pane fade show active" id="custom-tabs-labguide-home" role="tabpanel" aria-labelledby="custom-tabs-labguide-editor-tab">
+                        <button class="btn btn-outline-secondary" type="button" id="add-text-input-labguide">Add simple question</button>
+                        <button class="btn btn-outline-secondary" type="button" id="add-textarea-input-labguide">Add text area question</button>
+                        <button class="btn btn-outline-secondary" type="button" id="add-select-input-labguide">Add select question</button>
+                        <button class="btn btn-outline-secondary" type="button" id="add-check-input-labguide">Add checkbox question</button>
+                        <div class="mb-3">
+                          <textarea name="lab_guide" id="lab-edit-guide" class="textarea" placeholder="Place some text here" rows="16">{{lab.lab_guide_md_str|default('', true)}}</textarea>
+                        </div>
+                      </div>
+                      <div class="tab-pane fade" id="custom-tabs-labguide-preview" role="tabpanel" aria-labelledby="custom-tabs-labguide-preview-tab">
+                      </div>
+                    </div>
+                  </div>
+		</div>
               </div>
             </div>
           </div>
@@ -437,6 +458,8 @@
   <script src="/static/assets/plugins/codemirror/lib/codemirror.js"></script>
   <script src="/static/assets/plugins/codemirror/mode/yaml/yaml.js"></script>
   <script src="/static/assets/plugins/codemirror/mode/markdown/markdown.js"></script>
+  <!-- Marked -->
+  <script src="/static/assets/plugins/marked/marked.min.js"></script>
   <!-- Select2 -->
   <script src="/static/assets/plugins/select2/js/select2.full.min.js"></script>
   <script>
@@ -461,6 +484,7 @@
         theme: 'abcdef',
         mode: 'markdown',
       });
+      var questionCounter = 0;
       editorLabGuide.setSize("100%", 600);
       //Initialize Select2 Elements
       $('.select2').select2();
@@ -498,56 +522,76 @@
           );
         }
       });
-      
-      $('form').submit(function(e) {
-        var selectedCategories = $('select[name="lab_categories"]').val();
-        if (!selectedCategories || selectedCategories.length === 0) {
-          e.preventDefault();
-          alert('Por favor, selecione pelo menos uma categoria para o lab.');
-          return false;
-        }
-        var questionCounter = 0;
+      function parseLabGuide(event, shouldAbort) {
+        const htmlLabGuide = marked.parse(editorLabGuide.getValue());
+        document.getElementById('custom-tabs-labguide-preview').innerHTML = htmlLabGuide;
         var seenNames = {};
         var duplicates = [];
-        $('#lab-guide').find(':input').each(function () {
-          // TODO
+        $('#custom-tabs-labguide-preview').find(':input').each(function () {
           var name = $(this).attr("name");
-          questionCounter++;
           if (!name) {
-           name = "question" + questionCounter;
-           $(this).attr("name", name);
+            duplicates.push("this-input-is-missing-its-name!");
+            $(this).css('border', '2px solid red');
+            return;
           }
           if (seenNames[name] && this.type !== 'radio' && this.type !== 'checkbox') {
             duplicates.push(name);
+            $(this).css('border', '2px solid red');
           } else {
             seenNames[name] = true;
           }
         });
+        questionCounter = Object.keys(seenNames).length;
         if (duplicates.length > 0) {
-          e.preventDefault();
-          alert('Duplicated question name found:', [...new Set(duplicates)]);
+	  if (shouldAbort) event.preventDefault();
+          alert('Duplicated question name found: ' + duplicates.join(', '));
           return false;
         }
+      }
+
+      $('form').submit(function(e) {
+        var selectedCategories = $('select[name="lab_categories"]').val();
+        if (!selectedCategories || selectedCategories.length === 0) {
+          e.preventDefault();
+          alert('Please select at least one lab category.');
+          return false;
+        }
+        parseLabGuide(e, true);
+      });
+      $('#custom-tabs-labguide-preview-tab').on('click', function (e) {
+        parseLabGuide(e, false);
       });
       
       $('#add-text-input-labguide').click(function () {
+        parseLabGuide(null, false);
+        questionCounter++;
         var doc = editorLabGuide.getDoc();
         var cursor = doc.getCursor();
-        var questions = $('#lab-guide').find(':input').length + 1;
-        doc.replaceRange("<input type='text' name='question"+questions+"' placeholder='insert your text here'>", cursor);
+        doc.replaceRange("<input type='text' name='question"+ questionCounter +"' placeholder='insert your text here'>\n", cursor);
       });
       $('#add-select-input-labguide').click(function () {
+        parseLabGuide(null, false);
+        questionCounter++;
         var doc = editorLabGuide.getDoc();
         var cursor = doc.getCursor();
-        doc.replaceRange("<select name='question1'>\n<option value=''>--</option>\n<option>my answer 1</option>\n</select>", cursor);
+        doc.replaceRange("<select name='question"+ questionCounter +"'>\n  <option value=''>--</option>\n  <option>my answer 1</option>\n</select>\n", cursor);
+      });
+      $('#add-textarea-input-labguide').click(function () {
+        parseLabGuide(null, false);
+        questionCounter++;
+        var doc = editorLabGuide.getDoc();
+        var cursor = doc.getCursor();
+        doc.replaceRange("<textarea name='question"+ questionCounter +"' rows='6' cols='80' placeholder='...'> </textarea>\n", cursor);
       });
       $('#add-check-input-labguide').click(function () {
+        parseLabGuide(null, false);
+        questionCounter++;
         var doc = editorLabGuide.getDoc();
         var cursor = doc.getCursor();
         doc.replaceRange(
-          "<input type='radio' name='question1' id='id1' value='my value 1'/> <label for='id1'>This is value 1.</label><br>" +
-          "<input type='radio' name='question1' id='id2' value='my value 2'/> <label for='id2'>This is value 2.</label><br>" +
-          "<input type='radio' name='question1' id='id3' value='my value 3'/> <label for='id3'>This is value 3.</label><br>",
+          "<input type='radio' name='question"+ questionCounter +"' id='id"+ questionCounter +"-1' value='my value 1'/> <label for='id"+ questionCounter +"-1'>This is value 1.</label><br>\n" +
+          "<input type='radio' name='question"+ questionCounter +"' id='id"+ questionCounter +"-2' value='my value 2'/> <label for='id"+ questionCounter +"-2'>This is value 2.</label><br>\n" +
+          "<input type='radio' name='question"+ questionCounter +"' id='id"+ questionCounter +"-3' value='my value 3'/> <label for='id"+ questionCounter +"-3'>This is value 3.</label><br>\n",
           cursor
         );
       });
