@@ -6,12 +6,13 @@ import traceback
 import uuid
 import os
 import re
+import json
 from collections import OrderedDict
 
 from apps import db, cache
 from apps.home import blueprint
 from apps.controllers import k8s, c9s
-from apps.home.models import Labs, LabInstances, LabCategories, LabAnswers, LabAnswerSheet, HomeLogging, UserLikes, UserFeedbacks
+from apps.home.models import Labs, LabInstances, LabCategories, LabAnswers, LabAnswerSheet, HomeLogging, UserLikes, UserFeedbacks, LabMetadata
 from apps.authentication.models import Users, Groups
 from flask import render_template, request, current_app, redirect, url_for, session, send_from_directory, jsonify
 from flask_login import login_required, current_user
@@ -474,8 +475,12 @@ def edit_lab(lab_id):
 
     groups = Groups.query.filter_by(is_deleted=False).all()
 
+    lab_uploads = []
+    if lab.lab_metadata:
+        lab_uploads = lab.lab_metadata.md.get("uploads", [])
+
     if request.method == "GET":
-        return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, groups=groups, allowed_groups=lab.allowed_groups, segment="/labs/edit")
+        return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, groups=groups, allowed_groups=lab.allowed_groups, segment="/labs/edit", lab_uploads=lab_uploads)
 
     # TODO: data validation/sanitization
     # validate manifest using k8s dry-run?
@@ -504,7 +509,7 @@ def edit_lab(lab_id):
     lab.allowed_groups = Groups.query.filter(Groups.id.in_(selected_group_ids), Groups.is_deleted==False).all()
 
     if not lab.categories or invalid_lab_category:
-        return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, msg_fail=invalid_lab_category+"Please select at least one category", segment="/labs/edit", groups=groups, allowed_groups=lab.allowed_groups)
+        return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, msg_fail=invalid_lab_category+"Please select at least one category", segment="/labs/edit", groups=groups, allowed_groups=lab.allowed_groups, lab_uploads=lab_uploads)
 
     try:
         db.session.add(lab)
@@ -516,14 +521,51 @@ def edit_lab(lab_id):
         msg = "Failed to save Lab information"
         current_app.logger.error(f"{msg} - {exc}")
 
-    edit_lab_log = HomeLogging(ipaddr=get_remote_addr(), action="edit_lab", success= status, lab_id=lab.id, user_id=current_user.id)
+    # Associate any pending uploads (from new-lab mode where lab.id was not yet available)
+    if status:
+        pending_filenames_raw = request.form.get("pending_upload_filenames", "[]")
+        pending_orignames_raw = request.form.get("pending_upload_orignames", "[]")
+        try:
+            pending_filenames = json.loads(pending_filenames_raw)
+            pending_orignames = json.loads(pending_orignames_raw)
+        except Exception:
+            pending_filenames = []
+            pending_orignames = []
+
+        if pending_filenames:
+            upload_dir = current_app.config['UPLOAD_DIR']
+            lab_md = lab.lab_metadata
+            if not lab_md:
+                lab_md = LabMetadata(lab=lab, is_clab=False)
+                db.session.add(lab_md)
+            md = lab_md.md
+            existing_uploads = md.get("uploads", [])
+            existing_filenames = {u["filename"] for u in existing_uploads}
+            for fname, orig in zip(pending_filenames, pending_orignames):
+                if fname in existing_filenames:
+                    continue
+                fpath = os.path.join(upload_dir, fname)
+                if not os.path.exists(fpath):
+                    current_app.logger.warning(f"Pending upload file not found on disk: {fname}")
+                    continue
+                file_url = url_for('home_blueprint.serve_upload', filename=fname)
+                existing_uploads.append({"filename": fname, "original_name": orig, "url": file_url})
+                existing_filenames.add(fname)
+            md["uploads"] = existing_uploads
+            lab_md.md = md
+            try:
+                db.session.commit()
+            except Exception as exc:
+                current_app.logger.error(f"Failed to save pending uploads metadata for lab {lab.id}: {exc}")
+
+    edit_lab_log = HomeLogging(ipaddr=get_remote_addr(), action="edit_lab", success=status, lab_id=lab.id, user_id=current_user.id)
     db.session.add(edit_lab_log)
     db.session.commit()
 
     if status:
         return redirect(url_for('home_blueprint.view_labs', lab_id=lab.id))
     else:
-        return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, msg_fail=msg, segment="/labs/edit", groups=groups, allowed_groups=lab.allowed_groups)
+        return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, msg_fail=msg, segment="/labs/edit", groups=groups, allowed_groups=lab.allowed_groups, lab_uploads=lab_uploads)
 
 @blueprint.route('/users')
 @login_required
@@ -1090,12 +1132,95 @@ def upload_lab_file():
 
     try:
         file.save(os.path.join(upload_dir, new_filename))
-        url = url_for('home_blueprint.serve_upload', filename=new_filename)
-        return jsonify({
-            "status": "ok",
-            "url": url,
-            "filename": file.filename
-        }), 200
+        file_url = url_for('home_blueprint.serve_upload', filename=new_filename)
     except Exception as exc:
         current_app.logger.error(f"Failed to save uploaded file: {exc}")
         return jsonify({"status": "fail", "result": "Failed to save file on server"}), 500
+
+    # If a lab_id was provided, persist the file reference to LabMetadata
+    uploads = []
+    lab_id = request.form.get("lab_id", "").strip()
+    if lab_id and lab_id != "new":
+        lab = Labs.query.get(lab_id)
+        if lab:
+            lab_md = lab.lab_metadata
+            if not lab_md:
+                lab_md = LabMetadata(lab=lab, is_clab=False)
+                db.session.add(lab_md)
+            md = lab_md.md
+            existing_uploads = md.get("uploads", [])
+            existing_uploads.append({
+                "filename": new_filename,
+                "original_name": file.filename,
+                "url": file_url,
+            })
+            md["uploads"] = existing_uploads
+            lab_md.md = md
+            try:
+                db.session.commit()
+            except Exception as exc:
+                current_app.logger.error(f"Failed to save upload metadata for lab {lab_id}: {exc}")
+            uploads = existing_uploads
+
+    return jsonify({
+        "status": "ok",
+        "url": file_url,
+        "filename": file.filename,
+        "saved_filename": new_filename,
+        "uploads": uploads,
+    }), 200
+
+
+@blueprint.route("/labs/<lab_id>/uploads", methods=["GET"])
+@login_required
+@check_user_category(["admin", "teacher", "labcreator"])
+def get_lab_uploads(lab_id):
+    lab = Labs.query.get(lab_id)
+    if not lab:
+        return jsonify({"status": "fail", "result": "Lab not found"}), 404
+    if current_user.category == "labcreator" and lab.updated_by != current_user.id:
+        return jsonify({"status": "fail", "result": "Unauthorized"}), 403
+    uploads = lab.lab_metadata.md.get("uploads", []) if lab.lab_metadata else []
+    return jsonify({"status": "ok", "uploads": uploads}), 200
+
+
+@blueprint.route("/labs/<lab_id>/uploads/<filename>", methods=["DELETE"])
+@login_required
+@check_user_category(["admin", "teacher", "labcreator"])
+def delete_lab_upload(lab_id, filename):
+    lab = Labs.query.get(lab_id)
+    if not lab:
+        return jsonify({"status": "fail", "result": "Lab not found"}), 404
+    if current_user.category == "labcreator" and lab.updated_by != current_user.id:
+        return jsonify({"status": "fail", "result": "Unauthorized"}), 403
+
+    lab_md = lab.lab_metadata
+    if not lab_md:
+        return jsonify({"status": "fail", "result": "No uploads found"}), 404
+
+    md = lab_md.md
+    uploads = md.get("uploads", [])
+    original_count = len(uploads)
+    uploads = [u for u in uploads if u.get("filename") != filename]
+    if len(uploads) == original_count:
+        return jsonify({"status": "fail", "result": "File not found in uploads list"}), 404
+
+    md["uploads"] = uploads
+    lab_md.md = md
+
+    upload_dir = current_app.config["UPLOAD_DIR"]
+    fpath = os.path.join(upload_dir, filename)
+    try:
+        os.remove(fpath)
+    except FileNotFoundError:
+        current_app.logger.warning(f"Upload file not found on disk during delete: {filename}")
+    except Exception as exc:
+        current_app.logger.error(f"Failed to delete upload file {filename}: {exc}")
+
+    try:
+        db.session.commit()
+    except Exception as exc:
+        current_app.logger.error(f"Failed to update uploads metadata after delete: {exc}")
+        return jsonify({"status": "fail", "result": "Failed to update metadata"}), 500
+
+    return jsonify({"status": "ok"}), 200

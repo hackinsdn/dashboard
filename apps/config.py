@@ -158,7 +158,7 @@ class Config(object):
 
     # File upload configurations for lab editor
     LAB_UPLOAD_MAX_SIZE = int(os.getenv("LAB_UPLOAD_MAX_SIZE", str(10 * 1024 * 1024))) # Default 10MB
-    LAB_UPLOAD_ALLOWED_EXTENSIONS = set(os.getenv("LAB_UPLOAD_ALLOWED_EXTENSIONS", "png,jpg,jpeg,gif,svg,webp,pdf,txt,zip,tar.gz").split(","))
+    LAB_UPLOAD_ALLOWED_EXTENSIONS = set(os.getenv("LAB_UPLOAD_ALLOWED_EXTENSIONS", "png,jpg,jpeg,gif,svg,webp,pdf,txt,yaml,yml,zip,tar.gz,tgz,tar.xz").split(","))
 
 class ProductionConfig(Config):
     DEBUG = False

@@ -81,6 +81,8 @@
     <!-- Main content -->
     <section class="content">
       <form method="POST" enctype="multipart/form-data" action="{{url_for('home_blueprint.edit_lab', lab_id=lab.id|default('new', true))}}">
+      <input type="hidden" name="pending_upload_filenames" id="pending-upload-filenames" value="[]">
+      <input type="hidden" name="pending_upload_orignames" id="pending-upload-orignames" value="[]">
       <div class="container-fluid">
         <div class="row">
           <!-- left column -->
@@ -232,7 +234,7 @@
         <!-- /.row -->
         <div class="row">
           <div class="col-md-12">
-            <div class="card card-dark">
+            <div id="lab-guide" class="card card-dark">
               <div class="card-header">
                 <h3 class="card-title">
                   Lab Guide
@@ -264,10 +266,24 @@
                         <div class="mb-3">
                           <textarea name="lab_guide" id="lab-edit-guide" class="textarea" placeholder="Place some text here" rows="16">{{lab.lab_guide_md_str|default('', true)}}</textarea>
                         </div>
+                        <div id="lab-uploads-panel" class="mt-3">
+                          <h6><i class="fas fa-paperclip"></i> Attached files</h6>
+                          <ul id="lab-uploads-list" class="list-group list-group-flush">
+                            {% for upload in lab_uploads|default([], true) %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center" data-filename="{{ upload.filename }}" data-url="{{ upload.url }}">
+                              <a href="{{ upload.url }}" target="_blank">{{ upload.original_name }}</a>
+                              <button type="button" class="btn btn-sm btn-outline-danger remove-upload-btn" data-filename="{{ upload.filename }}" data-original-name="{{ upload.original_name }}">
+                                <i class="fas fa-trash"></i> Remove
+                              </button>
+                            </li>
+                            {% endfor %}
+                          </ul>
+                        </div>
                       </div>
                       <div class="tab-pane fade" id="custom-tabs-labguide-preview" role="tabpanel" aria-labelledby="custom-tabs-labguide-preview-tab">
                       </div>
                     </div>
+                    <a href="#lab-guide">back to the top</a>
                   </div>
 		</div>
               </div>
@@ -519,6 +535,61 @@
       var questionCounter = 0;
       editorLabGuide.setSize("100%", 600);
 
+      var labId = "{{ lab.id|default('', true) }}";
+      var pendingFilenames = [];
+      var pendingOrignames = [];
+
+      function renderUploads(uploads) {
+        var list = $('#lab-uploads-list');
+        list.empty();
+        uploads.forEach(function(upload) {
+          list.append(
+            '<li class="list-group-item d-flex justify-content-between align-items-center"' +
+            ' data-filename="' + upload.filename + '" data-url="' + upload.url + '">' +
+            '<a href="' + upload.url + '" target="_blank">' + upload.original_name + '</a>' +
+            '<button type="button" class="btn btn-sm btn-outline-danger remove-upload-btn"' +
+            ' data-filename="' + upload.filename + '" data-original-name="' + upload.original_name + '">' +
+            '<i class="fas fa-trash"></i> Remove</button></li>'
+          );
+        });
+      }
+
+      $(document).on('click', '.remove-upload-btn', function() {
+        var btn = $(this);
+        var filename = btn.data('filename');
+        var origName = btn.data('original-name');
+        var content = editorLabGuide.getValue();
+        if (content.indexOf(filename) !== -1 || content.indexOf(origName) !== -1) {
+          alert('Warning: this file is still referenced in the Lab Guide. Remove the reference before deleting.');
+          return;
+        }
+        if (labId) {
+          $.ajax({
+            url: '/labs/' + labId + '/uploads/' + encodeURIComponent(filename),
+            type: 'DELETE',
+            success: function(response) {
+              if (response.status === 'ok') {
+                btn.closest('li').remove();
+              } else {
+                alert('Failed to remove file: ' + response.result);
+              }
+            },
+            error: function(jqXHR) {
+              var msg = jqXHR.responseJSON && jqXHR.responseJSON.result ? jqXHR.responseJSON.result : 'Unknown error';
+              alert('Failed to remove file: ' + msg);
+            }
+          });
+        } else {
+          // New lab mode: remove from pending arrays and DOM
+          var idx = pendingFilenames.indexOf(filename);
+          if (idx !== -1) {
+            pendingFilenames.splice(idx, 1);
+            pendingOrignames.splice(idx, 1);
+          }
+          btn.closest('li').remove();
+        }
+      });
+
       // Drag, Drop, Paste and Click handlers for Lab Guide file upload
       $('#upload-file-labguide-btn').click(function() {
         $('#labguide-file-input').click();
@@ -569,6 +640,9 @@
 
         var data = new FormData();
         data.append("file", file);
+        if (labId) {
+          data.append("lab_id", labId);
+        }
 
         $.ajax({
           url: "/labs/upload-file",
@@ -589,6 +663,21 @@
                 replacement = "[" + response.filename + "](" + response.url + ")";
               }
               replacePlaceholder(placeholder, replacement);
+
+              if (labId) {
+                renderUploads(response.uploads);
+              } else {
+                pendingFilenames.push(response.saved_filename);
+                pendingOrignames.push(response.filename);
+                $('#lab-uploads-list').append(
+                  '<li class="list-group-item d-flex justify-content-between align-items-center"' +
+                  ' data-filename="' + response.saved_filename + '" data-url="' + response.url + '">' +
+                  '<a href="' + response.url + '" target="_blank">' + response.filename + '</a>' +
+                  '<button type="button" class="btn btn-sm btn-outline-danger remove-upload-btn"' +
+                  ' data-filename="' + response.saved_filename + '" data-original-name="' + response.filename + '">' +
+                  '<i class="fas fa-trash"></i> Remove</button></li>'
+                );
+              }
             } else {
               replacePlaceholder(placeholder, "<!-- Upload failed: " + response.result + " -->");
               alert("Upload failed: " + response.result);
@@ -684,6 +773,8 @@
           alert('Please select at least one lab category.');
           return false;
         }
+        $('#pending-upload-filenames').val(JSON.stringify(pendingFilenames));
+        $('#pending-upload-orignames').val(JSON.stringify(pendingOrignames));
         parseLabGuide(e, true);
       });
       $('#custom-tabs-labguide-preview-tab').on('click', function (e) {
