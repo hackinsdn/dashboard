@@ -43,6 +43,24 @@
         <div class="filter-section">
           <div class="row mb-3">
             <div class="col-12">
+              <form method="GET" action="{{ url_for('home_blueprint.view_labs') }}" class="form-inline">
+                <label class="mr-2"><i class="fas fa-users"></i> Filter by Group:</label>
+                <select name="filter_group" class="form-control mr-2">
+                  <option value="">All Groups</option>
+                  <option disabled>--</option>
+                  {% for group_id in groups %}
+                    <option value="{{ group_id }}" {{ 'selected' if group_id == filter_group else '' }}>{{ groups[group_id].groupname }}</option>
+                  {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-primary mr-2">Filter</button>
+                {% if filter_group %}
+                <a href="{{ url_for('home_blueprint.view_labs') }}" class="btn btn-secondary">Clear</a>
+                {% endif %}
+              </form>
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-12">
               <h5><i class="fas fa-tags"></i> Filter by Category:</h5>
               {% for cat_id in lab_categories %}
               <button class="btn btn-{{lab_categories[cat_id].color_cls}} mx-2 filter-button{% if loop.first %} active-underline{% endif %}" data-filter="category-{{cat_id}}">
