@@ -589,13 +589,23 @@ def view_labs(lab_id=None):
     if not lab_categories:
         return render_template("pages/error.html", title="No Lab Categories", msg="No lab categories found. Please create a Lab Category first.")
 
+    filter_group_id = request.args.get("filter_group", "")
+    filter_group_id = int(filter_group_id) if filter_group_id.isdigit() else 0
+
     if current_user.category == "admin":
         labs = Labs.query
+        groups = {g.id: g for g in Groups.query.filter_by(is_deleted=False).all()}
     else:
-        labs = Labs.query.filter(db.or_(
-            Labs.allowed_groups.any(Groups.id.in_(current_user.all_group_ids)),
-            Labs.updated_by == current_user.id,
-        ))
+        labs = Labs.query.filter(
+            db.or_(
+                Labs.allowed_groups.any(Groups.id.in_(current_user.all_group_ids)),
+                Labs.updated_by == current_user.id,
+            )
+        )
+        groups = {g.id: g for g in Groups.query.filter(Groups.id.in_(current_user.all_group_ids), Groups.is_deleted == False).all()}
+
+    if filter_group_id:
+        labs = labs.filter(Labs.allowed_groups.any(Groups.id == filter_group_id))
 
     if lab_id:
         labs = labs.filter(Labs.id == lab_id)
@@ -609,7 +619,15 @@ def view_labs(lab_id=None):
             user_labs_status[lab.lab_id]["running_id"] = lab.id
         if lab.is_deleted and lab.finish_reason is not None:
             user_labs_status[lab.lab_id]["is_completed"] = True
-    return render_template("pages/labs_view.html", labs=labs, lab_categories=lab_categories, user_labs_status=user_labs_status, segment="/labs/view")
+    return render_template(
+        "pages/labs_view.html",
+        labs=labs,
+        lab_categories=lab_categories,
+        user_labs_status=user_labs_status,
+        groups=groups,
+        filter_group=filter_group_id,
+        segment="/labs/view",
+    )
 
 
 @blueprint.route('/groups/list')
