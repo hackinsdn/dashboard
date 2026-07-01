@@ -323,7 +323,7 @@ def reload_profile():
 @login_manager.unauthorized_handler
 def unauthorized_handler():
     if 'login' not in request.path:
-        session['next_url'] = request.path
+        session['next_url'] = request.full_path.rstrip('?')
     return redirect(url_for('authentication_blueprint.login'))
 
 
