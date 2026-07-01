@@ -26,9 +26,8 @@ def get_remote_addr():
 class AuditMixin(object):
     created_at = Column(DateTime, default=utcnow)
     updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
-    # XXX: this column is actually being used as a created_by, the way it
-    # works is by leveraging the default value as being get_user_id() which
-    # get the current_user.id and inserts into the DB entry being inserted
+    # updated_by: this field tracks who created the record, and on first 
+    # creation it's set via the default=get_user_id() callback.
     updated_by = Column(Integer, ForeignKey("users.id"), default=get_user_id)
 
 def check_user_category(allowed_categories):
