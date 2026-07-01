@@ -59,6 +59,12 @@ class GroupForm(FlaskForm):
     accesstoken = StringField('Accesstoken', id='accesstoken', validators=[DataRequired()])
 
 
+class RequireEmailForm(FlaskForm):
+    email = StringField('Email',
+                      id='email_require',
+                      validators=[DataRequired(), Email()])
+
+
 class ConfirmAccountForm(FlaskForm):
     confirmation_token = StringField('Confirmation Token',
                                     id='confirmation_token',

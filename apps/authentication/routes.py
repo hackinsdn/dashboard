@@ -16,7 +16,7 @@ from apps import db, login_manager, oauth, mail
 from apps.config import app_config
 from apps.audit_mixin import get_remote_addr, utcnow
 from apps.authentication import blueprint
-from apps.authentication.forms import LoginForm, CreateAccountForm, ConfirmAccountForm, ResetPasswordForm, ResetPasswordConfirmForm
+from apps.authentication.forms import LoginForm, CreateAccountForm, ConfirmAccountForm, ResetPasswordForm, ResetPasswordConfirmForm, RequireEmailForm
 from apps.authentication.models import Users, LoginLogging
 from apps.utils import check_pre_approved
 from flask_mail import Message
@@ -57,6 +57,8 @@ def login():
             login_log = LoginLogging(ipaddr=get_remote_addr(), login=identifier, auth_provider="local", success=True)
             db.session.add(login_log)
             db.session.commit()
+            if not user.email:
+                return redirect(url_for('authentication_blueprint.require_email'))
             if "next_url" in session:
                 next_url = session.pop("next_url")
                 return redirect(next_url)
@@ -113,6 +115,9 @@ def callback():
     db.session.commit()
 
     login_user(user)
+
+    if not user.email:
+        return redirect(url_for('authentication_blueprint.require_email'))
 
     if "next_url" in session:
         next_url = session.pop("next_url")
@@ -237,6 +242,131 @@ def resend_code():
     mail.send(msg)
 
     return redirect(url_for('authentication_blueprint.confirm_page'))
+
+@blueprint.route('/email/required', methods=['GET', 'POST'])
+@login_required
+def require_email():
+    if current_user.email:
+        if "next_url" in session:
+            next_url = session.pop("next_url")
+            return redirect(next_url)
+        return redirect(url_for('authentication_blueprint.route_default'))
+
+    form = RequireEmailForm(request.form)
+
+    if 'submit_email' in request.form:
+        if not form.validate_on_submit():
+            msg = "Failed to validate form."
+            if form.errors:
+                msg += f" Errors: {form.errors}"
+            return render_template('pages/email_required.html', form=form, msg=msg)
+
+        email = form.email.data
+
+        # Check email exists for another user
+        user = Users.query.filter(Users.email == email, Users.id != current_user.id).first()
+        if user:
+            return render_template('pages/email_required.html',
+                                   msg='Email already registered',
+                                   success=False,
+                                   form=form)
+
+        # else: send confirmation e-mail if configured, otherwise set the email directly
+        if not app.config['MAIL_SERVER']:
+            current_user.email = email
+            check_pre_approved(current_user)
+            db.session.commit()
+            if "next_url" in session:
+                next_url = session.pop("next_url")
+                return redirect(next_url)
+            return redirect(url_for('authentication_blueprint.route_default'))
+
+        confirmation_token = str(uuid.uuid4().int)[:6]
+        session['email_confirmation_token'] = confirmation_token
+        session['pending_email'] = email
+        session['email_datetime'] = utcnow()
+
+        # Send email
+        msg = Message(
+            subject="HackInSDN - Verify your identity",
+            sender=app.config['MAIL_USERNAME'],
+            recipients=[email],
+            body=(
+                "Help us protect your account\n\n"
+                "Before we confirm your e-mail, we need to verify your identity. Enter the following code on the confirmation page.\n\n"
+                f"{confirmation_token}\n\n"
+                "If you have not recently tried to update your e-mail on HackInSDN, you can ignore this e-mail.\n\n"
+                "--\n\n"
+                f"You're receiving this email because of your account on Dashboard HackInSDN."
+            ),
+            html=render_template('mail/confirmation_token.html', confirmation_token=confirmation_token),
+        )
+        mail.send(msg)
+
+        return redirect(url_for('authentication_blueprint.confirm_email'))
+
+    return render_template('pages/email_required.html', form=form)
+
+@blueprint.route('/email/required/confirm', methods=['GET', 'POST'])
+@login_required
+def confirm_email():
+    form = ConfirmAccountForm(request.form)
+
+    confirmation_token = session.get('email_confirmation_token')
+    if not confirmation_token:
+        return redirect(url_for('authentication_blueprint.require_email'))
+
+    if 'confirm' in request.form:
+        pending_email = session.get('pending_email')
+        created_at = session.get('email_datetime')
+
+        now = utcnow()
+        if now - created_at > timedelta(minutes=5):
+            return render_template('pages/confirm_email.html', msg='Token expired, please <a href=/email/required>click here</a> to request a new code', success=False, form=form)
+
+        if request.form['confirmation_token'] != confirmation_token:
+            return render_template('pages/confirm_email.html', msg='Invalid token', success=False, form=form)
+
+        session.pop('email_confirmation_token')
+        session.pop('pending_email')
+        session.pop('email_datetime')
+
+        current_user.email = pending_email
+        check_pre_approved(current_user)
+        db.session.commit()
+
+        if "next_url" in session:
+            next_url = session.pop("next_url")
+            return redirect(next_url)
+        return redirect(url_for('authentication_blueprint.route_default'))
+
+    return render_template('pages/confirm_email.html', form=form)
+
+@blueprint.route('/email/required/resend-code', methods=['GET'])
+@login_required
+def resend_email_code():
+    email = session.get('pending_email')
+    confirmation_token = session.get('email_confirmation_token')
+    if not email or not confirmation_token:
+        return redirect(url_for('authentication_blueprint.require_email'))
+
+    msg = Message(
+        subject="HackInSDN - Verify your identity",
+        sender=app.config['MAIL_USERNAME'],
+        recipients=[email],
+        body=(
+            "Help us protect your account\n\n"
+            "Before we confirm your e-mail, we need to verify your identity. Enter the following code on the confirmation page.\n\n"
+            f"{confirmation_token}\n\n"
+            "If you have not recently tried to update your e-mail on HackInSDN, you can ignore this e-mail.\n\n"
+            "--\n\n"
+            f"You're receiving this email because of your account on Dashboard HackInSDN."
+        ),
+        html=render_template('mail/confirmation_token.html', confirmation_token=confirmation_token),
+    )
+    mail.send(msg)
+
+    return redirect(url_for('authentication_blueprint.confirm_email'))
 
 @blueprint.route('/reset-password', methods=['GET', 'POST'])
 def reset_password():
