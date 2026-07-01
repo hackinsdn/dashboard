@@ -727,8 +727,7 @@
   <script>
     document.addEventListener("DOMContentLoaded", function () {
         {% if show_feedback_modal %}
-        const modalFeedback = new bootstrap.Modal(document.getElementById('modal-feedback'));
-        modalFeedback.show();
+        $('#modal-feedback').modal('show');
         {% endif %}
 
         const stars = document.querySelectorAll("#stars i");
