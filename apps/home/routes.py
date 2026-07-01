@@ -589,7 +589,8 @@ def view_labs(lab_id=None):
     if not lab_categories:
         return render_template("pages/error.html", title="No Lab Categories", msg="No lab categories found. Please create a Lab Category first.")
 
-    filter_group_id = int(request.args.get("filter_group") or 0)
+    filter_group_id = request.args.get("filter_group", "")
+    filter_group_id = int(filter_group_id) if filter_group_id.isdigit else 0
 
     if current_user.category == "admin":
         labs = Labs.query
