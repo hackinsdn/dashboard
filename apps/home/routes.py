@@ -469,7 +469,7 @@ def edit_lab(lab_id):
     else:
         lab = Labs()
 
-    lab_categories = {cat.id: cat for cat in LabCategories.query.all()}
+    lab_categories = {cat.id: cat for cat in LabCategories.query.filter_by(is_deleted=False).all()}
     if not lab_categories:
         return render_template("pages/labs_edit.html", segment="/labs/edit", msg_fail="No Lab Categories found. Please create a Lab Category first.", lab=lab)
 
@@ -579,13 +579,70 @@ def view_users():
     return render_template("pages/users.html", users=users)
 
 
+@blueprint.route('/lab_categories/list')
+@login_required
+@check_user_category(["admin", "teacher"])
+def list_lab_categories():
+    lab_categories = LabCategories.query.filter_by(is_deleted=False).all()
+    msg_ok = session.pop("msg_ok", None)
+    return render_template("pages/lab_categories_list.html", segment="/lab_categories/list", lab_categories=lab_categories, msg_ok=msg_ok)
+
+
+@blueprint.route('/lab_categories/edit/<category_id>', methods=["GET", "POST"])
+@login_required
+@check_user_category(["admin", "teacher"])
+def edit_lab_category(category_id):
+    valid_colors = current_app.config["LAB_CATEGORY_COLORS"]
+
+    if category_id == "new":
+        action_name = "Create"
+        category = LabCategories()
+    else:
+        action_name = "Update"
+        category = LabCategories.query.get(int(category_id))
+        if not category or category.is_deleted:
+            return render_template("pages/error.html", title="Not found", msg="Lab Category not found")
+        if current_user.category == "teacher" and category.updated_by != current_user.id:
+            return render_template(
+                "pages/error.html",
+                title="Unauthorized access",
+                msg="You don't have permission to edit this Lab Category (only its creator or an admin can)."
+            )
+
+    if request.method == "GET":
+        return render_template("pages/lab_categories_edit.html", category=category, action_name=action_name, valid_colors=valid_colors)
+
+    new_category_name = request.form.get("category", "").strip()
+    new_color = request.form.get("color_cls")
+    if not new_category_name:
+        return render_template("pages/lab_categories_edit.html", msg_fail="Category name is required.", category=category, action_name=action_name, valid_colors=valid_colors)
+    if new_color not in valid_colors:
+        return render_template("pages/lab_categories_edit.html", msg_fail="Invalid color selected.", category=category, action_name=action_name, valid_colors=valid_colors)
+
+    category.category = new_category_name
+    category.color_cls = new_color
+    if category_id == "new":
+        db.session.add(category)
+
+    try:
+        db.session.commit()
+    except Exception as exc:
+        current_app.logger.error(f"Failed to save lab category: {exc}")
+        return render_template("pages/lab_categories_edit.html", msg_fail="Failed to save Lab Category.", category=category, action_name=action_name, valid_colors=valid_colors)
+
+    if category_id == "new":
+        session["msg_ok"] = "Lab Category created successfully"
+        return redirect(url_for('home_blueprint.list_lab_categories'))
+    return render_template("pages/lab_categories_edit.html", msg_ok="Lab Category updated successfully", category=category, action_name=action_name, valid_colors=valid_colors)
+
+
 @blueprint.route('/labs/view', methods=["GET"])
 @blueprint.route('/labs/view/<lab_id>', methods=["GET"])
 @login_required
 @check_user_category(["admin", "teacher", "labcreator", "student"])
 def view_labs(lab_id=None):
 
-    lab_categories = {cat.id: cat for cat in LabCategories.query.all()}
+    lab_categories = {cat.id: cat for cat in LabCategories.query.filter_by(is_deleted=False).all()}
     if not lab_categories:
         return render_template("pages/error.html", title="No Lab Categories", msg="No lab categories found. Please create a Lab Category first.")
 

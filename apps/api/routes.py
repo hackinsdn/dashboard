@@ -6,7 +6,7 @@ import re
 from apps import db, cache
 from apps.api import blueprint
 from apps.controllers import k8s, git
-from apps.home.models import Labs, LabInstances, LabAnswers, LabAnswerSheet, UserLikes, UserFeedbacks, lab_groups
+from apps.home.models import Labs, LabInstances, LabAnswers, LabAnswerSheet, UserLikes, UserFeedbacks, lab_groups, LabCategories
 from apps.authentication.models import Users, Groups, DeletedGroupUsers, group_members, group_owners
 from apps.audit_mixin import check_user_category
 from flask import request, current_app
@@ -309,6 +309,30 @@ def delete_group(group_id):
         return {"status": "fail", "result": "Failed to delete group"}, 400
 
     return {"status": "ok", "result": "Group deleted successfully"}, 200
+
+
+@blueprint.route('/lab_categories/<int:category_id>', methods=["DELETE"])
+@login_required
+def delete_lab_category(category_id):
+    if current_user.category != "admin":
+        return {"status": "fail", "result": "Unauthorized access"}, 401
+
+    category = LabCategories.query.get(category_id)
+    if not category or category.is_deleted:
+        return {"status": "fail", "result": "Lab Category not found"}, 404
+
+    if len(category.labs) > 0:
+        return {"status": "fail", "result": f"Cannot delete: Lab Category is still in use by {len(category.labs)} lab(s)"}, 400
+
+    category.is_deleted = True
+    try:
+        db.session.commit()
+    except Exception as exc:
+        current_app.logger.error(f"Failed to delete lab category {category_id}: {exc}")
+        return {"status": "fail", "result": "Failed to delete lab category"}, 400
+
+    return {"status": "ok", "result": "Lab Category deleted successfully"}, 200
+
 
 @blueprint.route('/groups/join/<int:group_id>', methods=["POST"])
 @login_required
