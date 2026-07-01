@@ -127,7 +127,7 @@
             </a>
           </li>
           <li class="nav-item">
-            <a href="{{url_for('home_blueprint.list_lab_categories')}}" class="nav-link {% if request.url_rule.endpoint == 'home_blueprint.list_lab_categories' or request.url_rule.endpoint == 'home_blueprint.edit_lab_category' %} active {% endif %}">
+            <a href="{{ url_for('home_blueprint.list_lab_categories') }}" class="nav-link {% if request.url_rule.endpoint == 'home_blueprint.list_lab_categories' or request.url_rule.endpoint == 'home_blueprint.edit_lab_category' %} active {% endif %}">
               <i class="nav-icon fas fa-tags"></i>
               <p>
                 Lab Categories
