@@ -126,6 +126,14 @@
               </p>
             </a>
           </li>
+          <li class="nav-item">
+            <a href="{{ url_for('home_blueprint.list_lab_categories') }}" class="nav-link {% if request.url_rule.endpoint == 'home_blueprint.list_lab_categories' or request.url_rule.endpoint == 'home_blueprint.edit_lab_category' %} active {% endif %}">
+              <i class="nav-icon fas fa-tags"></i>
+              <p>
+                Lab Categories
+              </p>
+            </a>
+          </li>
           <li class="nav-item has-treeview {% if request.url_rule.endpoint.startswith('k8s_blueprint') %} menu-open {% endif %}">
             <a href="#" class="nav-link {% if request.url_rule.endpoint.startswith('k8s_blueprint') %} active {% endif %}">
               <i class="nav-icon far fa-dharmachakra"></i>

@@ -160,6 +160,12 @@ class Config(object):
     LAB_UPLOAD_MAX_SIZE = int(os.getenv("LAB_UPLOAD_MAX_SIZE", str(10 * 1024 * 1024))) # Default 10MB
     LAB_UPLOAD_ALLOWED_EXTENSIONS = set(os.getenv("LAB_UPLOAD_ALLOWED_EXTENSIONS", "png,jpg,jpeg,gif,svg,webp,pdf,txt,yaml,yml,zip,tar.gz,tgz,tar.xz").split(","))
 
+    # Lab Categories: allowed Bootstrap color classes for tagging (CSV -> list, extendable via env var)
+    LAB_CATEGORY_COLORS = [c.strip() for c in os.getenv(
+        "LAB_CATEGORY_COLORS",
+        "primary,secondary,success,danger,warning,info,light,dark,white,black"
+    ).split(",") if c.strip()]
+
 class ProductionConfig(Config):
     DEBUG = False
 

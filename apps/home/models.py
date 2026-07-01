@@ -32,12 +32,13 @@ lab_categories = db.Table('lab_categories_association',
 )
 
 
-class LabCategories(db.Model):
+class LabCategories(db.Model, AuditMixin):
     __tablename__ = 'lab_categories'
     id = db.Column(db.Integer, primary_key=True)
     category = db.Column(db.String(64))
     color_cls = db.Column(db.String(16))
-    
+    is_deleted = db.Column(db.Boolean, default=False)
+
     @property
     def color_hex(self):
         return {

@@ -63,7 +63,8 @@ def update_category_stats():
     ).group_by(lab_categories.c.category_id)
     count = {cat_id: cat_count for cat_id, cat_count in count_query.all()}
     categories = LabCategories.query.filter(
-        LabCategories.category != "All"
+        LabCategories.category != "All",
+        LabCategories.is_deleted == False,
     ).order_by(LabCategories.category).all()
     stats = {
         "name_cls": {},

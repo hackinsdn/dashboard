@@ -35,7 +35,7 @@ def upsert(clab_id="new"):
     else:
         clab = Labs()
 
-    lab_categories = {cat.id: cat for cat in LabCategories.query.all()}
+    lab_categories = {cat.id: cat for cat in LabCategories.query.filter_by(is_deleted=False).all()}
     if not lab_categories:
         return render_template("pages/clabs_upsert.html", msg_fail="No Lab Categories found. Please create a Lab Category first.", clab=clab)
 
@@ -60,8 +60,14 @@ def upsert(clab_id="new"):
     selected_group_ids = request.form.getlist('clab_allowed_groups')
     clab.allowed_groups = Groups.query.filter(Groups.id.in_(selected_group_ids), Groups.is_deleted==False).all()
     selected_category_ids = request.form.getlist('clab_categories')
-    clab.categories = LabCategories.query.filter(LabCategories.id.in_(selected_category_ids)).all()
-    clab_category = LabCategories.query.filter(LabCategories.category=="ContainerLab").first()
+    clab.categories = LabCategories.query.filter(
+        LabCategories.id.in_(selected_category_ids),
+        LabCategories.is_deleted == False
+    ).all()
+    clab_category = LabCategories.query.filter(
+        LabCategories.category == "ContainerLab",
+        LabCategories.is_deleted == False
+    ).first()
     if clab_category and clab_category not in clab.categories:
         clab.categories.append(clab_category)
 
