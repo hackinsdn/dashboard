@@ -121,11 +121,11 @@ class LabInstances(db.Model, AuditMixin):
         self._k8s_resources = json.dumps(k8s_resources)
 
     def get_user(self):
-        user = Users.query.get(self.user_id)
+        user = db.session.get(Users, self.user_id)
         return user.realname
 
     def get_lab(self):
-        lab = Labs.query.get(self.lab_id)
+        lab = db.session.get(Labs, self.lab_id)
         return lab.title
 
     def get_id(self):

@@ -67,7 +67,7 @@ def login():
                 return redirect(next_url)
             return redirect(url_for('authentication_blueprint.route_default'))
 
-        app.logger.warn(f"Failed login ipaddr={get_remote_addr()} login={identifier} auth_provider=local")
+        app.logger.warning(f"Failed login ipaddr={get_remote_addr()} login={identifier} auth_provider=local")
         login_log = LoginLogging(ipaddr=get_remote_addr(), login=identifier, auth_provider="local", success=False)
         db.session.add(login_log)
         db.session.commit()
@@ -102,7 +102,7 @@ def callback():
     email = token.get("email", None)
 
     if not subject:
-        app.logger.warn("Invalid auth token from OAUTH callback:", token)
+        app.logger.warning(f"Invalid auth token from OAUTH callback: {token}")
         return render_template('pages/page-403.html'), 403
 
     user = Users.query.filter_by(subject=subject).first()

@@ -256,7 +256,7 @@ def list_files(folder, ignore_prefix=""):
 
 def remove_empty_folders(folder):
     """Remove empty folders inside a particular folder."""
-    folders = list(os.walk(mydir))[1:]
+    folders = list(os.walk(folder))[1:]
     for folder in folders:
         if not folder[2]:
             os.rmdir(folder[0])

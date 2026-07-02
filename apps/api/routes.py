@@ -37,7 +37,7 @@ def get_lab_status(lab_id):
     if current_user.category == "user":
         return {}, 404
 
-    lab = LabInstances.query.get(lab_id)
+    lab = db.session.get(LabInstances, lab_id)
     if not lab:
         return {"status": "fail", "result": "Lab instance not found"}, 404
     
@@ -64,7 +64,7 @@ def delete_lab(lab_id):
     if current_user.category == "user":
         return {}, 404
 
-    lab = LabInstances.query.get(lab_id)
+    lab = db.session.get(LabInstances, lab_id)
     if not lab:
         return {"status": "fail", "result": "Lab instance not found"}, 404
 
@@ -132,7 +132,7 @@ def bulk_approve_users():
         if not user_id.isdigit():
             errors.append(f"Invalid user provided {user_id=}")
             continue
-        user = Users.query.get(int(user_id))
+        user = db.session.get(Users, int(user_id))
         if not user or user.is_deleted or user.category != "user":
             errors.append(f"Invalid user provided {user_id=}")
             continue
@@ -158,7 +158,7 @@ def get_lab_answers(lab_inst_id):
     if current_user.category == "user":
         return {}, 404
 
-    lab_inst = LabInstances.query.get(lab_inst_id)
+    lab_inst = db.session.get(LabInstances, lab_inst_id)
     if not lab_inst:
         return {"status": "fail", "result": "Lab instance not found"}, 404
 
@@ -182,7 +182,7 @@ def save_lab_answers(lab_inst_id):
     if not content:
         return {"status": "fail", "result": "invalid content"}, 400
 
-    lab_inst = LabInstances.query.get(lab_inst_id)
+    lab_inst = db.session.get(LabInstances, lab_inst_id)
     if not lab_inst:
         return {"status": "fail", "result": "Lab instance not found"}, 404
 
@@ -205,7 +205,7 @@ def save_grades_comments(answer_id):
     if current_user.category not in ["admin", "teacher"]:
         return {"status": "fail", "result": "User not authorized"}, 401
 
-    lab_answers = LabAnswers.query.get(answer_id)
+    lab_answers = db.session.get(LabAnswers, answer_id)
     if not lab_answers:
         return {"status": "fail", "result": "Lab answers not found"}, 404
 
@@ -245,7 +245,7 @@ def delete_user(user_id):
     if current_user.category != "admin":
         return {"status": "fail", "result": "Unauthorized access"}, 401
 
-    user = Users.query.get(user_id)
+    user = db.session.get(Users, user_id)
     if not user or user.is_deleted:
         return {"status": "fail", "result": "User not found"}, 404
 
@@ -280,7 +280,7 @@ def delete_group(group_id):
     if current_user.category not in ["admin", "teacher"]:
         return {"status": "fail", "result": "Unauthorized access"}, 401
 
-    group = Groups.query.get(group_id)
+    group = db.session.get(Groups, group_id)
     if not group or group.is_deleted:
         return {"status": "fail", "result": "Group not found"}, 404
 
@@ -294,9 +294,9 @@ def delete_group(group_id):
     deleted = DeletedGroupUsers()
     deleted.object_id = group.id
     deleted.object_type = "group"
-    deleted.members = json.dumps(group.members_dict.keys())
-    deleted.assistants = json.dumps(group.assistants_dict.keys())
-    deleted.owners = json.dumps(group.owners_dict.keys())
+    deleted.members = json.dumps(list(group.members_dict.keys()))
+    deleted.assistants = json.dumps(list(group.assistants_dict.keys()))
+    deleted.owners = json.dumps(list(group.owners_dict.keys()))
     db.session.add(deleted)
     group.members.clear()
     group.assistants.clear()
@@ -341,7 +341,7 @@ def join_group(group_id):
     if not content or not content.get("accessToken"):
         return {"status": "fail", "result": "invalid content"}, 400
 
-    group = Groups.query.get(group_id)
+    group = db.session.get(Groups, group_id)
     if not group or group.is_deleted:
         return {"status": "fail", "result": "Group not found"}, 404
 
@@ -373,7 +373,7 @@ def check_lab_answer(lab_id, answer_id):
     if current_user.category not in ["admin", "teacher"]:
         return {"status": "fail", "result": "Unauthorized access"}, 401
 
-    lab = Labs.query.get(lab_id)
+    lab = db.session.get(Labs, lab_id)
     if not lab:
         return {"status": "fail", "result": "Invalid or Unauthorized access to lab"}, 401
 
@@ -384,7 +384,7 @@ def check_lab_answer(lab_id, answer_id):
     else:
         return {"status": "fail", "result": "Invalid or Unauthorized access to lab"}, 401
 
-    lab_answer = LabAnswers.query.get(answer_id)
+    lab_answer = db.session.get(LabAnswers, answer_id)
     if not lab_answer:
         return {"status": "fail", "result": "Invalid or Unauthorized access to lab answer"}, 401
 
@@ -477,7 +477,7 @@ def feedback():
 @login_required
 def add_user_like():
     counter = cache.get("user_likes") or UserLikes.query.count()
-    user_like = UserLikes.query.get(current_user.id)
+    user_like = db.session.get(UserLikes, current_user.id)
     if user_like:
         return {"status": "ok", "result": counter}, 200
     user_like = UserLikes(user_id=current_user.id)
@@ -509,7 +509,7 @@ def del_user_like():
 @login_required
 def extend_lab(lab_id):
 
-    lab_instance = LabInstances.query.get(lab_id)
+    lab_instance = db.session.get(LabInstances, lab_id)
     if not lab_instance:
         return {"status": "fail", "result": "Lab instance not found"}, 404
 

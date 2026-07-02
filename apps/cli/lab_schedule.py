@@ -19,9 +19,9 @@ def alert_expiring_labs(app, send_email=False):
     ).all()
     app.logger.info(f"Checking for expiring labs. Found {len(lab_instances)} lab instances expiring..")
     for lab_instance in lab_instances:
-        lab = Labs.query.get(lab_instance.lab_id)
+        lab = db.session.get(Labs, lab_instance.lab_id)
         end_time = datetime_from_ts(lab_instance.expiration_ts)
-        user = Users.query.get(lab_instance.user_id)
+        user = db.session.get(Users, lab_instance.user_id)
         if not user or not send_email:
             app.logger.info(f"ALERT Expiring Lab {user=} {lab_instance.id=} {end_time=}. No e-mail to send..")
             continue

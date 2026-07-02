@@ -56,7 +56,7 @@ def index():
         "lab_categories": stats_data.get("lab_categories", {}),
         "lab_usage": stats_data.get("lab_usage", {}),
         "likes": user_likes,
-        "has_liked": UserLikes.query.get(current_user.id),
+        "has_liked": db.session.get(UserLikes, current_user.id),
         "users": stats_data.get("users", 0),
         "lab_inst_period_report": "1 Jul, 2014 - 23 Nov, 2014",
         "cpu_capacity": stats_data.get("total_cpu_capacity", 0),
@@ -103,7 +103,7 @@ def running_labs():
     filter_members = {}
     if filter_group.isdigit():
         filter_group = int(filter_group)
-        group = Groups.query.get(filter_group)
+        group = db.session.get(Groups, filter_group)
         if not group or group.is_deleted:
             return render_template("pages/error.html", title="Error getting running labs", msg="Group not found")
         filter_members = group.members_dict
@@ -181,7 +181,7 @@ def running_labs():
 def run_lab(lab_id):
 
     msg_error = ""
-    lab = Labs.query.get(lab_id)
+    lab = db.session.get(Labs, lab_id)
     if not lab:
         return render_template("pages/error.html", title="Error Running Labs", msg="Lab not found")
 
@@ -255,7 +255,7 @@ def run_lab(lab_id):
 def check_lab_status(lab_id):
 
     msg_error = ""
-    lab = LabInstances.query.get(lab_id)
+    lab = db.session.get(LabInstances, lab_id)
     if not lab:
         return render_template("pages/error.html", title="Error checking lab status", msg="Lab not found")
 
@@ -268,7 +268,7 @@ def check_lab_status(lab_id):
 @login_required
 @check_user_category(["admin", "teacher", "labcreator", "student"])
 def xterm(lab_id, kind, pod, container):
-    lab = LabInstances.query.get(lab_id)
+    lab = db.session.get(LabInstances, lab_id)
     if not lab:
         return render_template("pages/error.html", title="Error checking lab status", msg="Lab not found")
     if (current_user.category in ["student", "labcreator"] and (lab.user_id != current_user.id)):
@@ -294,7 +294,7 @@ def edit_user(user_id=None):
     if current_user.id != user_id and current_user.category not in ["admin"]:
         return render_template("pages/error.html", title="Unauthorized access", msg="You dont have access for this page")
 
-    user = Users.query.get(user_id)
+    user = db.session.get(Users, user_id)
     if not user or user.is_deleted:
         return render_template("pages/error.html", title="Invalid user", msg="User not found or deactivated on the database")
 
@@ -346,13 +346,13 @@ def edit_user(user_id=None):
 @check_user_category(["admin", "teacher", "labcreator", "student"])
 def view_lab_instance(lab_id):
 
-    lab_instance = LabInstances.query.get(lab_id)
+    lab_instance = db.session.get(LabInstances, lab_id)
     if not lab_instance:
         return render_template("pages/error.html", title="Error accessing Lab Instance", msg="Lab not found")
     if lab_instance.is_deleted:
         return render_template("pages/error.html", title="Error accessing Lab Instance", msg="Lab finished")
 
-    lab = Labs.query.get(lab_instance.lab_id)
+    lab = db.session.get(Labs, lab_instance.lab_id)
     if not lab:
         return render_template("pages/error.html", title="Error accessing Lab Instance", msg="Lab instance belongs to an unknown Lab.")
 
@@ -366,7 +366,7 @@ def view_lab_instance(lab_id):
 
     owner = current_user
     if lab_instance.user_id != current_user.id:
-        owner = Users.query.get(lab_instance.user_id)
+        owner = db.session.get(Users, lab_instance.user_id)
 
     ports = {}
     if lab.lab_metadata:
@@ -431,7 +431,7 @@ def view_lab_instance(lab_id):
 @login_required
 @check_user_category(["admin", "teacher", "student"])
 def cancel_restart_lab_instance(lab_id):
-    lab_instance = LabInstances.query.get(lab_id)
+    lab_instance = db.session.get(LabInstances, lab_id)
     if not lab_instance or lab_instance.is_deleted:
         return render_template("pages/error.html", title="Error accessing Lab Instance", msg="Lab not found")
 
@@ -459,7 +459,7 @@ def cancel_restart_lab_instance(lab_id):
 def edit_lab(lab_id):
 
     if lab_id != "new":
-        lab = Labs.query.get(lab_id)
+        lab = db.session.get(Labs, lab_id)
         if not lab:
             return render_template("pages/labs_edit.html", lab=None, segment="/labs/edit", msg_fail="Lab not found")
         if current_user.category == "labcreator" and lab.updated_by != current_user.id:
@@ -488,7 +488,7 @@ def edit_lab(lab_id):
     # validate manifest using k8s dry-run?
     # validate mandatory fields
     # ...
-
+    db.session.add(lab)
     lab.title = request.form["lab_title"]
     lab.description = request.form["lab_description"]
 
@@ -514,7 +514,6 @@ def edit_lab(lab_id):
         return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, msg_fail=invalid_lab_category+"Please select at least one category", segment="/labs/edit", groups=groups, allowed_groups=lab.allowed_groups, lab_uploads=lab_uploads)
 
     try:
-        db.session.add(lab)
         db.session.commit()
         status = True
         msg = "Lab saved with success"
@@ -718,7 +717,7 @@ def edit_group(group_id):
             )
     else:
         action_name = "Update"
-        group = Groups.query.get(int(group_id))
+        group = db.session.get(Groups, int(group_id))
         if not group or group.is_deleted:
             return render_template("pages/groups_edit.html", segment="/groups/edit", msg_fail="Group not found")
         if (current_user.category == "teacher" and current_user not in group.owners) or (current_user.category == "student" and current_user not in group.assistants):
@@ -780,7 +779,7 @@ def edit_group(group_id):
         try:
             user = users[int(user_id)]
         except Exception as exc:
-            current_app.logger.warn(f"Failed to process group_members {user_id=}: user not found")
+            current_app.logger.warning(f"Failed to process group_members {user_id=}: user not found")
             continue
         if user.id not in current_members:
             current_app.logger.info(
@@ -805,7 +804,7 @@ def edit_group(group_id):
         try:
             user = users[int(user_id)]
         except Exception as exc:
-            current_app.logger.warn(f"Failed to process group_assistants {user_id=}: user not found")
+            current_app.logger.warning(f"Failed to process group_assistants {user_id=}: user not found")
             continue
         if user.id not in current_assistants:
             group.assistants.append(user)
@@ -830,7 +829,7 @@ def edit_group(group_id):
         try:
             user = users[int(user_id)]
         except Exception as exc:
-            current_app.logger.warn(f"Failed to process group_owners {user_id=}: user not found")
+            current_app.logger.warning(f"Failed to process group_owners {user_id=}: user not found")
             continue
         if user.id not in current_owners:
             group.owners.append(user)
@@ -1034,7 +1033,7 @@ def hide_feedback():
     if not feedback_id or action not in ["hide", "unhide"]:
         return redirect(url_for('home_blueprint.feedback_view'))
 
-    feedback = UserFeedbacks.query.get(feedback_id)
+    feedback = db.session.get(UserFeedbacks, feedback_id)
     if not feedback:
         return redirect(url_for('home_blueprint.feedback_view'))
 
@@ -1055,7 +1054,7 @@ def view_finished_labs():
     filter_members = {}
     if filter_group.isdigit():
         filter_group = int(filter_group)
-        group = Groups.query.get(filter_group)
+        group = db.session.get(Groups, filter_group)
         if not group or group.is_deleted:
             return render_template("pages/error.html", title="Error getting finished labs", msg="Group not found")
         filter_members = group.members_dict
@@ -1218,7 +1217,7 @@ def upload_lab_file():
     uploads = []
     lab_id = request.form.get("lab_id", "").strip()
     if lab_id and lab_id != "new":
-        lab = Labs.query.get(lab_id)
+        lab = db.session.get(Labs, lab_id)
         if lab:
             lab_md = lab.lab_metadata
             if not lab_md:
@@ -1252,7 +1251,7 @@ def upload_lab_file():
 @login_required
 @check_user_category(["admin", "teacher", "labcreator"])
 def get_lab_uploads(lab_id):
-    lab = Labs.query.get(lab_id)
+    lab = db.session.get(Labs, lab_id)
     if not lab:
         return jsonify({"status": "fail", "result": "Lab not found"}), 404
     if current_user.category == "labcreator" and lab.updated_by != current_user.id:
@@ -1265,7 +1264,7 @@ def get_lab_uploads(lab_id):
 @login_required
 @check_user_category(["admin", "teacher", "labcreator"])
 def delete_lab_upload(lab_id, filename):
-    lab = Labs.query.get(lab_id)
+    lab = db.session.get(Labs, lab_id)
     if not lab:
         return jsonify({"status": "fail", "result": "Lab not found"}), 404
     if current_user.category == "labcreator" and lab.updated_by != current_user.id:
