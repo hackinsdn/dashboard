@@ -332,7 +332,7 @@ def require_email():
             mail.send(msg)
         except Exception:
             error = traceback.format_exc().replace("\n", ", ")
-            app.logger.info(f"Fail to send e-mail to {email}: {error}")
+            app.logger.error(f"Fail to send e-mail to {email}: {error}")
             session.pop('email_confirmation_token', None)
             session.pop('pending_email', None)
             session.pop('email_datetime', None)
@@ -414,7 +414,7 @@ def resend_email_code():
         mail.send(msg)
     except Exception:
         error = traceback.format_exc().replace("\n", ", ")
-        app.logger.info(f"Fail to send e-mail to {email}: {error}")
+        app.logger.error(f"Fail to send e-mail to {email}: {error}")
         session['error_msg'] = "Failed to send confirmation e-mail. Please try again later"
 
     return redirect(url_for('authentication_blueprint.confirm_email'))
@@ -456,7 +456,7 @@ def reset_password():
         mail.send(mail_msg)
     except Exception:
         error = traceback.format_exc().replace("\n", ", ")
-        app.logger.info(f"Fail to send e-mail to {user.email} user={user.username}: {error}")
+        app.logger.error(f"Fail to send e-mail to {user.email} user={user.username}: {error}")
         msg="Failed to send confirmation e-mail. Please try again later"
 
     return render_template('pages/reset_password.html', form=form, msg=msg)
