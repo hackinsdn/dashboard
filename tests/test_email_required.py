@@ -2,11 +2,13 @@
 
 Exercises the same scenarios that were checked manually while building the
 feature: login redirects to /email/required when Users.email is empty,
-next_url is preserved through the detour, the no-MAIL_SERVER fast path sets
-the email directly, duplicate emails are rejected, a user who already has an
-email is bounced straight through (not looped back into the flow), the full
-token-confirmation path (including resend and expiry), and the Logout
-escape hatch is present on both new pages.
+the same guard on the OAuth callback() path (which creates the Users row
+itself, unlike local login), next_url is preserved through the detour, the
+no-MAIL_SERVER fast path sets the email directly, duplicate emails are
+rejected, a user who already has an email is bounced straight through (not
+looped back into the flow), the full token-confirmation path (including
+resend and expiry), and the Logout escape hatch is present on both new
+pages.
 
 Runs entirely against a throwaway temporary SQLite database created in a temp
 directory - it never touches the real dev/production database
@@ -155,6 +157,53 @@ class TestLoginRedirectsWhenEmailMissing:
         assert resp.status_code == 200
         assert b"email_require" in resp.data
         assert b'href="/logout"' in resp.data
+        logout(client)
+
+
+# --- OAuth callback with a missing e-mail claim ----------------------------
+class TestOAuthCallbackWhenEmailMissing:
+    """OAuth providers sometimes don't return an email claim at all
+    (token.get("email") is None) - callback() creates the Users row itself
+    rather than going through register(), so this exercises that path
+    independently of the local-login tests above."""
+
+    def test_oauth_callback_redirects_then_completes_email_required_flow(
+        self, client, monkeypatch, no_mail_server
+    ):
+        logout(client)
+        monkeypatch.setattr(
+            auth_routes.oauth.provider,
+            "authorize_access_token",
+            lambda *a, **kw: {
+                "userinfo": {
+                    "sub": "oauth-noemail-sub",
+                    "iss": "https://idp.example.com",
+                    "given_name": "OAuth",
+                    "family_name": "NoEmail",
+                    "email": None,
+                }
+            },
+        )
+
+        resp = client.get("/login/callback")
+        assert resp.status_code == 302
+        assert "/email/required" in resp.headers["Location"]
+
+        user = Users.query.filter_by(subject="oauth-noemail-sub").first()
+        assert user is not None
+        assert not user.email
+
+        # same email_required.html/confirm flow local-login users go
+        # through - no special-casing for OAuth-created accounts
+        resp = client.post(
+            "/email/required",
+            data={"email": "oauthnoemail@example.com", "submit_email": "1"},
+        )
+        assert resp.status_code == 302
+        assert "/email/required" not in resp.headers["Location"]
+
+        db.session.refresh(user)
+        assert user.email == "oauthnoemail@example.com"
         logout(client)
 
 
