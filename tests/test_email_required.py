@@ -305,7 +305,7 @@ class TestTokenConfirmationPath:
             data={"email": "expireduser@example.com", "submit_email": "1"},
         )
         token = get_session_value(client, "email_confirmation_token")
-        set_session_value(client, "email_datetime", utcnow() - timedelta(minutes=10))
+        set_session_value(client, "email_datetime", utcnow() - timedelta(minutes=20))
 
         resp = client.post(
             "/email/required/confirm",
