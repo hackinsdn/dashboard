@@ -601,7 +601,7 @@ def edit_lab_category(category_id):
         category = LabCategories()
     else:
         action_name = "Update"
-        category = LabCategories.query.get(int(category_id))
+        category = db.session.get(LabCategories, int(category_id))
         if not category or category.is_deleted:
             return render_template("pages/error.html", title="Not found", msg="Lab Category not found")
         if current_user.category == "teacher" and category.updated_by != current_user.id:
