@@ -1,7 +1,10 @@
 # -*- encoding: utf-8 -*-
 """
-Copyright (c) 2019 - present AppSeed.us
+Copyright (c) 2019 - 2024 AppSeed.us
+Copyright (c) 2024 - present HackInSDN
 """
+
+import traceback
 
 from flask import render_template, redirect, request, url_for, session
 from flask import current_app as app
@@ -183,7 +186,17 @@ def register():
             ),
             html=render_template('mail/confirmation_token.html', confirmation_token=confirmation_token),
         )
-        mail.send(msg)
+        try:
+            mail.send(msg)
+        except:
+            error = traceback.format_exc().replace("\n", ", ")
+            app.logger.error(f"Fail to send e-mail to email={email} user={username}: {error}")
+            return render_template(
+                "pages/confirm.html",
+                form=create_account_form,
+                msg="Failed to send confirmation e-mail. Please try again later",
+                success=False,
+            )
 
         return redirect(url_for('authentication_blueprint.confirm_page'))
 
@@ -203,7 +216,7 @@ def confirm_page():
         created_at = session.get('datetime')
      
         now = utcnow()
-        if now - created_at > timedelta(minutes=5):
+        if not user or not created_at or now - created_at > timedelta(minutes=15):
             return render_template('pages/confirm.html', msg='Token expired, please <a href=/register>click here</a> to register again', success=False, form=form)
 
         if request.form['confirmation_token'] != confirmation_token:
@@ -217,6 +230,12 @@ def confirm_page():
         db.session.commit()
 
         return redirect(url_for('authentication_blueprint.login'))
+
+    error_msg = session.pop("error_msg", None)
+    if error_msg:
+        return render_template(
+            'pages/confirm.html', form=form, success=False, msg=error_msg
+        )
     
     return render_template('pages/confirm.html', form=form)
 
@@ -239,7 +258,12 @@ def resend_code():
         ),
         html=render_template('mail/confirmation_token.html', confirmation_token=confirmation_token),
     )
-    mail.send(msg)
+    try:
+        mail.send(msg)
+    except:
+        error = traceback.format_exc().replace("\n", ", ")
+        app.logger.error(f"Fail to send e-mail to email={email} user={username}: {error}")
+        session['error_msg'] = "Failed to send confirmation e-mail. Please try again later"
 
     return redirect(url_for('authentication_blueprint.confirm_page'))
 
@@ -301,7 +325,20 @@ def require_email():
             ),
             html=render_template('mail/confirmation_token.html', confirmation_token=confirmation_token),
         )
-        mail.send(msg)
+        try:
+            mail.send(msg)
+        except:
+            error = traceback.format_exc().replace("\n", ", ")
+            app.logger.info(f"Fail to send e-mail to {email}: {error}")
+            session.pop('email_confirmation_token', None)
+            session.pop('pending_email', None)
+            session.pop('email_datetime', None)
+            return render_template(
+                'pages/email_required.html',
+                msg='Failed to send confirmation e-mail. Please try again later',
+                success=False,
+                form=form,
+            )
 
         return redirect(url_for('authentication_blueprint.confirm_email'))
 
@@ -321,7 +358,7 @@ def confirm_email():
         created_at = session.get('email_datetime')
 
         now = utcnow()
-        if now - created_at > timedelta(minutes=5):
+        if not created_at or now - created_at > timedelta(minutes=15) or not pending_email:
             return render_template('pages/confirm_email.html', msg='Token expired, please <a href=/email/required>click here</a> to request a new code', success=False, form=form)
 
         if request.form['confirmation_token'] != confirmation_token:
@@ -339,6 +376,12 @@ def confirm_email():
             next_url = session.pop("next_url")
             return redirect(next_url)
         return redirect(url_for('authentication_blueprint.route_default'))
+
+    error_msg = session.pop("error_msg", None)
+    if error_msg:
+        return render_template(
+            'pages/confirm_email.html', form=form, success=False, msg=error_msg
+        )
 
     return render_template('pages/confirm_email.html', form=form)
 
@@ -364,7 +407,12 @@ def resend_email_code():
         ),
         html=render_template('mail/confirmation_token.html', confirmation_token=confirmation_token),
     )
-    mail.send(msg)
+    try:
+        mail.send(msg)
+    except:
+        error = traceback.format_exc().replace("\n", ", ")
+        app.logger.info(f"Fail to send e-mail to {email}: {error}")
+        session['error_msg'] = "Failed to send confirmation e-mail. Please try again later"
 
     return redirect(url_for('authentication_blueprint.confirm_email'))
 
@@ -401,7 +449,12 @@ def reset_password():
         ),
         html=render_template('mail/reset_password.html', confirmation_url=confirmation_url),
     )
-    mail.send(mail_msg)
+    try:
+        mail.send(msg)
+    except:
+        error = traceback.format_exc().replace("\n", ", ")
+        app.logger.info(f"Fail to send e-mail to {email}: {error}")
+        msg="Failed to send confirmation e-mail. Please try again later"
 
     return render_template('pages/reset_password.html', form=form, msg=msg)
 
