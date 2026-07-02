@@ -1,0 +1,53 @@
+# Minimized fixture derived from a VCR.py recording. Not a live cassette:
+# only method + uri + response.body.string are kept, and each JSON body is
+# trimmed to the fields apps/controllers/kubernetes.py actually reads.
+# Secrets (auth token, real IPs, machine IDs) were removed. See test_k8s_tape.py.
+interactions:
+- request:
+    method: GET
+    uri: https://198.51.100.10:6443/api/v1/nodes
+  response:
+    body:
+      string: '{"kind":"NodeList","apiVersion":"v1","items":[{"metadata":{"name":"k8s-testing"},"status":{"capacity":{"cpu":"8","memory":"16375548Ki","ephemeral-storage":"102624184Ki","pods":"110"},"conditions":[{"type":"Ready","status":"True"}],"addresses":[{"type":"InternalIP","address":"198.51.100.10"}]}}]}'
+- request:
+    method: POST
+    uri: https://198.51.100.10:6443/apis/apps/v1/namespaces/hackinsdn/deployments
+  response:
+    body:
+      string: '{"kind":"Deployment","apiVersion":"apps/v1","metadata":{"name":"helloworld-hackinsdn-18fb2637c46a47","uid":"8755b19e-1ccf-43d1-a277-a99981a542af"}}'
+- request:
+    method: POST
+    uri: https://198.51.100.10:6443/api/v1/namespaces/hackinsdn/services
+  response:
+    body:
+      string: '{"kind":"Service","apiVersion":"v1","metadata":{"name":"helloworld-hackinsdn-18fb2637c46a47","uid":"755f9dba-bb5c-4cde-ad83-36f390ad27a5"}}'
+- request:
+    method: GET
+    uri: https://198.51.100.10:6443/apis/apps/v1/namespaces/hackinsdn/deployments
+  response:
+    body:
+      string: '{"kind":"DeploymentList","apiVersion":"apps/v1","items":[{"metadata":{"name":"helloworld-hackinsdn-18fb2637c46a47","uid":"8755b19e-1ccf-43d1-a277-a99981a542af","creationTimestamp":"2026-07-02T19:29:44Z","labels":{"app":"hackinsdn-dashboard","lab_id":"aec2666f-b887-4e09-b628-7b14c7270016","user_uid":"757bc0a552be49"}},"spec":{"template":{"spec":{"containers":[{"name":"helloworld-hackinsdn"}]}}},"status":{"replicas":1}},{"metadata":{"name":"mnsec-proxy","uid":"4d655b02-d942-414b-9996-4cf852f855bb","creationTimestamp":"2026-05-23T18:54:04Z","labels":{"app":"mnsec-proxy"}},"spec":{"template":{"spec":{"containers":[{"name":"nginx"},{"name":"auth-service"},{"name":"kubectl-service"}]}}},"status":{"replicas":1,"readyReplicas":1}}]}'
+- request:
+    method: GET
+    uri: https://198.51.100.10:6443/apis/apps/v1/namespaces/hackinsdn/replicasets
+  response:
+    body:
+      string: '{"kind":"ReplicaSetList","apiVersion":"apps/v1","items":[{"metadata":{"uid":"15b4e9f5-e2a9-4d1a-8325-02bec4f2d388","ownerReferences":[{"kind":"Deployment","uid":"8755b19e-1ccf-43d1-a277-a99981a542af"}]}}]}'
+- request:
+    method: GET
+    uri: https://198.51.100.10:6443/api/v1/namespaces/hackinsdn/pods
+  response:
+    body:
+      string: '{"kind":"PodList","apiVersion":"v1","items":[{"metadata":{"name":"helloworld-hackinsdn-18fb2637c46a47-755db7c785-dn9d9","uid":"10e078e9-acd1-4347-bdfc-33626bc0c7b8","creationTimestamp":"2026-07-02T19:29:44Z","labels":{"app":"helloworld-hackinsdn-18fb2637c46a47"},"ownerReferences":[{"kind":"ReplicaSet","uid":"15b4e9f5-e2a9-4d1a-8325-02bec4f2d388"}]},"spec":{"nodeName":"k8s-testing","containers":[{"name":"helloworld-hackinsdn"}]},"status":{"phase":"Pending","containerStatuses":[{"ready":false}]}},{"metadata":{"name":"mnsec-proxy-5ddbcfb656-6ct5n","uid":"a11da0d1-6b78-4f38-878f-1b9ab5bd908a","creationTimestamp":"2026-05-23T18:54:04Z","labels":{"app":"mnsec-proxy"},"ownerReferences":[{"kind":"ReplicaSet","uid":"f40e483f-199c-4a6e-bf23-5f6be7d8f02b"}]},"spec":{"nodeName":"k8s-testing","containers":[{"name":"nginx"},{"name":"auth-service"},{"name":"kubectl-service"}]},"status":{"phase":"Running","podIP":"10.97.108.27","containerStatuses":[{"ready":true},{"ready":true},{"ready":true}]}}]}'
+- request:
+    method: GET
+    uri: https://198.51.100.10:6443/api/v1/namespaces/hackinsdn/services
+  response:
+    body:
+      string: '{"kind":"ServiceList","apiVersion":"v1","items":[{"metadata":{"name":"helloworld-hackinsdn-18fb2637c46a47","uid":"755f9dba-bb5c-4cde-ad83-36f390ad27a5","creationTimestamp":"2026-07-02T19:29:44Z","labels":{"app":"hackinsdn-dashboard","lab_id":"aec2666f-b887-4e09-b628-7b14c7270016","user_uid":"757bc0a552be49"}},"spec":{"type":"NodePort","selector":{"app":"helloworld-hackinsdn-18fb2637c46a47"},"ports":[{"name":"http-helloworld-webserver","protocol":"TCP","port":80,"targetPort":80,"nodePort":30996}]}},{"metadata":{"name":"mnsec-proxy-service","uid":"48f4b817-3e50-4c15-ae17-f515094b1f30","creationTimestamp":"2026-05-23T18:54:04Z"},"spec":{"type":"ClusterIP","selector":{"app":"mnsec-proxy"},"ports":[{"name":"svc-mnsec-proxy","protocol":"TCP","port":443,"targetPort":443}]}}]}'
+- request:
+    method: GET
+    uri: https://198.51.100.10:6443/api/v1/namespaces/hackinsdn/configmaps
+  response:
+    body:
+      string: '{"kind":"ConfigMapList","apiVersion":"v1","items":[{"metadata":{"name":"helloworld-config","uid":"c0nf1g00-0000-0000-0000-000000000001","creationTimestamp":"2026-07-02T19:29:44Z","labels":{"app":"hackinsdn-dashboard","lab_id":"aec2666f-b887-4e09-b628-7b14c7270016","user_uid":"757bc0a552be49"}},"data":{"startup.sh":"echo hi","motd":"welcome"}}]}'

@@ -10,8 +10,11 @@ Usage:
     pip install -r requirements-dev.txt
     pytest tests/test_k8s_controller.py -v
 """
+
 import importlib
+import json
 import os
+import subprocess
 import sys
 import tempfile
 import types
@@ -95,7 +98,7 @@ class TestPureLogic:
     def test_humanbytes(self, ctrl):
         assert "KB" in ctrl.humanbytes(2048)
         assert "MB" in ctrl.humanbytes(5 * 1024 * 1024)
-        assert "GB" in ctrl.humanbytes(3 * 1024 ** 3)
+        assert "GB" in ctrl.humanbytes(3 * 1024**3)
 
     def test_validate_token_and_pods_by_lab(self, ctrl):
         assert ctrl.validate_token("anything") is True
@@ -120,7 +123,9 @@ class TestPureLogic:
         assert ctrl.get_identifier_func("bogus") is None
 
     def test_substitute_identifiers_ok(self, ctrl):
-        status, data = ctrl.substitute_identifiers("id=${pod_hash}", pod_hash="abc", dry_run=True)
+        status, data = ctrl.substitute_identifiers(
+            "id=${pod_hash}", pod_hash="abc", dry_run=True
+        )
         assert status is True
         assert data == "id=abc"
 
@@ -139,7 +144,9 @@ class TestRegistrySecret:
         ctrl.v1_api.create_namespaced_secret.assert_called_once()
 
     def test_failure(self, ctrl):
-        ctrl.v1_api.create_namespaced_secret = MagicMock(side_effect=RuntimeError("boom"))
+        ctrl.v1_api.create_namespaced_secret = MagicMock(
+            side_effect=RuntimeError("boom")
+        )
         status, msg = ctrl.create_registry_secret("s1", "reg.io", "bob", "pw")
         assert status is False
         assert "Failed to create secret" in msg
@@ -172,7 +179,9 @@ class TestGetByName:
     def test_get_resources_by_name_dispatch(self, ctrl):
         ctrl.get_pod_by_name = MagicMock(return_value={"kind": "Pod"})
         ctrl.get_service_by_name = MagicMock(return_value={"kind": "Service"})
-        results = ctrl.get_resources_by_name([{"kind": "Pod", "name": "p"}, {"kind": "Service", "name": "s"}])
+        results = ctrl.get_resources_by_name(
+            [{"kind": "Pod", "name": "p"}, {"kind": "Service", "name": "s"}]
+        )
         assert len(results) == 2
         ctrl.get_pod_by_name.assert_called_once()
         ctrl.get_service_by_name.assert_called_once()
@@ -197,11 +206,13 @@ class TestDeleteByName:
         ctrl.delete_pod_by_name = MagicMock(return_value=True)
         ctrl.delete_service_by_name = MagicMock(return_value=True)
         ctrl.delete_secret_by_name = MagicMock(return_value=True)
-        results = ctrl.delete_resources_by_name([
-            {"kind": "Pod", "name": "p"},
-            {"kind": "Service", "name": "s"},
-            {"kind": "Secret", "name": "sec"},
-        ])
+        results = ctrl.delete_resources_by_name(
+            [
+                {"kind": "Pod", "name": "p"},
+                {"kind": "Service", "name": "s"},
+                {"kind": "Secret", "name": "sec"},
+            ]
+        )
         assert results == [True, True, True]
 
 
@@ -225,3 +236,120 @@ class TestNodes:
 
         assert ctrl.get_node_ip("nodeA") == "10.1.2.3"
         assert ctrl.get_node_ip("missing") is None
+
+
+def _completed(stdout):
+    return types.SimpleNamespace(stdout=stdout, stderr="", returncode=0)
+
+
+# --- kubectl / subprocess wrappers --------------------------------------
+class TestKubectlResources:
+    def test_get_k8s_resource_topology(self, ctrl, monkeypatch):
+        """Topology resources take is_ok from status.topologyReady."""
+        out = json.dumps({"kind": "Topology", "status": {"topologyReady": True}})
+        monkeypatch.setattr(
+            k8s_module.subprocess, "run", lambda *a, **k: _completed(out)
+        )
+        result = ctrl.get_k8s_resource({"kind": "Topology", "name": "t1"})
+        assert result["is_ok"] is True
+
+    def test_get_k8s_resource_generic_is_ok(self, ctrl, monkeypatch):
+        """Non-Topology resources are always is_ok=True when kubectl succeeds."""
+        monkeypatch.setattr(
+            k8s_module.subprocess, "run", lambda *a, **k: _completed(json.dumps({}))
+        )
+        result = ctrl.get_k8s_resource({"kind": "Foo", "name": "f1"})
+        assert result["is_ok"] is True
+
+    def test_get_k8s_resource_error(self, ctrl, monkeypatch):
+        """A kubectl failure is surfaced as an Exception."""
+
+        def boom(*a, **k):
+            raise subprocess.CalledProcessError(1, "kubectl", stderr="nope")
+
+        monkeypatch.setattr(k8s_module.subprocess, "run", boom)
+        with pytest.raises(Exception):
+            ctrl.get_k8s_resource({"kind": "Foo", "name": "f1"})
+
+    def test_create_k8s_resource_kubectl_fallback(self, ctrl, monkeypatch):
+        """Unknown kinds are created via kubectl and the parsed JSON returned."""
+        created = {"kind": "Topology", "metadata": {"name": "t1", "uid": "u1"}}
+        monkeypatch.setattr(
+            k8s_module.subprocess,
+            "run",
+            lambda *a, **k: _completed(json.dumps(created)),
+        )
+        result = ctrl.create_k8s_resource({"kind": "Topology", "metadata": {}})
+        assert result == created
+
+    def test_create_k8s_resource_error(self, ctrl, monkeypatch):
+        def boom(*a, **k):
+            raise subprocess.CalledProcessError(1, "kubectl", stderr="bad")
+
+        monkeypatch.setattr(k8s_module.subprocess, "run", boom)
+        with pytest.raises(Exception):
+            ctrl.create_k8s_resource({"kind": "Topology", "metadata": {}})
+
+    def test_delete_k8s_resource_success(self, ctrl, monkeypatch):
+        monkeypatch.setattr(
+            k8s_module.subprocess, "run", lambda *a, **k: _completed("")
+        )
+        assert ctrl.delete_k8s_resource({"kind": "Topology", "name": "t1"}) is True
+
+    def test_delete_k8s_resource_failure(self, ctrl, monkeypatch):
+        def boom(*a, **k):
+            raise subprocess.CalledProcessError(1, "kubectl", stderr="bad")
+
+        monkeypatch.setattr(k8s_module.subprocess, "run", boom)
+        assert ctrl.delete_k8s_resource({"kind": "Topology", "name": "t1"}) is False
+
+
+# --- get_/delete_ wrappers not covered elsewhere ------------------------
+class TestMoreByName:
+    def test_get_deployment_by_name(self, ctrl):
+        dep = MagicMock()
+        dep.to_dict.return_value = {"metadata": {"name": "d1"}}
+        dep.status.replicas = 2
+        dep.status.ready_replicas = 2
+        ctrl.apps_v1_api.read_namespaced_deployment = MagicMock(return_value=dep)
+        result = ctrl.get_deployment_by_name({"name": "d1"})
+        assert result["is_ok"] is True
+
+    def test_get_config_map_by_name(self, ctrl):
+        cfg = MagicMock()
+        cfg.to_dict.return_value = {"metadata": {"name": "c1"}}
+        ctrl.v1_api.read_namespaced_config_map = MagicMock(return_value=cfg)
+        assert ctrl.get_config_map_by_name({"name": "c1"})["is_ok"] is True
+
+    def test_get_resources_by_name_dispatches_all_kinds(self, ctrl):
+        ctrl.get_pod_by_name = MagicMock(return_value={"kind": "Pod"})
+        ctrl.get_service_by_name = MagicMock(return_value={"kind": "Service"})
+        ctrl.get_deployment_by_name = MagicMock(return_value={"kind": "Deployment"})
+        ctrl.get_config_map_by_name = MagicMock(return_value={"kind": "ConfigMap"})
+        ctrl.get_k8s_resource = MagicMock(return_value={"kind": "Other"})
+        results = ctrl.get_resources_by_name(
+            [
+                {"kind": "Pod", "name": "p"},
+                {"kind": "Service", "name": "s"},
+                {"kind": "Deployment", "name": "d"},
+                {"kind": "ConfigMap", "name": "c"},
+                {"kind": "Topology", "name": "t"},
+            ]
+        )
+        assert [r["kind"] for r in results] == [
+            "Pod",
+            "Service",
+            "Deployment",
+            "ConfigMap",
+            "Other",
+        ]
+
+    def test_delete_config_map_by_name(self, ctrl):
+        ctrl.v1_api.delete_namespaced_config_map = MagicMock()
+        assert ctrl.delete_config_map_by_name({"name": "c1"}) is True
+
+    def test_delete_config_map_by_name_failure(self, ctrl):
+        ctrl.v1_api.delete_namespaced_config_map = MagicMock(
+            side_effect=RuntimeError("boom")
+        )
+        assert ctrl.delete_config_map_by_name({"name": "c1"}) is False
