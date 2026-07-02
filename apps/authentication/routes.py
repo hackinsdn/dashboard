@@ -450,7 +450,7 @@ def reset_password():
         html=render_template('mail/reset_password.html', confirmation_url=confirmation_url),
     )
     try:
-        mail.send(msg)
+        mail.send(mail_msg)
     except:
         error = traceback.format_exc().replace("\n", ", ")
         app.logger.info(f"Fail to send e-mail to {user.email} user={user.username}: {error}")
