@@ -2,12 +2,17 @@
 
 Mirrors tests/test_lab_categories.py: exercises route/role gating,
 create/edit workflows, the "at least one category" and invalid-category
-validation, labcreator ownership rules, per-group view filtering, and the
-"no categories exist yet" guard.
+validation, labcreator ownership rules, per-group view filtering, the
+"no categories exist yet" guard, and the soft-delete route.
 
-There is no soft-delete route for catalog Labs (the /api/lab/<id> DELETE
-endpoint removes LabInstances, which is out of scope here), so this suite
-covers view + edit only.
+Soft-delete for catalog Labs lives at DELETE /api/labs/<id> (distinct from
+DELETE /api/lab/<id>, which removes a running LabInstance). It flips the
+Labs.is_deleted flag, mirrors edit permissions, is blocked while the lab has
+running instances, and hides deleted labs from the catalog views.
+
+Admins can undelete via POST /api/labs/<id>/restore, reveal soft-deleted labs
+in the catalog with ?show_deleted=1, and open a deleted lab in the editor to
+restore it (all covered by TestRestore).
 
 Runs entirely against a throwaway temporary SQLite database created in a temp
 directory - it never touches the real dev/production database
@@ -56,7 +61,7 @@ sys.modules["apps.controllers.clabernetes"] = _fake_clabernetes
 from run import app as flask_app  # noqa: E402
 from apps import db  # noqa: E402
 from apps.authentication.models import Users, Groups  # noqa: E402
-from apps.home.models import Labs, LabCategories  # noqa: E402
+from apps.home.models import Labs, LabCategories, LabInstances  # noqa: E402
 
 flask_app.config["TESTING"] = True
 flask_app.config["WTF_CSRF_ENABLED"] = False
@@ -297,3 +302,189 @@ class TestNoCategoriesGuard:
                 category.is_deleted = False
             db.session.commit()
             logout(client)
+
+
+# --- soft-delete route --------------------------------------------------
+def _make_lab(ids, title, updated_by=None):
+    """Create and persist a catalog Lab bound to the seeded category."""
+    lab = Labs(title=title, description="x")
+    lab.categories.append(db.session.get(LabCategories, ids["category_id"]))
+    if updated_by is not None:
+        lab.updated_by = updated_by
+    db.session.add(lab)
+    db.session.commit()
+    return lab.id
+
+
+class TestSoftDelete:
+    def test_student_cannot_delete_lab(self, client, ids):
+        lab_id = _make_lab(ids, "Delete Me Student")
+        logout(client)
+        login(client, "lbstudent", "stud123")
+        resp = client.delete(f"/api/labs/{lab_id}")
+        assert resp.status_code == 401
+        assert db.session.get(Labs, lab_id).is_deleted is False
+        logout(client)
+
+    def test_delete_missing_lab_returns_404(self, client, ids):
+        login(client, "lbadmin", "admin123")
+        resp = client.delete("/api/labs/does-not-exist")
+        assert resp.status_code == 404
+
+    def test_delete_blocked_when_running_instance_exists(self, client, ids):
+        lab_id = _make_lab(ids, "Delete Me With Instance")
+        instance = LabInstances(lab_id=lab_id, user_id=ids["student_id"], is_deleted=False)
+        db.session.add(instance)
+        db.session.commit()
+
+        resp = client.delete(f"/api/labs/{lab_id}")
+        assert resp.status_code == 400
+        assert b"running instance" in resp.data
+        assert db.session.get(Labs, lab_id).is_deleted is False
+
+        # a finished (soft-deleted) instance no longer blocks deletion
+        instance.is_deleted = True
+        db.session.commit()
+        resp = client.delete(f"/api/labs/{lab_id}")
+        assert resp.status_code == 200
+        assert db.session.get(Labs, lab_id).is_deleted is True
+
+    def test_admin_can_delete_lab_and_it_disappears_from_view(self, client, ids):
+        lab_id = _make_lab(ids, "Admin Deletable Lab")
+        resp = client.get("/labs/view")
+        assert b"Admin Deletable Lab" in resp.data
+
+        resp = client.delete(f"/api/labs/{lab_id}")
+        assert resp.status_code == 200
+        assert db.session.get(Labs, lab_id).is_deleted is True
+
+        resp = client.get("/labs/view")
+        assert b"Admin Deletable Lab" not in resp.data
+
+    def test_delete_already_deleted_returns_404(self, client, ids):
+        lab_id = _make_lab(ids, "Already Deleted Lab")
+        db.session.get(Labs, lab_id).is_deleted = True
+        db.session.commit()
+        resp = client.delete(f"/api/labs/{lab_id}")
+        assert resp.status_code == 404
+
+    def test_deleted_lab_edit_returns_not_found_for_non_admin(self, client, ids):
+        # non-admins never see a soft-deleted lab in the editor (admins can,
+        # to restore it - covered by TestRestore)
+        lab_id = _make_lab(ids, "Deleted Lab Edit Guard")
+        db.session.get(Labs, lab_id).is_deleted = True
+        db.session.commit()
+        logout(client)
+        login(client, "lbteacher", "teach123")
+        resp = client.get(f"/labs/edit/{lab_id}")
+        assert b"Lab not found" in resp.data
+        logout(client)
+
+    def test_labcreator_cannot_delete_others_lab(self, client, ids):
+        lab_id = _make_lab(ids, "Admin Owned Lab", updated_by=ids["admin_id"])
+        logout(client)
+        login(client, "lblabcreator", "lc123")
+        resp = client.delete(f"/api/labs/{lab_id}")
+        assert resp.status_code == 401
+        assert db.session.get(Labs, lab_id).is_deleted is False
+        logout(client)
+
+    def test_labcreator_can_delete_own_lab(self, client, ids):
+        lab_id = _make_lab(ids, "LabCreator Owned Lab", updated_by=ids["labcreator_id"])
+        login(client, "lblabcreator", "lc123")
+        resp = client.delete(f"/api/labs/{lab_id}")
+        assert resp.status_code == 200
+        assert db.session.get(Labs, lab_id).is_deleted is True
+        logout(client)
+
+
+# --- admin restore (undelete) -------------------------------------------
+def _make_deleted_lab(ids, title, allowed_group_id=None):
+    lab = Labs(title=title, description="x", is_deleted=True)
+    db.session.add(lab)
+    lab.categories.append(db.session.get(LabCategories, ids["category_id"]))
+    if allowed_group_id is not None:
+        lab.allowed_groups.append(db.session.get(Groups, allowed_group_id))
+    db.session.commit()
+    return lab.id
+
+
+class TestRestore:
+    def test_teacher_cannot_restore_lab(self, client, ids):
+        lab_id = _make_deleted_lab(ids, "Restore Teacher Denied")
+        logout(client)
+        login(client, "lbteacher", "teach123")
+        resp = client.post(f"/api/labs/{lab_id}/restore")
+        assert resp.status_code == 401
+        assert db.session.get(Labs, lab_id).is_deleted is True
+        logout(client)
+
+    def test_labcreator_cannot_restore_own_lab(self, client, ids):
+        lab_id = _make_deleted_lab(ids, "Restore LabCreator Denied")
+        db.session.get(Labs, lab_id).updated_by = ids["labcreator_id"]
+        db.session.commit()
+        login(client, "lblabcreator", "lc123")
+        resp = client.post(f"/api/labs/{lab_id}/restore")
+        assert resp.status_code == 401
+        assert db.session.get(Labs, lab_id).is_deleted is True
+        logout(client)
+
+    def test_restore_missing_lab_returns_404(self, client, ids):
+        login(client, "lbadmin", "admin123")
+        resp = client.post("/api/labs/does-not-exist/restore")
+        assert resp.status_code == 404
+
+    def test_restore_non_deleted_lab_returns_404(self, client, ids):
+        login(client, "lbadmin", "admin123")
+        lab_id = _make_lab(ids, "Restore Not Deleted")
+        resp = client.post(f"/api/labs/{lab_id}/restore")
+        assert resp.status_code == 404
+        assert db.session.get(Labs, lab_id).is_deleted is False
+
+    def test_admin_can_restore_and_lab_reappears_in_view(self, client, ids):
+        login(client, "lbadmin", "admin123")
+        lab_id = _make_deleted_lab(ids, "Restore Me Admin")
+
+        # hidden from the default catalog view
+        resp = client.get("/labs/view")
+        assert b"Restore Me Admin" not in resp.data
+
+        resp = client.post(f"/api/labs/{lab_id}/restore")
+        assert resp.status_code == 200
+        assert db.session.get(Labs, lab_id).is_deleted is False
+
+        # visible again after restore
+        resp = client.get("/labs/view")
+        assert b"Restore Me Admin" in resp.data
+        logout(client)
+
+    def test_admin_show_deleted_reveals_deleted_labs(self, client, ids):
+        login(client, "lbadmin", "admin123")
+        _make_deleted_lab(ids, "Show Deleted Toggle Lab")
+
+        # default view hides deleted labs
+        resp = client.get("/labs/view")
+        assert b"Show Deleted Toggle Lab" not in resp.data
+
+        # show_deleted=1 reveals them for admins
+        resp = client.get("/labs/view?show_deleted=1")
+        assert b"Show Deleted Toggle Lab" in resp.data
+        logout(client)
+
+    def test_admin_can_open_deleted_lab_in_editor(self, client, ids):
+        login(client, "lbadmin", "admin123")
+        lab_id = _make_deleted_lab(ids, "Editable Deleted Lab")
+        resp = client.get(f"/labs/edit/{lab_id}")
+        assert resp.status_code == 200
+        assert b"Lab not found" not in resp.data
+        assert b"Restore Lab" in resp.data
+        logout(client)
+
+    def test_non_admin_show_deleted_does_not_reveal(self, client, ids):
+        # a deleted lab restricted to the student's group stays hidden even
+        # when show_deleted is requested by a non-admin
+        _make_deleted_lab(ids, "Hidden From Student Deleted", allowed_group_id=ids["student_group_id"])
+        login(client, "lbstudent", "stud123")
+        resp = client.get("/labs/view?show_deleted=1")
+        assert b"Hidden From Student Deleted" not in resp.data
+        logout(client)

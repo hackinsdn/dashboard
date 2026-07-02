@@ -45,7 +45,7 @@ def index():
             current_app.logger.error(f"Failed to retrieve Kubernetes data: {e}")
         stats_data["lab_instances"] = LabInstances.query.filter_by(is_deleted=True).count()
         stats_data["users"] = Users.query.filter_by(is_deleted=False).count()
-        stats_data["labs"] = Labs.query.order_by(Labs.created_at.desc()).all()
+        stats_data["labs"] = Labs.query.filter_by(is_deleted=False).order_by(Labs.created_at.desc()).all()
         stats_data["lab_categories"] = update_category_stats()
         stats_data["lab_usage"] = update_stats_lab_instances_answers()
         cache.set("stats_data", stats_data)
@@ -460,7 +460,8 @@ def edit_lab(lab_id):
 
     if lab_id != "new":
         lab = db.session.get(Labs, lab_id)
-        if not lab:
+        # admins may open a soft-deleted lab in order to restore it
+        if not lab or (lab.is_deleted and current_user.category != "admin"):
             return render_template("pages/labs_edit.html", lab=None, segment="/labs/edit", msg_fail="Lab not found")
         if current_user.category == "labcreator" and lab.updated_by != current_user.id:
             return render_template(
@@ -650,15 +651,21 @@ def view_labs(lab_id=None):
     filter_group_id = request.args.get("filter_group", "")
     filter_group_id = int(filter_group_id) if filter_group_id.isdigit() else 0
 
+    # only admins may reveal soft-deleted labs (to restore them)
+    show_deleted = current_user.category == "admin" and request.args.get("show_deleted") == "1"
+
     if current_user.category == "admin":
         labs = Labs.query
+        if not show_deleted:
+            labs = labs.filter(Labs.is_deleted == False)
         groups = {g.id: g for g in Groups.query.filter_by(is_deleted=False).all()}
     else:
         labs = Labs.query.filter(
+            Labs.is_deleted == False,
             db.or_(
                 Labs.allowed_groups.any(Groups.id.in_(current_user.all_group_ids)),
                 Labs.updated_by == current_user.id,
-            )
+            ),
         )
         groups = {g.id: g for g in Groups.query.filter(Groups.id.in_(current_user.all_group_ids), Groups.is_deleted == False).all()}
 
@@ -684,6 +691,7 @@ def view_labs(lab_id=None):
         user_labs_status=user_labs_status,
         groups=groups,
         filter_group=filter_group_id,
+        show_deleted=show_deleted,
         segment="/labs/view",
     )
 
