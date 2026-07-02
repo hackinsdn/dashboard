@@ -288,7 +288,7 @@ def require_email():
                 msg += f" Errors: {form.errors}"
             return render_template('pages/email_required.html', form=form, msg=msg)
 
-        email = form.email.data
+        email = form.email.data.lower()
 
         # Check email exists for another user
         user = Users.query.filter(Users.email == email, Users.id != current_user.id).first()
@@ -457,7 +457,7 @@ def reset_password():
     except Exception:
         error = traceback.format_exc().replace("\n", ", ")
         app.logger.error(f"Fail to send e-mail to {user.email} user={user.username}: {error}")
-        msg="Failed to send confirmation e-mail. Please try again later"
+        msg = "Failed to send confirmation e-mail. Please try again later"
 
     return render_template('pages/reset_password.html', form=form, msg=msg)
 
