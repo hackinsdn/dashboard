@@ -216,7 +216,7 @@ def confirm_page():
         created_at = session.get('datetime')
      
         now = utcnow()
-        if not user or not created_at or now - created_at > timedelta(minutes=15):
+        if not user or not created_at or now - created_at > timedelta(minutes=app.config["EMAIL_TOKEN_EXPIRY_MINUTES"]):
             return render_template('pages/confirm.html', msg='Token expired, please <a href=/register>click here</a> to register again', success=False, form=form)
 
         if request.form['confirmation_token'] != confirmation_token:
@@ -358,7 +358,7 @@ def confirm_email():
         created_at = session.get('email_datetime')
 
         now = utcnow()
-        if not created_at or now - created_at > timedelta(minutes=15) or not pending_email:
+        if not created_at or now - created_at > timedelta(minutes=app.config["EMAIL_TOKEN_EXPIRY_MINUTES"]) or not pending_email:
             return render_template('pages/confirm_email.html', msg='Token expired, please <a href=/email/required>click here</a> to request a new code', success=False, form=form)
 
         if request.form['confirmation_token'] != confirmation_token:

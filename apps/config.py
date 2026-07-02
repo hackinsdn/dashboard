@@ -166,6 +166,9 @@ class Config(object):
         "primary,secondary,success,danger,warning,info,light,dark,white,black"
     ).split(",") if c.strip()]
 
+    # E-mail validation token expiration time
+    EMAIL_TOKEN_EXPIRY_MINUTES = int(os.getenv("EMAIL_TOKEN_EXPIRY_MINUTES", 15)
+
 class ProductionConfig(Config):
     DEBUG = False
 

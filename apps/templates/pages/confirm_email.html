@@ -37,7 +37,7 @@
             {% if msg %}
               <span class="text-danger">{{ msg | safe }}</span>
             {% else %}
-                Insert the token sent to your email (check your spam/junk folder!). The token will expire in 15 minutes
+                Insert the token sent to your email (check your spam/junk folder!). The token will expire in {{ config.EMAIL_TOKEN_EXPIRY_MINUTES }} minutes
             {% endif %}
         </p>
 
