@@ -1,0 +1,79 @@
+{% extends "layouts/base-fullscreen.html" %}
+
+{% block title %} Confirm your e-mail {% endblock %}
+
+<!-- Element injected in the BODY element -->
+{% block body_class %} register-page {% endblock body_class %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}
+
+<!-- Google Font: Source Sans Pro -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+<!-- Font Awesome -->
+<link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
+<!-- icheck bootstrap -->
+<link rel="stylesheet" href="/static/assets/plugins/icheck-bootstrap/icheck-bootstrap.min.css">
+<!-- Theme style -->
+<link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
+
+{% endblock stylesheets %}
+
+{% block content %}
+
+<div class="register-box">
+
+  <div class="login-logo">
+    <a target="_blank" rel="noopener noreferrer" href="https://hackinsdn.github.io/">
+      <img src="{{ url_for('static', filename='assets/img/hackinsdn.png') }}" alt="HackInSDN" />
+    </a>
+  </div>
+
+  <div class="card">
+    <div class="card-body register-card-body">
+      <p class="login-box-msg">
+        {% if msg %}
+        <span class="text-danger">{{ msg | safe }}</span>
+        {% else %}
+        <span>
+          We need a valid e-mail address for your account before you can continue.
+        </span>
+        {% endif %}
+      </p>
+
+      <form id="emailForm" role="form" method="post" action="">
+
+        {{ form.hidden_tag() }}
+
+        <div class="input-group mb-3">
+          {{ form.email(placeholder="Email", class="form-control") }}
+          <div class="input-group-append">
+            <div class="input-group-text">
+              <span class="fas fa-envelope"></span>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" name="submit_email" class="btn btn-primary btn-block">Continue</button>
+      </form>
+
+      <br />
+      <div class="text-center">
+        <a href="{{ url_for('authentication_blueprint.logout') }}" class="text-center">Logout</a>
+      </div>
+
+    </div><!-- /.card-body -->
+  </div><!-- /.card -->
+</div><!-- /.register-box -->
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+<!-- jQuery -->
+<script src="/static/assets/plugins/jquery/jquery.min.js"></script>
+<!-- Bootstrap 4 -->
+<script src="/static/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+{% endblock javascripts %}

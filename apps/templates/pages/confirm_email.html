@@ -1,6 +1,6 @@
 {% extends "layouts/base-fullscreen.html" %}
 
-{% block title %} Login {% endblock %}
+{% block title %} Confirm your e-mail {% endblock %}
 
 <!-- Element injected in the BODY element -->
 {% block body_class %} login-page {% endblock body_class %}
@@ -37,7 +37,7 @@
             {% if msg %}
               <span class="text-danger">{{ msg | safe }}</span>
             {% else %}
-                Insert the token sent to your email (check your spam/junk folder!). The token will expire in {{ config.EMAIL_TOKEN_EXPIRY_MINUTES }} minutes.
+                Insert the token sent to your email (check your spam/junk folder!). The token will expire in {{ config.EMAIL_TOKEN_EXPIRY_MINUTES }} minutes
             {% endif %}
         </p>
 
@@ -55,15 +55,17 @@
           </div>
           <div class="row">
             <div class="col-6">
-                <button type="submit" name="confirm" class="btn btn-primary btn-block">Verify code</button>    
+                <button type="submit" name="confirm" class="btn btn-primary btn-block">Verify code</button>
             </div>
             <div class="col-6">
-                <a href="{{ url_for('authentication_blueprint.resend_code')}}" class="btn btn-secondary btn-block">Resend code</a>
+                <a href="{{ url_for('authentication_blueprint.resend_email_code')}}" class="btn btn-secondary btn-block">Resend code</a>
           </div>
         </form>
 
         <br />
-
+        <div class="text-center">
+          <a href="{{ url_for('authentication_blueprint.logout') }}" class="text-center">Logout</a>
+        </div>
 
       </div>
       <!-- /.login-card-body -->

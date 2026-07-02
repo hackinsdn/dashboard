@@ -83,7 +83,9 @@ def index():
     show_feedback_modal = False
 
     if not user_feedback:
-        last_shown = cache.get(f"feedback_prompt_last_shown_{current_user.id}") or 0
+        last_shown = cache.get(f"feedback_prompt_last_shown_{current_user.id}")
+        if not last_shown:
+            last_shown = int(current_user.created_at.timestamp())
         now_ts = int(utcnow().timestamp())
         if now_ts - last_shown > current_app.config["HIDE_FEEDBACK_SEC"]:
             show_feedback_modal = True
@@ -599,7 +601,7 @@ def edit_lab_category(category_id):
         category = LabCategories()
     else:
         action_name = "Update"
-        category = LabCategories.query.get(int(category_id))
+        category = db.session.get(LabCategories, int(category_id))
         if not category or category.is_deleted:
             return render_template("pages/error.html", title="Not found", msg="Lab Category not found")
         if current_user.category == "teacher" and category.updated_by != current_user.id:
