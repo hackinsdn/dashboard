@@ -241,8 +241,11 @@ def confirm_page():
 
 @blueprint.route('/resend-code', methods=['GET'])
 def resend_code():
-    email = session.get('user').get('email')
+    email = session.get('user', {}).get('email')
     confirmation_token = session.get('confirmation_token')
+    if not email or not confirmation_token:
+        session['error_msg'] = "Failed to send confirmation e-mail. No user found"
+        return redirect(url_for('authentication_blueprint.confirm_page'))
 
     msg = Message(
         subject="HackInSDN - Verify your identity",
@@ -262,7 +265,7 @@ def resend_code():
         mail.send(msg)
     except Exception:
         error = traceback.format_exc().replace("\n", ", ")
-        app.logger.error(f"Fail to send e-mail to email={email} user={username}: {error}")
+        app.logger.error(f"Fail to send e-mail to email={email}: {error}")
         session['error_msg'] = "Failed to send confirmation e-mail. Please try again later"
 
     return redirect(url_for('authentication_blueprint.confirm_page'))
