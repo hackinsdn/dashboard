@@ -188,7 +188,7 @@ def register():
         )
         try:
             mail.send(msg)
-        except:
+        except Exception:
             error = traceback.format_exc().replace("\n", ", ")
             app.logger.error(f"Fail to send e-mail to email={email} user={username}: {error}")
             return render_template(
@@ -260,7 +260,7 @@ def resend_code():
     )
     try:
         mail.send(msg)
-    except:
+    except Exception:
         error = traceback.format_exc().replace("\n", ", ")
         app.logger.error(f"Fail to send e-mail to email={email} user={username}: {error}")
         session['error_msg'] = "Failed to send confirmation e-mail. Please try again later"
@@ -327,7 +327,7 @@ def require_email():
         )
         try:
             mail.send(msg)
-        except:
+        except Exception:
             error = traceback.format_exc().replace("\n", ", ")
             app.logger.info(f"Fail to send e-mail to {email}: {error}")
             session.pop('email_confirmation_token', None)
@@ -409,7 +409,7 @@ def resend_email_code():
     )
     try:
         mail.send(msg)
-    except:
+    except Exception:
         error = traceback.format_exc().replace("\n", ", ")
         app.logger.info(f"Fail to send e-mail to {email}: {error}")
         session['error_msg'] = "Failed to send confirmation e-mail. Please try again later"
@@ -451,7 +451,7 @@ def reset_password():
     )
     try:
         mail.send(mail_msg)
-    except:
+    except Exception:
         error = traceback.format_exc().replace("\n", ", ")
         app.logger.info(f"Fail to send e-mail to {user.email} user={user.username}: {error}")
         msg="Failed to send confirmation e-mail. Please try again later"
