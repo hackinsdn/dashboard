@@ -317,7 +317,7 @@ def delete_lab_category(category_id):
     if current_user.category != "admin":
         return {"status": "fail", "result": "Unauthorized access"}, 401
 
-    category = LabCategories.query.get(category_id)
+    category = db.session.get(LabCategories, category_id)
     if not category or category.is_deleted:
         return {"status": "fail", "result": "Lab Category not found"}, 404
 
