@@ -21,7 +21,7 @@ def upsert(clab_id="new"):
     """Update or Insert a ContainerLab."""
 
     if clab_id != "new":
-        clab = Labs.query.get(clab_id)
+        clab = db.session.get(Labs, clab_id)
         if not clab:
             return render_template("pages/clabs_upsert.html", clab=None, msg_fail="ContainerLab not found")
         if not clab.is_clab:
@@ -51,6 +51,8 @@ def upsert(clab_id="new"):
     if request.method == "GET":
         return render_template("pages/clabs_upsert.html", clab=clab, lab_categories=lab_categories, groups=groups, current_files=current_files)
 
+    db.session.add(clab)
+    db.session.add(clab_md)
     clab.title = request.form.get("clab_title", "").strip()
     clab.description = request.form.get("clab_desc", "").strip()
     clab.set_extended_desc(request.form["clab_extended_desc"])
@@ -134,7 +136,7 @@ def upsert(clab_id="new"):
     if len(files) > max_files:
         return jsonify({
             "ok": False,
-            "result": f"Too many files: {files_count} (max {max_files})"
+            "result": f"Too many files: {len(files)} (max {max_files})"
         }), 400
 
     changed_files = False
@@ -183,8 +185,6 @@ def upsert(clab_id="new"):
                 return jsonify({"ok": False, "result": msg}), 400
 
     try:
-        db.session.add(clab)
-        db.session.add(clab_md)
         db.session.commit()
         status = True
         msg = "ContainerLab saved with success"
