@@ -139,8 +139,8 @@ def register():
                 msg += f" Errors: {create_account_form.errors}"
             return render_template('pages/register.html', form=create_account_form, msg=msg)
 
-        username = create_account_form.username.data
-        email = create_account_form.email.data
+        username = create_account_form.username.data.lower()
+        email = create_account_form.email.data.lower()
         password = create_account_form.password.data
 
         # Check username exists
