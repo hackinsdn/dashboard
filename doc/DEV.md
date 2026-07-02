@@ -2,6 +2,17 @@
 
 This page contains some documentation for developers.
 
+## Tests + Linter + Format
+
+```
+python3 -m venv .venv
+source .venv/bin/activate
+python3 -m pip install -r requirements-dev.txt
+pytest -v tests/
+djlint --profile=jinja2 --ignore=H023,D004,J004 apps/templates/
+black --check apps/
+```
+
 ## Entity Relationship Diagram
 
 The picture below shows the Entity Relationship Diagram for Dashboard HackInSDN:
