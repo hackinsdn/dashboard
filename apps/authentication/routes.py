@@ -478,7 +478,7 @@ def confirm_reset_password(token):
 
     cache.delete(f"resetpw-{token}")
 
-    user = Users.query.get(resetpw_user)
+    user = db.session.get(Users, resetpw_user)
     if not user or user.is_deleted:
         app.logger.info(f"Invalid password reset request ipaddr={get_remote_addr()} user={resetpw_user}")
         msg = "Invalid password reset request! You need to request a new <a href='{url_for('authentication_blueprint.reset_password')}'>Password Reset</a>"
