@@ -651,8 +651,23 @@ def post_support_message():
     if not body:
         return {"error": "message body is required"}, 400
 
-    is_new = support.get_active_thread(current_user) is None
-    thread = support.get_or_create_active_thread(current_user)
+    # If the widget is posting into a specific conversation, it must still be open.
+    thread_id = data.get("thread_id")
+    if thread_id is not None:
+        thread = db.session.get(SupportThreads, thread_id)
+        if thread is None or thread.user_id != current_user.id:
+            return {"status": "fail", "result": "Thread not found"}, 404
+        if thread.status == "finished":
+            reason = next(
+                (m.body for m in reversed(thread.messages) if m.sender == "system"),
+                "This conversation has been finished.",
+            )
+            return {"error": reason + " Please start a new conversation.", "finished": True}, 409
+        is_new = False
+    else:
+        is_new = support.get_active_thread(current_user) is None
+        thread = support.get_or_create_active_thread(current_user)
+
     message = support.add_message(thread, "user", body, is_read=False)
     if is_new:
         support.record_telemetry(

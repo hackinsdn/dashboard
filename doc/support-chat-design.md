@@ -72,6 +72,9 @@ refinements, and describes the resulting architecture.
     shown as a centered note in the thread.
 15. Multi-line messages are rendered with their **line breaks preserved** in the admin and
     user thread-view pages (`white-space: pre-wrap`).
+16. After a conversation is finished, the widget **locks**: it cannot send new messages
+    into it (the API rejects with `409`), it shows the closing note and disables the send
+    button, and offers a **"Start new conversation"** action.
 
 ---
 
@@ -139,7 +142,7 @@ Schema is created by migration `2.0.7 → 2.0.8`
 | Method & path | Who | Purpose |
 | --- | --- | --- |
 | `GET /support/thread` | user | active thread + messages (marks it seen by the user) |
-| `POST /support/thread/messages` | user | append a user message; record telemetry on a **new** thread; store any AI reply |
+| `POST /support/thread/messages` | user | append a user message; record telemetry on a **new** thread; store any AI reply. Accepts an optional `thread_id` — if it names a **finished** thread the request is rejected with `409 {finished: true}`; if omitted it continues/starts the active thread |
 | `POST /support/thread/finish` | user | finish the active thread |
 | `POST /support/threads/<id>/finish` | admin | finish any thread |
 | `GET /support/threads/<id>` | admin **or** owner | single thread + messages (used by the 30 s poll) |
@@ -170,7 +173,10 @@ Support is **not** e-mailed from the request path; notifications are batched (be
   **per-message timestamps** (`HH:MM`, or `DD/MM/YYYY HH:MM` when not today),
   **"Finish conversation"**, **"See all cases"** link → `/support/my`, sends the current
   `page` for telemetry, and **polls every 30 s** while open. A `@media (max-width: 575.98px)`
-  rule makes the panel span the viewport with symmetric gutters on phones.
+  rule makes the panel span the viewport with symmetric gutters on phones. The widget
+  tracks its `currentThreadId` and polls it by id; when that thread becomes **finished**
+  (by an admin, or on a `409` from a send) it **locks** — disables the input/send button,
+  shows the closing note, and offers **"Start new conversation"**.
 - **Navbar Messages dropdown** — `apps/templates/includes/navigation.html`; shows the
   user's recent threads, an unread badge (`support_unread_count`), and "See All
   Messages" → `/support/my`.
@@ -218,8 +224,9 @@ filter), telemetry capture on a new thread, the read-endpoint authorization, the
 unread indicator (including the rendered badge), the admin sidebar unread count
 (`admin_unread_thread_count`, rising with a pending message and dropping after a reply),
 multi-line message persistence, conversation finishing (user + admin, the closing `system`
-message, admin-route authorization, and idempotency), and the batch-flush timing boundary
-(with a mocked mailer).
+message, admin-route authorization, and idempotency), posting into a specific thread
+(append vs. the `409` rejection on a finished thread, and ownership 404s), and the
+batch-flush timing boundary (with a mocked mailer).
 
 ## Future work
 

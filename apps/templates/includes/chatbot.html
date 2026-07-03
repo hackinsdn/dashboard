@@ -96,6 +96,9 @@
       <button id="hisdn-chat-finish" type="button" title="Finish this conversation">
         <i class="fas fa-times-circle"></i> Finish conversation
       </button>
+      <button id="hisdn-chat-newconv" type="button" title="Start a new conversation" style="display:none;">
+        <i class="fas fa-plus-circle"></i> Start new conversation
+      </button>
     </div>
     <form class="hisdn-chat-inputrow" id="hisdn-chat-form" autocomplete="off">
       <textarea id="hisdn-chat-input" rows="1" placeholder="Type your message ... (Shift+Enter for a new line)" aria-label="Message" required></textarea>
@@ -115,9 +118,13 @@
   var input = document.getElementById('hisdn-chat-input');
   var sendBtn = document.getElementById('hisdn-chat-send');
   var finishBtn = document.getElementById('hisdn-chat-finish');
+  var newConvBtn = document.getElementById('hisdn-chat-newconv');
 
   var pollTimer = null;
   var lastMessageId = 0;
+  var currentThreadId = null;
+  var locked = false;
+  var DEFAULT_PLACEHOLDER = input.getAttribute('placeholder');
 
   function scrollBottom() { body.scrollTop = body.scrollHeight; }
 
@@ -169,31 +176,72 @@
 
   function showEmpty(show) { emptyState.style.display = show ? 'block' : 'none'; }
 
-  function loadThread() {
-    fetch('/api/support/thread', { credentials: 'same-origin' })
-      .then(function (r) { return r.ok ? r.json() : { thread: null }; })
-      .then(function (data) {
-        var thread = data.thread;
-        var existing = {};
-        body.querySelectorAll('[data-id]').forEach(function (n) {
-          existing[n.getAttribute('data-id')] = true;
-        });
-        if (!thread || !thread.messages || !thread.messages.length) {
-          if (!Object.keys(existing).length) { showEmpty(true); }
-          return;
-        }
-        showEmpty(false);
-        thread.messages.forEach(function (msg) {
-          if (!existing[String(msg.id)]) { renderMessage(msg); }
-        });
-        scrollBottom();
-      })
+  function lockWidget() {
+    locked = true;
+    input.disabled = true;
+    sendBtn.disabled = true;
+    input.placeholder = 'This conversation has been finished.';
+    finishBtn.style.display = 'none';
+    newConvBtn.style.display = '';
+  }
+  function unlockWidget() {
+    locked = false;
+    input.disabled = false;
+    sendBtn.disabled = false;
+    input.placeholder = DEFAULT_PLACEHOLDER;
+    finishBtn.style.display = '';
+    newConvBtn.style.display = 'none';
+  }
+  function startNewConversation() {
+    currentThreadId = null;
+    clearMessages();
+    unlockWidget();
+    showEmpty(true);
+    input.focus();
+  }
+
+  // Render any messages from a thread object that are not already shown.
+  function renderThread(thread) {
+    if (!thread) { return; }
+    var existing = {};
+    body.querySelectorAll('[data-id]').forEach(function (n) {
+      existing[n.getAttribute('data-id')] = true;
+    });
+    var added = false;
+    (thread.messages || []).forEach(function (msg) {
+      if (!existing[String(msg.id)]) { renderMessage(msg); added = true; }
+    });
+    if (thread.messages && thread.messages.length) { showEmpty(false); }
+    if (added) { scrollBottom(); }
+    if (thread.status === 'finished' && !locked) { lockWidget(); }
+  }
+
+  function syncThread() {
+    if (currentThreadId == null) {
+      // No conversation yet: pick up an active (open) one if it exists.
+      fetch('/api/support/thread', { credentials: 'same-origin' })
+        .then(function (r) { return r.ok ? r.json() : { thread: null }; })
+        .then(function (data) {
+          if (data.thread) {
+            currentThreadId = data.thread.id;
+            renderThread(data.thread);
+          } else if (!body.querySelector('[data-id]')) {
+            showEmpty(true);
+          }
+        })
+        .catch(function () { /* ignore transient errors */ });
+      return;
+    }
+    // Follow the current conversation by id so we can detect it being finished.
+    fetch('/api/support/threads/' + currentThreadId, { credentials: 'same-origin' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) { if (data && data.thread) { renderThread(data.thread); } })
       .catch(function () { /* ignore transient errors */ });
   }
 
   function startPolling() {
     stopPolling();
-    pollTimer = setInterval(loadThread, 30000);
+    pollTimer = setInterval(syncThread, 30000);
   }
   function stopPolling() {
     if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
@@ -202,9 +250,9 @@
   function openPanel() {
     panel.classList.add('open');
     fab.style.display = 'none';
-    loadThread();
+    syncThread();
     startPolling();
-    input.focus();
+    if (!locked) { input.focus(); }
   }
   function minimizePanel() {
     panel.classList.remove('open');
@@ -240,6 +288,7 @@
 
   form.addEventListener('submit', function (event) {
     event.preventDefault();
+    if (locked) { return; }
     var text = input.value.trim();
     if (!text) { return; }
     sendBtn.disabled = true;
@@ -249,31 +298,38 @@
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'same-origin',
-      body: JSON.stringify({ body: text, page: page })
+      body: JSON.stringify({ body: text, page: page, thread_id: currentThreadId })
     }).then(function (r) {
-      if (!r.ok) { throw new Error('send failed'); }
-      return r.json();
-    }).then(function (data) {
-      (data.messages || []).forEach(renderMessage);
-      scrollBottom();
-      resetInput();
+      return r.json().then(function (data) { return { status: r.status, data: data }; });
+    }).then(function (res) {
+      if (res.status === 201) {
+        currentThreadId = res.data.thread_id;
+        (res.data.messages || []).forEach(renderMessage);
+        scrollBottom();
+        resetInput();
+      } else if (res.status === 409 && res.data && res.data.finished) {
+        // The conversation was finished (e.g. by an admin) — lock the widget
+        // and pull the closing message so the user sees why.
+        resetInput();
+        syncThread();
+        lockWidget();
+      } else {
+        input.value = text; // keep the text so it is not lost
+      }
     }).catch(function () {
-      // re-render the typed text so it is not lost
       input.value = text;
     }).finally(function () {
-      sendBtn.disabled = false;
-      input.focus();
+      if (!locked) { sendBtn.disabled = false; input.focus(); }
     });
   });
 
   finishBtn.addEventListener('click', function () {
     fetch('/api/support/thread/finish', { method: 'POST', credentials: 'same-origin' })
-      .then(function () {
-        clearMessages();
-        showEmpty(true);
-      })
+      .then(function () { startNewConversation(); })
       .catch(function () { /* ignore */ });
   });
+
+  newConvBtn.addEventListener('click', startNewConversation);
 })();
 </script>
 {% endif %}

@@ -497,3 +497,60 @@ class TestFinishConversation:
         login(client, "sc_admin", "admin123")
         assert post_json(client, "/api/support/threads/999999/finish", {}).status_code == 404
         logout(client)
+
+
+# --- posting into a specific (possibly finished) thread ----------------
+class TestPostIntoThread:
+    def test_thread_id_appends_to_same_thread(self, client, ids):
+        make_user("sc_leo")
+        logout(client)
+        login(client, "sc_leo", "pw123456")
+        tid = post_json(client, "/api/support/thread/messages", {"body": "first"}).get_json()["thread_id"]
+        resp = post_json(client, "/api/support/thread/messages", {"body": "second", "thread_id": tid})
+        assert resp.status_code == 201
+        assert resp.get_json()["thread_id"] == tid
+        thread = db.session.get(SupportThreads, tid)
+        assert sum(1 for m in thread.messages if m.sender == "user") == 2
+        logout(client)
+
+    def test_post_to_finished_thread_rejected(self, client, ids):
+        mia = make_user("sc_mia")
+        logout(client)
+        login(client, "sc_mia", "pw123456")
+        tid = post_json(client, "/api/support/thread/messages", {"body": "hi"}).get_json()["thread_id"]
+
+        # admin finishes the conversation
+        logout(client)
+        login(client, "sc_admin", "admin123")
+        post_json(client, f"/api/support/threads/{tid}/finish", {})
+
+        # the user tries to post into that finished conversation
+        logout(client)
+        login(client, "sc_mia", "pw123456")
+        resp = post_json(client, "/api/support/thread/messages", {"body": "still there?", "thread_id": tid})
+        assert resp.status_code == 409
+        data = resp.get_json()
+        assert data["finished"] is True
+        assert "support team" in data["error"]
+        # no new user message was recorded
+        thread = db.session.get(SupportThreads, tid)
+        assert sum(1 for m in thread.messages if m.sender == "user") == 1
+        logout(client)
+
+    def test_thread_id_of_another_user_404(self, client, ids):
+        make_user("sc_nina")
+        logout(client)
+        login(client, "sc_nina", "pw123456")
+        tid = post_json(client, "/api/support/thread/messages", {"body": "nina"}).get_json()["thread_id"]
+        logout(client)
+        login(client, "sc_bob", "bob123")
+        resp = post_json(client, "/api/support/thread/messages", {"body": "sneaky", "thread_id": tid})
+        assert resp.status_code == 404
+        logout(client)
+
+    def test_unknown_thread_id_404(self, client, ids):
+        logout(client)
+        login(client, "sc_bob", "bob123")
+        resp = post_json(client, "/api/support/thread/messages", {"body": "x", "thread_id": 999999})
+        assert resp.status_code == 404
+        logout(client)
