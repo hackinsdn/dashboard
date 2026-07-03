@@ -70,13 +70,13 @@
                       {% if current_user.category == "admin" %}
                       <div class="float-right">
                         {% if feedback.is_hidden %}
-                        <form action="{{ url_for('home_blueprint.hide_feedback') }}" method="POST" class="d-inline">
+                        <form action="{{ url_for('home_blueprint.hide_feedback') }}" method="post" class="d-inline">
                           <input type="hidden" name="feedback_id" value="{{ feedback.id }}">
                           <input type="hidden" name="action" value="unhide">
                           <button type="submit" class="btn btn-info btn-sm">Unhide</button>
                         </form>
                         {% else %}
-                        <form action="{{ url_for('home_blueprint.hide_feedback') }}" method="POST" class="d-inline">
+                        <form action="{{ url_for('home_blueprint.hide_feedback') }}" method="post" class="d-inline">
                           <input type="hidden" name="feedback_id" value="{{ feedback.id }}">
                           <input type="hidden" name="action" value="hide">
                           <button type="submit" class="btn btn-warning btn-sm">Hide</button>

@@ -369,8 +369,6 @@
           <!-- /.card -->
         </div>
         <!-- /.Right col -->
-          </div>
-          <!-- /.col -->
         </div>
         <!-- /.row -->
 
@@ -393,7 +391,7 @@
                       <img src="/static/assets/img/default-150x150.png" alt="Lab Image" class="img-size-50">
                     </div>
                     <div class="product-info">
-                      <a href="/labs/view/{{ lab.id }}" class="product-title">
+                      <a href="{{ url_for('home_blueprint.view_labs', lab_id=lab.id) }}" class="product-title">
                         {{ lab.title }}
 			{% for category in lab.categories %}
 			<span class="badge badge-{{ category.color_cls }} float-right ml-1">{{ category.category }}</span>
@@ -410,7 +408,7 @@
               </div>
               <!-- /.card-body -->
               <div class="card-footer text-center">
-                <a href="/labs/view" class="uppercase">View All Labs</a>
+                <a href="{{ url_for('home_blueprint.view_labs') }}" class="uppercase">View All Labs</a>
               </div>
               <!-- /.card-footer -->
             </div>

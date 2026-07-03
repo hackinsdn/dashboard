@@ -78,7 +78,7 @@
         </p>
         <div class="d-flex justify-content-center flex-wrap mt-3">
             <a href="{{ url_for('authentication_blueprint.login') }}" class="btn btn-primary m-2">Return to Home</a>
-            <a href="javascript:history.back()" class="btn btn-secondary m-2">Go Back</a>
+            <a href="{{ url_for('home_blueprint.index') }}" class="btn btn-secondary m-2" onclick="history.back(); return false;">Go Back</a>
         </div>
     </div>
 

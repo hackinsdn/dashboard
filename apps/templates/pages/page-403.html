@@ -126,7 +126,7 @@
       insufficient privileges or security restrictions on this server.
     </p>
     <div class="d-flex justify-content-center gap-3 flex-wrap mt-3">
-      <a href="javascript:history.back()" class="btn btn-secondary">Go Back</a>
+      <a href="{{ url_for('home_blueprint.index') }}" class="btn btn-secondary" onclick="history.back(); return false;">Go Back</a>
     </div>
   </div>
 

@@ -4,6 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="/static/assets/favicon.ico">
+  <meta name="description" content="A web platform for experimenting/training on cybersecurity and networking using Kubernetes.">
+  <meta name="keywords" content="cybersecurity, networking, SDN, Kubernetes, training, labs, HackInSDN">
 
   <title>
     Dashboard HackInSDN - {% block title %}{% endblock title %}
@@ -18,15 +20,15 @@
 <body class="hold-transition {% block body_class %}{% endblock body_class %}">
 <div class="wrapper">
 
-    {% include 'includes/navigation.html' %}
+    {% include "includes/navigation.html" %}
 
-    {% include 'includes/sidebar.html' %}
+    {% include "includes/sidebar.html" %}
 
     {% block content %}{% endblock content %}
 
-    {% include 'includes/footer.html' %}
+    {% include "includes/footer.html" %}
 
-    {% include 'includes/chatbot.html' %}
+    {% include "includes/chatbot.html" %}
 
 </div>
 <!-- ./wrapper -->

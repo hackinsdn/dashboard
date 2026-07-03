@@ -80,7 +80,7 @@
 
     <!-- Main content -->
     <section class="content">
-      <form method="POST" enctype="multipart/form-data" action="{{ url_for('home_blueprint.edit_lab', lab_id=lab.id|default('new', true)) }}">
+      <form method="post" enctype="multipart/form-data" action="{{ url_for('home_blueprint.edit_lab', lab_id=lab.id|default('new', true)) }}">
       <input type="hidden" name="pending_upload_filenames" id="pending-upload-filenames" value="[]">
       <input type="hidden" name="pending_upload_orignames" id="pending-upload-orignames" value="[]">
       <div class="container-fluid">

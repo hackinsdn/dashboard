@@ -15,7 +15,7 @@
           <img src="/static/assets/img/user-avatar-1.png" class="img-circle elevation-2" alt="User Image">
         </div>
         <div class="info">
-          <a href="/profile" class="d-block">
+          <a href="{{ url_for('home_blueprint.edit_user') }}" class="d-block">
             {{ current_user.username }}
           </a>
         </div>
