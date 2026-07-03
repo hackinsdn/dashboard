@@ -135,11 +135,11 @@ user2@ufxpto.edu.br"
                         <select name="group_members" class="duallistbox" multiple="multiple">
 	                {% set members_dict = group.members_dict %}
 	                {% for user_id in users %}
-		        {%   set selected = "" %}
-		        {%   if user_id in members_dict %}
-		        {%     set selected = "selected" %}
-		        {%   endif %}
-		          <option {{selected}} value={{user_id}}>{{users[user_id]}}</option>
+		        {% set selected = "" %}
+		        {% if user_id in members_dict %}
+		        {% set selected = "selected" %}
+		        {% endif %}
+		          <option {{ selected }} value={{ user_id }}>{{ users[user_id] }}</option>
 		        {% endfor %}
                         </select>
                       </div>
@@ -157,11 +157,11 @@ user2@ufxpto.edu.br"
                         <select name="group_assistants" class="duallistbox" multiple="multiple">
 	                {% set assistants_dict = group.assistants_dict %}
 	                {% for user_id in users %}
-		        {%   set selected = "" %}
-		        {%   if user_id in assistants_dict %}
-		        {%     set selected = "selected" %}
-		        {%   endif %}
-		          <option {{selected}} value={{user_id}}>{{users[user_id]}}</option>
+		        {% set selected = "" %}
+		        {% if user_id in assistants_dict %}
+		        {% set selected = "selected" %}
+		        {% endif %}
+		          <option {{ selected }} value={{ user_id }}>{{ users[user_id] }}</option>
 		        {% endfor %}
                         </select>
                       </div>
@@ -179,17 +179,17 @@ user2@ufxpto.edu.br"
                         <select name="group_owners" class="duallistbox" multiple="multiple">
 	                {% set owners_dict = group.owners_dict %}
 	                {% for user_id in users %}
-		        {%   set selected = "" %}
-		        {%   if action_name == "Create" %}
-		        {%     if (current_user.category == "admin" or current_user.category == "teacher") and current_user.id == user_id %}
-		        {%       set selected = "selected" %}
-		        {%     endif %}
-		        {%   else %}
-		        {%     if user_id in owners_dict %}
-		        {%       set selected = "selected" %}
-		        {%     endif %}
-		        {%   endif %}
-		          <option {{selected}} value={{user_id}}>{{users[user_id]}}</option>
+		        {% set selected = "" %}
+		        {% if action_name == "Create" %}
+		        {% if (current_user.category == "admin" or current_user.category == "teacher") and current_user.id == user_id %}
+		        {% set selected = "selected" %}
+		        {% endif %}
+		        {% else %}
+		        {% if user_id in owners_dict %}
+		        {% set selected = "selected" %}
+		        {% endif %}
+		        {% endif %}
+		          <option {{ selected }} value={{ user_id }}>{{ users[user_id] }}</option>
 		        {% endfor %}
                         </select>
                       </div>
@@ -201,7 +201,7 @@ user2@ufxpto.edu.br"
               </div> <!-- /.row -->
 
               <div class="row">
-		<button class="btn btn-primary" type="submit">{{action_name}}</button>
+		<button class="btn btn-primary" type="submit">{{ action_name }}</button>
                 <a href="{{ url_for('home_blueprint.list_groups') }}" class="btn btn-secondary mx-2" role="button" aria-pressed="true">Cancel</a>
               </div>
               <!-- /.row -->

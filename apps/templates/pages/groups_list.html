@@ -79,7 +79,7 @@
                 </thead>
                 <tbody>
                 {% for group in groups %}
-                <tr id="{{group.id}}">
+                <tr id="{{ group.id }}">
                   <td>{{ group.groupname }}</td>
                   <td>{{ group.organization|default("", true) }}</td>
                   <td class="text-right">
@@ -92,7 +92,7 @@
                       <a href="{{ url_for('home_blueprint.edit_group', group_id=group.id) }}" class="btn btn-outline-dark" role="button" aria-pressed="true">
                         <i class="fas fa-edit"></i> Edit/View
                       </a>
-		      <button type="button" title="Delete group" class="btn btn-outline-danger button-delete-group" data-toggle="modal" data-target="#modal-delete-group" data-id="{{group.id}}">
+		      <button type="button" title="Delete group" class="btn btn-outline-danger button-delete-group" data-toggle="modal" data-target="#modal-delete-group" data-id="{{ group.id }}">
                         <i class="fas fa-trash"></i> Delete
                       </button>
                     {% endif %}

@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0" />
-    <title>{{container}} - xterm</title>
+    <title>{{ container }} - xterm</title>
     <link rel="icon" href="/static/assets/favicon.ico">
     <style>
 html {
@@ -67,11 +67,11 @@ body {
 
     <!-- Analytics measurements -->
     {% if config.ANALYTICS_JSFILE %}
-    <script async src="{{config.ANALYTICS_JSFILE}}"></script>
+    <script async src="{{ config.ANALYTICS_JSFILE }}"></script>
     {% endif %}
     {% if config.ANALYTICS_SCRIPT %}
     <script>
-    {{config.ANALYTICS_SCRIPT|safe}}
+    {{ config.ANALYTICS_SCRIPT|safe }}
     </script>
     {% endif %}
     <!-- xterm -->
@@ -148,7 +148,7 @@ body {
       fit.fit();
       term.resize(15, 50);
       fit.fit();
-      term.writeln("Welcome to {{host}}");
+      term.writeln("Welcome to {{ host }}");
       term.writeln('')
       term.writeln("You can copy with ctrl+shift+c or ctrl+shift+x");
       term.writeln("You can paste with ctrl+shift+v");
@@ -167,13 +167,13 @@ body {
           data = String.fromCharCode(27, data.codePointAt(0));
           shouldClear = true;
         }
-        socket.emit("pty-input", { input: data, host: "{{host}}" });
+        socket.emit("pty-input", { input: data, host: "{{ host }}" });
         if (shouldClear) {
           clearVirtualKeyboard();
         }
       });
 
-      const socket = io.connect("/pty?host={{host}}");
+      const socket = io.connect("/pty?host={{ host }}");
       const status = document.getElementById("status");
 
       socket.on("pty-output", function (data) {
@@ -209,7 +209,7 @@ body {
         }
         fit.fit();
         const dims = { cols: term.cols, rows: term.rows };
-        socket.emit("resize", { dims: dims, host: "{{host}}" });
+        socket.emit("resize", { dims: dims, host: "{{ host }}" });
       }
 
       function debounce(func, wait_ms) {
@@ -271,7 +271,7 @@ body {
       function handleVirtualKeyboard(evt) {
         evt.preventDefault();
         if (evt.target.id in specialKeyMap) {
-          socket.emit("pty-input", { input: specialKeyMap[evt.target.id], host: "{{host}}" });
+          socket.emit("pty-input", { input: specialKeyMap[evt.target.id], host: "{{ host }}" });
           clearVirtualKeyboard();
         } else if (evt.target.id === "ctrl") {
           ctrlButton.style.backgroundColor = "lightblue";
@@ -301,7 +301,7 @@ body {
       }
 
       window.onbeforeunload = function () {
-        socket.emit('disconnect', {'host': "{{host}}"});
+        socket.emit('disconnect', {'host': "{{ host }}"});
       }
     </script>
   </body>

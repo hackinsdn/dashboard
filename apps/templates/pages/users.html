@@ -48,7 +48,7 @@
         <div class="col-md-12">
           <div class="card">
             <div class="card-header">
-              <h3 class="card-title">Current users ({{'All' if current_user.category == "admin" else 'Unauthorized'}} users)</h3>
+              <h3 class="card-title">Current users ({{ 'All' if current_user.category == "admin" else 'Unauthorized' }} users)</h3>
               <div class="float-right">
                 <button type="button" title="Select all users" class="btn btn-default btn-sm checkbox-toggle"><i class="far fa-square"></i></button>
                 <button type="button" title="Delete selected users" class="btn btn-default btn-sm" data-toggle="modal" data-target="#modal-default">
@@ -78,11 +78,11 @@
                 </thead>
                 <tbody>
             	{% for user in users %}
-                <tr id="{{user.id}}">
+                <tr id="{{ user.id }}">
                   <td>
                     <div class="icheck-primary">
-                      <input type="checkbox" value="" id="checkbox-{{user.id}}" class="checkbox-user">
-                      <label for="checkbox-{{user.id}}"></label>
+                      <input type="checkbox" value="" id="checkbox-{{ user.id }}" class="checkbox-user">
+                      <label for="checkbox-{{ user.id }}"></label>
                     </div>
                   </td>
             	  <td>{{ user.username }}</td>
@@ -92,7 +92,7 @@
                   <td>{{ user.issuer|default('LOCAL', true) }}</td>
                   <td>{{ user.last_login.strftime('%Y-%m-%d %H:%M') if user.last_login else '--' }}</td>
                   <td>{{ user.created_at.strftime('%Y-%m-%d %H:%M') if user.created_at else '--' }}</td>
-                  <td><a href="{{url_for('home_blueprint.edit_user', user_id=user.id)}}" class="btn btn-outline-dark" role="button" aria-pressed="true"><i class="fa fa-pen"></i> Edit</a></td>
+                  <td><a href="{{ url_for('home_blueprint.edit_user', user_id=user.id) }}" class="btn btn-outline-dark" role="button" aria-pressed="true"><i class="fa fa-pen"></i> Edit</a></td>
                 </tr>
                 {% endfor %}
                 </tbody>

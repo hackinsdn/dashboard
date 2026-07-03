@@ -69,7 +69,7 @@
                           <option value="">All Labs</option>
                           <option disabled>--</option>
 			{% for lab_id in labs %}
-			  <option value="{{lab_id}}" {{'selected' if lab_id == filter_lab else ''}}>{{labs[lab_id].title}}</option>
+			  <option value="{{ lab_id }}" {{ 'selected' if lab_id == filter_lab else '' }}>{{ labs[lab_id].title }}</option>
 			{% endfor %}
                       </select>
                     </div>
@@ -79,14 +79,14 @@
                           <option value="">All Groups</option>
                           <option disabled>--</option>
 			{% for group_id in groups %}
-			  <option value="{{group_id}}" {{'selected' if group_id == filter_group else ''}}>{{groups[group_id].groupname}}</option>
+			  <option value="{{ group_id }}" {{ 'selected' if group_id == filter_group else '' }}>{{ groups[group_id].groupname }}</option>
 			{% endfor %}
                       </select>
                     </div>
                     <div class="form-group row">
                       <div class="custom-control custom-switch">
                         <input type="checkbox" class="custom-control-input" id="customSwitch1" name="check_answer_sheet">
-			<label class="custom-control-label" for="customSwitch1">Check answers with Lab Answer Sheet</label> (see more information in <a href="{{url_for('home_blueprint.add_answer_sheet')}}">Lab Answer Sheet</a>)
+			<label class="custom-control-label" for="customSwitch1">Check answers with Lab Answer Sheet</label> (see more information in <a href="{{ url_for('home_blueprint.add_answer_sheet') }}">Lab Answer Sheet</a>)
                       </div>
                     </div>
                     <div class="form-group row">
@@ -117,13 +117,13 @@
                 </thead>
                 <tbody>
                 {% for lab_answer in lab_answers %}
-                <tr id="{{lab_answer['id']}}">
+                <tr id="{{ lab_answer['id'] }}">
                   <td>{{ lab_answer['lab_title'] }}</td>
                   <td>{{ lab_answer['user'] }}</td>
                   <td>{{ lab_answer['score'] }}</td>
                   <td>{{ lab_answer['answers_text'] }}</td>
                   <td class="text-right">
-		    <button type="button" title="Show answer" class="btn btn-outline-dark button-show-answer" data-toggle="modal" data-target="#modal-show-answer" data-answers="<p>Lab answers for user <b>{{ lab_answer['user'] }}</b></p>{{lab_answer['answers']}}" data-answerid="{{lab_answer['id']}}" data-labid="{{lab_answer['lab_id']}}">
+		    <button type="button" title="Show answer" class="btn btn-outline-dark button-show-answer" data-toggle="modal" data-target="#modal-show-answer" data-answers="<p>Lab answers for user <b>{{ lab_answer['user'] }}</b></p>{{ lab_answer['answers'] }}" data-answerid="{{ lab_answer['id'] }}" data-labid="{{ lab_answer['lab_id'] }}">
                       <i class="fas fa-eye"></i> View Answers
                     </button>
                   </td>

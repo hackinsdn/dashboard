@@ -72,11 +72,11 @@
                 </thead>
                 <tbody>
                 {% for item in services %}
-                <tr id="{{item['uid']}}">
+                <tr id="{{ item['uid'] }}">
                   <td>
                     <div class="icheck-primary">
-                      <input type="checkbox" value="" id="checkbox-{{item['uid']}}">
-                      <label for="checkbox-{{item['uid']}}"></label>
+                      <input type="checkbox" value="" id="checkbox-{{ item['uid'] }}">
+                      <label for="checkbox-{{ item['uid'] }}"></label>
                     </div>
                   </td>
                   <td>{{ item['name'] }}</td>

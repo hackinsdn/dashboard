@@ -59,7 +59,7 @@
           </div>
           <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
-              <li class="breadcrumb-item"><a href="{{url_for('home_blueprint.index')}}">Home</a></li>
+              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.index') }}">Home</a></li>
               <li class="breadcrumb-item"><a href="#">Labs</a></li>
               <li class="breadcrumb-item active">Lab Completed</li>
             </ol>
@@ -89,7 +89,7 @@
                 </p>
 
                 <div class="success-actions">
-                  <a href="{{url_for('home_blueprint.view_labs', lab_id=lab_id)}}" type="button" class="btn btn-primary btn-lg mr-2" id="retry-lab">
+                  <a href="{{ url_for('home_blueprint.view_labs', lab_id=lab_id) }}" type="button" class="btn btn-primary btn-lg mr-2" id="retry-lab">
                     <i class="fas fa-redo"></i> Execute Again
                   </a>
                   <!-- Future feature: View Answers -->
@@ -99,7 +99,7 @@
                 </div>
 
                 <div class="mt-4">
-                  <a href="{{url_for('home_blueprint.index')}}" class="text-muted">
+                  <a href="{{ url_for('home_blueprint.index') }}" class="text-muted">
                     <i class="fas fa-arrow-left mr-1"></i> Back to Home
                   </a>
                 </div>
@@ -161,7 +161,7 @@
       // Button to execute again
       $('#retry-lab').click(function() {
         // Redirect to the laboratory page
-        window.location.href = '/labs/execute/{{lab_id}}';
+        window.location.href = '/labs/execute/{{ lab_id }}';
       });
 
 

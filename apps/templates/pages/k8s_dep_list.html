@@ -75,15 +75,15 @@
                 </thead>
                 <tbody>
                 {% for item in deployments %}
-                <tr id="{{item['uid']}}">
+                <tr id="{{ item['uid'] }}">
                   <td>
                     <div class="icheck-primary">
-                      <input type="checkbox" value="" id="checkbox-{{item['uid']}}">
-                      <label for="checkbox-{{item['uid']}}"></label>
+                      <input type="checkbox" value="" id="checkbox-{{ item['uid'] }}">
+                      <label for="checkbox-{{ item['uid'] }}"></label>
                     </div>
                   </td>
                   <td>{{ item['name'] }}</td>
-                  <td>{{ item['containers_ready']}}/{{item['containers_total']}}</td>
+                  <td>{{ item['containers_ready'] }}/{{ item['containers_total'] }}</td>
                   <td>{{ item['age'] }}</td>
                   <td>{{ item['containers'] }}</td>
                   <td>

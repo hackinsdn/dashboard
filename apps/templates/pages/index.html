@@ -55,7 +55,7 @@
               <div class="info-box-content">
                 <span class="info-box-text">Finished Labs</span>
                 <span class="info-box-number">
-                  {{stats['lab_instances']}}
+                  {{ stats['lab_instances'] }}
                 </span>
               </div>
               <!-- /.info-box-content -->
@@ -69,7 +69,7 @@
 
               <div class="info-box-content">
                 <span class="info-box-text">Registered Labs</span>
-                <span class="info-box-number">{{stats['registered_labs']|length}}</span>
+                <span class="info-box-number">{{ stats['registered_labs']|length }}</span>
               </div>
               <!-- /.info-box-content -->
             </div>
@@ -87,7 +87,7 @@
 
               <div class="info-box-content">
                 <span class="info-box-text">Users</span>
-                <span class="info-box-number">{{stats['users']}}</span>
+                <span class="info-box-number">{{ stats['users'] }}</span>
               </div>
               <!-- /.info-box-content -->
             </div>
@@ -96,11 +96,11 @@
           <!-- /.col -->
           <div class="col-12 col-sm-6 col-md-3">
             <div class="info-box mb-3">
-              <button id="thumbsUpButtonMain" type="button" class="info-box-icon {{"bg-success" if stats['has_liked'] else "bg-secondary"}} elevation-1 icobutton icobutton--thumbs-up" data-toggle="modal" data-target="#modal-feedback"><i class="fas fa-thumbs-up"></i></button>
+              <button id="thumbsUpButtonMain" type="button" class="info-box-icon {{ "bg-success" if stats['has_liked'] else "bg-secondary" }} elevation-1 icobutton icobutton--thumbs-up" data-toggle="modal" data-target="#modal-feedback"><i class="fas fa-thumbs-up"></i></button>
 
               <div class="info-box-content">
                 <span class="info-box-text">Likes</span>
-                <span class="info-box-number" id="user-likes">{{stats['likes']}}</span>
+                <span class="info-box-number" id="user-likes">{{ stats['likes'] }}</span>
               </div>
               <!-- /.info-box-content -->
             </div>
@@ -117,7 +117,7 @@
             <!-- MAP & BOX PANE -->
             <div class="card">
               <div class="card-header">
-                <h3 class="card-title">{{testbed_infos.title}}</h3>
+                <h3 class="card-title">{{ testbed_infos.title }}</h3>
               </div>
               <!-- /.card-header -->
               <div class="card-body p-0">
@@ -143,7 +143,7 @@
 
                       <div class="info-box-content">
                         <span class="info-box-text">Available CPUs</span>
-                        <span class="info-box-number">{{stats['cpu_capacity']}}</span>
+                        <span class="info-box-number">{{ stats['cpu_capacity'] }}</span>
                       </div>
                       <!-- /.info-box-content -->
                     </div>
@@ -153,7 +153,7 @@
 
                       <div class="info-box-content">
                         <span class="info-box-text">Available Memory</span>
-                        <span class="info-box-number">{{stats['memory_capacity']}}</span>
+                        <span class="info-box-number">{{ stats['memory_capacity'] }}</span>
                       </div>
                       <!-- /.info-box-content -->
                     </div>
@@ -163,7 +163,7 @@
 
                       <div class="info-box-content">
                         <span class="info-box-text">Storage capacity</span>
-                        <span class="info-box-number">{{stats['storage_capacity']}}</span>
+                        <span class="info-box-number">{{ stats['storage_capacity'] }}</span>
                       </div>
                       <!-- /.info-box-content -->
                     </div>
@@ -173,7 +173,7 @@
 
                       <div class="info-box-content">
                         <span class="info-box-text">Pods</span>
-                        <span class="info-box-number">{{stats['total_pods']}}</span>
+                        <span class="info-box-number">{{ stats['total_pods'] }}</span>
                       </div>
                       <!-- /.info-box-content -->
                     </div>
@@ -183,7 +183,7 @@
 
                       <div class="info-box-content">
                         <span class="info-box-text">Nodes</span>
-                        <span class="info-box-number">{{stats['total_nodes']}}</span>
+                        <span class="info-box-number">{{ stats['total_nodes'] }}</span>
                       </div>
                       <!-- /.info-box-content -->
                     </div>
@@ -315,7 +315,7 @@
             <div class="card-header d-flex justify-content-between align-items-center">
               <h3 class="card-title mb-0">Users Feedback</h3>
               <div class="ml-auto">
-                <a href="#" id="view-add-feedback" class="btn btn-sm btn-outline-primary mr-2" data-toggle="modal" data-target="#modal-feedback">{{ "View" if user_feedback else "Add"}} Feedback</a>
+                <a href="#" id="view-add-feedback" class="btn btn-sm btn-outline-primary mr-2" data-toggle="modal" data-target="#modal-feedback">{{ "View" if user_feedback else "Add" }} Feedback</a>
                 <a href="{{ url_for('home_blueprint.feedback_view') }}" class="btn btn-sm btn-outline-secondary">See All</a>
               </div>
             </div>
@@ -334,10 +334,10 @@
                       </button>
                     </div>
                     <div class="modal-body">
-                      <div class="form-group {{"d-none" if stats['has_liked'] else ""}}">
+                      <div class="form-group {{ "d-none" if stats['has_liked'] else "" }}">
                         <label for="thumbsUp">Enjoying the platform?</label>
                         <div class="info-box mb-3">
-                          <button id="thumbsUpButton" type="button" class="info-box-icon {{"bg-success" if stats['has_liked'] else "bg-secondary"}} elevation-1 icobutton icobutton--thumbs-up"><i class="fas fa-thumbs-up"></i></button>
+                          <button id="thumbsUpButton" type="button" class="info-box-icon {{ "bg-success" if stats['has_liked'] else "bg-secondary" }} elevation-1 icobutton icobutton--thumbs-up"><i class="fas fa-thumbs-up"></i></button>
                         </div>
                       </div>
                       <div class="form-group">
@@ -393,14 +393,14 @@
                       <img src="/static/assets/img/default-150x150.png" alt="Lab Image" class="img-size-50">
                     </div>
                     <div class="product-info">
-                      <a href="/labs/view/{{lab.id}}" class="product-title">
-                        {{lab.title}}
+                      <a href="/labs/view/{{ lab.id }}" class="product-title">
+                        {{ lab.title }}
 			{% for category in lab.categories %}
-			<span class="badge badge-{{category.color_cls}} float-right ml-1">{{category.category}}</span>
+			<span class="badge badge-{{ category.color_cls }} float-right ml-1">{{ category.category }}</span>
 			{% endfor %}
 		      </a>
                       <span class="product-description">
-                        {{lab.description|default('No short description provided. Click to see more details', true)}}
+                        {{ lab.description|default('No short description provided. Click to see more details', true) }}
                       </span>
                     </div>
                    </li>
@@ -474,7 +474,7 @@
   <!-- Leaflet -->
   <script src="/static/assets/plugins/leaflet/leaflet.js"></script>
   {% if config.MAP_GEOJSON_JS %}
-  <script src="/static/assets/plugins/leaflet/geojson/{{config.MAP_GEOJSON_JS}}"></script>
+  <script src="/static/assets/plugins/leaflet/geojson/{{ config.MAP_GEOJSON_JS }}"></script>
   {% endif %}
   <!-- ChartJS -->
   <script src="/static/assets/plugins/chart.js/Chart.min.js"></script>
@@ -510,7 +510,7 @@
           this.options = extend({}, this.options);
           extend(this.options, options);
 
-          this.checked = {{"true" if stats['has_liked'] else "false"}};
+          this.checked = {{ "true" if stats['has_liked'] else "false" }};
           this.timeline = new mojs.Timeline();
 
           for (var i = 0, len = this.options.tweens.length; i < len; ++i) {
@@ -620,11 +620,11 @@
       // ------ PIE CHART ------
       var pieChartCanvas = $('#pieChart').get(0).getContext('2d')
       var pieData = {
-        labels: {{stats.lab_categories.category_names|safe}},
+        labels: {{ stats.lab_categories.category_names|safe }},
         datasets: [
           {
-            data: {{stats.lab_categories.usage_counts|safe}},
-            backgroundColor: {{stats.lab_categories.category_colors|safe}},
+            data: {{ stats.lab_categories.usage_counts|safe }},
+            backgroundColor: {{ stats.lab_categories.category_colors|safe }},
             borderColor: '#eeeeeeff'
           }
         ]
@@ -640,7 +640,7 @@
         options: pieOptions
       })
       const pieChartLegend = document.getElementById('pie-chart-legend');
-      const categories = {{stats.lab_categories.name_cls|safe}};
+      const categories = {{ stats.lab_categories.name_cls|safe }};
       Object.keys(categories).forEach(name => {
           pieChartLegend.innerHTML += `<li><i class="fa fa-circle fa-border text-${categories[name]}"></i> ${name}</li>`;
       });
@@ -655,10 +655,10 @@
         }
       };
       const salesChartCanvas = $('#salesChart').get(0).getContext('2d');
-      const labsData = {{stats.lab_usage.labs|safe}};
-      const answersData = {{stats.lab_usage.answers|safe}};
+      const labsData = {{ stats.lab_usage.labs|safe }};
+      const answersData = {{ stats.lab_usage.answers|safe }};
       const salesChartData = {
-        labels: {{stats.lab_usage.months|safe}},
+        labels: {{ stats.lab_usage.months|safe }},
         datasets: [
           {
              label: 'Lab Instances',
@@ -708,9 +708,9 @@
       $('#current-month-completed-labs').text(labsData.at(-1));
       $('#current-month-answers-questions').text(answersData.at(-1));
       $('#current-month-completed-challenges').text(answersData.at(-1));
-      $('#completed-labs-last-six-months').text({{stats.lab_usage.total_labs}});
-      $('#answered-questions-last-six-months').text({{stats.lab_usage.total_answers}});
-      $('#solved-challenges-last-six-months').text({{stats.lab_usage.total_answers}});
+      $('#completed-labs-last-six-months').text({{ stats.lab_usage.total_labs }});
+      $('#answered-questions-last-six-months').text({{ stats.lab_usage.total_answers }});
+      $('#solved-challenges-last-six-months').text({{ stats.lab_usage.total_answers }});
       updateGrowthAmount('completed-labs-growth', labsData.at(-1) - labsData.at(-2));
       updateGrowthAmount('completed-challenges-growth', answersData.at(-1) - answersData.at(-2));
       updateGrowthAmount('answered-questions-growth', answersData.at(-1) - answersData.at(-2));
@@ -734,7 +734,7 @@
         const commentInput = document.getElementById("comment");
         const submitButton = document.getElementById("submit-star");
 
-        let selectedRating = {{user_feedback.stars|default(0, true)}};
+        let selectedRating = {{ user_feedback.stars|default(0, true) }};
         let hasRated = false;
 
         fetch('api/feedback', {
@@ -763,7 +763,7 @@
         });
 
         // ------------------------ STARS ------------------------
-        highlightStars({{user_feedback.stars|default(0, true)}});
+        highlightStars({{ user_feedback.stars|default(0, true) }});
         stars.forEach(star => {
             star.addEventListener("mouseover", function () {
                 const index = parseInt(this.getAttribute("data-index"));

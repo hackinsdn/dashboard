@@ -34,7 +34,7 @@
             <div class="alert alert-danger alert-dismissible">
               <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
               <h5><i class="icon fas fa-ban"></i> Fail to execute the lab!</h5>
-              {{msg_fail}}
+              {{ msg_fail }}
             </div>
             {% endif %}
           </div>
@@ -55,7 +55,7 @@
         <!-- SELECT2 EXAMPLE -->
         <div class="card card-default">
           <div class="card-header">
-            <h3 class="card-title">Lab -- {{lab.title}}</h3>
+            <h3 class="card-title">Lab -- {{ lab.title }}</h3>
           </div>
           <!-- /.card-header -->
           <div class="card-body">
@@ -65,12 +65,12 @@
               <div class="col-md-6">
                 <div class="form-group">
                   <label>Lab title</label>
-                  <input type="text" class="form-control" disabled="disabled" value="{{lab.title}}"/>
+                  <input type="text" class="form-control" disabled="disabled" value="{{ lab.title }}"/>
                 </div>
                 <!-- /.form-group -->
                 <div class="form-group">
                   <label>User label</label>
-                  <input type="text" class="form-control" disabled="disabled" value="{{current_user.email}}"/>
+                  <input type="text" class="form-control" disabled="disabled" value="{{ current_user.email }}"/>
                 </div>
                 <!-- /.form-group -->
               </div>
@@ -78,7 +78,7 @@
               <div class="col-md-6">
                 <div class="form-group">
                   <label>Lab category</label>
-                  <input type="text" class="form-control" disabled="disabled" value="{{lab.category}}"/>
+                  <input type="text" class="form-control" disabled="disabled" value="{{ lab.category }}"/>
                 </div>
                 <!-- /.form-group -->
                 <!--
@@ -110,7 +110,7 @@
                   <label>Lab Duration/Expiration</label>
                   <select name="lab_expiration" class="form-control" required>
                     {% for exp_sec in lab_expirations %}
-                    <option value="{{exp_sec}}">{{lab_expirations[exp_sec]}}</option>
+                    <option value="{{ exp_sec }}">{{ lab_expirations[exp_sec] }}</option>
                     {% endfor %}
                   </select>
 	          <!--

@@ -65,11 +65,11 @@
                       <div id="loading" class="overlay"><i class="fas fa-3x fa-sync-alt fa-spin"></i><div class="text-bold pt-2">Loading...</div></div>
                       <ul>
                         {% for resource in resources %}
-                        <li><span id="{{resource['kind'] + '__' + resource['name']}}" class="badge badge-secondary status-badge">Unknown</span> {{resource['kind']}}/{{resource['name']}}</li>
+                        <li><span id="{{ resource['kind'] + '__' + resource['name'] }}" class="badge badge-secondary status-badge">Unknown</span> {{ resource['kind'] }}/{{ resource['name'] }}</li>
                         {% endfor %}
                       </ul>
                       <p id="statusText"></p>
-                      <a style="display: none;" id="labLink" class="btn btn-outline-success" href="{{url_for('home_blueprint.view_lab_instance', lab_id=lab_instance_id)}}">Start using the Lab resources and Lab guide!</a>
+                      <a style="display: none;" id="labLink" class="btn btn-outline-success" href="{{ url_for('home_blueprint.view_lab_instance', lab_id=lab_instance_id) }}">Start using the Lab resources and Lab guide!</a>
                     </div>
                   </div>
                 </div>
@@ -106,7 +106,7 @@
     $(function () {
       var checkStatus = function() {
         var request = $.ajax({
-          url: "/api/lab/status/{{lab_instance_id}}",
+          url: "/api/lab/status/{{ lab_instance_id }}",
           type: "GET",
           dataType: "json",
           contentType: "application/json",

@@ -69,9 +69,9 @@
                       <div class="col-md-8">
                         <select name="filter_group" class="form-control" onchange="this.form.submit()">
                           <option value="">My own labs</option>
-                          <option value="all" {{'selected' if filter_group == 'all' else ''}}>All labs</option>
+                          <option value="all" {{ 'selected' if filter_group == 'all' else '' }}>All labs</option>
                           {% for group_id in groups %}
-                          <option value="{{group_id}}" {{'selected' if filter_group == group_id else ''}}>{{groups[group_id].groupname}}</option>
+                          <option value="{{ group_id }}" {{ 'selected' if filter_group == group_id else '' }}>{{ groups[group_id].groupname }}</option>
                           {% endfor %}
                         </select>
 	              </div>
@@ -101,18 +101,18 @@
                 </thead>
                 <tbody>
             	{% for lab in labs %}
-                <tr id="{{lab['lab_instance_id']}}">
+                <tr id="{{ lab['lab_instance_id'] }}">
                   <td>
                     <div class="icheck-primary">
-                      <input type="checkbox" value="" id="checkbox-{{lab['lab_instance_id']}}" class="checkbox-labs">
-                      <label for="checkbox-{{lab['lab_instance_id']}}"></label>
+                      <input type="checkbox" value="" id="checkbox-{{ lab['lab_instance_id'] }}" class="checkbox-labs">
+                      <label for="checkbox-{{ lab['lab_instance_id'] }}"></label>
                     </div>
                   </td>
             	  <td>{{ lab['user'] }}</td>
-                  <td>{{lab['title']}}</td>
-                  <td>{{lab['created']}}</td>
+                  <td>{{ lab['title'] }}</td>
+                  <td>{{ lab['created'] }}</td>
                   <td>
-                    <a class="btn btn-default" href="{{url_for('home_blueprint.view_lab_instance', lab_id=lab['lab_instance_id'])}}"><i class="fas fa-eye"></i> View</a>
+                    <a class="btn btn-default" href="{{ url_for('home_blueprint.view_lab_instance', lab_id=lab['lab_instance_id']) }}"><i class="fas fa-eye"></i> View</a>
                   </td>
                 </tr>
                 {% endfor %}
