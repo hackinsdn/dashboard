@@ -8,6 +8,12 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
   <link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
   <link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
+  <style>
+    /* Preserve line breaks in multi-line messages */
+    .direct-chat-text { white-space: pre-wrap; word-wrap: break-word; }
+    /* Centered system notes (conversation finished, etc.) */
+    .support-system-msg { text-align: center; color: #8a939b; font-size: .8rem; margin: 10px 0; }
+  </style>
 {% endblock stylesheets %}
 
 {% block content %}
@@ -37,11 +43,17 @@
               <h3 class="card-title">
                 {{ thread.user.name if thread.user else thread.user_id }}
                 {% if thread.status == "open" %}
-                  <span class="badge badge-success ml-2">Open</span>
+                  <span class="badge badge-success ml-2" id="threadStatusBadge">Open</span>
                 {% else %}
-                  <span class="badge badge-secondary ml-2">Finished</span>
+                  <span class="badge badge-secondary ml-2" id="threadStatusBadge">Finished</span>
                 {% endif %}
               </h3>
+              <div class="card-tools">
+                <button type="button" id="finishBtn" class="btn btn-sm btn-outline-danger"
+                        {% if thread.status != "open" %}style="display:none;"{% endif %}>
+                  <i class="fas fa-times-circle"></i> Finish conversation
+                </button>
+              </div>
             </div>
             {% if thread.origin_page or thread.ip_address or thread.user_agent %}
             <div class="card-body py-2 bg-light border-bottom">
@@ -56,7 +68,11 @@
               <div class="direct-chat-messages" id="chatMessages" style="height: 60vh;"
                    data-user-name="{{ thread.user.name if thread.user else 'User' }}">
                 {% for message in thread.messages %}
-                  {% if message.sender == "user" %}
+                  {% if message.sender == "system" %}
+                  <div class="support-system-msg" data-id="{{ message.id }}">
+                    <i class="fas fa-info-circle mr-1"></i>{{ message.body }}
+                  </div>
+                  {% elif message.sender == "user" %}
                   <div class="direct-chat-msg" data-id="{{ message.id }}">
                     <div class="direct-chat-infos clearfix">
                       <span class="direct-chat-name float-left">{{ thread.user.name if thread.user else 'User' }}</span>
@@ -127,9 +143,15 @@
         div.textContent = text;
         return div.innerHTML;
       }
-      function hasMessage(id) { return !!messages.querySelector('.direct-chat-msg[data-id="' + id + '"]'); }
+      function hasMessage(id) { return !!messages.querySelector('[data-id="' + id + '"]'); }
       function appendMessage(msg) {
         if (hasMessage(msg.id)) { return; }
+        if (msg.sender === 'system') {
+          messages.insertAdjacentHTML('beforeend',
+            '<div class="support-system-msg" data-id="' + msg.id + '">'
+            + '<i class="fas fa-info-circle mr-1"></i>' + escapeHtml(msg.body) + '</div>');
+          return;
+        }
         var isUser = msg.sender === 'user';
         var name = isUser ? userName : (msg.sender === 'assistant' ? 'Assistant' : 'Support');
         var side = isUser ? '' : ' right';
@@ -145,6 +167,20 @@
 
       renderStamps();
       messages.scrollTop = messages.scrollHeight;
+
+      var finishBtn = document.getElementById('finishBtn');
+      if (finishBtn) {
+        finishBtn.addEventListener('click', function () {
+          if (!window.confirm('Finish this conversation?')) { return; }
+          finishBtn.disabled = true;
+          fetch('/api/support/threads/' + THREAD_ID + '/finish', {
+            method: 'POST', credentials: 'same-origin'
+          }).then(function (r) {
+            if (!r.ok) { throw new Error('failed'); }
+            window.location.reload();
+          }).catch(function () { finishBtn.disabled = false; });
+        });
+      }
 
       form.addEventListener('submit', function (event) {
         event.preventDefault();

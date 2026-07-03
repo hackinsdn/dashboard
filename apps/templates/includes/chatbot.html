@@ -46,6 +46,7 @@
     font-size: .9em; line-height: 1.35; white-space: pre-wrap; word-wrap: break-word;
   }
   .hisdn-chat-time { font-size: .68rem; color: #8a939b; margin-top: 2px; }
+  .hisdn-chat-system { text-align: center; color: #8a939b; font-size: .75rem; margin: 8px 4px; }
   .hisdn-chat-msg--user { justify-content: flex-end; }
   .hisdn-chat-msg--user .hisdn-chat-bubblewrap { align-items: flex-end; }
   .hisdn-chat-msg--user .bubble { background-color: #007bff; color: #fff; border-bottom-right-radius: 2px; }
@@ -132,6 +133,15 @@
   }
 
   function renderMessage(msg) {
+    if (msg.sender === 'system') {
+      var sys = document.createElement('div');
+      sys.className = 'hisdn-chat-system';
+      sys.setAttribute('data-id', msg.id);
+      sys.textContent = msg.body;
+      body.appendChild(sys);
+      if (msg.id && msg.id > lastMessageId) { lastMessageId = msg.id; }
+      return;
+    }
     var isUser = msg.sender === 'user';
     var row = document.createElement('div');
     row.className = 'hisdn-chat-msg ' + (isUser ? 'hisdn-chat-msg--user' : 'hisdn-chat-msg--support');
@@ -152,7 +162,7 @@
   }
 
   function clearMessages() {
-    var nodes = body.querySelectorAll('.hisdn-chat-msg');
+    var nodes = body.querySelectorAll('[data-id]');
     nodes.forEach(function (n) { n.remove(); });
     lastMessageId = 0;
   }
@@ -165,7 +175,7 @@
       .then(function (data) {
         var thread = data.thread;
         var existing = {};
-        body.querySelectorAll('.hisdn-chat-msg').forEach(function (n) {
+        body.querySelectorAll('[data-id]').forEach(function (n) {
           existing[n.getAttribute('data-id')] = true;
         });
         if (!thread || !thread.messages || !thread.messages.length) {

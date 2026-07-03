@@ -696,7 +696,23 @@ def finish_support_thread():
     thread = support.get_active_thread(current_user)
     if thread is None:
         return {"status": "ok"}, 200
-    support.finish_thread(thread)
+    support.finish_thread(thread, by="user")
+    db.session.commit()
+    return {"status": "ok", "thread_id": thread.id}, 200
+
+
+@blueprint.route('/support/threads/<int:thread_id>/finish', methods=["POST"])
+@login_required
+def finish_support_thread_admin(thread_id):
+    """Finish any thread (admin only)."""
+    if current_user.category != "admin":
+        return {"status": "fail", "result": "Unauthorized"}, 403
+
+    thread = db.session.get(SupportThreads, thread_id)
+    if thread is None:
+        return {"status": "fail", "result": "Thread not found"}, 404
+
+    support.finish_thread(thread, by="support")
     db.session.commit()
     return {"status": "ok", "thread_id": thread.id}, 200
 

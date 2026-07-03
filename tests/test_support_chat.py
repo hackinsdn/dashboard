@@ -440,3 +440,60 @@ class TestMultilineMessage:
         assert body == "line one\nline two\n\nline four"
         assert "\n" in body
         logout(client)
+
+
+# --- finishing a conversation records a system message -----------------
+def _system_bodies(thread):
+    return [m.body for m in thread.messages if m.sender == "system"]
+
+
+class TestFinishConversation:
+    def test_user_finish_records_system_message(self, client, ids):
+        jane = make_user("sc_jane")
+        logout(client)
+        login(client, "sc_jane", "pw123456")
+        post_json(client, "/api/support/thread/messages", {"body": "jane hi"})
+        thread = SupportThreads.query.filter_by(user_id=jane.id).one()
+
+        resp = post_json(client, "/api/support/thread/finish", {})
+        assert resp.status_code == 200
+        db.session.refresh(thread)
+        assert thread.status == "finished"
+        assert _system_bodies(thread) == ["Conversation finished by the user."]
+        logout(client)
+
+    def test_admin_finish_records_system_message_and_shows_on_page(self, client, ids):
+        karl = make_user("sc_karl")
+        logout(client)
+        login(client, "sc_karl", "pw123456")
+        post_json(client, "/api/support/thread/messages", {"body": "karl hi"})
+        thread = SupportThreads.query.filter_by(user_id=karl.id).one()
+
+        # a normal user cannot finish someone else's thread via the admin route
+        logout(client)
+        login(client, "sc_bob", "bob123")
+        assert post_json(client, f"/api/support/threads/{thread.id}/finish", {}).status_code == 403
+
+        logout(client)
+        login(client, "sc_admin", "admin123")
+        resp = post_json(client, f"/api/support/threads/{thread.id}/finish", {})
+        assert resp.status_code == 200
+        db.session.refresh(thread)
+        assert thread.status == "finished"
+        assert _system_bodies(thread) == ["Conversation finished by the support team."]
+
+        # the closing note is rendered on the admin thread view
+        page = client.get(f"/support/threads/{thread.id}")
+        assert b"Conversation finished by the support team." in page.data
+
+        # finishing again is idempotent (no duplicate system message)
+        post_json(client, f"/api/support/threads/{thread.id}/finish", {})
+        db.session.refresh(thread)
+        assert len(_system_bodies(thread)) == 1
+        logout(client)
+
+    def test_admin_finish_missing_thread_404(self, client, ids):
+        logout(client)
+        login(client, "sc_admin", "admin123")
+        assert post_json(client, "/api/support/threads/999999/finish", {}).status_code == 404
+        logout(client)

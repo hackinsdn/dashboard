@@ -30,10 +30,24 @@ def _aware(dt):
     return dt
 
 
-def finish_thread(thread):
-    """Mark a thread as finished. Caller is responsible for committing."""
+FINISH_MESSAGES = {
+    "user": "Conversation finished by the user.",
+    "support": "Conversation finished by the support team.",
+    "inactivity": "Conversation closed automatically due to inactivity.",
+}
+
+
+def finish_thread(thread, by="user"):
+    """Mark a thread finished and record a closing system message.
+
+    Idempotent: a thread that is already finished is left untouched (no duplicate
+    system message). Caller is responsible for committing.
+    """
+    if thread.status == "finished":
+        return thread
     thread.status = "finished"
     thread.finished_at = utcnow()
+    add_message(thread, "system", FINISH_MESSAGES.get(by, FINISH_MESSAGES["user"]), is_read=True)
     return thread
 
 
@@ -53,7 +67,7 @@ def get_active_thread(user):
 
     last_activity = _aware(thread.updated_at) or _aware(thread.created_at)
     if last_activity is not None and utcnow() - last_activity > _inactivity_delta():
-        finish_thread(thread)
+        finish_thread(thread, by="inactivity")
         db.session.commit()
         return None
     return thread

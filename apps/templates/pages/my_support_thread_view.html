@@ -8,6 +8,10 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
   <link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
   <link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
+  <style>
+    .direct-chat-text { white-space: pre-wrap; word-wrap: break-word; }
+    .support-system-msg { text-align: center; color: #8a939b; font-size: .8rem; margin: 10px 0; }
+  </style>
 {% endblock stylesheets %}
 
 {% block content %}
@@ -46,7 +50,11 @@
             <div class="card-body">
               <div class="direct-chat-messages" id="chatMessages" style="height: 60vh;">
                 {% for message in thread.messages %}
-                  {% if message.sender == "user" %}
+                  {% if message.sender == "system" %}
+                  <div class="support-system-msg" data-id="{{ message.id }}">
+                    <i class="fas fa-info-circle mr-1"></i>{{ message.body }}
+                  </div>
+                  {% elif message.sender == "user" %}
                   <div class="direct-chat-msg right" data-id="{{ message.id }}">
                     <div class="direct-chat-infos clearfix">
                       <span class="direct-chat-name float-right">You</span>
@@ -109,9 +117,15 @@
         div.textContent = text;
         return div.innerHTML;
       }
-      function hasMessage(id) { return !!messages.querySelector('.direct-chat-msg[data-id="' + id + '"]'); }
+      function hasMessage(id) { return !!messages.querySelector('[data-id="' + id + '"]'); }
       function appendMessage(msg) {
         if (hasMessage(msg.id)) { return; }
+        if (msg.sender === 'system') {
+          messages.insertAdjacentHTML('beforeend',
+            '<div class="support-system-msg" data-id="' + msg.id + '">'
+            + '<i class="fas fa-info-circle mr-1"></i>' + escapeHtml(msg.body) + '</div>');
+          return;
+        }
         var isUser = msg.sender === 'user';
         var name = isUser ? 'You' : (msg.sender === 'assistant' ? 'Assistant' : 'Support');
         var side = isUser ? ' right' : '';

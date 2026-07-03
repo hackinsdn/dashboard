@@ -64,6 +64,15 @@ refinements, and describes the resulting architecture.
 12. The widget is **responsive**: on small screens it spans the viewport width with
     symmetric side gutters instead of a fixed panel anchored to the right edge.
 
+### Refinements (third follow-up)
+
+13. Admins can **finish a conversation** from a button on the admin thread-view page.
+14. Whenever a conversation is closed (by the user, by an admin, or automatically due to
+    inactivity), a **`system` message** is recorded stating who/what closed it, and is
+    shown as a centered note in the thread.
+15. Multi-line messages are rendered with their **line breaks preserved** in the admin and
+    user thread-view pages (`white-space: pre-wrap`).
+
 ---
 
 ## Architecture
@@ -95,7 +104,7 @@ and `as_dict(with_messages=…)`.
 | --- | --- |
 | `id` | PK |
 | `thread_id` | FK → `support_threads.id` |
-| `sender` | `user` \| `support` \| `assistant` |
+| `sender` | `user` \| `support` \| `assistant` \| `system` (closing note) |
 | `body` | message text |
 | `is_read` | staff-side read flag (user message seen by staff) |
 | `emailed_at` | null = not yet included in a batched support e-mail |
@@ -111,7 +120,9 @@ Schema is created by migration `2.0.7 → 2.0.8`
 - `get_or_create_active_thread(user)` — returns the active thread or creates a new one.
 - `add_message(thread, sender, body, is_read)` — append a message and bump the thread's
   last-activity time. User messages start with `emailed_at = NULL`.
-- `finish_thread(thread)` — mark `finished` + set `finished_at`.
+- `finish_thread(thread, by="user")` — mark `finished` + set `finished_at`, and record a
+  `system` closing message (`FINISH_MESSAGES[by]` for `user` / `support` / `inactivity`).
+  Idempotent: a thread already `finished` is left untouched.
 - `mark_thread_read(thread)` — staff-side: mark user messages read.
 - `mark_thread_seen_by_user(thread)` — user-side: set `user_last_read_at = now`.
 - `record_telemetry(thread, page, user_agent, ip)` — set the three telemetry fields
@@ -130,6 +141,7 @@ Schema is created by migration `2.0.7 → 2.0.8`
 | `GET /support/thread` | user | active thread + messages (marks it seen by the user) |
 | `POST /support/thread/messages` | user | append a user message; record telemetry on a **new** thread; store any AI reply |
 | `POST /support/thread/finish` | user | finish the active thread |
+| `POST /support/threads/<id>/finish` | admin | finish any thread |
 | `GET /support/threads/<id>` | admin **or** owner | single thread + messages (used by the 30 s poll) |
 | `POST /support/threads/<id>/messages` | admin | staff reply; marks the thread's user messages read |
 
@@ -165,7 +177,9 @@ Support is **not** e-mailed from the request path; notifications are batched (be
 - **Sidebar "Support" entry** — `apps/templates/includes/sidebar.html` (admin only);
   right-aligned badge showing `support_admin_unread_count` when > 0.
 - **Admin pages** — `pages/support_threads.html` (list + open/all toggle),
-  `pages/support_thread_view.html` (conversation, telemetry block, reply form, 30 s poll).
+  `pages/support_thread_view.html` (conversation, telemetry block, reply form, **finish
+  button**, 30 s poll). Both thread-view pages render `system` messages as centered notes
+  and preserve line breaks in multi-line messages (`white-space: pre-wrap`).
 - **User pages** — `pages/my_support_threads.html` (list),
   `pages/my_support_thread_view.html` (read-only conversation, 30 s poll).
 
@@ -203,7 +217,9 @@ boundary, per-user scoping), admin management (role gating, reply + mark-read, o
 filter), telemetry capture on a new thread, the read-endpoint authorization, the navbar
 unread indicator (including the rendered badge), the admin sidebar unread count
 (`admin_unread_thread_count`, rising with a pending message and dropping after a reply),
-multi-line message persistence, and the batch-flush timing boundary (with a mocked mailer).
+multi-line message persistence, conversation finishing (user + admin, the closing `system`
+message, admin-route authorization, and idempotency), and the batch-flush timing boundary
+(with a mocked mailer).
 
 ## Future work
 
