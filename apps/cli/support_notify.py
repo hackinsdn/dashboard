@@ -59,9 +59,13 @@ def flush_support_emails(app):
         ]
         if not pending:
             continue
-        # Wait until the user has gone quiet: newest pending message older than cutoff.
-        newest = max(_aware(m.created_at) for m in pending)
-        if newest and newest > cutoff:
+        # Flush once the OLDEST un-e-mailed message has waited at least
+        # SUPPORT_EMAIL_BATCH_MINUTES. Basing this on the oldest (not the newest)
+        # message means an ongoing conversation can no longer defer the notification
+        # indefinitely — support is told within ~the batch window of the first
+        # unreported message, and all pending messages are still grouped into one e-mail.
+        stamps = [_aware(m.created_at) for m in pending if m.created_at]
+        if not stamps or min(stamps) > cutoff:
             continue
 
         user = thread.user or db.session.get(Users, thread.user_id)

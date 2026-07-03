@@ -396,6 +396,44 @@ class TestBatchEmail:
         assert len(sent) == 1
         logout(client)
 
+    def test_flush_reports_ongoing_conversation_not_starved(self, client, ids, monkeypatch):
+        """An old un-e-mailed message must be reported even if a newer one just arrived."""
+        from apps.cli import support_notify
+
+        sent = []
+
+        class FakeMail:
+            def __init__(self, app):
+                pass
+
+            def send(self, msg):
+                sent.append(msg)
+
+        monkeypatch.setattr(support_notify, "Mail", FakeMail)
+        monkeypatch.setitem(flask_app.config, "MAIL_SENDTO", "support@test.local")
+
+        olga = make_user("sc_olga")
+        logout(client)
+        login(client, "sc_olga", "pw123456")
+        post_json(client, "/api/support/thread/messages", {"body": "olga old"})
+        post_json(client, "/api/support/thread/messages", {"body": "olga new"})
+        thread = SupportThreads.query.filter_by(user_id=olga.id).one()
+
+        # Ongoing conversation: the first message is well past the window, but the
+        # latest one is recent. The old message must still be flushed (previously it
+        # was starved by the newer message and never reported).
+        msgs = sorted(thread.messages, key=lambda m: m.id)
+        msgs[0].created_at = utcnow() - timedelta(minutes=30)   # old
+        msgs[1].created_at = utcnow() - timedelta(minutes=1)    # recent activity
+        db.session.commit()
+
+        support_notify.flush_support_emails(flask_app)
+        db.session.refresh(thread)
+        # both pending messages grouped into a single e-mail and marked
+        assert all(m.emailed_at is not None for m in thread.messages if m.sender == "user")
+        assert any("olga old" in (m.body or "") for m in sent)
+        logout(client)
+
 
 # --- admin sidebar unread badge count ----------------------------------
 class TestAdminUnreadCount:
