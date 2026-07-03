@@ -448,7 +448,7 @@
             {% if lab and lab.id %}
               {% if lab.is_deleted %}
             <button type="button" class="btn btn-success float-right" data-toggle="modal" data-target="#modal-restore-lab"><i class="fas fa-trash-restore"></i> Restore Lab</button>
-              {% else %}
+              {% elif current_user.category == "admin" or lab.updated_by == current_user.id %}
             <button type="button" class="btn btn-danger float-right" data-toggle="modal" data-target="#modal-delete-lab"><i class="fas fa-trash"></i> Delete Lab</button>
               {% endif %}
             {% endif %}
