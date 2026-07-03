@@ -347,8 +347,8 @@ def delete_lab_catalog(lab_id):
     if not lab or lab.is_deleted:
         return {"status": "fail", "result": "Lab not found"}, 404
 
-    # labcreator may only delete labs they own (mirrors edit_lab)
-    if current_user.category == "labcreator" and lab.updated_by != current_user.id:
+    # non-admins (teacher/labcreator) may only delete labs they own
+    if current_user.category != "admin" and lab.updated_by != current_user.id:
         return {"status": "fail", "result": "Unauthorized access to this lab"}, 401
 
     active = LabInstances.query.filter_by(lab_id=lab_id, is_deleted=False).count()

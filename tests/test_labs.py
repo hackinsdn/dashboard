@@ -7,8 +7,9 @@ validation, labcreator ownership rules, per-group view filtering, the
 
 Soft-delete for catalog Labs lives at DELETE /api/labs/<id> (distinct from
 DELETE /api/lab/<id>, which removes a running LabInstance). It flips the
-Labs.is_deleted flag, mirrors edit permissions, is blocked while the lab has
-running instances, and hides deleted labs from the catalog views.
+Labs.is_deleted flag, is allowed for admin (any lab) and teacher/labcreator
+(only labs they own, by Labs.updated_by), is blocked while the lab has running
+instances, and hides deleted labs from the catalog views.
 
 Admins can undelete via POST /api/labs/<id>/restore, reveal soft-deleted labs
 in the catalog with ?show_deleted=1, and open a deleted lab in the editor to
@@ -353,6 +354,8 @@ class TestSoftDelete:
         lab_id = _make_lab(ids, "Admin Deletable Lab")
         resp = client.get("/labs/view")
         assert b"Admin Deletable Lab" in resp.data
+        # the delete button carries the lab title so the modal can name it
+        assert b'data-name="Admin Deletable Lab"' in resp.data
 
         resp = client.delete(f"/api/labs/{lab_id}")
         assert resp.status_code == 200
@@ -360,6 +363,19 @@ class TestSoftDelete:
 
         resp = client.get("/labs/view")
         assert b"Admin Deletable Lab" not in resp.data
+
+    def test_single_lab_view_delete_redirects_to_full_list(self, client, ids):
+        # regression: deleting the lab currently being viewed at
+        # /labs/view/<id> must redirect to the full list (dropping the lab_id),
+        # not reload the single-lab URL into an empty, now-filtered-out list
+        login(client, "lbadmin", "admin123")
+        lab_id = _make_lab(ids, "Single View Redirect Lab")
+        resp = client.get(f"/labs/view/{lab_id}")
+        assert resp.status_code == 200
+        assert b'var labsListUrl = "/labs/view"' in resp.data
+        # the redirect target must not carry the lab id
+        list_url = resp.data.split(b"var labsListUrl =")[1].split(b";")[0]
+        assert lab_id.encode() not in list_url
 
     def test_delete_already_deleted_returns_404(self, client, ids):
         lab_id = _make_lab(ids, "Already Deleted Lab")
@@ -392,6 +408,23 @@ class TestSoftDelete:
     def test_labcreator_can_delete_own_lab(self, client, ids):
         lab_id = _make_lab(ids, "LabCreator Owned Lab", updated_by=ids["labcreator_id"])
         login(client, "lblabcreator", "lc123")
+        resp = client.delete(f"/api/labs/{lab_id}")
+        assert resp.status_code == 200
+        assert db.session.get(Labs, lab_id).is_deleted is True
+        logout(client)
+
+    def test_teacher_cannot_delete_others_lab(self, client, ids):
+        lab_id = _make_lab(ids, "Admin Owned Lab For Teacher", updated_by=ids["admin_id"])
+        logout(client)
+        login(client, "lbteacher", "teach123")
+        resp = client.delete(f"/api/labs/{lab_id}")
+        assert resp.status_code == 401
+        assert db.session.get(Labs, lab_id).is_deleted is False
+        logout(client)
+
+    def test_teacher_can_delete_own_lab(self, client, ids):
+        lab_id = _make_lab(ids, "Teacher Owned Lab", updated_by=ids["teacher_id"])
+        login(client, "lbteacher", "teach123")
         resp = client.delete(f"/api/labs/{lab_id}")
         assert resp.status_code == 200
         assert db.session.get(Labs, lab_id).is_deleted is True

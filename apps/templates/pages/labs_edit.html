@@ -448,7 +448,7 @@
             {% if lab and lab.id %}
               {% if lab.is_deleted %}
             <button type="button" class="btn btn-success float-right" data-toggle="modal" data-target="#modal-restore-lab"><i class="fas fa-trash-restore"></i> Restore Lab</button>
-              {% else %}
+              {% elif current_user.category == "admin" or lab.updated_by == current_user.id %}
             <button type="button" class="btn btn-danger float-right" data-toggle="modal" data-target="#modal-delete-lab"><i class="fas fa-trash"></i> Delete Lab</button>
               {% endif %}
             {% endif %}
@@ -491,7 +491,7 @@
               </button>
             </div>
             <div class="modal-body">
-              <p>Are you sure you want to delete this lab?</p>
+              <p>Are you sure you want to delete Lab <span class="text-danger">{{ lab.title }}</span>?</p>
             </div>
             <div class="modal-footer justify-content-between">
               <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
@@ -524,6 +524,8 @@
   <script src="/static/assets/plugins/bootstrap4-duallistbox/jquery.bootstrap-duallistbox.min.js"></script>
   <!-- AdminLTE App -->
   <script src="/static/assets/js/adminlte.min.js"></script>
+  <!-- Shared Labs delete/restore actions -->
+  <script src="/static/assets/js/pages/labs_actions.js"></script>
   <!-- AdminLTE for demo purposes -->
   <script src="/static/assets/js/demo.js"></script>
   <!-- Summernote -->
@@ -953,42 +955,15 @@
           );
       });
 
+      var editLabId = "{{ lab.id|default('', true) }}";
+      var labsViewUrl = "{{ url_for('home_blueprint.view_labs') }}";
+
       $('#delete-lab').on('click', function () {
-        var delLabId = "{{ lab.id|default('', true) }}";
-        var request = $.ajax({
-          url: '/api/labs/' + delLabId,
-          type: "DELETE",
-          dataType: "json",
-          contentType: "application/json",
-        });
-        request.done(function(data) {
-          sessionStorage.setItem('msgSuccess', data.result);
-          window.location.href = "{{ url_for('home_blueprint.view_labs') }}";
-        });
-        request.fail(function(xhr) {
-          var msg = xhr.responseJSON ? xhr.responseJSON.result : xhr.responseText;
-          $('#modal-delete-lab').modal('hide');
-          alert(msg);
-        });
+        LabsActions.run({ labId: editLabId, action: "delete", redirectUrl: labsViewUrl, onFail: "alert", modalId: "#modal-delete-lab" });
       });
 
       $('#restore-lab').on('click', function () {
-        var resLabId = "{{ lab.id|default('', true) }}";
-        var request = $.ajax({
-          url: '/api/labs/' + resLabId + '/restore',
-          type: "POST",
-          dataType: "json",
-          contentType: "application/json",
-        });
-        request.done(function(data) {
-          sessionStorage.setItem('msgSuccess', data.result);
-          window.location.href = "{{ url_for('home_blueprint.view_labs') }}";
-        });
-        request.fail(function(xhr) {
-          var msg = xhr.responseJSON ? xhr.responseJSON.result : xhr.responseText;
-          $('#modal-restore-lab').modal('hide');
-          alert(msg);
-        });
+        LabsActions.run({ labId: editLabId, action: "restore", redirectUrl: labsViewUrl, onFail: "alert", modalId: "#modal-restore-lab" });
       });
   </script>
 

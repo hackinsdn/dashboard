@@ -163,8 +163,8 @@
                 {% if current_user.category == "admin" %}
                 <button type="button" class="btn btn-outline-success mx-2 button-restore-lab" data-toggle="modal" data-target="#modal-restore-lab" data-id="{{lab.id}}"><i class="fas fa-trash-restore"></i> Restore Lab</button>
                 {% endif %}
-                {% else %}
-                <button type="button" class="btn btn-outline-danger mx-2 button-delete-lab" data-toggle="modal" data-target="#modal-delete-lab" data-id="{{lab.id}}"><i class="fas fa-trash"></i> Delete Lab</button>
+                {% elif current_user.category == "admin" or lab.updated_by == current_user.id %}
+                <button type="button" class="btn btn-outline-danger mx-2 button-delete-lab" data-toggle="modal" data-target="#modal-delete-lab" data-id="{{lab.id}}" data-name="{{lab.title}}"><i class="fas fa-trash"></i> Delete Lab</button>
                 {% endif %}
                 {% endif %}
               </div>
@@ -186,7 +186,7 @@
               <input type="hidden" id="delete-lab-id" />
             </div>
             <div class="modal-body">
-              <p>Are you sure you want to delete this lab?</p>
+              <p>Are you sure you want to delete Lab <span class="text-danger" id="delete-lab-name"></span>?</p>
             </div>
             <div class="modal-footer justify-content-between">
               <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
@@ -239,6 +239,8 @@
   <script src="/static/assets/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js"></script>
   <!-- AdminLTE App -->
   <script src="/static/assets/js/adminlte.js"></script>
+  <!-- Shared Labs delete/restore actions -->
+  <script src="/static/assets/js/pages/labs_actions.js"></script>
   <script>
     $(function () {
       $(".filter-button").click(function(){
@@ -287,71 +289,27 @@
 
       $('.filter').addClass('category-visible status-visible');
 
-      if ( sessionStorage.getItem('msgSuccess') ) {
-        $(document).Toasts('create', {
-          class: 'bg-success',
-          title: 'Success',
-          body: sessionStorage.getItem('msgSuccess')
-        });
-        sessionStorage.removeItem('msgSuccess');
-      }
-      if ( sessionStorage.getItem('msgFail') ) {
-        $(document).Toasts('create', {
-          class: 'bg-danger',
-          title: 'Failure',
-          body: sessionStorage.getItem('msgFail')
-        });
-        sessionStorage.removeItem('msgFail');
-      }
+      LabsActions.flushToasts();
+
+      // full labs list (preserves the group filter, drops any single lab_id
+      // in the URL) so deleting the lab currently being viewed does not
+      // reload into an empty, now-filtered-out list
+      var labsListUrl = "{{ url_for('home_blueprint.view_labs', filter_group=filter_group or None, show_deleted='1' if show_deleted else None) }}";
 
       $("#modal-delete-lab").on('show.bs.modal', function(event){
-        var labId = $(event.relatedTarget).data('id');
-        $("#delete-lab-id").val( labId );
+        var target = $(event.relatedTarget);
+        $("#delete-lab-id").val( target.data('id') );
+        $("#delete-lab-name").text( target.data('name') );
       });
       $('#delete-lab').click(function () {
-        var labId = $("#delete-lab-id").val();
-        var request = $.ajax({
-          url: '/api/labs/' + labId,
-          type: "DELETE",
-          dataType: "json",
-          contentType: "application/json",
-        });
-        request.done(function(data) {
-          sessionStorage.setItem('msgSuccess', data.result);
-          $("#delete-lab-id").val("");
-          location.reload();
-        });
-        request.fail(function(xhr) {
-          var msg = xhr.responseJSON ? xhr.responseJSON.result : xhr.responseText;
-          sessionStorage.setItem('msgFail', msg);
-          $("#delete-lab-id").val("");
-          location.reload();
-        });
+        LabsActions.run({ labId: $("#delete-lab-id").val(), action: "delete", redirectUrl: labsListUrl });
       });
 
       $("#modal-restore-lab").on('show.bs.modal', function(event){
-        var labId = $(event.relatedTarget).data('id');
-        $("#restore-lab-id").val( labId );
+        $("#restore-lab-id").val( $(event.relatedTarget).data('id') );
       });
       $('#restore-lab').click(function () {
-        var labId = $("#restore-lab-id").val();
-        var request = $.ajax({
-          url: '/api/labs/' + labId + '/restore',
-          type: "POST",
-          dataType: "json",
-          contentType: "application/json",
-        });
-        request.done(function(data) {
-          sessionStorage.setItem('msgSuccess', data.result);
-          $("#restore-lab-id").val("");
-          location.reload();
-        });
-        request.fail(function(xhr) {
-          var msg = xhr.responseJSON ? xhr.responseJSON.result : xhr.responseText;
-          sessionStorage.setItem('msgFail', msg);
-          $("#restore-lab-id").val("");
-          location.reload();
-        });
+        LabsActions.run({ labId: $("#restore-lab-id").val(), action: "restore" });
       });
     });
   </script>
