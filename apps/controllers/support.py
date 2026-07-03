@@ -120,6 +120,16 @@ def user_unread_thread_count(user):
     return sum(1 for t in threads if t.has_unseen_for_user)
 
 
+def admin_unread_thread_count():
+    """Number of threads with at least one unread user message (needs staff attention)."""
+    return (
+        db.session.query(SupportMessages.thread_id)
+        .filter(SupportMessages.sender == "user", SupportMessages.is_read.is_(False))
+        .distinct()
+        .count()
+    )
+
+
 def generate_support_reply(thread, body):
     """Return an automatic reply for a user message, or None.
 

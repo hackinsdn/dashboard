@@ -50,6 +50,7 @@ from apps import db  # noqa: E402
 from apps.audit_mixin import utcnow  # noqa: E402
 from apps.authentication.models import Users  # noqa: E402
 from apps.home.models import SupportThreads, SupportMessages  # noqa: E402
+from apps.controllers import support  # noqa: E402
 
 flask_app.config["TESTING"] = True
 flask_app.config["WTF_CSRF_ENABLED"] = False
@@ -344,6 +345,7 @@ class TestNavbarUnread:
         login(client, "sc_frank", "pw123456")
         page = client.get("/support/my")
         assert b"See All Messages" in page.data
+        assert b'badge badge-danger navbar-badge">1' in page.data  # unread count badge
         client.get(f"/support/my/{thread.id}")
         db.session.refresh(thread)
         assert thread.has_unseen_for_user is False
@@ -392,4 +394,49 @@ class TestBatchEmail:
         # second run sends nothing more
         support_notify.flush_support_emails(flask_app)
         assert len(sent) == 1
+        logout(client)
+
+
+# --- admin sidebar unread badge count ----------------------------------
+class TestAdminUnreadCount:
+    def test_admin_unread_count_tracks_pending_then_reply(self, client, ids):
+        base = support.admin_unread_thread_count()
+
+        heidi = make_user("sc_heidi")
+        logout(client)
+        login(client, "sc_heidi", "pw123456")
+        post_json(client, "/api/support/thread/messages", {"body": "heidi needs help"})
+        thread = SupportThreads.query.filter_by(user_id=heidi.id).one()
+
+        # one more thread now has an unread user message
+        assert support.admin_unread_thread_count() == base + 1
+
+        # the sidebar badge is rendered on an admin page
+        logout(client)
+        login(client, "sc_admin", "admin123")
+        resp = client.get("/support/threads")
+        assert f'badge-danger right">{base + 1}<'.encode() in resp.data
+
+        # replying clears that thread's unread state -> count drops back
+        post_json(client, f"/api/support/threads/{thread.id}/messages", {"body": "on it"})
+        assert support.admin_unread_thread_count() == base
+        logout(client)
+
+
+# --- multi-line message input ------------------------------------------
+class TestMultilineMessage:
+    def test_newlines_preserved(self, client, ids):
+        make_user("sc_ivan")
+        logout(client)
+        login(client, "sc_ivan", "pw123456")
+        # surrounding whitespace is trimmed, internal newlines are kept
+        resp = post_json(
+            client,
+            "/api/support/thread/messages",
+            {"body": "  line one\nline two\n\nline four  "},
+        )
+        assert resp.status_code == 201
+        body = resp.get_json()["messages"][0]["body"]
+        assert body == "line one\nline two\n\nline four"
+        assert "\n" in body
         logout(client)

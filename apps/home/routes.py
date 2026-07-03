@@ -647,12 +647,18 @@ def view_my_support_thread(thread_id):
 
 @blueprint.app_context_processor
 def inject_support_dropdown():
-    """Provide recent threads + unread count for the navbar Messages dropdown."""
+    """Provide recent threads + unread counts for the navbar dropdown and sidebar."""
     if not getattr(current_user, "is_authenticated", False):
-        return {"support_recent_threads": [], "support_unread_count": 0}
+        return {
+            "support_recent_threads": [],
+            "support_unread_count": 0,
+            "support_admin_unread_count": 0,
+        }
+    is_admin = current_user.category == "admin"
     return {
         "support_recent_threads": support.recent_threads_for_user(current_user, limit=5),
         "support_unread_count": support.user_unread_thread_count(current_user),
+        "support_admin_unread_count": support.admin_unread_thread_count() if is_admin else 0,
     }
 
 

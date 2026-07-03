@@ -53,6 +53,17 @@ refinements, and describes the resulting architecture.
 8. When a thread is open for viewing, a JS routine **polls for new messages every
    30 s**.
 
+### Refinements (second follow-up)
+
+9. The admin **sidebar "Support" entry** shows a badge with the number of threads that
+   have unread user messages (needs staff attention), similar to "Running Labs".
+10. The navbar **chat icon** shows a badge with the number of the current user's threads
+    that have an unseen staff reply (already present; distinct from the sidebar count).
+11. The chat-widget input supports **multi-line** messages: **Enter** sends, **Shift+Enter**
+    inserts a new line; the box auto-grows and newlines are preserved in the bubbles.
+12. The widget is **responsive**: on small screens it spans the viewport width with
+    symmetric side gutters instead of a fixed panel anchored to the right edge.
+
 ---
 
 ## Architecture
@@ -106,7 +117,9 @@ Schema is created by migration `2.0.7 → 2.0.8`
 - `record_telemetry(thread, page, user_agent, ip)` — set the three telemetry fields
   (only when a thread is created).
 - `recent_threads_for_user(user, limit)` / `user_unread_thread_count(user)` — feed the
-  navbar dropdown.
+  navbar dropdown (the user's own unseen staff replies).
+- `admin_unread_thread_count()` — number of threads with at least one unread user
+  message; feeds the admin sidebar "Support" badge.
 - `generate_support_reply(thread, body)` — **AI seam**; returns `None` today, so replies
   come from humans. Returning text here would persist an `assistant` message.
 
@@ -132,19 +145,25 @@ Support is **not** e-mailed from the request path; notifications are batched (be
 - `GET /support/my/<id>` — read-only conversation for one of the user's own threads
   (404 for someone else's); opening marks staff replies seen.
 - `@blueprint.app_context_processor inject_support_dropdown` — provides
-  `support_recent_threads` + `support_unread_count` to every page's navbar.
+  `support_recent_threads`, `support_unread_count` (user, for the navbar), and
+  `support_admin_unread_count` (admins only, for the sidebar badge) to every page.
 
 ### UI components
 
 - **Floating widget** — `apps/templates/includes/chatbot.html`, included from
   `layouts/base.html` for authenticated users (Font Awesome is loaded globally in
   `base.html`). Vanilla JS (no jQuery dependency). Features: expand/minimize, load and
-  send messages, **per-message timestamps** (`HH:MM`, or `DD/MM/YYYY HH:MM` when not
-  today), **"Finish conversation"**, **"See all cases"** link → `/support/my`, sends the
-  current `page` for telemetry, and **polls every 30 s** while open.
+  send messages, **multi-line input** (`<textarea>`: Enter sends, Shift+Enter adds a
+  newline, auto-grows; newlines preserved via `white-space: pre-wrap`),
+  **per-message timestamps** (`HH:MM`, or `DD/MM/YYYY HH:MM` when not today),
+  **"Finish conversation"**, **"See all cases"** link → `/support/my`, sends the current
+  `page` for telemetry, and **polls every 30 s** while open. A `@media (max-width: 575.98px)`
+  rule makes the panel span the viewport with symmetric gutters on phones.
 - **Navbar Messages dropdown** — `apps/templates/includes/navigation.html`; shows the
   user's recent threads, an unread badge (`support_unread_count`), and "See All
   Messages" → `/support/my`.
+- **Sidebar "Support" entry** — `apps/templates/includes/sidebar.html` (admin only);
+  right-aligned badge showing `support_admin_unread_count` when > 0.
 - **Admin pages** — `pages/support_threads.html` (list + open/all toggle),
   `pages/support_thread_view.html` (conversation, telemetry block, reply form, 30 s poll).
 - **User pages** — `pages/my_support_threads.html` (list),
@@ -182,7 +201,9 @@ messages `emailed_at`. The e-mail body is `templates/mail/support_message.html`.
 `tests/test_support_chat.py` covers the widget flow (start/continue/finish, the 2 h
 boundary, per-user scoping), admin management (role gating, reply + mark-read, open-vs-all
 filter), telemetry capture on a new thread, the read-endpoint authorization, the navbar
-unread indicator, and the batch-flush timing boundary (with a mocked mailer).
+unread indicator (including the rendered badge), the admin sidebar unread count
+(`admin_unread_thread_count`, rising with a pending message and dropping after a reply),
+multi-line message persistence, and the batch-flush timing boundary (with a mocked mailer).
 
 ## Future work
 

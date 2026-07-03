@@ -10,12 +10,23 @@
   #hisdn-chat-fab:hover { background-color: #0069d9; }
   #hisdn-chat-panel {
     position: fixed; bottom: 24px; right: 24px; z-index: 1041;
+    box-sizing: border-box;
     width: 340px; max-width: calc(100vw - 32px); height: 460px; max-height: calc(100vh - 48px);
     display: none; flex-direction: column;
     background: #fff; border-radius: 8px; overflow: hidden;
     box-shadow: 0 6px 24px rgba(0,0,0,.28);
   }
   #hisdn-chat-panel.open { display: flex; }
+  /* On small screens the panel spans the width with symmetric side gutters
+     instead of a fixed 340px anchored to the right edge, so it never overflows. */
+  @media (max-width: 575.98px) {
+    #hisdn-chat-fab { bottom: 16px; right: 16px; }
+    #hisdn-chat-panel {
+      left: 12px; right: 12px; bottom: 12px;
+      width: auto; max-width: none;
+      height: 75vh; max-height: calc(100vh - 24px);
+    }
+  }
   .hisdn-chat-header {
     background-color: #007bff; color: #fff; padding: 10px 14px;
     display: flex; align-items: center; justify-content: space-between;
@@ -42,13 +53,15 @@
   .hisdn-chat-msg--support .hisdn-chat-bubblewrap { align-items: flex-start; }
   .hisdn-chat-msg--support .bubble { background-color: #e9ecef; color: #1f1f1f; border-bottom-left-radius: 2px; }
   .hisdn-chat-footer { border-top: 1px solid #e3e6ea; background: #fff; }
-  .hisdn-chat-inputrow { display: flex; padding: 8px; }
-  .hisdn-chat-inputrow input {
+  .hisdn-chat-inputrow { display: flex; align-items: flex-end; padding: 8px; }
+  .hisdn-chat-inputrow textarea {
     flex: 1; border: 1px solid #ced4da; border-radius: 4px; padding: 6px 10px; font-size: .9em;
+    resize: none; line-height: 1.35; max-height: 120px; overflow-y: auto;
+    font-family: inherit;
   }
   .hisdn-chat-inputrow button {
     margin-left: 6px; border: none; background-color: #007bff; color: #fff;
-    border-radius: 4px; padding: 6px 12px; cursor: pointer;
+    border-radius: 4px; padding: 6px 12px; cursor: pointer; align-self: stretch;
   }
   .hisdn-chat-inputrow button:disabled { opacity: .6; cursor: default; }
   .hisdn-chat-actions { padding: 0 10px 8px; display: flex; justify-content: space-between; align-items: center; }
@@ -84,7 +97,7 @@
       </button>
     </div>
     <form class="hisdn-chat-inputrow" id="hisdn-chat-form" autocomplete="off">
-      <input type="text" id="hisdn-chat-input" placeholder="Type your message ..." aria-label="Message" required>
+      <textarea id="hisdn-chat-input" rows="1" placeholder="Type your message ... (Shift+Enter for a new line)" aria-label="Message" required></textarea>
       <button type="submit" id="hisdn-chat-send" title="Send"><i class="fas fa-paper-plane"></i></button>
     </form>
   </div>
@@ -192,6 +205,29 @@
   fab.addEventListener('click', openPanel);
   minBtn.addEventListener('click', minimizePanel);
 
+  // Auto-grow the textarea up to its CSS max-height.
+  function autoGrow() {
+    input.style.height = 'auto';
+    input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+  }
+  function resetInput() {
+    input.value = '';
+    input.style.height = 'auto';
+  }
+  input.addEventListener('input', autoGrow);
+
+  // Enter sends the message; Shift+Enter inserts a new line.
+  input.addEventListener('keydown', function (event) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      if (typeof form.requestSubmit === 'function') {
+        form.requestSubmit();
+      } else {
+        form.dispatchEvent(new Event('submit', { cancelable: true }));
+      }
+    }
+  });
+
   form.addEventListener('submit', function (event) {
     event.preventDefault();
     var text = input.value.trim();
@@ -210,7 +246,7 @@
     }).then(function (data) {
       (data.messages || []).forEach(renderMessage);
       scrollBottom();
-      input.value = '';
+      resetInput();
     }).catch(function () {
       // re-render the typed text so it is not lost
       input.value = text;
