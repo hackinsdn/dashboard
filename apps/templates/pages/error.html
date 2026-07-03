@@ -1,6 +1,6 @@
 {% extends "layouts/base.html" %}
 
-{% block title %} {{ title|default("Error", true) }} {% endblock %} 
+{% block title %} {{ title|default("Error", true) }} {% endblock title %}
 
 <!-- Element injected in the BODY element -->
 {% block body_class %} sidebar-mini {% endblock body_class %}
@@ -17,7 +17,7 @@
 
 {% endblock stylesheets %}
 
-{% block content %}    
+{% block content %}
 
   <div class="content-wrapper">
     <!-- Content Header (Page header) -->
