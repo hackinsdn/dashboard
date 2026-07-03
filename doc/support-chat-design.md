@@ -76,6 +76,16 @@ refinements, and describes the resulting architecture.
     into it (the API rejects with `409`), it shows the closing note and disables the send
     button, and offers a **"Start new conversation"** action.
 
+### Refinements (fourth follow-up)
+
+17. The widget **persists its open/minimized state** in `localStorage`, so it stays open
+    across page navigation.
+18. The widget is sized and positioned against the **visual viewport**
+    (`window.visualViewport`) rather than the layout viewport, so it fits the visible screen
+    even on pages whose content overflows horizontally (page overflow inflates the layout
+    viewport, which previously made the `vw`/`right`-anchored panel larger than the phone
+    screen).
+
 ---
 
 ## Architecture
@@ -176,7 +186,10 @@ Support is **not** e-mailed from the request path; notifications are batched (be
   rule makes the panel span the viewport with symmetric gutters on phones. The widget
   tracks its `currentThreadId` and polls it by id; when that thread becomes **finished**
   (by an admin, or on a `409` from a send) it **locks** — disables the input/send button,
-  shows the closing note, and offers **"Start new conversation"**.
+  shows the closing note, and offers **"Start new conversation"**. It **persists its
+  open/minimized state** in `localStorage` (stays open across navigation) and sizes/positions
+  itself against `window.visualViewport` so it fits the visible screen even when the page
+  overflows horizontally.
 - **Navbar Messages dropdown** — `apps/templates/includes/navigation.html`; shows the
   user's recent threads, an unread badge (`support_unread_count`), and "See All
   Messages" → `/support/my`.

@@ -247,9 +247,36 @@
     if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
   }
 
+  // Persist the open/minimized state so the widget survives page navigation.
+  function saveOpen(v) { try { localStorage.setItem('hisdnChatOpen', v ? '1' : '0'); } catch (e) {} }
+  function isSavedOpen() { try { return localStorage.getItem('hisdnChatOpen') === '1'; } catch (e) { return false; } }
+
+  // Size and place the FAB + panel against the VISUAL viewport (not the layout
+  // viewport). On pages with horizontal overflow the layout viewport can be far
+  // wider than the screen, which would otherwise make the panel bigger than the
+  // phone and push it off to the right.
+  function placeWidget() {
+    var vv = window.visualViewport;
+    if (!vv) { return; }
+    var m = 12, fabSize = 56;
+    fab.style.right = 'auto'; fab.style.bottom = 'auto';
+    fab.style.left = Math.round(vv.offsetLeft + vv.width - fabSize - m) + 'px';
+    fab.style.top = Math.round(vv.offsetTop + vv.height - fabSize - m) + 'px';
+    var w = Math.min(360, vv.width - m * 2);
+    var h = Math.min(460, vv.height - m * 2);
+    panel.style.right = 'auto'; panel.style.bottom = 'auto';
+    panel.style.maxWidth = 'none'; panel.style.maxHeight = 'none';
+    panel.style.width = Math.round(w) + 'px';
+    panel.style.height = Math.round(h) + 'px';
+    panel.style.left = Math.round(vv.offsetLeft + vv.width - w - m) + 'px';
+    panel.style.top = Math.round(vv.offsetTop + vv.height - h - m) + 'px';
+  }
+
   function openPanel() {
     panel.classList.add('open');
     fab.style.display = 'none';
+    placeWidget();
+    saveOpen(true);
     syncThread();
     startPolling();
     if (!locked) { input.focus(); }
@@ -257,8 +284,16 @@
   function minimizePanel() {
     panel.classList.remove('open');
     fab.style.display = '';
+    saveOpen(false);
     stopPolling();
   }
+
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', placeWidget);
+    window.visualViewport.addEventListener('scroll', placeWidget);
+    window.addEventListener('resize', placeWidget);
+  }
+  placeWidget();
 
   fab.addEventListener('click', openPanel);
   minBtn.addEventListener('click', minimizePanel);
@@ -330,6 +365,9 @@
   });
 
   newConvBtn.addEventListener('click', startNewConversation);
+
+  // Restore the widget if it was left open on a previous page.
+  if (isSavedOpen()) { openPanel(); }
 })();
 </script>
 {% endif %}
