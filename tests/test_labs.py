@@ -361,6 +361,19 @@ class TestSoftDelete:
         resp = client.get("/labs/view")
         assert b"Admin Deletable Lab" not in resp.data
 
+    def test_single_lab_view_delete_redirects_to_full_list(self, client, ids):
+        # regression: deleting the lab currently being viewed at
+        # /labs/view/<id> must redirect to the full list (dropping the lab_id),
+        # not reload the single-lab URL into an empty, now-filtered-out list
+        login(client, "lbadmin", "admin123")
+        lab_id = _make_lab(ids, "Single View Redirect Lab")
+        resp = client.get(f"/labs/view/{lab_id}")
+        assert resp.status_code == 200
+        assert b'var labsListUrl = "/labs/view"' in resp.data
+        # the redirect target must not carry the lab id
+        list_url = resp.data.split(b"var labsListUrl =")[1].split(b";")[0]
+        assert lab_id.encode() not in list_url
+
     def test_delete_already_deleted_returns_404(self, client, ids):
         lab_id = _make_lab(ids, "Already Deleted Lab")
         db.session.get(Labs, lab_id).is_deleted = True

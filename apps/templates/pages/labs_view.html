@@ -304,6 +304,11 @@
         sessionStorage.removeItem('msgFail');
       }
 
+      // full labs list (preserves the group filter, drops any single lab_id
+      // in the URL) so deleting the lab currently being viewed does not
+      // reload into an empty, now-filtered-out list
+      var labsListUrl = "{{ url_for('home_blueprint.view_labs', filter_group=filter_group or None, show_deleted='1' if show_deleted else None) }}";
+
       $("#modal-delete-lab").on('show.bs.modal', function(event){
         var labId = $(event.relatedTarget).data('id');
         $("#delete-lab-id").val( labId );
@@ -319,7 +324,7 @@
         request.done(function(data) {
           sessionStorage.setItem('msgSuccess', data.result);
           $("#delete-lab-id").val("");
-          location.reload();
+          window.location.href = labsListUrl;
         });
         request.fail(function(xhr) {
           var msg = xhr.responseJSON ? xhr.responseJSON.result : xhr.responseText;
