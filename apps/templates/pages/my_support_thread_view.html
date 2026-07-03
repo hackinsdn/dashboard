@@ -6,8 +6,8 @@
 
 {% block stylesheets %}
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
-  <link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
-  <link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/fontawesome-free/css/all.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/adminlte.min.css') }}">
   <style>
     .direct-chat-text { white-space: pre-wrap; word-wrap: break-word; }
     .support-system-msg { text-align: center; color: #8a939b; font-size: .8rem; margin: 10px 0; }
@@ -89,9 +89,9 @@
 {% endblock content %}
 
 {% block javascripts %}
-  <script src="/static/assets/plugins/jquery/jquery.min.js"></script>
-  <script src="/static/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="/static/assets/js/adminlte.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/jquery/jquery.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/js/adminlte.js') }}"></script>
   <script>
     (function () {
       var THREAD_ID = {{ thread.id }};

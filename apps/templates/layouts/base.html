@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" href="/static/assets/favicon.ico">
+  <link rel="icon" href="{{ url_for('static', filename='assets/favicon.ico') }}">
   <meta name="description" content="A web platform for experimenting/training on cybersecurity and networking using Kubernetes.">
   <meta name="keywords" content="cybersecurity, networking, SDN, Kubernetes, training, labs, HackInSDN">
 
@@ -12,7 +12,7 @@
   </title>
 
   <!-- Font Awesome (loaded globally so the support chat widget renders on every page) -->
-  <link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/fontawesome-free/css/all.min.css') }}">
 
   {% block stylesheets %}{% endblock stylesheets %}
 

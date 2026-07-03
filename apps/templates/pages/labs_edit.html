@@ -11,19 +11,19 @@
   <!-- Google Font: Source Sans Pro -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
   <!-- Font Awesome -->
-  <link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/fontawesome-free/css/all.min.css') }}">
   <!-- Theme style -->
-  <link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/adminlte.min.css') }}">
   <!-- summernote -->
-  <link rel="stylesheet" href="/static/assets/plugins/summernote/summernote-bs4.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/summernote/summernote-bs4.min.css') }}">
   <!-- Select2 -->
-  <link rel="stylesheet" href="/static/assets/plugins/select2/css/select2.min.css">
-  <link rel="stylesheet" href="/static/assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/select2/css/select2.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css') }}">
   <!-- Bootstrap4 Duallistbox -->
-  <link rel="stylesheet" href="/static/assets/plugins/bootstrap4-duallistbox/bootstrap-duallistbox.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/bootstrap4-duallistbox/bootstrap-duallistbox.min.css') }}">
   <!-- CodeMirror -->
-  <link rel="stylesheet" href="/static/assets/plugins/codemirror/lib/codemirror.css">
-  <link rel="stylesheet" href="/static/assets/plugins/codemirror/theme/abcdef.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/codemirror/lib/codemirror.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/codemirror/theme/abcdef.css') }}">
   <style>
 .input-group > .select2-container--default {
     width: auto;
@@ -515,29 +515,29 @@
 {% block javascripts %}
 
   <!-- jQuery -->
-  <script src="/static/assets/plugins/jquery/jquery.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/jquery/jquery.min.js') }}"></script>
   <!-- Bootstrap 4 -->
-  <script src="/static/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
   <!-- bs-custom-file-input -->
-  <script src="/static/assets/plugins/bs-custom-file-input/bs-custom-file-input.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/bs-custom-file-input/bs-custom-file-input.min.js') }}"></script>
   <!-- Bootstrap4 Duallistbox -->
-  <script src="/static/assets/plugins/bootstrap4-duallistbox/jquery.bootstrap-duallistbox.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/bootstrap4-duallistbox/jquery.bootstrap-duallistbox.min.js') }}"></script>
   <!-- AdminLTE App -->
-  <script src="/static/assets/js/adminlte.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/js/adminlte.min.js') }}"></script>
   <!-- Shared Labs delete/restore actions -->
-  <script src="/static/assets/js/pages/labs_actions.js"></script>
+  <script src="{{ url_for('static', filename='assets/js/pages/labs_actions.js') }}"></script>
   <!-- AdminLTE for demo purposes -->
-  <script src="/static/assets/js/demo.js"></script>
+  <script src="{{ url_for('static', filename='assets/js/demo.js') }}"></script>
   <!-- Summernote -->
-  <script src="/static/assets/plugins/summernote/summernote-bs4.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/summernote/summernote-bs4.min.js') }}"></script>
   <!-- CodeMirror -->
-  <script src="/static/assets/plugins/codemirror/lib/codemirror.js"></script>
-  <script src="/static/assets/plugins/codemirror/mode/yaml/yaml.js"></script>
-  <script src="/static/assets/plugins/codemirror/mode/markdown/markdown.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/codemirror/lib/codemirror.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/codemirror/mode/yaml/yaml.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/codemirror/mode/markdown/markdown.js') }}"></script>
   <!-- Marked -->
-  <script src="/static/assets/plugins/marked/marked.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/marked/marked.min.js') }}"></script>
   <!-- Select2 -->
-  <script src="/static/assets/plugins/select2/js/select2.full.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/select2/js/select2.full.min.js') }}"></script>
   <script>
     $(function () {
       $('#lab-editor').summernote({

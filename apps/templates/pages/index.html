@@ -11,14 +11,14 @@
   <!-- Google Font: Source Sans Pro -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
   <!-- Font Awesome Icons -->
-  <link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/fontawesome-free/css/all.min.css') }}">
   <!-- overlayScrollbars -->
-  <link rel="stylesheet" href="/static/assets/plugins/overlayScrollbars/css/OverlayScrollbars.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/overlayScrollbars/css/OverlayScrollbars.min.css') }}">
   <!-- Leaflet -->
-  <link rel="stylesheet" href="/static/assets/plugins/leaflet/leaflet.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/leaflet/leaflet.css') }}">
   <!-- Theme style -->
-  <link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
-  <link rel="stylesheet" href="/static/assets/css/custom.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/adminlte.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/custom.css') }}">
 {% endblock stylesheets %}
 
 {% block content %}
@@ -388,7 +388,7 @@
 		  {% if loop.index <= 5 %}
                   <li class="item">
                     <div class="product-img">
-                      <img src="/static/assets/img/default-150x150.png" alt="Lab Image" class="img-size-50">
+                      <img src="{{ url_for('static', filename='assets/img/default-150x150.png') }}" alt="Lab Image" class="img-size-50">
                     </div>
                     <div class="product-info">
                       <a href="{{ url_for('home_blueprint.view_labs', lab_id=lab.id) }}" class="product-title">
@@ -460,27 +460,27 @@
 
   <!-- REQUIRED SCRIPTS -->
   <!-- jQuery -->
-  <script src="/static/assets/plugins/jquery/jquery.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/jquery/jquery.min.js') }}"></script>
   <!-- Bootstrap -->
-  <script src="/static/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
   <!-- overlayScrollbars -->
-  <script src="/static/assets/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js') }}"></script>
   <!-- AdminLTE App -->
-  <script src="/static/assets/js/adminlte.js"></script>
+  <script src="{{ url_for('static', filename='assets/js/adminlte.js') }}"></script>
 
   <!-- PAGE PLUGINS -->
   <!-- Leaflet -->
-  <script src="/static/assets/plugins/leaflet/leaflet.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/leaflet/leaflet.js') }}"></script>
   {% if config.MAP_GEOJSON_JS %}
-  <script src="/static/assets/plugins/leaflet/geojson/{{ config.MAP_GEOJSON_JS }}"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/leaflet/geojson/{{ config.MAP_GEOJSON_JS }}') }}"></script>
   {% endif %}
   <!-- ChartJS -->
-  <script src="/static/assets/plugins/chart.js/Chart.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/chart.js/Chart.min.js') }}"></script>
   <!-- Motion JS -->
-  <script src="/static/assets/plugins/mojs/mojs.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/mojs/mojs.js') }}"></script>
 
   <!-- PAGE SCRIPTS -->
-  <script src="/static/assets/js/pages/dashboard2.js"></script>
+  <script src="{{ url_for('static', filename='assets/js/pages/dashboard2.js') }}"></script>
   <script type="text/javascript">
     function isIOSSafari() {
         var userAgent;

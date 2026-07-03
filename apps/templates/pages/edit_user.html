@@ -11,9 +11,9 @@
   <!-- Google Font: Source Sans Pro -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
   <!-- Font Awesome -->
-  <link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/fontawesome-free/css/all.min.css') }}">
   <!-- Theme style -->
-  <link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/adminlte.min.css') }}">
 
 {% endblock stylesheets %}
 
@@ -162,19 +162,19 @@
 {% block javascripts %}
 
   <!-- jQuery -->
-  <script src="/static/assets/plugins/jquery/jquery.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/jquery/jquery.min.js') }}"></script>
   <!-- Bootstrap 4 -->
-  <script src="/static/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
   <!-- jquery-validation -->
-  <script src="/static/assets/plugins/jquery-validation/jquery.validate.min.js"></script>
-  <script src="/static/assets/plugins/jquery-validation/additional-methods.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/jquery-validation/jquery.validate.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/jquery-validation/additional-methods.min.js') }}"></script>
   <!-- InputMask -->
-  <script src="/static/assets/plugins/moment/moment.min.js"></script>
-  <script src="/static/assets/plugins/inputmask/jquery.inputmask.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/moment/moment.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/inputmask/jquery.inputmask.min.js') }}"></script>
   <!-- Tempusdominus Bootstrap 4 -->
-  <script src="/static/assets/plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js') }}"></script>
   <!-- AdminLTE App -->
-  <script src="/static/assets/js/adminlte.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/js/adminlte.min.js') }}"></script>
   <!-- Page script -->
   <script>
     $(function () {
