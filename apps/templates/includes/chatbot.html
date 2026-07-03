@@ -1,0 +1,205 @@
+{% if current_user.is_authenticated %}
+<!-- Floating support chat widget -->
+<style>
+  #hisdn-chat-fab {
+    position: fixed; bottom: 24px; right: 24px; z-index: 1040;
+    width: 56px; height: 56px; border-radius: 50%; border: none;
+    background-color: #007bff; color: #fff; font-size: 22px;
+    box-shadow: 0 4px 12px rgba(0,0,0,.25); cursor: pointer;
+  }
+  #hisdn-chat-fab:hover { background-color: #0069d9; }
+  #hisdn-chat-panel {
+    position: fixed; bottom: 24px; right: 24px; z-index: 1041;
+    width: 340px; max-width: calc(100vw - 32px); height: 460px; max-height: calc(100vh - 48px);
+    display: none; flex-direction: column;
+    background: #fff; border-radius: 8px; overflow: hidden;
+    box-shadow: 0 6px 24px rgba(0,0,0,.28);
+  }
+  #hisdn-chat-panel.open { display: flex; }
+  .hisdn-chat-header {
+    background-color: #007bff; color: #fff; padding: 10px 14px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .hisdn-chat-header .title { font-weight: 600; }
+  .hisdn-chat-header button {
+    background: transparent; border: none; color: #fff; font-size: 16px; cursor: pointer;
+  }
+  .hisdn-chat-body {
+    flex: 1; overflow-y: auto; padding: 12px; background: #f4f6f9;
+  }
+  .hisdn-chat-empty { color: #6c757d; font-size: .9em; text-align: center; margin-top: 24px; }
+  .hisdn-chat-msg { margin-bottom: 10px; display: flex; }
+  .hisdn-chat-msg .bubble {
+    padding: 8px 12px; border-radius: 12px; max-width: 80%;
+    font-size: .9em; line-height: 1.35; white-space: pre-wrap; word-wrap: break-word;
+  }
+  .hisdn-chat-msg--user { justify-content: flex-end; }
+  .hisdn-chat-msg--user .bubble { background-color: #007bff; color: #fff; border-bottom-right-radius: 2px; }
+  .hisdn-chat-msg--support { justify-content: flex-start; }
+  .hisdn-chat-msg--support .bubble { background-color: #e9ecef; color: #1f1f1f; border-bottom-left-radius: 2px; }
+  .hisdn-chat-footer { border-top: 1px solid #e3e6ea; background: #fff; }
+  .hisdn-chat-inputrow { display: flex; padding: 8px; }
+  .hisdn-chat-inputrow input {
+    flex: 1; border: 1px solid #ced4da; border-radius: 4px; padding: 6px 10px; font-size: .9em;
+  }
+  .hisdn-chat-inputrow button {
+    margin-left: 6px; border: none; background-color: #007bff; color: #fff;
+    border-radius: 4px; padding: 6px 12px; cursor: pointer;
+  }
+  .hisdn-chat-inputrow button:disabled { opacity: .6; cursor: default; }
+  .hisdn-chat-actions { padding: 0 10px 8px; text-align: right; }
+  .hisdn-chat-actions button {
+    background: transparent; border: none; color: #6c757d; font-size: .78em; cursor: pointer;
+  }
+  .hisdn-chat-actions button:hover { color: #dc3545; text-decoration: underline; }
+</style>
+
+<button id="hisdn-chat-fab" type="button" title="Support chat" aria-label="Open support chat">
+  <i class="fas fa-comments"></i>
+</button>
+
+<div id="hisdn-chat-panel" role="dialog" aria-label="Support chat">
+  <div class="hisdn-chat-header">
+    <span class="title"><i class="fas fa-comments mr-1"></i> Support</span>
+    <button id="hisdn-chat-min" type="button" title="Minimize" aria-label="Minimize chat">
+      <i class="fas fa-minus"></i>
+    </button>
+  </div>
+  <div class="hisdn-chat-body" id="hisdn-chat-body">
+    <div class="hisdn-chat-empty" id="hisdn-chat-empty">Send a message and our team will get back to you.</div>
+  </div>
+  <div class="hisdn-chat-footer">
+    <div class="hisdn-chat-actions">
+      <button id="hisdn-chat-finish" type="button" title="Finish this conversation">
+        <i class="fas fa-times-circle"></i> Finish conversation
+      </button>
+    </div>
+    <form class="hisdn-chat-inputrow" id="hisdn-chat-form" autocomplete="off">
+      <input type="text" id="hisdn-chat-input" placeholder="Type your message ..." aria-label="Message" required>
+      <button type="submit" id="hisdn-chat-send" title="Send"><i class="fas fa-paper-plane"></i></button>
+    </form>
+  </div>
+</div>
+
+<script>
+(function () {
+  var fab = document.getElementById('hisdn-chat-fab');
+  var panel = document.getElementById('hisdn-chat-panel');
+  var minBtn = document.getElementById('hisdn-chat-min');
+  var body = document.getElementById('hisdn-chat-body');
+  var emptyState = document.getElementById('hisdn-chat-empty');
+  var form = document.getElementById('hisdn-chat-form');
+  var input = document.getElementById('hisdn-chat-input');
+  var sendBtn = document.getElementById('hisdn-chat-send');
+  var finishBtn = document.getElementById('hisdn-chat-finish');
+
+  var pollTimer = null;
+  var lastMessageId = 0;
+
+  function scrollBottom() { body.scrollTop = body.scrollHeight; }
+
+  function renderMessage(msg) {
+    var isUser = msg.sender === 'user';
+    var row = document.createElement('div');
+    row.className = 'hisdn-chat-msg ' + (isUser ? 'hisdn-chat-msg--user' : 'hisdn-chat-msg--support');
+    row.setAttribute('data-id', msg.id);
+    var bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.textContent = msg.body;
+    row.appendChild(bubble);
+    body.appendChild(row);
+    if (msg.id && msg.id > lastMessageId) { lastMessageId = msg.id; }
+  }
+
+  function clearMessages() {
+    var nodes = body.querySelectorAll('.hisdn-chat-msg');
+    nodes.forEach(function (n) { n.remove(); });
+    lastMessageId = 0;
+  }
+
+  function showEmpty(show) { emptyState.style.display = show ? 'block' : 'none'; }
+
+  function loadThread() {
+    fetch('/api/support/thread', { credentials: 'same-origin' })
+      .then(function (r) { return r.ok ? r.json() : { thread: null }; })
+      .then(function (data) {
+        var thread = data.thread;
+        var existing = {};
+        body.querySelectorAll('.hisdn-chat-msg').forEach(function (n) {
+          existing[n.getAttribute('data-id')] = true;
+        });
+        if (!thread || !thread.messages || !thread.messages.length) {
+          if (!Object.keys(existing).length) { showEmpty(true); }
+          return;
+        }
+        showEmpty(false);
+        thread.messages.forEach(function (msg) {
+          if (!existing[String(msg.id)]) { renderMessage(msg); }
+        });
+        scrollBottom();
+      })
+      .catch(function () { /* ignore transient errors */ });
+  }
+
+  function startPolling() {
+    stopPolling();
+    pollTimer = setInterval(loadThread, 15000);
+  }
+  function stopPolling() {
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+  }
+
+  function openPanel() {
+    panel.classList.add('open');
+    fab.style.display = 'none';
+    loadThread();
+    startPolling();
+    input.focus();
+  }
+  function minimizePanel() {
+    panel.classList.remove('open');
+    fab.style.display = '';
+    stopPolling();
+  }
+
+  fab.addEventListener('click', openPanel);
+  minBtn.addEventListener('click', minimizePanel);
+
+  form.addEventListener('submit', function (event) {
+    event.preventDefault();
+    var text = input.value.trim();
+    if (!text) { return; }
+    sendBtn.disabled = true;
+    showEmpty(false);
+    fetch('/api/support/thread/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ body: text })
+    }).then(function (r) {
+      if (!r.ok) { throw new Error('send failed'); }
+      return r.json();
+    }).then(function (data) {
+      (data.messages || []).forEach(renderMessage);
+      scrollBottom();
+      input.value = '';
+    }).catch(function () {
+      // re-render the typed text so it is not lost
+      input.value = text;
+    }).finally(function () {
+      sendBtn.disabled = false;
+      input.focus();
+    });
+  });
+
+  finishBtn.addEventListener('click', function () {
+    fetch('/api/support/thread/finish', { method: 'POST', credentials: 'same-origin' })
+      .then(function () {
+        clearMessages();
+        showEmpty(true);
+      })
+      .catch(function () { /* ignore */ });
+  });
+})();
+</script>
+{% endif %}

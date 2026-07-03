@@ -12,7 +12,8 @@ from collections import OrderedDict
 from apps import db, cache
 from apps.home import blueprint
 from apps.controllers import k8s, c9s
-from apps.home.models import Labs, LabInstances, LabCategories, LabAnswers, LabAnswerSheet, HomeLogging, UserLikes, UserFeedbacks, LabMetadata
+from apps.controllers import support
+from apps.home.models import Labs, LabInstances, LabCategories, LabAnswers, LabAnswerSheet, HomeLogging, UserLikes, UserFeedbacks, LabMetadata, SupportThreads, SupportMessages
 from apps.authentication.models import Users, Groups
 from flask import render_template, request, current_app, redirect, url_for, session, send_from_directory, jsonify
 from flask_login import login_required, current_user
@@ -588,6 +589,42 @@ def list_lab_categories():
     lab_categories = LabCategories.query.filter_by(is_deleted=False).all()
     msg_ok = session.pop("msg_ok", None)
     return render_template("pages/lab_categories_list.html", segment="/lab_categories/list", lab_categories=lab_categories, msg_ok=msg_ok)
+
+
+@blueprint.route('/support/threads')
+@login_required
+@check_user_category(["admin"])
+def list_support_threads():
+    # Show threads that are still open OR that have unread user messages.
+    threads = (
+        SupportThreads.query.join(SupportMessages, isouter=True)
+        .filter(
+            db.or_(
+                SupportThreads.status == "open",
+                db.and_(
+                    SupportMessages.sender == "user",
+                    SupportMessages.is_read.is_(False),
+                ),
+            )
+        )
+        .order_by(desc(SupportThreads.updated_at))
+        .distinct()
+        .all()
+    )
+    return render_template("pages/support_threads.html", segment="/support/threads", threads=threads)
+
+
+@blueprint.route('/support/threads/<int:thread_id>')
+@login_required
+@check_user_category(["admin"])
+def view_support_thread(thread_id):
+    thread = db.session.get(SupportThreads, thread_id)
+    if thread is None:
+        return render_template("pages/error.html", title="Not found", msg="Support thread not found")
+    # Opening a thread marks its user messages as read.
+    if support.mark_thread_read(thread):
+        db.session.commit()
+    return render_template("pages/support_thread_view.html", segment="/support/threads", thread=thread)
 
 
 @blueprint.route('/lab_categories/edit/<category_id>', methods=["GET", "POST"])

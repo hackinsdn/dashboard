@@ -1,0 +1,135 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Support Chat {% endblock %}
+
+{% block body_class %} sidebar-mini layout-navbar-fixed {% endblock body_class %}
+
+{% block stylesheets %}
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+  <link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
+  <link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
+{% endblock stylesheets %}
+
+{% block content %}
+  <div class="content-wrapper">
+    <section class="content-header">
+      <div class="container-fluid">
+        <div class="row mb-2">
+          <div class="col-sm-6">
+            <h1>Support Chat</h1>
+          </div>
+          <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+              <li class="breadcrumb-item"><a href="/index">Home</a></li>
+              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.list_support_threads') }}">Support</a></li>
+              <li class="breadcrumb-item active">Thread #{{ thread.id }}</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="content">
+      <div class="row">
+        <div class="col-md-8">
+          <div class="card direct-chat direct-chat-primary">
+            <div class="card-header">
+              <h3 class="card-title">
+                {{ thread.user.name if thread.user else thread.user_id }}
+                {% if thread.status == "open" %}
+                  <span class="badge badge-success ml-2">Open</span>
+                {% else %}
+                  <span class="badge badge-secondary ml-2">Finished</span>
+                {% endif %}
+              </h3>
+            </div>
+            <div class="card-body">
+              <div class="direct-chat-messages" style="height: 60vh;">
+                {% for message in thread.messages %}
+                  {% if message.sender == "user" %}
+                  <div class="direct-chat-msg">
+                    <div class="direct-chat-infos clearfix">
+                      <span class="direct-chat-name float-left">{{ thread.user.name if thread.user else 'User' }}</span>
+                      <span class="direct-chat-timestamp float-right">{{ message.created_at.strftime('%Y-%m-%d %H:%M') if message.created_at else '' }} UTC</span>
+                    </div>
+                    <div class="direct-chat-text">{{ message.body }}</div>
+                  </div>
+                  {% else %}
+                  <div class="direct-chat-msg right">
+                    <div class="direct-chat-infos clearfix">
+                      <span class="direct-chat-name float-right">{{ "Assistant" if message.sender == "assistant" else "Support" }}</span>
+                      <span class="direct-chat-timestamp float-left">{{ message.created_at.strftime('%Y-%m-%d %H:%M') if message.created_at else '' }} UTC</span>
+                    </div>
+                    <div class="direct-chat-text">{{ message.body }}</div>
+                  </div>
+                  {% endif %}
+                {% endfor %}
+              </div>
+            </div>
+            <div class="card-footer">
+              <form id="replyForm">
+                <div class="input-group">
+                  <input type="text" id="replyBody" name="body" placeholder="Type your reply ..." class="form-control" autocomplete="off" required>
+                  <span class="input-group-append">
+                    <button type="submit" class="btn btn-primary">Send <i class="fas fa-paper-plane"></i></button>
+                  </span>
+                </div>
+                <div id="replyError" class="text-danger mt-2" style="display:none;"></div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+{% endblock content %}
+
+{% block javascripts %}
+  <script src="/static/assets/plugins/jquery/jquery.min.js"></script>
+  <script src="/static/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="/static/assets/js/adminlte.js"></script>
+  <script>
+    (function () {
+      var form = document.getElementById('replyForm');
+      var input = document.getElementById('replyBody');
+      var errorBox = document.getElementById('replyError');
+      var messages = document.querySelector('.direct-chat-messages');
+      messages.scrollTop = messages.scrollHeight;
+
+      function escapeHtml(text) {
+        var div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      form.addEventListener('submit', function (event) {
+        event.preventDefault();
+        var body = input.value.trim();
+        if (!body) { return; }
+        errorBox.style.display = 'none';
+        fetch('/api/support/threads/{{ thread.id }}/messages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ body: body })
+        }).then(function (resp) {
+          if (!resp.ok) { throw new Error('Failed to send reply'); }
+          return resp.json();
+        }).then(function () {
+          var now = new Date().toISOString().slice(0, 16).replace('T', ' ');
+          var html = '<div class="direct-chat-msg right">'
+            + '<div class="direct-chat-infos clearfix">'
+            + '<span class="direct-chat-name float-right">Support</span>'
+            + '<span class="direct-chat-timestamp float-left">' + now + ' UTC</span>'
+            + '</div><div class="direct-chat-text">' + escapeHtml(body) + '</div></div>';
+          messages.insertAdjacentHTML('beforeend', html);
+          messages.scrollTop = messages.scrollHeight;
+          input.value = '';
+        }).catch(function (err) {
+          errorBox.textContent = err.message;
+          errorBox.style.display = 'block';
+        });
+      });
+    })();
+  </script>
+{% endblock javascripts %}

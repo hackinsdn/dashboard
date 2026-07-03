@@ -4,10 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="/static/assets/favicon.ico">
-  
+
   <title>
     Dashboard HackInSDN - {% block title %}{% endblock %}
-  </title> 
+  </title>
+
+  <!-- Font Awesome (loaded globally so the support chat widget renders on every page) -->
+  <link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
 
   {% block stylesheets %}{% endblock stylesheets %}
 
@@ -22,6 +25,8 @@
     {% block content %}{% endblock content %}
 
     {% include 'includes/footer.html' %}
+
+    {% include 'includes/chatbot.html' %}
 
 </div>
 <!-- ./wrapper -->

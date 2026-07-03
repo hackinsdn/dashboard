@@ -114,6 +114,9 @@ class Config(object):
     MAIL_USE_SSL = os.getenv("MAIL_USE_SSL", "False") == "True"
     MAIL_SENDTO = os.getenv("MAIL_SENDTO")
 
+    # Support chat: a thread is auto-finished after this many hours of user inactivity
+    SUPPORT_THREAD_INACTIVITY_HOURS = int(os.getenv("SUPPORT_THREAD_INACTIVITY_HOURS", 2))
+
     # Flask Cache (https://flask-caching.readthedocs.io/en/latest/)
     CACHE_TYPE = "SimpleCache"
     CACHE_DEFAULT_TIMEOUT = int(os.getenv("CACHE_DEFAULT_TIMEOUT", 300))
