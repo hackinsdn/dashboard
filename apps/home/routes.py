@@ -85,7 +85,7 @@ def index():
     if not user_feedback:
         last_shown = cache.get(f"feedback_prompt_last_shown_{current_user.id}")
         if not last_shown:
-            last_shown = int(current_user.created_at.timestamp())
+            last_shown = int(current_user.created_at.timestamp()) if current_user.created_at else 0
         now_ts = int(utcnow().timestamp())
         if now_ts - last_shown > current_app.config["HIDE_FEEDBACK_SEC"]:
             show_feedback_modal = True
