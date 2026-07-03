@@ -239,6 +239,8 @@
   <script src="/static/assets/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js"></script>
   <!-- AdminLTE App -->
   <script src="/static/assets/js/adminlte.js"></script>
+  <!-- Shared Labs delete/restore actions -->
+  <script src="/static/assets/js/pages/labs_actions.js"></script>
   <script>
     $(function () {
       $(".filter-button").click(function(){
@@ -287,22 +289,7 @@
 
       $('.filter').addClass('category-visible status-visible');
 
-      if ( sessionStorage.getItem('msgSuccess') ) {
-        $(document).Toasts('create', {
-          class: 'bg-success',
-          title: 'Success',
-          body: sessionStorage.getItem('msgSuccess')
-        });
-        sessionStorage.removeItem('msgSuccess');
-      }
-      if ( sessionStorage.getItem('msgFail') ) {
-        $(document).Toasts('create', {
-          class: 'bg-danger',
-          title: 'Failure',
-          body: sessionStorage.getItem('msgFail')
-        });
-        sessionStorage.removeItem('msgFail');
-      }
+      LabsActions.flushToasts();
 
       // full labs list (preserves the group filter, drops any single lab_id
       // in the URL) so deleting the lab currently being viewed does not
@@ -310,54 +297,19 @@
       var labsListUrl = "{{ url_for('home_blueprint.view_labs', filter_group=filter_group or None, show_deleted='1' if show_deleted else None) }}";
 
       $("#modal-delete-lab").on('show.bs.modal', function(event){
-        var labId = $(event.relatedTarget).data('id');
-        $("#delete-lab-id").val( labId );
-        $("#delete-lab-name").text( $(event.relatedTarget).data('name') );
+        var target = $(event.relatedTarget);
+        $("#delete-lab-id").val( target.data('id') );
+        $("#delete-lab-name").text( target.data('name') );
       });
       $('#delete-lab').click(function () {
-        var labId = $("#delete-lab-id").val();
-        var request = $.ajax({
-          url: '/api/labs/' + labId,
-          type: "DELETE",
-          dataType: "json",
-          contentType: "application/json",
-        });
-        request.done(function(data) {
-          sessionStorage.setItem('msgSuccess', data.result);
-          $("#delete-lab-id").val("");
-          window.location.href = labsListUrl;
-        });
-        request.fail(function(xhr) {
-          var msg = xhr.responseJSON ? xhr.responseJSON.result : xhr.responseText;
-          sessionStorage.setItem('msgFail', msg);
-          $("#delete-lab-id").val("");
-          location.reload();
-        });
+        LabsActions.run({ labId: $("#delete-lab-id").val(), action: "delete", redirectUrl: labsListUrl });
       });
 
       $("#modal-restore-lab").on('show.bs.modal', function(event){
-        var labId = $(event.relatedTarget).data('id');
-        $("#restore-lab-id").val( labId );
+        $("#restore-lab-id").val( $(event.relatedTarget).data('id') );
       });
       $('#restore-lab').click(function () {
-        var labId = $("#restore-lab-id").val();
-        var request = $.ajax({
-          url: '/api/labs/' + labId + '/restore',
-          type: "POST",
-          dataType: "json",
-          contentType: "application/json",
-        });
-        request.done(function(data) {
-          sessionStorage.setItem('msgSuccess', data.result);
-          $("#restore-lab-id").val("");
-          location.reload();
-        });
-        request.fail(function(xhr) {
-          var msg = xhr.responseJSON ? xhr.responseJSON.result : xhr.responseText;
-          sessionStorage.setItem('msgFail', msg);
-          $("#restore-lab-id").val("");
-          location.reload();
-        });
+        LabsActions.run({ labId: $("#restore-lab-id").val(), action: "restore" });
       });
     });
   </script>
