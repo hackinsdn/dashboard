@@ -1,0 +1,373 @@
+{% if current_user.is_authenticated %}
+<!-- Floating support chat widget -->
+<style>
+  #hisdn-chat-fab {
+    position: fixed; bottom: 24px; right: 24px; z-index: 1040;
+    width: 56px; height: 56px; border-radius: 50%; border: none;
+    background-color: #007bff; color: #fff; font-size: 22px;
+    box-shadow: 0 4px 12px rgba(0,0,0,.25); cursor: pointer;
+  }
+  #hisdn-chat-fab:hover { background-color: #0069d9; }
+  #hisdn-chat-panel {
+    position: fixed; bottom: 24px; right: 24px; z-index: 1041;
+    box-sizing: border-box;
+    width: 340px; max-width: calc(100vw - 32px); height: 460px; max-height: calc(100vh - 48px);
+    display: none; flex-direction: column;
+    background: #fff; border-radius: 8px; overflow: hidden;
+    box-shadow: 0 6px 24px rgba(0,0,0,.28);
+  }
+  #hisdn-chat-panel.open { display: flex; }
+  /* On small screens the panel spans the width with symmetric side gutters
+     instead of a fixed 340px anchored to the right edge, so it never overflows. */
+  @media (max-width: 575.98px) {
+    #hisdn-chat-fab { bottom: 16px; right: 16px; }
+    #hisdn-chat-panel {
+      left: 12px; right: 12px; bottom: 12px;
+      width: auto; max-width: none;
+      height: 75vh; max-height: calc(100vh - 24px);
+    }
+  }
+  .hisdn-chat-header {
+    background-color: #007bff; color: #fff; padding: 10px 14px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .hisdn-chat-header .title { font-weight: 600; }
+  .hisdn-chat-header button {
+    background: transparent; border: none; color: #fff; font-size: 16px; cursor: pointer;
+  }
+  .hisdn-chat-body {
+    flex: 1; overflow-y: auto; padding: 12px; background: #f4f6f9;
+  }
+  .hisdn-chat-empty { color: #6c757d; font-size: .9em; text-align: center; margin-top: 24px; }
+  .hisdn-chat-msg { margin-bottom: 10px; display: flex; }
+  .hisdn-chat-bubblewrap { display: flex; flex-direction: column; max-width: 80%; }
+  .hisdn-chat-msg .bubble {
+    padding: 8px 12px; border-radius: 12px; max-width: 100%;
+    font-size: .9em; line-height: 1.35; white-space: pre-wrap; word-wrap: break-word;
+  }
+  .hisdn-chat-time { font-size: .68rem; color: #8a939b; margin-top: 2px; }
+  .hisdn-chat-system { text-align: center; color: #8a939b; font-size: .75rem; margin: 8px 4px; }
+  .hisdn-chat-msg--user { justify-content: flex-end; }
+  .hisdn-chat-msg--user .hisdn-chat-bubblewrap { align-items: flex-end; }
+  .hisdn-chat-msg--user .bubble { background-color: #007bff; color: #fff; border-bottom-right-radius: 2px; }
+  .hisdn-chat-msg--support { justify-content: flex-start; }
+  .hisdn-chat-msg--support .hisdn-chat-bubblewrap { align-items: flex-start; }
+  .hisdn-chat-msg--support .bubble { background-color: #e9ecef; color: #1f1f1f; border-bottom-left-radius: 2px; }
+  .hisdn-chat-footer { border-top: 1px solid #e3e6ea; background: #fff; }
+  .hisdn-chat-inputrow { display: flex; align-items: flex-end; padding: 8px; }
+  .hisdn-chat-inputrow textarea {
+    flex: 1; border: 1px solid #ced4da; border-radius: 4px; padding: 6px 10px; font-size: .9em;
+    resize: none; line-height: 1.35; max-height: 120px; overflow-y: auto;
+    font-family: inherit;
+  }
+  .hisdn-chat-inputrow button {
+    margin-left: 6px; border: none; background-color: #007bff; color: #fff;
+    border-radius: 4px; padding: 6px 12px; cursor: pointer; align-self: stretch;
+  }
+  .hisdn-chat-inputrow button:disabled { opacity: .6; cursor: default; }
+  .hisdn-chat-actions { padding: 0 10px 8px; display: flex; justify-content: space-between; align-items: center; }
+  .hisdn-chat-actions button, .hisdn-chat-actions a {
+    background: transparent; border: none; color: #6c757d; font-size: .78em; cursor: pointer;
+    padding: 0; text-decoration: none;
+  }
+  .hisdn-chat-actions a:hover { color: #007bff; text-decoration: underline; }
+  .hisdn-chat-actions button:hover { color: #dc3545; text-decoration: underline; }
+</style>
+
+<button id="hisdn-chat-fab" type="button" title="Support chat" aria-label="Open support chat">
+  <i class="fas fa-comments"></i>
+</button>
+
+<div id="hisdn-chat-panel" role="dialog" aria-label="Support chat">
+  <div class="hisdn-chat-header">
+    <span class="title"><i class="fas fa-comments mr-1"></i> Support</span>
+    <button id="hisdn-chat-min" type="button" title="Minimize" aria-label="Minimize chat">
+      <i class="fas fa-minus"></i>
+    </button>
+  </div>
+  <div class="hisdn-chat-body" id="hisdn-chat-body">
+    <div class="hisdn-chat-empty" id="hisdn-chat-empty">Send a message and our team will get back to you.</div>
+  </div>
+  <div class="hisdn-chat-footer">
+    <div class="hisdn-chat-actions">
+      <a href="{{ url_for('home_blueprint.list_my_support_threads') }}" title="See all your support cases">
+        <i class="fas fa-list-ul"></i> See all cases
+      </a>
+      <button id="hisdn-chat-finish" type="button" title="Finish this conversation">
+        <i class="fas fa-times-circle"></i> Finish conversation
+      </button>
+      <button id="hisdn-chat-newconv" type="button" title="Start a new conversation" style="display:none;">
+        <i class="fas fa-plus-circle"></i> Start new conversation
+      </button>
+    </div>
+    <form class="hisdn-chat-inputrow" id="hisdn-chat-form" autocomplete="off">
+      <textarea id="hisdn-chat-input" rows="1" placeholder="Type your message ... (Shift+Enter for a new line)" aria-label="Message" required></textarea>
+      <button type="submit" id="hisdn-chat-send" title="Send"><i class="fas fa-paper-plane"></i></button>
+    </form>
+  </div>
+</div>
+
+<script>
+(function () {
+  var fab = document.getElementById('hisdn-chat-fab');
+  var panel = document.getElementById('hisdn-chat-panel');
+  var minBtn = document.getElementById('hisdn-chat-min');
+  var body = document.getElementById('hisdn-chat-body');
+  var emptyState = document.getElementById('hisdn-chat-empty');
+  var form = document.getElementById('hisdn-chat-form');
+  var input = document.getElementById('hisdn-chat-input');
+  var sendBtn = document.getElementById('hisdn-chat-send');
+  var finishBtn = document.getElementById('hisdn-chat-finish');
+  var newConvBtn = document.getElementById('hisdn-chat-newconv');
+
+  var pollTimer = null;
+  var lastMessageId = 0;
+  var currentThreadId = null;
+  var locked = false;
+  var DEFAULT_PLACEHOLDER = input.getAttribute('placeholder');
+
+  function scrollBottom() { body.scrollTop = body.scrollHeight; }
+
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function formatTime(iso) {
+    if (!iso) { return ''; }
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) { return ''; }
+    var now = new Date();
+    var time = pad(d.getHours()) + ':' + pad(d.getMinutes());
+    var sameDay = d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+    return sameDay ? time : (pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear() + ' ' + time);
+  }
+
+  function renderMessage(msg) {
+    if (msg.sender === 'system') {
+      var sys = document.createElement('div');
+      sys.className = 'hisdn-chat-system';
+      sys.setAttribute('data-id', msg.id);
+      sys.textContent = msg.body;
+      body.appendChild(sys);
+      if (msg.id && msg.id > lastMessageId) { lastMessageId = msg.id; }
+      return;
+    }
+    var isUser = msg.sender === 'user';
+    var row = document.createElement('div');
+    row.className = 'hisdn-chat-msg ' + (isUser ? 'hisdn-chat-msg--user' : 'hisdn-chat-msg--support');
+    row.setAttribute('data-id', msg.id);
+    var wrap = document.createElement('div');
+    wrap.className = 'hisdn-chat-bubblewrap';
+    var bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.textContent = msg.body;
+    wrap.appendChild(bubble);
+    var time = document.createElement('div');
+    time.className = 'hisdn-chat-time';
+    time.textContent = formatTime(msg.created_at);
+    wrap.appendChild(time);
+    row.appendChild(wrap);
+    body.appendChild(row);
+    if (msg.id && msg.id > lastMessageId) { lastMessageId = msg.id; }
+  }
+
+  function clearMessages() {
+    var nodes = body.querySelectorAll('[data-id]');
+    nodes.forEach(function (n) { n.remove(); });
+    lastMessageId = 0;
+  }
+
+  function showEmpty(show) { emptyState.style.display = show ? 'block' : 'none'; }
+
+  function lockWidget() {
+    locked = true;
+    input.disabled = true;
+    sendBtn.disabled = true;
+    input.placeholder = 'This conversation has been finished.';
+    finishBtn.style.display = 'none';
+    newConvBtn.style.display = '';
+  }
+  function unlockWidget() {
+    locked = false;
+    input.disabled = false;
+    sendBtn.disabled = false;
+    input.placeholder = DEFAULT_PLACEHOLDER;
+    finishBtn.style.display = '';
+    newConvBtn.style.display = 'none';
+  }
+  function startNewConversation() {
+    currentThreadId = null;
+    clearMessages();
+    unlockWidget();
+    showEmpty(true);
+    input.focus();
+  }
+
+  // Render any messages from a thread object that are not already shown.
+  function renderThread(thread) {
+    if (!thread) { return; }
+    var existing = {};
+    body.querySelectorAll('[data-id]').forEach(function (n) {
+      existing[n.getAttribute('data-id')] = true;
+    });
+    var added = false;
+    (thread.messages || []).forEach(function (msg) {
+      if (!existing[String(msg.id)]) { renderMessage(msg); added = true; }
+    });
+    if (thread.messages && thread.messages.length) { showEmpty(false); }
+    if (added) { scrollBottom(); }
+    if (thread.status === 'finished' && !locked) { lockWidget(); }
+  }
+
+  function syncThread() {
+    if (currentThreadId == null) {
+      // No conversation yet: pick up an active (open) one if it exists.
+      fetch('/api/support/thread', { credentials: 'same-origin' })
+        .then(function (r) { return r.ok ? r.json() : { thread: null }; })
+        .then(function (data) {
+          if (data.thread) {
+            currentThreadId = data.thread.id;
+            renderThread(data.thread);
+          } else if (!body.querySelector('[data-id]')) {
+            showEmpty(true);
+          }
+        })
+        .catch(function () { /* ignore transient errors */ });
+      return;
+    }
+    // Follow the current conversation by id so we can detect it being finished.
+    fetch('/api/support/threads/' + currentThreadId, { credentials: 'same-origin' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) { if (data && data.thread) { renderThread(data.thread); } })
+      .catch(function () { /* ignore transient errors */ });
+  }
+
+  function startPolling() {
+    stopPolling();
+    pollTimer = setInterval(syncThread, 30000);
+  }
+  function stopPolling() {
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+  }
+
+  // Persist the open/minimized state so the widget survives page navigation.
+  function saveOpen(v) { try { localStorage.setItem('hisdnChatOpen', v ? '1' : '0'); } catch (e) {} }
+  function isSavedOpen() { try { return localStorage.getItem('hisdnChatOpen') === '1'; } catch (e) { return false; } }
+
+  // Size and place the FAB + panel against the VISUAL viewport (not the layout
+  // viewport). On pages with horizontal overflow the layout viewport can be far
+  // wider than the screen, which would otherwise make the panel bigger than the
+  // phone and push it off to the right.
+  function placeWidget() {
+    var vv = window.visualViewport;
+    if (!vv) { return; }
+    var m = 12, fabSize = 56;
+    fab.style.right = 'auto'; fab.style.bottom = 'auto';
+    fab.style.left = Math.round(vv.offsetLeft + vv.width - fabSize - m) + 'px';
+    fab.style.top = Math.round(vv.offsetTop + vv.height - fabSize - m) + 'px';
+    var w = Math.min(360, vv.width - m * 2);
+    var h = Math.min(460, vv.height - m * 2);
+    panel.style.right = 'auto'; panel.style.bottom = 'auto';
+    panel.style.maxWidth = 'none'; panel.style.maxHeight = 'none';
+    panel.style.width = Math.round(w) + 'px';
+    panel.style.height = Math.round(h) + 'px';
+    panel.style.left = Math.round(vv.offsetLeft + vv.width - w - m) + 'px';
+    panel.style.top = Math.round(vv.offsetTop + vv.height - h - m) + 'px';
+  }
+
+  function openPanel() {
+    panel.classList.add('open');
+    fab.style.display = 'none';
+    placeWidget();
+    saveOpen(true);
+    syncThread();
+    startPolling();
+    if (!locked) { input.focus(); }
+  }
+  function minimizePanel() {
+    panel.classList.remove('open');
+    fab.style.display = '';
+    saveOpen(false);
+    stopPolling();
+  }
+
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', placeWidget);
+    window.visualViewport.addEventListener('scroll', placeWidget);
+    window.addEventListener('resize', placeWidget);
+  }
+  placeWidget();
+
+  fab.addEventListener('click', openPanel);
+  minBtn.addEventListener('click', minimizePanel);
+
+  // Auto-grow the textarea up to its CSS max-height.
+  function autoGrow() {
+    input.style.height = 'auto';
+    input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+  }
+  function resetInput() {
+    input.value = '';
+    input.style.height = 'auto';
+  }
+  input.addEventListener('input', autoGrow);
+
+  // Enter sends the message; Shift+Enter inserts a new line.
+  input.addEventListener('keydown', function (event) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      if (typeof form.requestSubmit === 'function') {
+        form.requestSubmit();
+      } else {
+        form.dispatchEvent(new Event('submit', { cancelable: true }));
+      }
+    }
+  });
+
+  form.addEventListener('submit', function (event) {
+    event.preventDefault();
+    if (locked) { return; }
+    var text = input.value.trim();
+    if (!text) { return; }
+    sendBtn.disabled = true;
+    showEmpty(false);
+    var page = window.location.pathname + (document.title ? (' — ' + document.title) : '');
+    fetch('/api/support/thread/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ body: text, page: page, thread_id: currentThreadId })
+    }).then(function (r) {
+      return r.json().then(function (data) { return { status: r.status, data: data }; });
+    }).then(function (res) {
+      if (res.status === 201) {
+        currentThreadId = res.data.thread_id;
+        (res.data.messages || []).forEach(renderMessage);
+        scrollBottom();
+        resetInput();
+      } else if (res.status === 409 && res.data && res.data.finished) {
+        // The conversation was finished (e.g. by an admin) — lock the widget
+        // and pull the closing message so the user sees why.
+        resetInput();
+        syncThread();
+        lockWidget();
+      } else {
+        input.value = text; // keep the text so it is not lost
+      }
+    }).catch(function () {
+      input.value = text;
+    }).finally(function () {
+      if (!locked) { sendBtn.disabled = false; input.focus(); }
+    });
+  });
+
+  finishBtn.addEventListener('click', function () {
+    fetch('/api/support/thread/finish', { method: 'POST', credentials: 'same-origin' })
+      .then(function () { startNewConversation(); })
+      .catch(function () { /* ignore */ });
+  });
+
+  newConvBtn.addEventListener('click', startNewConversation);
+
+  // Restore the widget if it was left open on a previous page.
+  if (isSavedOpen()) { openPanel(); }
+})();
+</script>
+{% endif %}

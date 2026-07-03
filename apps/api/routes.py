@@ -6,9 +6,10 @@ import re
 from apps import db, cache
 from apps.api import blueprint
 from apps.controllers import k8s, git
-from apps.home.models import Labs, LabInstances, LabAnswers, LabAnswerSheet, UserLikes, UserFeedbacks, lab_groups, LabCategories
+from apps.controllers import support
+from apps.home.models import Labs, LabInstances, LabAnswers, LabAnswerSheet, UserLikes, UserFeedbacks, lab_groups, LabCategories, SupportThreads, SupportMessages
 from apps.authentication.models import Users, Groups, DeletedGroupUsers, group_members, group_owners
-from apps.audit_mixin import check_user_category
+from apps.audit_mixin import check_user_category, get_remote_addr
 from flask import request, current_app
 from flask_login import login_required, current_user
 from datetime import timedelta, datetime
@@ -624,3 +625,130 @@ def get_kubernetes_template(template_name):
     if not status:
         return {"status": "fail", "result": result}, 400
     return {"status": "ok", "result": result}, 200
+
+
+@blueprint.route('/support/thread', methods=["GET"])
+@login_required
+def get_support_thread():
+    """Return the current user's active support thread and its messages."""
+    thread = support.get_active_thread(current_user)
+    if thread is None:
+        return {"thread": None}, 200
+    support.mark_thread_seen_by_user(thread)
+    db.session.commit()
+    return {"thread": thread.as_dict(with_messages=True)}, 200
+
+
+@blueprint.route('/support/thread/messages', methods=["POST"])
+@login_required
+def post_support_message():
+    """Persist a user message and store any auto-reply.
+
+    Support is notified by the batched ``flush-support-emails`` CLI job, not here.
+    """
+    data = request.get_json(silent=True) or {}
+    body = (data.get("body") or "").strip()
+    if not body:
+        return {"error": "message body is required"}, 400
+
+    # If the widget is posting into a specific conversation, it must still be open.
+    thread_id = data.get("thread_id")
+    if thread_id is not None:
+        thread = db.session.get(SupportThreads, thread_id)
+        if thread is None or thread.user_id != current_user.id:
+            return {"status": "fail", "result": "Thread not found"}, 404
+        if thread.status == "finished":
+            reason = next(
+                (m.body for m in reversed(thread.messages) if m.sender == "system"),
+                "This conversation has been finished.",
+            )
+            return {"error": reason + " Please start a new conversation.", "finished": True}, 409
+        is_new = False
+    else:
+        is_new = support.get_active_thread(current_user) is None
+        thread = support.get_or_create_active_thread(current_user)
+
+    message = support.add_message(thread, "user", body, is_read=False)
+    if is_new:
+        support.record_telemetry(
+            thread,
+            page=(data.get("page") or "").strip() or None,
+            user_agent=request.headers.get("User-Agent"),
+            ip=get_remote_addr(),
+        )
+    db.session.commit()
+
+    messages = [message.as_dict()]
+    reply = support.generate_support_reply(thread, body)
+    if reply:
+        reply_msg = support.add_message(thread, "assistant", reply, is_read=True)
+        db.session.commit()
+        messages.append(reply_msg.as_dict())
+
+    return {"thread_id": thread.id, "messages": messages}, 201
+
+
+@blueprint.route('/support/threads/<int:thread_id>', methods=["GET"])
+@login_required
+def get_support_thread_by_id(thread_id):
+    """Return a single thread + messages (admin, or the thread's owner)."""
+    thread = db.session.get(SupportThreads, thread_id)
+    if thread is None:
+        return {"status": "fail", "result": "Thread not found"}, 404
+    is_owner = thread.user_id == current_user.id
+    if current_user.category != "admin" and not is_owner:
+        return {"status": "fail", "result": "Unauthorized"}, 403
+    if is_owner:
+        support.mark_thread_seen_by_user(thread)
+        db.session.commit()
+    return {"thread": thread.as_dict(with_messages=True)}, 200
+
+
+@blueprint.route('/support/thread/finish', methods=["POST"])
+@login_required
+def finish_support_thread():
+    """Finish the current user's active thread, if any."""
+    thread = support.get_active_thread(current_user)
+    if thread is None:
+        return {"status": "ok"}, 200
+    support.finish_thread(thread, by="user")
+    db.session.commit()
+    return {"status": "ok", "thread_id": thread.id}, 200
+
+
+@blueprint.route('/support/threads/<int:thread_id>/finish', methods=["POST"])
+@login_required
+def finish_support_thread_admin(thread_id):
+    """Finish any thread (admin only)."""
+    if current_user.category != "admin":
+        return {"status": "fail", "result": "Unauthorized"}, 403
+
+    thread = db.session.get(SupportThreads, thread_id)
+    if thread is None:
+        return {"status": "fail", "result": "Thread not found"}, 404
+
+    support.finish_thread(thread, by="support")
+    db.session.commit()
+    return {"status": "ok", "thread_id": thread.id}, 200
+
+
+@blueprint.route('/support/threads/<int:thread_id>/messages', methods=["POST"])
+@login_required
+def post_support_reply(thread_id):
+    """Staff reply to a thread (admin only)."""
+    if current_user.category != "admin":
+        return {"status": "fail", "result": "Unauthorized"}, 403
+
+    thread = db.session.get(SupportThreads, thread_id)
+    if thread is None:
+        return {"status": "fail", "result": "Thread not found"}, 404
+
+    data = request.get_json(silent=True) or {}
+    body = (data.get("body") or "").strip()
+    if not body:
+        return {"error": "message body is required"}, 400
+
+    message = support.add_message(thread, "support", body, is_read=True)
+    support.mark_thread_read(thread)
+    db.session.commit()
+    return {"thread_id": thread.id, "messages": [message.as_dict()]}, 201

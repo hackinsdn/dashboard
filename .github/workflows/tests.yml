@@ -66,4 +66,4 @@ jobs:
       - name: Enforce coverage threshold
         # Fails the job if overall coverage drops below the floor. Bump this up
         # over time as coverage improves.
-        run: python -m coverage report --fail-under=75
+        run: python -m coverage report --fail-under=85

@@ -139,3 +139,77 @@ The mixin introduces three key fields that track record creation and updates:
 - `updated_by: Logs the ID of the user who made the last update.`
 
 The AuditMixin uses the `utcnow()` function to ensure that date and time records are made in UTC time, avoiding issues related to different time zones, especially in distributed systems or with users in different regions.
+
+## Scheduled jobs (cron)
+
+Some periodic tasks are implemented as Flask CLI commands under the `cli` group
+(`apps/cli/routes.py`) and are meant to be triggered by an external scheduler
+(e.g. cron or a Kubernetes CronJob). Invoke them with the same app entrypoint
+used to run the server:
+
+| Command | Purpose | Suggested schedule |
+| --- | --- | --- |
+| `flask --app run.py cli notify-expiring-labs --send-email` | E-mail users whose lab instances are about to expire | every 30 min |
+| `flask --app run.py cli remove-expired-labs` | Delete lab instances past their expiration tolerance | every 10 min |
+| `flask --app run.py cli flush-support-emails` | Send **batched** support-chat notifications to the support inbox | every 2–5 min |
+
+### `flush-support-emails`
+
+The support chat (see [support-chat-design.md](./support-chat-design.md)) does **not**
+e-mail the support team on every message. Instead, each user message is stored with
+`emailed_at = NULL`, and this job groups a user's pending messages into a **single**
+e-mail once the user has been quiet for at least `SUPPORT_EMAIL_BATCH_MINUTES`
+(default `10`). Behaviour notes:
+
+- It only sends when `MAIL_SENDTO` is configured; otherwise it is a no-op.
+- For each thread, it waits until the newest un-e-mailed user message is older than
+  the batch window, then sends one e-mail (including the thread telemetry: origin
+  page, IP, browser) to `MAIL_SENDTO` and stamps those messages `emailed_at`.
+- It is idempotent: already-e-mailed messages are never resent.
+
+Run it at an interval shorter than `SUPPORT_EMAIL_BATCH_MINUTES` so notifications are
+not delayed much beyond the quiet window, e.g. a crontab entry:
+
+```
+*/3 * * * * cd /opt/dashboard && flask --app run.py cli flush-support-emails >> /var/log/dashboard-support.log 2>&1
+```
+
+## TLS and reverse proxy
+
+**Do not terminate TLS directly in gunicorn.** The shipped `docker-entrypoint.sh`
+runs gunicorn as plain HTTP with `--proxy-allow-from "*"`, which assumes a
+**reverse proxy (nginx / traefik / caddy) terminates TLS in front of it**. That is
+the recommended deployment: the proxy handles the certificate and forwards plain
+HTTP to gunicorn. Because `apps/audit_mixin.get_remote_addr()` reads
+`request.access_route` (i.e. `X-Forwarded-For`), the real client IP — including the
+support-chat telemetry — is preserved as long as the proxy sets the
+`X-Forwarded-For` / `X-Forwarded-Proto` headers.
+
+### Symptom: `SSLV3_ALERT_CERTIFICATE_UNKNOWN` in the logs
+
+If you instead let gunicorn terminate TLS itself (e.g. passing `--certfile/--keyfile`
+via `EXTRA_OPS`) with a **self-signed certificate**, you may see noisy tracebacks like:
+
+```
+ssl.SSLError: [SSL: SSLV3_ALERT_CERTIFICATE_UNKNOWN] sslv3 alert certificate unknown
+  ... gevent/ssl.py ... do_handshake()
+```
+
+This is a **TLS handshake alert sent by the browser** to reject the untrusted
+certificate — it happens in the gevent SSL layer *before* any request reaches Flask,
+so it is unrelated to the application code (the accepted connections still return
+`200`). It became more visible with the support chat because the widget and
+thread-view pages poll every 30 s, and browsers open extra background/preconnect TLS
+connections; those background sockets never get the interactive "accept the risk"
+prompt, so they are silently aborted with `certificate unknown`.
+
+Fixes:
+
+- **Preferred:** terminate TLS at a reverse proxy and run gunicorn over plain HTTP
+  (as above); gunicorn then never performs the TLS handshake and the errors disappear.
+- **Local/dev:** make the certificate trusted instead of using a bare self-signed one
+  — e.g. generate a locally-trusted cert with [`mkcert`](https://github.com/FiloSottile/mkcert),
+  or import the self-signed cert into the OS/browser trust store (macOS Keychain →
+  *Always Trust*). For a real hostname, use a CA-issued certificate (Let's Encrypt).
+- If you keep gunicorn terminating self-signed TLS, the tracebacks are harmless log
+  noise (functionality is unaffected); the trust fixes above are still the right move.

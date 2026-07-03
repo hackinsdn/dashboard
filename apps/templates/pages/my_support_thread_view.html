@@ -1,0 +1,159 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} My Support Case {% endblock %}
+
+{% block body_class %} sidebar-mini layout-navbar-fixed {% endblock body_class %}
+
+{% block stylesheets %}
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+  <link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
+  <link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
+  <style>
+    .direct-chat-text { white-space: pre-wrap; word-wrap: break-word; }
+    .support-system-msg { text-align: center; color: #8a939b; font-size: .8rem; margin: 10px 0; }
+  </style>
+{% endblock stylesheets %}
+
+{% block content %}
+  <div class="content-wrapper">
+    <section class="content-header">
+      <div class="container-fluid">
+        <div class="row mb-2">
+          <div class="col-sm-6">
+            <h1>Support Case #{{ thread.id }}</h1>
+          </div>
+          <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+              <li class="breadcrumb-item"><a href="/index">Home</a></li>
+              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.list_my_support_threads') }}">My Support</a></li>
+              <li class="breadcrumb-item active">Case #{{ thread.id }}</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="content">
+      <div class="row">
+        <div class="col-md-8">
+          <div class="card direct-chat direct-chat-primary">
+            <div class="card-header">
+              <h3 class="card-title">
+                Conversation
+                {% if thread.status == "open" %}
+                  <span class="badge badge-success ml-2">Open</span>
+                {% else %}
+                  <span class="badge badge-secondary ml-2">Finished</span>
+                {% endif %}
+              </h3>
+            </div>
+            <div class="card-body">
+              <div class="direct-chat-messages" id="chatMessages" style="height: 60vh;">
+                {% for message in thread.messages %}
+                  {% if message.sender == "system" %}
+                  <div class="support-system-msg" data-id="{{ message.id }}">
+                    <i class="fas fa-info-circle mr-1"></i>{{ message.body }}
+                  </div>
+                  {% elif message.sender == "user" %}
+                  <div class="direct-chat-msg right" data-id="{{ message.id }}">
+                    <div class="direct-chat-infos clearfix">
+                      <span class="direct-chat-name float-right">You</span>
+                      <span class="direct-chat-timestamp float-left" data-ts="{{ message.created_at.isoformat() if message.created_at else '' }}"></span>
+                    </div>
+                    <div class="direct-chat-text">{{ message.body }}</div>
+                  </div>
+                  {% else %}
+                  <div class="direct-chat-msg" data-id="{{ message.id }}">
+                    <div class="direct-chat-infos clearfix">
+                      <span class="direct-chat-name float-left">{{ "Assistant" if message.sender == "assistant" else "Support" }}</span>
+                      <span class="direct-chat-timestamp float-right" data-ts="{{ message.created_at.isoformat() if message.created_at else '' }}"></span>
+                    </div>
+                    <div class="direct-chat-text">{{ message.body }}</div>
+                  </div>
+                  {% endif %}
+                {% endfor %}
+              </div>
+            </div>
+            <div class="card-footer text-muted">
+              {% if thread.status == "open" %}
+                <i class="fas fa-info-circle mr-1"></i> Use the chat button at the bottom-right of any page to continue this conversation.
+              {% else %}
+                <i class="fas fa-check-circle mr-1"></i> This conversation is finished. Start a new one from the chat button at the bottom-right.
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+{% endblock content %}
+
+{% block javascripts %}
+  <script src="/static/assets/plugins/jquery/jquery.min.js"></script>
+  <script src="/static/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="/static/assets/js/adminlte.js"></script>
+  <script>
+    (function () {
+      var THREAD_ID = {{ thread.id }};
+      var messages = document.getElementById('chatMessages');
+
+      function pad(n) { return (n < 10 ? '0' : '') + n; }
+      function formatStamp(iso) {
+        if (!iso) { return ''; }
+        var d = new Date(iso);
+        if (isNaN(d.getTime())) { return iso; }
+        var now = new Date();
+        var time = pad(d.getHours()) + ':' + pad(d.getMinutes());
+        var sameDay = d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+        return sameDay ? time : (pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear() + ' ' + time);
+      }
+      function renderStamps() {
+        messages.querySelectorAll('.direct-chat-timestamp').forEach(function (el) {
+          if (!el.textContent) { el.textContent = formatStamp(el.getAttribute('data-ts')); }
+        });
+      }
+      function escapeHtml(text) {
+        var div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      }
+      function hasMessage(id) { return !!messages.querySelector('[data-id="' + id + '"]'); }
+      function appendMessage(msg) {
+        if (hasMessage(msg.id)) { return; }
+        if (msg.sender === 'system') {
+          messages.insertAdjacentHTML('beforeend',
+            '<div class="support-system-msg" data-id="' + msg.id + '">'
+            + '<i class="fas fa-info-circle mr-1"></i>' + escapeHtml(msg.body) + '</div>');
+          return;
+        }
+        var isUser = msg.sender === 'user';
+        var name = isUser ? 'You' : (msg.sender === 'assistant' ? 'Assistant' : 'Support');
+        var side = isUser ? ' right' : '';
+        var nameFloat = isUser ? 'float-right' : 'float-left';
+        var tsFloat = isUser ? 'float-left' : 'float-right';
+        var html = '<div class="direct-chat-msg' + side + '" data-id="' + msg.id + '">'
+          + '<div class="direct-chat-infos clearfix">'
+          + '<span class="direct-chat-name ' + nameFloat + '">' + name + '</span>'
+          + '<span class="direct-chat-timestamp ' + tsFloat + '">' + formatStamp(msg.created_at) + '</span>'
+          + '</div><div class="direct-chat-text">' + escapeHtml(msg.body) + '</div></div>';
+        messages.insertAdjacentHTML('beforeend', html);
+      }
+
+      renderStamps();
+      messages.scrollTop = messages.scrollHeight;
+
+      // Poll for new messages every 30s
+      setInterval(function () {
+        fetch('/api/support/threads/' + THREAD_ID, { credentials: 'same-origin' })
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (data) {
+            if (!data || !data.thread) { return; }
+            var atBottom = messages.scrollHeight - messages.scrollTop - messages.clientHeight < 40;
+            (data.thread.messages || []).forEach(appendMessage);
+            if (atBottom) { messages.scrollTop = messages.scrollHeight; }
+          })
+          .catch(function () {});
+      }, 30000);
+    })();
+  </script>
+{% endblock javascripts %}

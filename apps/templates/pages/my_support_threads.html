@@ -1,0 +1,104 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} My Support {% endblock %}
+
+{% block body_class %} sidebar-mini layout-navbar-fixed {% endblock body_class %}
+
+{% block stylesheets %}
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+  <link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
+  <link rel="stylesheet" href="/static/assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
+  <link rel="stylesheet" href="/static/assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css">
+  <link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
+{% endblock stylesheets %}
+
+{% block content %}
+  <div class="content-wrapper">
+    <section class="content-header">
+      <div class="container-fluid">
+        <div class="row mb-2">
+          <div class="col-sm-6">
+            <h1>My Support Cases</h1>
+          </div>
+          <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+              <li class="breadcrumb-item"><a href="/index">Home</a></li>
+              <li class="breadcrumb-item active">My Support</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="content">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Your conversations with support</h3>
+            </div>
+            <div class="card-body">
+              <table id="tableMyThreads" class="table table-striped display">
+                <thead>
+                  <tr>
+                    <th>Case</th>
+                    <th>Status</th>
+                    <th>Last activity</th>
+                    <th class="text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for thread in threads %}
+                <tr>
+                  <td>
+                    #{{ thread.id }}
+                    {% if thread.has_unseen_for_user %}
+                      <span class="badge badge-danger ml-1">new reply</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if thread.status == "open" %}
+                      <span class="badge badge-success">Open</span>
+                    {% else %}
+                      <span class="badge badge-secondary">Finished</span>
+                    {% endif %}
+                  </td>
+                  <td>{{ thread.updated_at.strftime('%Y-%m-%d %H:%M') if thread.updated_at else '' }} UTC</td>
+                  <td class="text-right">
+                    <a href="{{ url_for('home_blueprint.view_my_support_thread', thread_id=thread.id) }}" class="btn btn-outline-primary" role="button">
+                      <i class="fas fa-comments"></i> View
+                    </a>
+                  </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+{% endblock content %}
+
+{% block javascripts %}
+  <script src="/static/assets/plugins/jquery/jquery.min.js"></script>
+  <script src="/static/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="/static/assets/plugins/datatables/jquery.dataTables.min.js"></script>
+  <script src="/static/assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
+  <script src="/static/assets/plugins/datatables-responsive/js/dataTables.responsive.min.js"></script>
+  <script src="/static/assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js"></script>
+  <script src="/static/assets/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js"></script>
+  <script src="/static/assets/js/adminlte.js"></script>
+  <script>
+    $(function () {
+      $("#tableMyThreads").DataTable({
+        responsive: true,
+        autoWidth: false,
+        language: { emptyTable: 'You have no support cases yet' },
+        order: [[2, 'desc']],
+        columnDefs: [{ orderable: false, targets: 3 }]
+      });
+    });
+  </script>
+{% endblock javascripts %}

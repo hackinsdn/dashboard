@@ -294,6 +294,88 @@ class UserFeedbacks(db.Model, AuditMixin):
         return f'<UserFeedbacks User {self.user_id}, Stars {self.stars}>'
 
 
+class SupportThreads(db.Model, AuditMixin):
+    __tablename__ = 'support_threads'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    status = db.Column(db.String(16), nullable=False, default="open")  # open | finished
+    finished_at = db.Column(db.DateTime, nullable=True)
+    # Telemetry captured when the conversation starts
+    origin_page = db.Column(db.String, nullable=True)
+    user_agent = db.Column(db.String, nullable=True)
+    ip_address = db.Column(db.String, nullable=True)
+    # When the owning user last viewed this thread (drives the navbar unread badge)
+    user_last_read_at = db.Column(db.DateTime, nullable=True)
+
+    user = db.relationship('Users', backref='support_threads', foreign_keys=[user_id])
+    messages = db.relationship(
+        'SupportMessages',
+        backref='thread',
+        order_by='SupportMessages.created_at',
+        cascade="all, delete-orphan",
+    )
+
+    @property
+    def unread_count(self):
+        return sum(1 for m in self.messages if m.sender == "user" and not m.is_read)
+
+    @property
+    def has_unseen_for_user(self):
+        """True when a staff/assistant reply arrived after the user last read."""
+        def _naive(dt):
+            return dt.replace(tzinfo=None) if dt is not None and dt.tzinfo else dt
+
+        last_read = _naive(self.user_last_read_at)
+        for m in self.messages:
+            if m.sender in ("support", "assistant"):
+                created = _naive(m.created_at)
+                if last_read is None or (created and created > last_read):
+                    return True
+        return False
+
+    def as_dict(self, with_messages=False):
+        data = {
+            "id": self.id,
+            "user_id": self.user_id,
+            "user": self.user.name if self.user else None,
+            "status": self.status,
+            "unread_count": self.unread_count,
+            "origin_page": self.origin_page,
+            "user_agent": self.user_agent,
+            "ip_address": self.ip_address,
+            "updated_at": f"{self.updated_at.isoformat()}Z" if self.updated_at else None,
+            "created_at": f"{self.created_at.isoformat()}Z" if self.created_at else None,
+        }
+        if with_messages:
+            data["messages"] = [m.as_dict() for m in self.messages]
+        return data
+
+    def __repr__(self):
+        return f'<SupportThreads {self.id} User {self.user_id} {self.status}>'
+
+
+class SupportMessages(db.Model, AuditMixin):
+    __tablename__ = 'support_messages'
+    id = db.Column(db.Integer, primary_key=True)
+    thread_id = db.Column(db.Integer, db.ForeignKey("support_threads.id"), nullable=False)
+    sender = db.Column(db.String(16), nullable=False, default="user")  # user | support | assistant
+    body = db.Column(db.Text, nullable=False)
+    is_read = db.Column(db.Boolean, default=False, nullable=False)  # unread = staff hasn't seen a user msg
+    emailed_at = db.Column(db.DateTime, nullable=True)  # null = not yet included in a batch e-mail
+
+    def as_dict(self):
+        return {
+            "id": self.id,
+            "thread_id": self.thread_id,
+            "sender": self.sender,
+            "body": self.body,
+            "created_at": f"{self.created_at.isoformat()}Z" if self.created_at else None,
+        }
+
+    def __repr__(self):
+        return f'<SupportMessages {self.id} Thread {self.thread_id} {self.sender}>'
+
+
 @event.listens_for(Labs, 'after_insert')
 @event.listens_for(LabInstances, 'after_insert')
 def logging_added(mapper, connection, target):

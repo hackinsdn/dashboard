@@ -32,58 +32,40 @@
       <li class="nav-item dropdown">
         <a class="nav-link" data-toggle="dropdown" href="#">
           <i class="far fa-comments"></i>
-          <span class="badge badge-danger navbar-badge">3</span>
+          {% if support_unread_count %}
+          <span class="badge badge-danger navbar-badge">{{ support_unread_count }}</span>
+          {% endif %}
         </a>
         <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
-          <a href="#" class="dropdown-item">
+          <span class="dropdown-item dropdown-header">Support cases</span>
+          <div class="dropdown-divider"></div>
+          {% for thread in support_recent_threads %}
+          <a href="{{ url_for('home_blueprint.view_my_support_thread', thread_id=thread.id) }}" class="dropdown-item">
             <!-- Message Start -->
             <div class="media">
-              <img src="/static/assets/img/user1-128x128.jpg" alt="User Avatar" class="img-size-50 mr-3 img-circle">
+              <i class="fas fa-comments img-size-50 mr-3 text-muted" style="font-size: 1.6rem; width: 50px; text-align: center; line-height: 50px;"></i>
               <div class="media-body">
                 <h3 class="dropdown-item-title">
-                  Brad Diesel
-                  <span class="float-right text-sm text-danger"><i class="fas fa-star"></i></span>
+                  Case #{{ thread.id }}
+                  {% if thread.status == "open" %}
+                  <span class="float-right text-sm text-success"><i class="fas fa-circle"></i></span>
+                  {% endif %}
                 </h3>
-                <p class="text-sm">Call me whenever you can...</p>
-                <p class="text-sm text-muted"><i class="far fa-clock mr-1"></i> 4 Hours Ago</p>
+                <p class="text-sm">
+                  {% if thread.has_unseen_for_user %}<span class="text-danger">New reply</span>{% else %}{{ thread.status|capitalize }}{% endif %}
+                  {% if thread.messages %} &middot; {{ thread.messages[-1].body|truncate(28) }}{% endif %}
+                </p>
+                <p class="text-sm text-muted"><i class="far fa-clock mr-1"></i> {{ thread.updated_at.strftime('%Y-%m-%d %H:%M') if thread.updated_at else '' }} UTC</p>
               </div>
             </div>
             <!-- Message End -->
           </a>
           <div class="dropdown-divider"></div>
-          <a href="#" class="dropdown-item">
-            <!-- Message Start -->
-            <div class="media">
-              <img src="/static/assets/img/user8-128x128.jpg" alt="User Avatar" class="img-size-50 img-circle mr-3">
-              <div class="media-body">
-                <h3 class="dropdown-item-title">
-                  John Pierce
-                  <span class="float-right text-sm text-muted"><i class="fas fa-star"></i></span>
-                </h3>
-                <p class="text-sm">I got your message bro</p>
-                <p class="text-sm text-muted"><i class="far fa-clock mr-1"></i> 4 Hours Ago</p>
-              </div>
-            </div>
-            <!-- Message End -->
-          </a>
+          {% else %}
+          <span class="dropdown-item text-muted text-sm">No support cases yet</span>
           <div class="dropdown-divider"></div>
-          <a href="#" class="dropdown-item">
-            <!-- Message Start -->
-            <div class="media">
-              <img src="/static/assets/img/user3-128x128.jpg" alt="User Avatar" class="img-size-50 img-circle mr-3">
-              <div class="media-body">
-                <h3 class="dropdown-item-title">
-                  Nora Silvester
-                  <span class="float-right text-sm text-warning"><i class="fas fa-star"></i></span>
-                </h3>
-                <p class="text-sm">The subject goes here</p>
-                <p class="text-sm text-muted"><i class="far fa-clock mr-1"></i> 4 Hours Ago</p>
-              </div>
-            </div>
-            <!-- Message End -->
-          </a>
-          <div class="dropdown-divider"></div>
-          <a href="#" class="dropdown-item dropdown-footer">See All Messages</a>
+          {% endfor %}
+          <a href="{{ url_for('home_blueprint.list_my_support_threads') }}" class="dropdown-item dropdown-footer">See All Messages</a>
         </div>
       </li>
       <!-- Notifications Dropdown Menu -->

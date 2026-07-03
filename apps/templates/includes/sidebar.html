@@ -126,6 +126,19 @@
               </p>
             </a>
           </li>
+          {% if current_user.category == "admin" %}
+          <li class="nav-item">
+            <a href="{{url_for('home_blueprint.list_support_threads')}}" class="nav-link {% if request.url_rule.endpoint == 'home_blueprint.list_support_threads' or request.url_rule.endpoint == 'home_blueprint.view_support_thread' %} active {% endif %}">
+              <i class="nav-icon fas fa-comments"></i>
+              <p>
+                Support
+                {% if support_admin_unread_count %}
+                <span class="badge badge-danger right">{{ support_admin_unread_count }}</span>
+                {% endif %}
+              </p>
+            </a>
+          </li>
+          {% endif %}
           <li class="nav-item">
             <a href="{{ url_for('home_blueprint.list_lab_categories') }}" class="nav-link {% if request.url_rule.endpoint == 'home_blueprint.list_lab_categories' or request.url_rule.endpoint == 'home_blueprint.edit_lab_category' %} active {% endif %}">
               <i class="nav-icon fas fa-tags"></i>
