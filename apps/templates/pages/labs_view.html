@@ -163,7 +163,7 @@
                 {% if current_user.category == "admin" %}
                 <button type="button" class="btn btn-outline-success mx-2 button-restore-lab" data-toggle="modal" data-target="#modal-restore-lab" data-id="{{lab.id}}"><i class="fas fa-trash-restore"></i> Restore Lab</button>
                 {% endif %}
-                {% else %}
+                {% elif current_user.category == "admin" or lab.updated_by == current_user.id %}
                 <button type="button" class="btn btn-outline-danger mx-2 button-delete-lab" data-toggle="modal" data-target="#modal-delete-lab" data-id="{{lab.id}}" data-name="{{lab.title}}"><i class="fas fa-trash"></i> Delete Lab</button>
                 {% endif %}
                 {% endif %}
