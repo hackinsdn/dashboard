@@ -117,6 +117,10 @@ class Config(object):
     # Support chat: a thread is auto-finished after this many hours of user inactivity
     SUPPORT_THREAD_INACTIVITY_HOURS = int(os.getenv("SUPPORT_THREAD_INACTIVITY_HOURS", 2))
 
+    # Support chat: batch a user's messages into a single support e-mail once they have
+    # been quiet for at least this many minutes (sent by the flush-support-emails CLI job)
+    SUPPORT_EMAIL_BATCH_MINUTES = int(os.getenv("SUPPORT_EMAIL_BATCH_MINUTES", 10))
+
     # Flask Cache (https://flask-caching.readthedocs.io/en/latest/)
     CACHE_TYPE = "SimpleCache"
     CACHE_DEFAULT_TIMEOUT = int(os.getenv("CACHE_DEFAULT_TIMEOUT", 300))

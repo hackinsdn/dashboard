@@ -139,3 +139,37 @@ The mixin introduces three key fields that track record creation and updates:
 - `updated_by: Logs the ID of the user who made the last update.`
 
 The AuditMixin uses the `utcnow()` function to ensure that date and time records are made in UTC time, avoiding issues related to different time zones, especially in distributed systems or with users in different regions.
+
+## Scheduled jobs (cron)
+
+Some periodic tasks are implemented as Flask CLI commands under the `cli` group
+(`apps/cli/routes.py`) and are meant to be triggered by an external scheduler
+(e.g. cron or a Kubernetes CronJob). Invoke them with the same app entrypoint
+used to run the server:
+
+| Command | Purpose | Suggested schedule |
+| --- | --- | --- |
+| `flask --app run.py cli notify-expiring-labs --send-email` | E-mail users whose lab instances are about to expire | every 30 min |
+| `flask --app run.py cli remove-expired-labs` | Delete lab instances past their expiration tolerance | every 10 min |
+| `flask --app run.py cli flush-support-emails` | Send **batched** support-chat notifications to the support inbox | every 2–5 min |
+
+### `flush-support-emails`
+
+The support chat (see [support-chat-design.md](./support-chat-design.md)) does **not**
+e-mail the support team on every message. Instead, each user message is stored with
+`emailed_at = NULL`, and this job groups a user's pending messages into a **single**
+e-mail once the user has been quiet for at least `SUPPORT_EMAIL_BATCH_MINUTES`
+(default `10`). Behaviour notes:
+
+- It only sends when `MAIL_SENDTO` is configured; otherwise it is a no-op.
+- For each thread, it waits until the newest un-e-mailed user message is older than
+  the batch window, then sends one e-mail (including the thread telemetry: origin
+  page, IP, browser) to `MAIL_SENDTO` and stamps those messages `emailed_at`.
+- It is idempotent: already-e-mailed messages are never resent.
+
+Run it at an interval shorter than `SUPPORT_EMAIL_BATCH_MINUTES` so notifications are
+not delayed much beyond the quiet window, e.g. a crontab entry:
+
+```
+*/3 * * * * cd /opt/dashboard && flask --app run.py cli flush-support-emails >> /var/log/dashboard-support.log 2>&1
+```

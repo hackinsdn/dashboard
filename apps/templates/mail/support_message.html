@@ -27,10 +27,22 @@ body {margin: 0 !important; background-color: #e9ecef; padding: 0; text-align: c
 <tr>
 <td class="wrapper-cell" style="font-family: &quot;Helvetica Neue&quot;,Helvetica,Arial,sans-serif; border-radius: 3px; overflow: hidden; padding: 18px 25px; border: 1px solid #ededed;" align="left" bgcolor="#ffffff">
 <div style="color: #1F1F1F; line-height: 1.4em; max-width: 520px; margin: 0 auto;">
-<h3>New support message</h3>
-<p style="font-size: 0.9em;"><strong>User:</strong> {{ user.name }} ({{ user.username }}, {{ user.email }})</p>
+<h3>New support {{ "messages" if messages and messages|length > 1 else "message" }}</h3>
+{% if user %}<p style="font-size: 0.9em;"><strong>User:</strong> {{ user.name }} ({{ user.username }}, {{ user.email }})</p>{% endif %}
 <p style="font-size: 0.9em;"><strong>Thread:</strong> #{{ thread.id }}</p>
-<div style="background-color: #F5F5F5; border-radius: 4px; padding: 12px 16px; font-size: 0.95em; white-space: pre-wrap;">{{ body }}</div>
+{% if thread.origin_page or thread.ip_address or thread.user_agent %}
+<div style="background-color: #FAFAFA; border: 1px solid #eee; border-radius: 4px; padding: 8px 12px; font-size: 0.78em; color: #555; margin-bottom: 12px;">
+{% if thread.origin_page %}<div><strong>Started from:</strong> {{ thread.origin_page }}</div>{% endif %}
+{% if thread.ip_address %}<div><strong>IP:</strong> {{ thread.ip_address }}</div>{% endif %}
+{% if thread.user_agent %}<div><strong>Browser:</strong> {{ thread.user_agent }}</div>{% endif %}
+</div>
+{% endif %}
+{% for m in messages %}
+<div style="background-color: #F5F5F5; border-radius: 4px; padding: 10px 14px; font-size: 0.95em; white-space: pre-wrap; margin-bottom: 8px;">
+<div style="font-size: 0.72em; color: #888; margin-bottom: 4px;">{{ m.created_at.strftime('%Y-%m-%d %H:%M') if m.created_at else '' }} UTC</div>
+{{ m.body }}
+</div>
+{% endfor %}
 <p style="font-size: 0.8em; margin-top: 18px;">Reply from the Support panel in the Dashboard HackInSDN.</p>
 </div>
 </td>

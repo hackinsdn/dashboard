@@ -595,23 +595,18 @@ def list_lab_categories():
 @login_required
 @check_user_category(["admin"])
 def list_support_threads():
-    # Show threads that are still open OR that have unread user messages.
-    threads = (
-        SupportThreads.query.join(SupportMessages, isouter=True)
-        .filter(
-            db.or_(
-                SupportThreads.status == "open",
-                db.and_(
-                    SupportMessages.sender == "user",
-                    SupportMessages.is_read.is_(False),
-                ),
-            )
-        )
-        .order_by(desc(SupportThreads.updated_at))
-        .distinct()
-        .all()
+    # Default: only open (not finished) threads. ?show=all lists every thread.
+    show_all = request.args.get("show") == "all"
+    query = SupportThreads.query
+    if not show_all:
+        query = query.filter(SupportThreads.status == "open")
+    threads = query.order_by(desc(SupportThreads.updated_at)).all()
+    return render_template(
+        "pages/support_threads.html",
+        segment="/support/threads",
+        threads=threads,
+        show_all=show_all,
     )
-    return render_template("pages/support_threads.html", segment="/support/threads", threads=threads)
 
 
 @blueprint.route('/support/threads/<int:thread_id>')
@@ -625,6 +620,40 @@ def view_support_thread(thread_id):
     if support.mark_thread_read(thread):
         db.session.commit()
     return render_template("pages/support_thread_view.html", segment="/support/threads", thread=thread)
+
+
+@blueprint.route('/support/my')
+@login_required
+def list_my_support_threads():
+    threads = (
+        SupportThreads.query.filter_by(user_id=current_user.id)
+        .order_by(desc(SupportThreads.updated_at))
+        .all()
+    )
+    return render_template("pages/my_support_threads.html", segment="/support/my", threads=threads)
+
+
+@blueprint.route('/support/my/<int:thread_id>')
+@login_required
+def view_my_support_thread(thread_id):
+    thread = db.session.get(SupportThreads, thread_id)
+    if thread is None or thread.user_id != current_user.id:
+        return render_template("pages/error.html", title="Not found", msg="Support thread not found")
+    # Opening the thread marks staff replies as seen by the user.
+    support.mark_thread_seen_by_user(thread)
+    db.session.commit()
+    return render_template("pages/my_support_thread_view.html", segment="/support/my", thread=thread)
+
+
+@blueprint.app_context_processor
+def inject_support_dropdown():
+    """Provide recent threads + unread count for the navbar Messages dropdown."""
+    if not getattr(current_user, "is_authenticated", False):
+        return {"support_recent_threads": [], "support_unread_count": 0}
+    return {
+        "support_recent_threads": support.recent_threads_for_user(current_user, limit=5),
+        "support_unread_count": support.user_unread_thread_count(current_user),
+    }
 
 
 @blueprint.route('/lab_categories/edit/<category_id>', methods=["GET", "POST"])

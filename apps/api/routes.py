@@ -3,16 +3,14 @@
 
 import json
 import re
-import traceback
-from apps import db, cache, mail
+from apps import db, cache
 from apps.api import blueprint
 from apps.controllers import k8s, git
 from apps.controllers import support
 from apps.home.models import Labs, LabInstances, LabAnswers, LabAnswerSheet, UserLikes, UserFeedbacks, lab_groups, LabCategories, SupportThreads, SupportMessages
 from apps.authentication.models import Users, Groups, DeletedGroupUsers, group_members, group_owners
-from apps.audit_mixin import check_user_category
-from flask import request, current_app, render_template
-from flask_mail import Message
+from apps.audit_mixin import check_user_category, get_remote_addr
+from flask import request, current_app
 from flask_login import login_required, current_user
 from datetime import timedelta, datetime
 from apps.utils import datetime_from_ts, parse_lab_expiration, check_pre_approved, secure_filename
@@ -629,35 +627,6 @@ def get_kubernetes_template(template_name):
     return {"status": "ok", "result": result}, 200
 
 
-def _notify_support(thread, body):
-    """Send an e-mail to the support inbox about a new user message.
-
-    Failures are logged and swallowed so they never break the user's request.
-    """
-    recipient = current_app.config.get("MAIL_SENDTO")
-    if not recipient:
-        return
-    sender = current_app.config.get("MAIL_DEFAULT_SENDER") or current_app.config.get("MAIL_USERNAME")
-    try:
-        mail_msg = Message(
-            subject=f"HackInSDN - New support message from {current_user.username}",
-            sender=sender,
-            recipients=[recipient],
-            body=(
-                f"User: {current_user.name} ({current_user.username}, {current_user.email})\n"
-                f"Thread: {thread.id}\n\n"
-                f"{body}\n\n"
-                "--\n"
-                "Reply from the Support panel in the Dashboard HackInSDN."
-            ),
-            html=render_template('mail/support_message.html', user=current_user, thread=thread, body=body),
-        )
-        mail.send(mail_msg)
-    except Exception:
-        error = traceback.format_exc().replace("\n", ", ")
-        current_app.logger.error(f"Fail to send support e-mail user={current_user.username}: {error}")
-
-
 @blueprint.route('/support/thread', methods=["GET"])
 @login_required
 def get_support_thread():
@@ -665,23 +634,34 @@ def get_support_thread():
     thread = support.get_active_thread(current_user)
     if thread is None:
         return {"thread": None}, 200
+    support.mark_thread_seen_by_user(thread)
+    db.session.commit()
     return {"thread": thread.as_dict(with_messages=True)}, 200
 
 
 @blueprint.route('/support/thread/messages', methods=["POST"])
 @login_required
 def post_support_message():
-    """Persist a user message, notify support, and store any auto-reply."""
+    """Persist a user message and store any auto-reply.
+
+    Support is notified by the batched ``flush-support-emails`` CLI job, not here.
+    """
     data = request.get_json(silent=True) or {}
     body = (data.get("body") or "").strip()
     if not body:
         return {"error": "message body is required"}, 400
 
+    is_new = support.get_active_thread(current_user) is None
     thread = support.get_or_create_active_thread(current_user)
     message = support.add_message(thread, "user", body, is_read=False)
+    if is_new:
+        support.record_telemetry(
+            thread,
+            page=(data.get("page") or "").strip() or None,
+            user_agent=request.headers.get("User-Agent"),
+            ip=get_remote_addr(),
+        )
     db.session.commit()
-
-    _notify_support(thread, body)
 
     messages = [message.as_dict()]
     reply = support.generate_support_reply(thread, body)
@@ -691,6 +671,22 @@ def post_support_message():
         messages.append(reply_msg.as_dict())
 
     return {"thread_id": thread.id, "messages": messages}, 201
+
+
+@blueprint.route('/support/threads/<int:thread_id>', methods=["GET"])
+@login_required
+def get_support_thread_by_id(thread_id):
+    """Return a single thread + messages (admin, or the thread's owner)."""
+    thread = db.session.get(SupportThreads, thread_id)
+    if thread is None:
+        return {"status": "fail", "result": "Thread not found"}, 404
+    is_owner = thread.user_id == current_user.id
+    if current_user.category != "admin" and not is_owner:
+        return {"status": "fail", "result": "Unauthorized"}, 403
+    if is_owner:
+        support.mark_thread_seen_by_user(thread)
+        db.session.commit()
+    return {"thread": thread.as_dict(with_messages=True)}, 200
 
 
 @blueprint.route('/support/thread/finish', methods=["POST"])

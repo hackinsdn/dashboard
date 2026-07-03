@@ -90,6 +90,36 @@ def mark_thread_read(thread):
     return changed
 
 
+def mark_thread_seen_by_user(thread):
+    """Record that the owning user has just viewed this thread. Commit by caller."""
+    thread.user_last_read_at = utcnow()
+    return thread
+
+
+def record_telemetry(thread, page=None, user_agent=None, ip=None):
+    """Store where/how a conversation started. Called only when a thread is created."""
+    thread.origin_page = page
+    thread.user_agent = user_agent
+    thread.ip_address = ip
+    return thread
+
+
+def recent_threads_for_user(user, limit=5):
+    """Most recently active threads owned by the user (for the navbar dropdown)."""
+    return (
+        SupportThreads.query.filter_by(user_id=user.id)
+        .order_by(desc(SupportThreads.updated_at))
+        .limit(limit)
+        .all()
+    )
+
+
+def user_unread_thread_count(user):
+    """Number of the user's threads with a staff/assistant reply they haven't seen."""
+    threads = SupportThreads.query.filter_by(user_id=user.id).all()
+    return sum(1 for t in threads if t.has_unseen_for_user)
+
+
 def generate_support_reply(thread, body):
     """Return an automatic reply for a user message, or None.
 

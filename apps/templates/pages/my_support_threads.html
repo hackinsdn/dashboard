@@ -1,18 +1,14 @@
 {% extends "layouts/base.html" %}
 
-{% block title %} Support {% endblock %}
+{% block title %} My Support {% endblock %}
 
 {% block body_class %} sidebar-mini layout-navbar-fixed {% endblock body_class %}
 
 {% block stylesheets %}
-  <!-- Google Font: Source Sans Pro -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
-  <!-- Font Awesome -->
   <link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
-  <!-- DataTables -->
   <link rel="stylesheet" href="/static/assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
   <link rel="stylesheet" href="/static/assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css">
-  <!-- Theme style -->
   <link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
 {% endblock stylesheets %}
 
@@ -22,12 +18,12 @@
       <div class="container-fluid">
         <div class="row mb-2">
           <div class="col-sm-6">
-            <h1>Support Chats</h1>
+            <h1>My Support Cases</h1>
           </div>
           <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
               <li class="breadcrumb-item"><a href="/index">Home</a></li>
-              <li class="breadcrumb-item active">Support</li>
+              <li class="breadcrumb-item active">My Support</li>
             </ol>
           </div>
         </div>
@@ -39,26 +35,14 @@
         <div class="col-md-12">
           <div class="card">
             <div class="card-header">
-              <h3 class="card-title">{{ "All support threads" if show_all else "Open support threads" }}</h3>
-              <div class="float-right">
-                {% if show_all %}
-                  <a class="btn btn-sm btn-outline-primary" href="{{ url_for('home_blueprint.list_support_threads') }}" role="button">
-                    <i class="fas fa-filter"></i> Show open only
-                  </a>
-                {% else %}
-                  <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('home_blueprint.list_support_threads', show='all') }}" role="button">
-                    <i class="fas fa-list"></i> Show all threads
-                  </a>
-                {% endif %}
-              </div>
+              <h3 class="card-title">Your conversations with support</h3>
             </div>
             <div class="card-body">
-              <table id="tableSupportThreads" class="table table-striped display">
+              <table id="tableMyThreads" class="table table-striped display">
                 <thead>
                   <tr>
-                    <th>User</th>
+                    <th>Case</th>
                     <th>Status</th>
-                    <th>Unread</th>
                     <th>Last activity</th>
                     <th class="text-right">Actions</th>
                   </tr>
@@ -66,7 +50,12 @@
                 <tbody>
                 {% for thread in threads %}
                 <tr>
-                  <td>{{ thread.user.name if thread.user else thread.user_id }}</td>
+                  <td>
+                    #{{ thread.id }}
+                    {% if thread.has_unseen_for_user %}
+                      <span class="badge badge-danger ml-1">new reply</span>
+                    {% endif %}
+                  </td>
                   <td>
                     {% if thread.status == "open" %}
                       <span class="badge badge-success">Open</span>
@@ -74,17 +63,10 @@
                       <span class="badge badge-secondary">Finished</span>
                     {% endif %}
                   </td>
-                  <td>
-                    {% if thread.unread_count %}
-                      <span class="badge badge-danger">{{ thread.unread_count }}</span>
-                    {% else %}
-                      <span class="text-muted">0</span>
-                    {% endif %}
-                  </td>
                   <td>{{ thread.updated_at.strftime('%Y-%m-%d %H:%M') if thread.updated_at else '' }} UTC</td>
                   <td class="text-right">
-                    <a href="{{ url_for('home_blueprint.view_support_thread', thread_id=thread.id) }}" class="btn btn-outline-primary" role="button">
-                      <i class="fas fa-comments"></i> Open
+                    <a href="{{ url_for('home_blueprint.view_my_support_thread', thread_id=thread.id) }}" class="btn btn-outline-primary" role="button">
+                      <i class="fas fa-comments"></i> View
                     </a>
                   </td>
                 </tr>
@@ -110,12 +92,12 @@
   <script src="/static/assets/js/adminlte.js"></script>
   <script>
     $(function () {
-      $("#tableSupportThreads").DataTable({
+      $("#tableMyThreads").DataTable({
         responsive: true,
         autoWidth: false,
-        language: { emptyTable: 'No open conversations or unread messages' },
-        order: [[3, 'desc']],
-        columnDefs: [{ orderable: false, targets: 4 }]
+        language: { emptyTable: 'You have no support cases yet' },
+        order: [[2, 'desc']],
+        columnDefs: [{ orderable: false, targets: 3 }]
       });
     });
   </script>

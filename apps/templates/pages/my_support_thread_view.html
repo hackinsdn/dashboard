@@ -1,6 +1,6 @@
 {% extends "layouts/base.html" %}
 
-{% block title %} Support Chat {% endblock %}
+{% block title %} My Support Case {% endblock %}
 
 {% block body_class %} sidebar-mini layout-navbar-fixed {% endblock body_class %}
 
@@ -16,13 +16,13 @@
       <div class="container-fluid">
         <div class="row mb-2">
           <div class="col-sm-6">
-            <h1>Support Chat</h1>
+            <h1>Support Case #{{ thread.id }}</h1>
           </div>
           <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
               <li class="breadcrumb-item"><a href="/index">Home</a></li>
-              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.list_support_threads') }}">Support</a></li>
-              <li class="breadcrumb-item active">Thread #{{ thread.id }}</li>
+              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.list_my_support_threads') }}">My Support</a></li>
+              <li class="breadcrumb-item active">Case #{{ thread.id }}</li>
             </ol>
           </div>
         </div>
@@ -35,7 +35,7 @@
           <div class="card direct-chat direct-chat-primary">
             <div class="card-header">
               <h3 class="card-title">
-                {{ thread.user.name if thread.user else thread.user_id }}
+                Conversation
                 {% if thread.status == "open" %}
                   <span class="badge badge-success ml-2">Open</span>
                 {% else %}
@@ -43,32 +43,22 @@
                 {% endif %}
               </h3>
             </div>
-            {% if thread.origin_page or thread.ip_address or thread.user_agent %}
-            <div class="card-body py-2 bg-light border-bottom">
-              <small class="text-muted">
-                {% if thread.origin_page %}<div><i class="fas fa-location-arrow mr-1"></i> Started from: {{ thread.origin_page }}</div>{% endif %}
-                {% if thread.ip_address %}<div><i class="fas fa-network-wired mr-1"></i> IP: {{ thread.ip_address }}</div>{% endif %}
-                {% if thread.user_agent %}<div><i class="fas fa-desktop mr-1"></i> Browser: {{ thread.user_agent }}</div>{% endif %}
-              </small>
-            </div>
-            {% endif %}
             <div class="card-body">
-              <div class="direct-chat-messages" id="chatMessages" style="height: 60vh;"
-                   data-user-name="{{ thread.user.name if thread.user else 'User' }}">
+              <div class="direct-chat-messages" id="chatMessages" style="height: 60vh;">
                 {% for message in thread.messages %}
                   {% if message.sender == "user" %}
-                  <div class="direct-chat-msg" data-id="{{ message.id }}">
+                  <div class="direct-chat-msg right" data-id="{{ message.id }}">
                     <div class="direct-chat-infos clearfix">
-                      <span class="direct-chat-name float-left">{{ thread.user.name if thread.user else 'User' }}</span>
-                      <span class="direct-chat-timestamp float-right" data-ts="{{ message.created_at.isoformat() if message.created_at else '' }}"></span>
+                      <span class="direct-chat-name float-right">You</span>
+                      <span class="direct-chat-timestamp float-left" data-ts="{{ message.created_at.isoformat() if message.created_at else '' }}"></span>
                     </div>
                     <div class="direct-chat-text">{{ message.body }}</div>
                   </div>
                   {% else %}
-                  <div class="direct-chat-msg right" data-id="{{ message.id }}">
+                  <div class="direct-chat-msg" data-id="{{ message.id }}">
                     <div class="direct-chat-infos clearfix">
-                      <span class="direct-chat-name float-right">{{ "Assistant" if message.sender == "assistant" else "Support" }}</span>
-                      <span class="direct-chat-timestamp float-left" data-ts="{{ message.created_at.isoformat() if message.created_at else '' }}"></span>
+                      <span class="direct-chat-name float-left">{{ "Assistant" if message.sender == "assistant" else "Support" }}</span>
+                      <span class="direct-chat-timestamp float-right" data-ts="{{ message.created_at.isoformat() if message.created_at else '' }}"></span>
                     </div>
                     <div class="direct-chat-text">{{ message.body }}</div>
                   </div>
@@ -76,16 +66,12 @@
                 {% endfor %}
               </div>
             </div>
-            <div class="card-footer">
-              <form id="replyForm">
-                <div class="input-group">
-                  <input type="text" id="replyBody" name="body" placeholder="Type your reply ..." class="form-control" autocomplete="off" required>
-                  <span class="input-group-append">
-                    <button type="submit" class="btn btn-primary">Send <i class="fas fa-paper-plane"></i></button>
-                  </span>
-                </div>
-                <div id="replyError" class="text-danger mt-2" style="display:none;"></div>
-              </form>
+            <div class="card-footer text-muted">
+              {% if thread.status == "open" %}
+                <i class="fas fa-info-circle mr-1"></i> Use the chat button at the bottom-right of any page to continue this conversation.
+              {% else %}
+                <i class="fas fa-check-circle mr-1"></i> This conversation is finished. Start a new one from the chat button at the bottom-right.
+              {% endif %}
             </div>
           </div>
         </div>
@@ -101,11 +87,7 @@
   <script>
     (function () {
       var THREAD_ID = {{ thread.id }};
-      var form = document.getElementById('replyForm');
-      var input = document.getElementById('replyBody');
-      var errorBox = document.getElementById('replyError');
       var messages = document.getElementById('chatMessages');
-      var userName = messages.getAttribute('data-user-name') || 'User';
 
       function pad(n) { return (n < 10 ? '0' : '') + n; }
       function formatStamp(iso) {
@@ -131,13 +113,13 @@
       function appendMessage(msg) {
         if (hasMessage(msg.id)) { return; }
         var isUser = msg.sender === 'user';
-        var name = isUser ? userName : (msg.sender === 'assistant' ? 'Assistant' : 'Support');
-        var side = isUser ? '' : ' right';
-        var nameFloat = isUser ? 'float-left' : 'float-right';
-        var tsFloat = isUser ? 'float-right' : 'float-left';
+        var name = isUser ? 'You' : (msg.sender === 'assistant' ? 'Assistant' : 'Support');
+        var side = isUser ? ' right' : '';
+        var nameFloat = isUser ? 'float-right' : 'float-left';
+        var tsFloat = isUser ? 'float-left' : 'float-right';
         var html = '<div class="direct-chat-msg' + side + '" data-id="' + msg.id + '">'
           + '<div class="direct-chat-infos clearfix">'
-          + '<span class="direct-chat-name ' + nameFloat + '">' + escapeHtml(name) + '</span>'
+          + '<span class="direct-chat-name ' + nameFloat + '">' + name + '</span>'
           + '<span class="direct-chat-timestamp ' + tsFloat + '">' + formatStamp(msg.created_at) + '</span>'
           + '</div><div class="direct-chat-text">' + escapeHtml(msg.body) + '</div></div>';
         messages.insertAdjacentHTML('beforeend', html);
@@ -145,29 +127,6 @@
 
       renderStamps();
       messages.scrollTop = messages.scrollHeight;
-
-      form.addEventListener('submit', function (event) {
-        event.preventDefault();
-        var body = input.value.trim();
-        if (!body) { return; }
-        errorBox.style.display = 'none';
-        fetch('/api/support/threads/' + THREAD_ID + '/messages', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'same-origin',
-          body: JSON.stringify({ body: body })
-        }).then(function (resp) {
-          if (!resp.ok) { throw new Error('Failed to send reply'); }
-          return resp.json();
-        }).then(function (data) {
-          (data.messages || []).forEach(appendMessage);
-          messages.scrollTop = messages.scrollHeight;
-          input.value = '';
-        }).catch(function (err) {
-          errorBox.textContent = err.message;
-          errorBox.style.display = 'block';
-        });
-      });
 
       // Poll for new messages every 30s
       setInterval(function () {

@@ -229,3 +229,167 @@ class TestAdminSupport:
         db.session.refresh(thread)
         assert thread.unread_count == 0
         logout(client)
+
+
+# --- helper to create additional users on the shared DB ----------------
+def make_user(username, category="student"):
+    user = Users(
+        username=username, password="pw123456",
+        email=f"{username}@test.local", category=category,
+    )
+    db.session.add(user)
+    db.session.commit()
+    return user
+
+
+# --- telemetry on conversation start -----------------------------------
+class TestTelemetry:
+    def test_telemetry_recorded_on_new_thread(self, client, ids):
+        carol = make_user("sc_carol")
+        logout(client)
+        assert login(client, "sc_carol", "pw123456")
+        resp = client.post(
+            "/api/support/thread/messages",
+            data=json.dumps({"body": "help please", "page": "/labs — Labs page"}),
+            content_type="application/json",
+            headers={"User-Agent": "PyTest-UA/9.9"},
+        )
+        assert resp.status_code == 201
+        thread = SupportThreads.query.filter_by(user_id=carol.id).one()
+        assert thread.origin_page == "/labs — Labs page"
+        assert thread.user_agent == "PyTest-UA/9.9"
+        assert thread.ip_address  # some remote address recorded
+        # message should not be e-mailed yet (batched later)
+        assert all(m.emailed_at is None for m in thread.messages)
+
+
+# --- user-facing pages + read endpoint authorization -------------------
+class TestUserPages:
+    def test_user_sees_only_own_threads(self, client, ids):
+        dave = make_user("sc_dave")
+        logout(client)
+        login(client, "sc_dave", "pw123456")
+        post_json(client, "/api/support/thread/messages", {"body": "dave needs help"})
+
+        resp = client.get("/support/my")
+        assert resp.status_code == 200
+        dave_thread = SupportThreads.query.filter_by(user_id=dave.id).one()
+        assert f"#{dave_thread.id}".encode() in resp.data
+
+        # dave cannot open another user's thread page
+        bob_thread = SupportThreads.query.filter_by(user_id=ids["bob_id"]).first()
+        resp = client.get(f"/support/my/{bob_thread.id}")
+        assert b"Support thread not found" in resp.data
+
+    def test_read_endpoint_authorization(self, client, ids):
+        dave_user = Users.query.filter_by(username="sc_dave").one()
+        dave = SupportThreads.query.filter_by(user_id=dave_user.id).first()
+        # owner can read
+        logout(client)
+        login(client, "sc_dave", "pw123456")
+        assert client.get(f"/api/support/threads/{dave.id}").status_code == 200
+        # a different non-admin user cannot
+        logout(client)
+        login(client, "sc_bob", "bob123")
+        assert client.get(f"/api/support/threads/{dave.id}").status_code == 403
+        # admin can
+        logout(client)
+        login(client, "sc_admin", "admin123")
+        assert client.get(f"/api/support/threads/{dave.id}").status_code == 200
+        logout(client)
+
+
+# --- admin open-vs-all filter ------------------------------------------
+class TestAdminFilter:
+    def test_default_open_only_all_toggle(self, client, ids):
+        finished = make_user("sc_erin")
+        logout(client)
+        login(client, "sc_erin", "pw123456")
+        post_json(client, "/api/support/thread/messages", {"body": "erin msg"})
+        post_json(client, "/api/support/thread/finish", {})
+        erin_thread = SupportThreads.query.filter_by(user_id=finished.id).one()
+        assert erin_thread.status == "finished"
+
+        logout(client)
+        login(client, "sc_admin", "admin123")
+        marker = f'/support/threads/{erin_thread.id}"'.encode()
+
+        default = client.get("/support/threads")
+        assert marker not in default.data  # finished thread hidden by default
+
+        show_all = client.get("/support/threads?show=all")
+        assert marker in show_all.data
+        logout(client)
+
+
+# --- navbar unread indicator -------------------------------------------
+class TestNavbarUnread:
+    def test_unread_reflects_staff_reply_and_clears_on_view(self, client, ids):
+        frank = make_user("sc_frank")
+        logout(client)
+        login(client, "sc_frank", "pw123456")
+        post_json(client, "/api/support/thread/messages", {"body": "frank question"})
+        thread = SupportThreads.query.filter_by(user_id=frank.id).one()
+        assert thread.has_unseen_for_user is False  # only own message so far
+
+        # admin replies -> becomes unseen for the user
+        logout(client)
+        login(client, "sc_admin", "admin123")
+        post_json(client, f"/api/support/threads/{thread.id}/messages", {"body": "hi frank"})
+        db.session.refresh(thread)
+        assert thread.has_unseen_for_user is True
+
+        # frank's navbar shows the badge, then clears after opening the thread
+        logout(client)
+        login(client, "sc_frank", "pw123456")
+        page = client.get("/support/my")
+        assert b"See All Messages" in page.data
+        client.get(f"/support/my/{thread.id}")
+        db.session.refresh(thread)
+        assert thread.has_unseen_for_user is False
+        logout(client)
+
+
+# --- batched support e-mail (CLI) --------------------------------------
+class TestBatchEmail:
+    def test_flush_groups_after_quiet_window(self, client, ids, monkeypatch):
+        from apps.cli import support_notify
+
+        sent = []
+
+        class FakeMail:
+            def __init__(self, app):
+                pass
+
+            def send(self, msg):
+                sent.append(msg)
+
+        monkeypatch.setattr(support_notify, "Mail", FakeMail)
+        monkeypatch.setitem(flask_app.config, "MAIL_SENDTO", "support@test.local")
+
+        grace = make_user("sc_grace")
+        logout(client)
+        login(client, "sc_grace", "pw123456")
+        post_json(client, "/api/support/thread/messages", {"body": "grace one"})
+        post_json(client, "/api/support/thread/messages", {"body": "grace two"})
+        thread = SupportThreads.query.filter_by(user_id=grace.id).one()
+
+        # recent messages -> nothing sent yet
+        support_notify.flush_support_emails(flask_app)
+        assert sent == []
+
+        # user goes quiet: backdate the messages beyond the batch window
+        for m in thread.messages:
+            m.created_at = utcnow() - timedelta(minutes=30)
+        db.session.commit()
+
+        support_notify.flush_support_emails(flask_app)
+        assert len(sent) == 1
+        # both messages grouped in a single e-mail and marked emailed
+        db.session.refresh(thread)
+        assert all(m.emailed_at is not None for m in thread.messages)
+
+        # second run sends nothing more
+        support_notify.flush_support_emails(flask_app)
+        assert len(sent) == 1
+        logout(client)

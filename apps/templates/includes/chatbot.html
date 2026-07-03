@@ -29,13 +29,17 @@
   }
   .hisdn-chat-empty { color: #6c757d; font-size: .9em; text-align: center; margin-top: 24px; }
   .hisdn-chat-msg { margin-bottom: 10px; display: flex; }
+  .hisdn-chat-bubblewrap { display: flex; flex-direction: column; max-width: 80%; }
   .hisdn-chat-msg .bubble {
-    padding: 8px 12px; border-radius: 12px; max-width: 80%;
+    padding: 8px 12px; border-radius: 12px; max-width: 100%;
     font-size: .9em; line-height: 1.35; white-space: pre-wrap; word-wrap: break-word;
   }
+  .hisdn-chat-time { font-size: .68rem; color: #8a939b; margin-top: 2px; }
   .hisdn-chat-msg--user { justify-content: flex-end; }
+  .hisdn-chat-msg--user .hisdn-chat-bubblewrap { align-items: flex-end; }
   .hisdn-chat-msg--user .bubble { background-color: #007bff; color: #fff; border-bottom-right-radius: 2px; }
   .hisdn-chat-msg--support { justify-content: flex-start; }
+  .hisdn-chat-msg--support .hisdn-chat-bubblewrap { align-items: flex-start; }
   .hisdn-chat-msg--support .bubble { background-color: #e9ecef; color: #1f1f1f; border-bottom-left-radius: 2px; }
   .hisdn-chat-footer { border-top: 1px solid #e3e6ea; background: #fff; }
   .hisdn-chat-inputrow { display: flex; padding: 8px; }
@@ -47,10 +51,12 @@
     border-radius: 4px; padding: 6px 12px; cursor: pointer;
   }
   .hisdn-chat-inputrow button:disabled { opacity: .6; cursor: default; }
-  .hisdn-chat-actions { padding: 0 10px 8px; text-align: right; }
-  .hisdn-chat-actions button {
+  .hisdn-chat-actions { padding: 0 10px 8px; display: flex; justify-content: space-between; align-items: center; }
+  .hisdn-chat-actions button, .hisdn-chat-actions a {
     background: transparent; border: none; color: #6c757d; font-size: .78em; cursor: pointer;
+    padding: 0; text-decoration: none;
   }
+  .hisdn-chat-actions a:hover { color: #007bff; text-decoration: underline; }
   .hisdn-chat-actions button:hover { color: #dc3545; text-decoration: underline; }
 </style>
 
@@ -70,6 +76,9 @@
   </div>
   <div class="hisdn-chat-footer">
     <div class="hisdn-chat-actions">
+      <a href="{{ url_for('home_blueprint.list_my_support_threads') }}" title="See all your support cases">
+        <i class="fas fa-list-ul"></i> See all cases
+      </a>
       <button id="hisdn-chat-finish" type="button" title="Finish this conversation">
         <i class="fas fa-times-circle"></i> Finish conversation
       </button>
@@ -98,15 +107,33 @@
 
   function scrollBottom() { body.scrollTop = body.scrollHeight; }
 
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function formatTime(iso) {
+    if (!iso) { return ''; }
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) { return ''; }
+    var now = new Date();
+    var time = pad(d.getHours()) + ':' + pad(d.getMinutes());
+    var sameDay = d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+    return sameDay ? time : (pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear() + ' ' + time);
+  }
+
   function renderMessage(msg) {
     var isUser = msg.sender === 'user';
     var row = document.createElement('div');
     row.className = 'hisdn-chat-msg ' + (isUser ? 'hisdn-chat-msg--user' : 'hisdn-chat-msg--support');
     row.setAttribute('data-id', msg.id);
+    var wrap = document.createElement('div');
+    wrap.className = 'hisdn-chat-bubblewrap';
     var bubble = document.createElement('div');
     bubble.className = 'bubble';
     bubble.textContent = msg.body;
-    row.appendChild(bubble);
+    wrap.appendChild(bubble);
+    var time = document.createElement('div');
+    time.className = 'hisdn-chat-time';
+    time.textContent = formatTime(msg.created_at);
+    wrap.appendChild(time);
+    row.appendChild(wrap);
     body.appendChild(row);
     if (msg.id && msg.id > lastMessageId) { lastMessageId = msg.id; }
   }
@@ -143,7 +170,7 @@
 
   function startPolling() {
     stopPolling();
-    pollTimer = setInterval(loadThread, 15000);
+    pollTimer = setInterval(loadThread, 30000);
   }
   function stopPolling() {
     if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
@@ -171,11 +198,12 @@
     if (!text) { return; }
     sendBtn.disabled = true;
     showEmpty(false);
+    var page = window.location.pathname + (document.title ? (' — ' + document.title) : '');
     fetch('/api/support/thread/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'same-origin',
-      body: JSON.stringify({ body: text })
+      body: JSON.stringify({ body: text, page: page })
     }).then(function (r) {
       if (!r.ok) { throw new Error('send failed'); }
       return r.json();
