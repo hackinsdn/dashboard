@@ -353,6 +353,8 @@ class TestSoftDelete:
         lab_id = _make_lab(ids, "Admin Deletable Lab")
         resp = client.get("/labs/view")
         assert b"Admin Deletable Lab" in resp.data
+        # the delete button carries the lab title so the modal can name it
+        assert b'data-name="Admin Deletable Lab"' in resp.data
 
         resp = client.delete(f"/api/labs/{lab_id}")
         assert resp.status_code == 200
