@@ -58,6 +58,7 @@ class LabCategories(db.Model, AuditMixin):
 class Labs(db.Model, AuditMixin):
     __tablename__ = 'labs'
     id = db.Column(db.String(40), primary_key=True, default=generate_uuid)
+    is_deleted = db.Column(db.Boolean, default=False, nullable=False, server_default=db.text('false'))
     title = db.Column(db.String(255))
     description = db.Column(db.String)
     extended_desc = db.Column(db.LargeBinary)

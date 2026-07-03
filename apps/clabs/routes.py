@@ -22,7 +22,8 @@ def upsert(clab_id="new"):
 
     if clab_id != "new":
         clab = db.session.get(Labs, clab_id)
-        if not clab:
+        # admins may open a soft-deleted clab in order to restore it
+        if not clab or (clab.is_deleted and current_user.category != "admin"):
             return render_template("pages/clabs_upsert.html", clab=None, msg_fail="ContainerLab not found")
         if not clab.is_clab:
             return redirect(url_for('home_blueprint.edit_lab', lab_id=clab_id))

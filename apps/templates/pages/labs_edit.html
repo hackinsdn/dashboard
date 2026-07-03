@@ -445,10 +445,66 @@
           <div class="col-md-12 mb-2">
             <button type="submit" class="btn btn-primary">Submit</button>
             <a href="{{ url_for('home_blueprint.view_labs', lab_id=lab.id) if lab.id else url_for('home_blueprint.view_labs') }}" class="btn btn-secondary mx-2" role="button" aria-pressed="true">Cancel</a>
+            {% if lab and lab.id %}
+              {% if lab.is_deleted %}
+            <button type="button" class="btn btn-success float-right" data-toggle="modal" data-target="#modal-restore-lab"><i class="fas fa-trash-restore"></i> Restore Lab</button>
+              {% elif current_user.category == "admin" or lab.updated_by == current_user.id %}
+            <button type="button" class="btn btn-danger float-right" data-toggle="modal" data-target="#modal-delete-lab"><i class="fas fa-trash"></i> Delete Lab</button>
+              {% endif %}
+            {% endif %}
           </div>
         </div>
       </div><!-- /.container-fluid -->
       </form>
+      {% if lab and lab.id %}
+        {% if lab.is_deleted %}
+      <div class="modal fade" id="modal-restore-lab">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">Confirm restore lab</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <p>Are you sure you want to restore this lab?</p>
+            </div>
+            <div class="modal-footer justify-content-between">
+              <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+              <button type="button" class="btn btn-success" id="restore-lab">Restore lab</button>
+            </div>
+          </div>
+          <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+      </div>
+      <!-- /.modal -->
+        {% else %}
+      <div class="modal fade" id="modal-delete-lab">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">Confirm delete lab</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <p>Are you sure you want to delete Lab <span class="text-danger">{{ lab.title }}</span>?</p>
+            </div>
+            <div class="modal-footer justify-content-between">
+              <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+              <button type="button" class="btn btn-danger" id="delete-lab">Delete lab</button>
+            </div>
+          </div>
+          <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+      </div>
+      <!-- /.modal -->
+        {% endif %}
+      {% endif %}
     </section>
     <!-- /.content -->
   </div>
@@ -468,6 +524,8 @@
   <script src="/static/assets/plugins/bootstrap4-duallistbox/jquery.bootstrap-duallistbox.min.js"></script>
   <!-- AdminLTE App -->
   <script src="/static/assets/js/adminlte.min.js"></script>
+  <!-- Shared Labs delete/restore actions -->
+  <script src="/static/assets/js/pages/labs_actions.js"></script>
   <!-- AdminLTE for demo purposes -->
   <script src="/static/assets/js/demo.js"></script>
   <!-- Summernote -->
@@ -895,6 +953,17 @@
               ? "Templates refreshed successfully!"
               : "Failed to refresh templates: " + (data.result || "Unknown error")
           );
+      });
+
+      var editLabId = "{{ lab.id|default('', true) }}";
+      var labsViewUrl = "{{ url_for('home_blueprint.view_labs') }}";
+
+      $('#delete-lab').on('click', function () {
+        LabsActions.run({ labId: editLabId, action: "delete", redirectUrl: labsViewUrl, onFail: "alert", modalId: "#modal-delete-lab" });
+      });
+
+      $('#restore-lab').on('click', function () {
+        LabsActions.run({ labId: editLabId, action: "restore", redirectUrl: labsViewUrl, onFail: "alert", modalId: "#modal-restore-lab" });
       });
   </script>
 

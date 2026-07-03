@@ -334,6 +334,54 @@ def delete_lab_category(category_id):
     return {"status": "ok", "result": "Lab Category deleted successfully"}, 200
 
 
+@blueprint.route('/labs/<lab_id>', methods=["DELETE"])
+@login_required
+def delete_lab_catalog(lab_id):
+    if current_user.category not in ["admin", "teacher", "labcreator"]:
+        return {"status": "fail", "result": "Unauthorized access"}, 401
+
+    lab = db.session.get(Labs, lab_id)
+    if not lab or lab.is_deleted:
+        return {"status": "fail", "result": "Lab not found"}, 404
+
+    # non-admins (teacher/labcreator) may only delete labs they own
+    if current_user.category != "admin" and lab.updated_by != current_user.id:
+        return {"status": "fail", "result": "Unauthorized access to this lab"}, 401
+
+    active = LabInstances.query.filter_by(lab_id=lab_id, is_deleted=False).count()
+    if active > 0:
+        return {"status": "fail", "result": f"Cannot delete: Lab has {active} running instance(s)"}, 400
+
+    lab.is_deleted = True
+    try:
+        db.session.commit()
+    except Exception as exc:
+        current_app.logger.error(f"Failed to delete lab {lab_id}: {exc}")
+        return {"status": "fail", "result": "Failed to delete lab"}, 400
+
+    return {"status": "ok", "result": "Lab deleted successfully"}, 200
+
+
+@blueprint.route('/labs/<lab_id>/restore', methods=["POST"])
+@login_required
+def restore_lab_catalog(lab_id):
+    if current_user.category != "admin":
+        return {"status": "fail", "result": "Unauthorized access"}, 401
+
+    lab = db.session.get(Labs, lab_id)
+    if not lab or not lab.is_deleted:
+        return {"status": "fail", "result": "Lab not found"}, 404
+
+    lab.is_deleted = False
+    try:
+        db.session.commit()
+    except Exception as exc:
+        current_app.logger.error(f"Failed to restore lab {lab_id}: {exc}")
+        return {"status": "fail", "result": "Failed to restore lab"}, 400
+
+    return {"status": "ok", "result": "Lab restored successfully"}, 200
+
+
 @blueprint.route('/groups/join/<int:group_id>', methods=["POST"])
 @login_required
 def join_group(group_id):
