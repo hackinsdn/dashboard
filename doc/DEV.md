@@ -173,3 +173,43 @@ not delayed much beyond the quiet window, e.g. a crontab entry:
 ```
 */3 * * * * cd /opt/dashboard && flask --app run.py cli flush-support-emails >> /var/log/dashboard-support.log 2>&1
 ```
+
+## TLS and reverse proxy
+
+**Do not terminate TLS directly in gunicorn.** The shipped `docker-entrypoint.sh`
+runs gunicorn as plain HTTP with `--proxy-allow-from "*"`, which assumes a
+**reverse proxy (nginx / traefik / caddy) terminates TLS in front of it**. That is
+the recommended deployment: the proxy handles the certificate and forwards plain
+HTTP to gunicorn. Because `apps/audit_mixin.get_remote_addr()` reads
+`request.access_route` (i.e. `X-Forwarded-For`), the real client IP — including the
+support-chat telemetry — is preserved as long as the proxy sets the
+`X-Forwarded-For` / `X-Forwarded-Proto` headers.
+
+### Symptom: `SSLV3_ALERT_CERTIFICATE_UNKNOWN` in the logs
+
+If you instead let gunicorn terminate TLS itself (e.g. passing `--certfile/--keyfile`
+via `EXTRA_OPS`) with a **self-signed certificate**, you may see noisy tracebacks like:
+
+```
+ssl.SSLError: [SSL: SSLV3_ALERT_CERTIFICATE_UNKNOWN] sslv3 alert certificate unknown
+  ... gevent/ssl.py ... do_handshake()
+```
+
+This is a **TLS handshake alert sent by the browser** to reject the untrusted
+certificate — it happens in the gevent SSL layer *before* any request reaches Flask,
+so it is unrelated to the application code (the accepted connections still return
+`200`). It became more visible with the support chat because the widget and
+thread-view pages poll every 30 s, and browsers open extra background/preconnect TLS
+connections; those background sockets never get the interactive "accept the risk"
+prompt, so they are silently aborted with `certificate unknown`.
+
+Fixes:
+
+- **Preferred:** terminate TLS at a reverse proxy and run gunicorn over plain HTTP
+  (as above); gunicorn then never performs the TLS handshake and the errors disappear.
+- **Local/dev:** make the certificate trusted instead of using a bare self-signed one
+  — e.g. generate a locally-trusted cert with [`mkcert`](https://github.com/FiloSottile/mkcert),
+  or import the self-signed cert into the OS/browser trust store (macOS Keychain →
+  *Always Trust*). For a real hostname, use a CA-issued certificate (Let's Encrypt).
+- If you keep gunicorn terminating self-signed TLS, the tracebacks are harmless log
+  noise (functionality is unaffected); the trust fixes above are still the right move.
