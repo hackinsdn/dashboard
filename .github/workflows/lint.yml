@@ -1,0 +1,42 @@
+name: Lint
+
+on:
+  pull_request:
+    branches: ['**']  # run for PRs targeting any branch
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+# Cancel superseded runs on the same ref (e.g. new pushes to a PR branch)
+concurrency:
+  group: lint-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  djlint:
+    name: Template linter (djlint)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"  # matches the Dockerfile (python:3.12-bookworm)
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+
+      - name: Install djlint
+        run: |
+          python -m pip install --upgrade pip
+          pip install "$(grep -i '^djlint' requirements-dev.txt)"
+
+      - name: Run djlint on templates
+        # Mail templates are excluded: inline styles and missing meta tags
+        # are intentional there (required for HTML email compatibility).
+        run: |
+          djlint --profile=jinja --ignore=H023,D004,H006,H021 --exclude="apps/templates/mail/" apps/templates/
