@@ -572,15 +572,15 @@ def edit_lab(lab_id):
     else:
         return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, msg_fail=msg, segment="/labs/edit", groups=groups, allowed_groups=lab.allowed_groups, lab_uploads=lab_uploads)
 
-@blueprint.route('/labs/duplicate/<lab_id>', methods=["GET"])
+@blueprint.route('/labs/fork/<lab_id>', methods=["GET"])
 @login_required
 @check_user_category(["admin", "teacher", "labcreator"])
-def duplicate_lab(lab_id):
+def fork_lab(lab_id):
     source = db.session.get(Labs, lab_id)
     if not source or source.is_deleted:
         return render_template("pages/labs_edit.html", lab=None, segment="/labs/edit", msg_fail="Lab not found")
     if current_user.category == "labcreator" and source.updated_by != current_user.id:
-        # labcreators may duplicate any lab they can view (same predicate as
+        # labcreators may fork any lab they can view (same predicate as
         # view_labs): shared with one of their groups or their own
         source_group_ids = {group.id for group in source.allowed_groups}
         if not source_group_ids.intersection(current_user.all_group_ids):
@@ -593,15 +593,15 @@ def duplicate_lab(lab_id):
     groups = Groups.query.filter_by(is_deleted=False).all()
 
     # Labs.title is String(255): truncate the source title so the suffix fits
-    new_title = f"{source.title} -- Copy"
+    new_title = f"{source.title} -- Fork"
     if len(new_title) > 255:
-        new_title = source.title[:247] + " -- Copy"
+        new_title = source.title[:247] + " -- Fork"
 
     lab_guide_md = source.lab_guide_md_str if source.lab_guide_md else ""
     extended_desc = source.extended_desc_str if source.extended_desc else ""
 
     # guide attachments are shared with the source lab (same filenames and
-    # URLs): nothing is written to disk on this GET, so an abandoned duplicate
+    # URLs): nothing is written to disk on this GET, so an abandoned fork
     # leaves no orphan files behind. Deletion is reference-counted in
     # delete_lab_upload, so removing the attachment from one lab does not
     # break the other.
@@ -623,8 +623,8 @@ def duplicate_lab(lab_id):
         lab_guide_md_str=lab_guide_md,
     )
 
-    duplicate_lab_log = HomeLogging(ipaddr=get_remote_addr(), action="duplicate_lab", success=True, lab_id=source.id, user_id=current_user.id)
-    db.session.add(duplicate_lab_log)
+    fork_lab_log = HomeLogging(ipaddr=get_remote_addr(), action="fork_lab", success=True, lab_id=source.id, user_id=current_user.id)
+    db.session.add(fork_lab_log)
     db.session.commit()
 
     return render_template(
@@ -636,7 +636,7 @@ def duplicate_lab(lab_id):
         segment="/labs/edit",
         lab_uploads=lab_uploads,
         pending_uploads=lab_uploads,
-        duplicated_from=source.title,
+        forked_from=source.title,
     )
 
 @blueprint.route('/users')
@@ -1434,7 +1434,7 @@ def delete_lab_upload(lab_id, filename):
     md["uploads"] = uploads
     lab_md.md = md
 
-    # lab duplication shares attachment files instead of copying them, so the
+    # lab forking shares attachment files instead of copying them, so the
     # same filename may be referenced by other labs: only remove the file from
     # disk when this lab held the last reference
     # substring matching for LabMetadata._md.contains(filename) is correct

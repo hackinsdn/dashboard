@@ -66,11 +66,11 @@
               {{ msg_fail }}
             </div>
             {% endif %}
-            {% if duplicated_from %}
+            {% if forked_from %}
             <div class="alert alert-info alert-dismissible">
               <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-              <h5><i class="icon fas fa-copy"></i> Duplicating Lab</h5>
-              You are duplicating "{{ duplicated_from }}". Nothing is saved until you press Submit.
+              <h5><i class="icon fas fa-code-branch"></i> Forking Lab</h5>
+              You are forking "{{ forked_from }}". Nothing is saved until you press Submit.
             </div>
             {% endif %}
           </div>
@@ -453,7 +453,7 @@
             <button type="submit" class="btn btn-primary">Submit</button>
             <a href="{{ url_for('home_blueprint.view_labs', lab_id=lab.id) if lab.id else url_for('home_blueprint.view_labs') }}" class="btn btn-secondary mx-2" role="button" aria-pressed="true">Cancel</a>
             {% if lab and lab.id and not lab.is_deleted %}
-            <a href="{{ url_for('home_blueprint.duplicate_lab', lab_id=lab.id) }}" class="btn btn-info" role="button"><i class="fas fa-copy"></i> Duplicate</a>
+            <a href="{{ url_for('home_blueprint.fork_lab', lab_id=lab.id) }}" class="btn btn-info" role="button"><i class="fas fa-code-branch"></i> Fork</a>
             {% endif %}
             {% if lab and lab.id %}
               {% if lab.is_deleted %}
