@@ -1435,6 +1435,8 @@ def delete_lab_upload(lab_id, filename):
     # lab duplication shares attachment files instead of copying them, so the
     # same filename may be referenced by other labs: only remove the file from
     # disk when this lab held the last reference
+    # substring matching for LabMetadata._md.contains(filename) is correct
+    # (filenames are uuid4().hex)
     still_referenced = LabMetadata.query.filter(
         LabMetadata.id != lab_md.id,
         LabMetadata._md.contains(filename),
