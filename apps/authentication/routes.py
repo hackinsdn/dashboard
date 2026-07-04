@@ -504,6 +504,27 @@ def reload_profile():
         db.session.commit()
     return redirect(url_for('authentication_blueprint.route_default'))
 
+@blueprint.route('/approval-notes', methods=['POST'])
+@login_required
+def save_approval_notes():
+    if current_user.notes:
+        if current_user.category != "user":
+            return redirect(url_for('authentication_blueprint.route_default'))
+        return render_template('pages/waiting_approval.html', msg_fail="Your note was already saved and can no longer be changed. Please contact an administrator if you need to update it.")
+
+    notes = request.form.get("notes", "").strip()
+    if len(notes) > 1000:
+        return render_template('pages/waiting_approval.html', msg_fail="Note is too long, maximum 1000 characters")
+
+    current_user.notes = notes
+    db.session.commit()
+    app.logger.info(f"User approval notes updated ipaddr={get_remote_addr()} login={current_user.username}")
+
+    if current_user.category != "user":
+        return redirect(url_for('authentication_blueprint.route_default'))
+
+    return render_template('pages/waiting_approval.html', msg_ok="Note saved successfully!")
+
 # Errors
 
 @login_manager.unauthorized_handler

@@ -293,3 +293,115 @@ class TestDeleteApi:
         resp = client.delete(f"/api/users/{ids['del_target_id']}")
         assert resp.status_code == 404
         logout(client)
+
+
+# --- approval notes -------------------------------------------------------
+class TestApprovalNotes:
+    def test_pending_user_sees_note_form_on_waiting_page(self, client, ids):
+        logout(client)
+        login(client, "uspending", "pend123")
+        resp = client.get("/users")  # any gated page renders waiting_approval
+        assert resp.status_code == 200
+        assert b"Waiting for approval" in resp.data
+        assert b'name="notes"' in resp.data
+
+    def test_too_long_note_is_rejected(self, client, ids):
+        resp = client.post("/approval-notes", data={"notes": "x" * 1001})
+        assert b"Note is too long" in resp.data
+
+        user = db.session.get(Users, ids["pending_id"])
+        assert not user.notes
+
+    def test_pending_user_saves_note(self, client, ids):
+        resp = client.post("/approval-notes", data={"notes": "  Student of Prof. X at Univ Y  "})
+        assert resp.status_code == 200
+        assert b"Note saved successfully!" in resp.data
+
+        user = db.session.get(Users, ids["pending_id"])
+        assert user.notes == "Student of Prof. X at Univ Y"
+
+    def test_note_is_read_only_on_waiting_page_after_save(self, client, ids):
+        resp = client.get("/users")
+        assert b"Student of Prof. X at Univ Y" in resp.data
+        assert b"can no longer be changed" in resp.data
+        # the editable form is gone once the note is saved
+        assert b'name="notes"' not in resp.data
+
+    def test_pending_user_cannot_change_saved_note(self, client, ids):
+        resp = client.post("/approval-notes", data={"notes": "trying to overwrite"})
+        assert resp.status_code == 200
+        assert b"already saved and can no longer be changed" in resp.data
+
+        user = db.session.get(Users, ids["pending_id"])
+        assert user.notes == "Student of Prof. X at Univ Y"
+        logout(client)
+
+    def test_approved_user_note_save_redirects_home(self, client, ids):
+        login(client, "usstudent", "stud123")
+        resp = client.post("/approval-notes", data={"notes": "student note"})
+        assert resp.status_code == 302
+
+        user = db.session.get(Users, ids["student_id"])
+        assert user.notes == "student note"
+
+    def test_approved_user_cannot_change_saved_note(self, client, ids):
+        resp = client.post("/approval-notes", data={"notes": "trying to overwrite"})
+        assert resp.status_code == 302
+
+        user = db.session.get(Users, ids["student_id"])
+        assert user.notes == "student note"
+
+    def test_self_edit_without_notes_field_preserves_note(self, client, ids):
+        resp = client.post(
+            "/profile",
+            data={
+                "username": "usstudent",
+                "email": "usstudent-new@test.local",
+                "given_name": "Student",
+                "family_name": "Aye",
+                "password": "",
+            },
+        )
+        assert b"User profile updated successfully" in resp.data
+
+        user = db.session.get(Users, ids["student_id"])
+        assert user.notes == "student note"
+        logout(client)
+
+    def test_teacher_users_listing_carries_note_for_approve_modal(self, client, ids):
+        login(client, "usteacher", "teach123")
+        resp = client.get("/users")
+        assert resp.status_code == 200
+        assert b'data-notes="Student of Prof. X at Univ Y"' in resp.data
+        logout(client)
+
+    def test_admin_sees_and_edits_note_on_edit_user_page(self, client, ids):
+        login(client, "usadmin", "admin123")
+        resp = client.get(f"/users/{ids['pending_id']}")
+        assert b"Approval notes" in resp.data
+        assert b"Student of Prof. X at Univ Y" in resp.data
+
+        resp = client.post(
+            f"/users/{ids['pending_id']}",
+            data={
+                "username": "uspending",
+                "email": "uspending@test.local",
+                "given_name": "",
+                "family_name": "",
+                "password": "",
+                "user_category": "user",
+                "notes": "Confirmed with Prof. X",
+            },
+        )
+        assert b"User profile updated successfully" in resp.data
+
+        user = db.session.get(Users, ids["pending_id"])
+        assert user.notes == "Confirmed with Prof. X"
+        logout(client)
+
+    def test_non_admin_does_not_get_notes_field_on_edit_page(self, client, ids):
+        login(client, "usstudent", "stud123")
+        resp = client.get("/profile")
+        assert resp.status_code == 200
+        assert b"Approval notes" not in resp.data
+        logout(client)

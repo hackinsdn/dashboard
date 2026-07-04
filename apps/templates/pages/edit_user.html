@@ -115,6 +115,13 @@
                   <input type="text" class="form-control" value="{{ user.issuer|default('LOCAL', true) }}" disabled/>
                 </div>
                 <!-- /.form-group -->
+                {% if current_user.category == 'admin' %}
+                <div class="form-group">
+                  <label>Approval notes (user-provided reference)</label>
+                  <textarea name="notes" class="form-control" rows="3" maxlength="1000">{{ user.notes or '' }}</textarea>
+                </div>
+                {% endif %}
+                <!-- /.form-group -->
                 <div class="form-group">
                   <label>Member of groups:</label>
                   <select name="member_of_groups" multiple class="form-control" disabled>

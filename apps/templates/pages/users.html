@@ -78,7 +78,7 @@
                 </thead>
                 <tbody>
             	{% for user in users %}
-                <tr id="{{ user.id }}">
+                <tr id="{{ user.id }}" data-notes="{{ user.notes|default('', true) }}">
                   <td>
                     <div class="icheck-primary">
                       <input type="checkbox" value="" id="checkbox-{{ user.id }}" class="checkbox-user">
@@ -331,17 +331,19 @@
       });
       $('#modal-approve-users').on('show.bs.modal', function (e) {
         var rows = $('#tableUsers tr').filter(':has(:checkbox:checked)');
-        var data = table.rows(rows).data();
         var items = $("#modal-approve-users-items");
         items.empty();
         $("#approve-users").prop('disabled', false);
-        if (data.length === 0) {
+        if (rows.length === 0) {
           items.append("<li>No user selected!</li>");
           $("#approve-users").prop('disabled', true);
           return;
         }
-        data.each(function (value, index) {
-          items.append(`<li>${value[2]} - ${value[3]}</li>`);
+        table.rows(rows).every(function () {
+          var value = this.data();
+          var notes = $(this.node()).data('notes');
+          var item = $('<li>').text(`${value[2]} - ${value[3]}` + (notes ? ` — ${notes}` : ''));
+          items.append(item);
         });
       });
       //Enable check and uncheck all functionality
