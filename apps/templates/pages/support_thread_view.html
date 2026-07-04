@@ -1,13 +1,13 @@
 {% extends "layouts/base.html" %}
 
-{% block title %} Support Chat {% endblock %}
+{% block title %} Support Chat {% endblock title %}
 
 {% block body_class %} sidebar-mini layout-navbar-fixed {% endblock body_class %}
 
 {% block stylesheets %}
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
-  <link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
-  <link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/fontawesome-free/css/all.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/adminlte.min.css') }}">
   <style>
     /* Preserve line breaks in multi-line messages */
     .direct-chat-text { white-space: pre-wrap; word-wrap: break-word; }
@@ -26,7 +26,7 @@
           </div>
           <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
-              <li class="breadcrumb-item"><a href="/index">Home</a></li>
+              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.index') }}">Home</a></li>
               <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.list_support_threads') }}">Support</a></li>
               <li class="breadcrumb-item active">Thread #{{ thread.id }}</li>
             </ol>
@@ -111,9 +111,9 @@
 {% endblock content %}
 
 {% block javascripts %}
-  <script src="/static/assets/plugins/jquery/jquery.min.js"></script>
-  <script src="/static/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="/static/assets/js/adminlte.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/jquery/jquery.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/js/adminlte.js') }}"></script>
   <script>
     (function () {
       var THREAD_ID = {{ thread.id }};

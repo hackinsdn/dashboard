@@ -1,6 +1,6 @@
 {% extends "layouts/base.html" %}
 
-{% block title %} Create ContainerLab {% endblock %}
+{% block title %} Create ContainerLab {% endblock title %}
 
 {% block body_class %} sidebar-mini {% endblock body_class %}
 
@@ -8,19 +8,19 @@
 <!-- Google Font: Source Sans Pro -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
 <!-- Font Awesome -->
-<link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/fontawesome-free/css/all.min.css') }}">
 <!-- AdminLTE -->
-<link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/adminlte.min.css') }}">
 <!-- summernote -->
-<link rel="stylesheet" href="/static/assets/plugins/summernote/summernote-bs4.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/summernote/summernote-bs4.min.css') }}">
 <!-- Select2 -->
-<link rel="stylesheet" href="/static/assets/plugins/select2/css/select2.min.css">
-<link rel="stylesheet" href="/static/assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/select2/css/select2.min.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css') }}">
 <!-- Bootstrap4 Duallistbox -->
-<link rel="stylesheet" href="/static/assets/plugins/bootstrap4-duallistbox/bootstrap-duallistbox.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/bootstrap4-duallistbox/bootstrap-duallistbox.min.css') }}">
 <!-- CodeMirror -->
-<link rel="stylesheet" href="/static/assets/plugins/codemirror/lib/codemirror.css">
-<link rel="stylesheet" href="/static/assets/plugins/codemirror/theme/abcdef.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/codemirror/lib/codemirror.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/codemirror/theme/abcdef.css') }}">
 <style>
 .dropzone {
     border: 2px dashed #adb5bd;
@@ -68,21 +68,21 @@
                     <div class="alert alert-success alert-dismissible">
                       <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
                       <h5><i class="icon fas fa-check"></i> Lab created/updated successfully!</h5>
-                      {{msg_ok}}
+                      {{ msg_ok }}
                     </div>
                     {% endif %}
                     {% if msg_fail %}
                     <div class="alert alert-danger alert-dismissible">
                       <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
                       <h5><i class="icon fas fa-ban"></i> Fail to insert/update container lab!</h5>
-                      {{msg_fail}}
+                      {{ msg_fail }}
                     </div>
                     {% endif %}
                 </div>
                 <div class="col-sm-6">
                     <ol class="breadcrumb float-sm-right">
                         <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.index') }}">Home</a></li>
-                        <li class="breadcrumb-item"><a href="{{url_for('home_blueprint.view_labs')}}">Labs</a></li>
+                        <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.view_labs') }}">Labs</a></li>
                         <li class="breadcrumb-item active">Create/Update CLab</li>
                     </ol>
                 </div>
@@ -106,17 +106,17 @@
                 <div class="card-body">
                   <div class="form-group">
                     <label>Lab title</label>
-                    <input name="clab_title" type="text" class="form-control" placeholder="Enter container lab title..." value="{{clab.title|default('', true)}}">
+                    <input name="clab_title" type="text" class="form-control" placeholder="Enter container lab title..." value="{{ clab.title|default('', true) }}">
                   </div>
                   <div class="form-group">
                     <label>Short Description</label>
-                    <input name="clab_desc" type="text" class="form-control" placeholder="Max 255 characters" value="{{clab.description|default('', true)}}">
+                    <input name="clab_desc" type="text" class="form-control" placeholder="Max 255 characters" value="{{ clab.description|default('', true) }}">
                   </div>
                   <div class="form-group">
                     <label>Lab categories</label>
                     <select name="clab_categories" class="form-control select2" multiple="multiple" data-placeholder="Select one or more categories" style="width: 100%;">
                       {% for cat_id in lab_categories %}
-                      <option value="{{cat_id}}" data-color="{{lab_categories[cat_id].color_cls}}" {{'selected' if lab_categories[cat_id] in clab.categories else ""}}>{{lab_categories[cat_id].category}}</option>
+                      <option value="{{ cat_id }}" data-color="{{ lab_categories[cat_id].color_cls }}" {{ 'selected' if lab_categories[cat_id] in clab.categories else "" }}>{{ lab_categories[cat_id].category }}</option>
                       {% endfor %}
                     </select>
                     <small class="form-text text-muted">Select one or more categories</small>
@@ -143,9 +143,9 @@
                       <select name="clab_allowed_groups" class="duallistbox" multiple="multiple">
                         {% for group in groups %}
                           {% if group in clab.allowed_groups %}
-                          <option value="{{group.id}}" selected>{{group.groupname}}</option>
+                          <option value="{{ group.id }}" selected>{{ group.groupname }}</option>
                           {% else %}
-                          <option value="{{group.id}}">{{group.groupname}}</option>
+                          <option value="{{ group.id }}">{{ group.groupname }}</option>
                           {% endif %}
                         {% endfor %}
                       </select>
@@ -183,7 +183,7 @@
               <div class="card-body pad">
                 <div class="mb-3">
                   <textarea name="clab_extended_desc" id="lab-editor" class="textarea" placeholder="Place some text here"
-                            style="width: 100%; height: 400px; font-size: 14px; line-height: 18px; border: 1px solid #dddddd; padding: 10px;">{{clab.extended_desc_str|default('', true)}}</textarea>
+                            style="width: 100%; height: 400px; font-size: 14px; line-height: 18px; border: 1px solid #dddddd; padding: 10px;">{{ clab.extended_desc_str|default('', true) }}</textarea>
                 </div>
                 <p class="text-sm mb-0">
                   Editor <a href="https://github.com/summernote/summernote">Documentation and license
@@ -210,7 +210,7 @@
                   <div class="col-md-12">
                     <div class="form-group">
                       <label>GIT repo URL (<span class="text-danger">Under development</span>):</label>
-                      <input name="clab_giturl" type="text" class="form-control" placeholder="Max 255 characters" value="{{clab.giturl|default('', true)}}" disabled>
+                      <input name="clab_giturl" type="text" class="form-control" placeholder="Max 255 characters" value="{{ clab.giturl|default('', true) }}" disabled>
                     </div>
 		  </div> <!-- end of col-md-6 -->
                 </div>
@@ -243,10 +243,10 @@
                   </div>
                 </div>
                 <!-- ./row -->
-		<div class="row {{'d-none' if not clab.manifest}}">
+		<div class="row {{ 'd-none' if not clab.manifest }}">
                   <div class="col-md-12">
                     <label>ContainerLab manifest</label>
-                    <textarea name="clab_yaml" id="clab_yaml" class="textarea" placeholder="Place some text here" rows="16">{{clab.manifest|default('', true)}}</textarea>
+                    <textarea name="clab_yaml" id="clab_yaml" class="textarea" placeholder="Place some text here" rows="16">{{ clab.manifest|default('', true) }}</textarea>
                   </div>
 		</div>
 		<div class="row">
@@ -264,13 +264,13 @@
                       </thead>
                       <tbody id="table-body-secrets">
                       {% for secret in clab.secret_names %}
-		      <tr id="row-secret-{{secret}}">
-                        <td><input class="form-control" type="text" name="secret-name" value="{{secret}}" readonly></td>
+		      <tr id="row-secret-{{ secret }}">
+                        <td><input class="form-control" type="text" name="secret-name" value="{{ secret }}" readonly></td>
                         <td><input class="form-control d-none" type="text" name="secret-server" value=""></td>
                         <td><input class="form-control d-none" type="text" name="secret-user" value=""></td>
 			<td>
                           <input class="form-control d-none" type="password" name="secret-pass" value="">
-			  <button type="button" class="btn btn-xs btn-outline-danger float-right" onclick="deleteSecretRow('{{secret}}')"><i class="fas fa-times"></i></button>
+			  <button type="button" class="btn btn-xs btn-outline-danger float-right" onclick="deleteSecretRow('{{ secret }}')"><i class="fas fa-times"></i></button>
                         </td>
                       </tr>
                       {% endfor %}
@@ -310,7 +310,7 @@
                 <button class="btn btn-outline-secondary" type="button" id="add-select-input-labguide">Add select question</button>
                 <button class="btn btn-outline-secondary" type="button" id="add-check-input-labguide">Add checkbox question</button>
                 <div class="mb-3">
-                  <textarea name="clab_guide" id="lab-edit-guide" class="textarea" placeholder="Place some text here" rows="16">{{clab.lab_guide_md_str|default('', true)}}</textarea>
+                  <textarea name="clab_guide" id="lab-edit-guide" class="textarea" placeholder="Place some text here" rows="16">{{ clab.lab_guide_md_str|default('', true) }}</textarea>
                 </div>
               </div>
             </div>
@@ -321,7 +321,7 @@
         <div class="row">
           <div class="col-md-12 mb-2">
             <button id="btnSubmit" type="button" class="btn btn-primary">
-              <span class="btn-text">{{"Create ContainerLab" if not clab.id else "Update ContainerLab"}}</span>
+              <span class="btn-text">{{ "Create ContainerLab" if not clab.id else "Update ContainerLab" }}</span>
               <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
             </button>
             <a href="{{ url_for('home_blueprint.view_labs', lab_id=clab.id) if clab.id else url_for('home_blueprint.view_labs') }}" class="btn btn-secondary mx-2" role="button" aria-pressed="true">Cancel</a>
@@ -336,23 +336,23 @@
 
 {% block javascripts %}
 <!-- jQuery -->
-<script src="/static/assets/plugins/jquery/jquery.min.js"></script>
+<script src="{{ url_for('static', filename='assets/plugins/jquery/jquery.min.js') }}"></script>
 <!-- Bootstrap 4 -->
-<script src="/static/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='assets/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
 <!-- bs-custom-file-input -->
-<script src="/static/assets/plugins/bs-custom-file-input/bs-custom-file-input.min.js"></script>
+<script src="{{ url_for('static', filename='assets/plugins/bs-custom-file-input/bs-custom-file-input.min.js') }}"></script>
 <!-- Bootstrap4 Duallistbox -->
-<script src="/static/assets/plugins/bootstrap4-duallistbox/jquery.bootstrap-duallistbox.min.js"></script>
+<script src="{{ url_for('static', filename='assets/plugins/bootstrap4-duallistbox/jquery.bootstrap-duallistbox.min.js') }}"></script>
 <!-- AdminLTE -->
-<script src="/static/assets/js/adminlte.min.js"></script>
+<script src="{{ url_for('static', filename='assets/js/adminlte.min.js') }}"></script>
 <!-- Summernote -->
-<script src="/static/assets/plugins/summernote/summernote-bs4.min.js"></script>
+<script src="{{ url_for('static', filename='assets/plugins/summernote/summernote-bs4.min.js') }}"></script>
 <!-- CodeMirror -->
-<script src="/static/assets/plugins/codemirror/lib/codemirror.js"></script>
-<script src="/static/assets/plugins/codemirror/mode/yaml/yaml.js"></script>
-<script src="/static/assets/plugins/codemirror/mode/markdown/markdown.js"></script>
+<script src="{{ url_for('static', filename='assets/plugins/codemirror/lib/codemirror.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/plugins/codemirror/mode/yaml/yaml.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/plugins/codemirror/mode/markdown/markdown.js') }}"></script>
 <!-- Select2 -->
-<script src="/static/assets/plugins/select2/js/select2.full.min.js"></script>
+<script src="{{ url_for('static', filename='assets/plugins/select2/js/select2.full.min.js') }}"></script>
 <script>
     function deleteSecretRow(secret) {
       const rowToDelete = document.getElementById(`row-secret-${secret}`);

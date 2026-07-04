@@ -1,9 +1,9 @@
 {% extends "layouts/base.html" %}
 
-{% block title %} Create/Update Lab {% endblock %} 
+{% block title %} Create/Update Lab {% endblock title %}
 
 <!-- Element injected in the BODY element -->
-{% block body_class %} sidebar-mini {% endblock body_class %} 
+{% block body_class %} sidebar-mini {% endblock body_class %}
 
 <!-- Specific Page CSS goes HERE  -->
 {% block stylesheets %}
@@ -11,19 +11,19 @@
   <!-- Google Font: Source Sans Pro -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
   <!-- Font Awesome -->
-  <link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/fontawesome-free/css/all.min.css') }}">
   <!-- Theme style -->
-  <link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/adminlte.min.css') }}">
   <!-- summernote -->
-  <link rel="stylesheet" href="/static/assets/plugins/summernote/summernote-bs4.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/summernote/summernote-bs4.min.css') }}">
   <!-- Select2 -->
-  <link rel="stylesheet" href="/static/assets/plugins/select2/css/select2.min.css">
-  <link rel="stylesheet" href="/static/assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/select2/css/select2.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css') }}">
   <!-- Bootstrap4 Duallistbox -->
-  <link rel="stylesheet" href="/static/assets/plugins/bootstrap4-duallistbox/bootstrap-duallistbox.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/bootstrap4-duallistbox/bootstrap-duallistbox.min.css') }}">
   <!-- CodeMirror -->
-  <link rel="stylesheet" href="/static/assets/plugins/codemirror/lib/codemirror.css">
-  <link rel="stylesheet" href="/static/assets/plugins/codemirror/theme/abcdef.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/codemirror/lib/codemirror.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/codemirror/theme/abcdef.css') }}">
   <style>
 .input-group > .select2-container--default {
     width: auto;
@@ -43,7 +43,7 @@
 
 {% endblock stylesheets %}
 
-{% block content %}    
+{% block content %}
 
   <div class="content-wrapper">
     <!-- Content Header (Page header) -->
@@ -56,21 +56,21 @@
             <div class="alert alert-success alert-dismissible">
               <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
               <h5><i class="icon fas fa-check"></i> Lab created/updated successfully!</h5>
-              {{msg_ok}}
+              {{ msg_ok }}
             </div>
             {% endif %}
             {% if msg_fail %}
             <div class="alert alert-danger alert-dismissible">
               <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
               <h5><i class="icon fas fa-ban"></i> Fail to create/update lab!</h5>
-              {{msg_fail}}
+              {{ msg_fail }}
             </div>
             {% endif %}
           </div>
           <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
-              <li class="breadcrumb-item"><a href="{{url_for('home_blueprint.index')}}">Home</a></li>
-              <li class="breadcrumb-item"><a href="{{url_for('home_blueprint.view_labs')}}">Labs</a></li>
+              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.index') }}">Home</a></li>
+              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.view_labs') }}">Labs</a></li>
               <li class="breadcrumb-item active">Create/Update Lab</li>
             </ol>
           </div>
@@ -80,7 +80,7 @@
 
     <!-- Main content -->
     <section class="content">
-      <form method="POST" enctype="multipart/form-data" action="{{url_for('home_blueprint.edit_lab', lab_id=lab.id|default('new', true))}}">
+      <form method="post" enctype="multipart/form-data" action="{{ url_for('home_blueprint.edit_lab', lab_id=lab.id|default('new', true)) }}">
       <input type="hidden" name="pending_upload_filenames" id="pending-upload-filenames" value="[]">
       <input type="hidden" name="pending_upload_orignames" id="pending-upload-orignames" value="[]">
       <div class="container-fluid">
@@ -97,17 +97,17 @@
                 <div class="card-body">
                   <div class="form-group">
                     <label>Lab title</label>
-                    <input name="lab_title" type="text" class="form-control" placeholder="Enter lab title..." value="{{lab.title|default('', true)}}">
+                    <input name="lab_title" type="text" class="form-control" placeholder="Enter lab title..." value="{{ lab.title|default('', true) }}">
                   </div>
                   <div class="form-group">
                     <label>Short Description</label>
-                    <input name="lab_description" type="text" class="form-control" placeholder="Max 255 characters" value="{{lab.description|default('', true)}}">
+                    <input name="lab_description" type="text" class="form-control" placeholder="Max 255 characters" value="{{ lab.description|default('', true) }}">
                   </div>
                   <div class="form-group">
                     <label>Lab categories</label>
                     <select name="lab_categories" class="form-control select2" multiple="multiple" data-placeholder="Select one or more categories" style="width: 100%;">
                       {% for cat_id in lab_categories %}
-                      <option value="{{cat_id}}" data-color="{{lab_categories[cat_id].color_cls}}" {{'selected' if lab_categories[cat_id] in lab.categories else ""}}>{{lab_categories[cat_id].category}}</option>
+                      <option value="{{ cat_id }}" data-color="{{ lab_categories[cat_id].color_cls }}" {{ 'selected' if lab_categories[cat_id] in lab.categories else "" }}>{{ lab_categories[cat_id].category }}</option>
                       {% endfor %}
                     </select>
                     <small class="form-text text-muted">Select one or more categories</small>
@@ -134,9 +134,9 @@
                       <select name="lab_allowed_groups" class="duallistbox" multiple="multiple">
                         {% for group in groups %}
                           {% if group in allowed_groups %}
-                          <option value="{{group.id}}" selected>{{group.groupname}}</option>
+                          <option value="{{ group.id }}" selected>{{ group.groupname }}</option>
                           {% else %}
-                          <option value="{{group.id}}">{{group.groupname}}</option>
+                          <option value="{{ group.id }}">{{ group.groupname }}</option>
                           {% endif %}
                         {% endfor %}
                       </select>
@@ -145,7 +145,7 @@
                     <!--
                     <div class="form-group">
                       <label>Lab goals (one per line)</label>
-                      <textarea name="lab_goals" class="form-control" rows="5" placeholder="One goal per line" value="{{lab.goals|default('', true)}}"></textarea>
+                      <textarea name="lab_goals" class="form-control" rows="5" placeholder="One goal per line" value="{{ lab.goals|default('', true) }}"></textarea>
                     </div>
                     -->
                     <!-- /.form-group -->
@@ -181,7 +181,7 @@
               <div class="card-body pad">
                 <div class="mb-3">
                   <textarea name="lab_extended_desc" id="lab-editor" class="textarea" placeholder="Place some text here"
-                            style="width: 100%; height: 400px; font-size: 14px; line-height: 18px; border: 1px solid #dddddd; padding: 10px;">{{lab.extended_desc_str|default('', true)}}</textarea>
+                            style="width: 100%; height: 400px; font-size: 14px; line-height: 18px; border: 1px solid #dddddd; padding: 10px;">{{ lab.extended_desc_str|default('', true) }}</textarea>
                 </div>
                 <p class="text-sm mb-0">
                   Editor <a href="https://github.com/summernote/summernote">Documentation and license
@@ -221,7 +221,7 @@
 		              </div> <!-- end of col-md-6 -->
                 </div>
                 <div class="mb-3">
-                  <textarea name="lab_manifest" id="lab-edit-manifest" class="textarea" placeholder="Place some text here" rows="16">{{lab.manifest|default('', true)}}</textarea>
+                  <textarea name="lab_manifest" id="lab-edit-manifest" class="textarea" placeholder="Place some text here" rows="16">{{ lab.manifest|default('', true) }}</textarea>
                 </div>
                 <p class="text-sm mb-0">
                   Read <a href="#">more information</a> about the Kubernetes manifest.
@@ -264,7 +264,7 @@
                         <button class="btn btn-outline-secondary" type="button" id="upload-file-labguide-btn"><i class="fas fa-paperclip"></i> Paste, drop, or click to add files</button>
                         <input type="file" id="labguide-file-input" style="display: none;">
                         <div class="mb-3">
-                          <textarea name="lab_guide" id="lab-edit-guide" class="textarea" placeholder="Place some text here" rows="16">{{lab.lab_guide_md_str|default('', true)}}</textarea>
+                          <textarea name="lab_guide" id="lab-edit-guide" class="textarea" placeholder="Place some text here" rows="16">{{ lab.lab_guide_md_str|default('', true) }}</textarea>
                         </div>
                         <div id="lab-uploads-panel" class="mt-3">
                           <h6><i class="fas fa-paperclip"></i> Attached files</h6>
@@ -515,29 +515,29 @@
 {% block javascripts %}
 
   <!-- jQuery -->
-  <script src="/static/assets/plugins/jquery/jquery.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/jquery/jquery.min.js') }}"></script>
   <!-- Bootstrap 4 -->
-  <script src="/static/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
   <!-- bs-custom-file-input -->
-  <script src="/static/assets/plugins/bs-custom-file-input/bs-custom-file-input.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/bs-custom-file-input/bs-custom-file-input.min.js') }}"></script>
   <!-- Bootstrap4 Duallistbox -->
-  <script src="/static/assets/plugins/bootstrap4-duallistbox/jquery.bootstrap-duallistbox.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/bootstrap4-duallistbox/jquery.bootstrap-duallistbox.min.js') }}"></script>
   <!-- AdminLTE App -->
-  <script src="/static/assets/js/adminlte.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/js/adminlte.min.js') }}"></script>
   <!-- Shared Labs delete/restore actions -->
-  <script src="/static/assets/js/pages/labs_actions.js"></script>
+  <script src="{{ url_for('static', filename='assets/js/pages/labs_actions.js') }}"></script>
   <!-- AdminLTE for demo purposes -->
-  <script src="/static/assets/js/demo.js"></script>
+  <script src="{{ url_for('static', filename='assets/js/demo.js') }}"></script>
   <!-- Summernote -->
-  <script src="/static/assets/plugins/summernote/summernote-bs4.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/summernote/summernote-bs4.min.js') }}"></script>
   <!-- CodeMirror -->
-  <script src="/static/assets/plugins/codemirror/lib/codemirror.js"></script>
-  <script src="/static/assets/plugins/codemirror/mode/yaml/yaml.js"></script>
-  <script src="/static/assets/plugins/codemirror/mode/markdown/markdown.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/codemirror/lib/codemirror.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/codemirror/mode/yaml/yaml.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/codemirror/mode/markdown/markdown.js') }}"></script>
   <!-- Marked -->
-  <script src="/static/assets/plugins/marked/marked.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/marked/marked.min.js') }}"></script>
   <!-- Select2 -->
-  <script src="/static/assets/plugins/select2/js/select2.full.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/select2/js/select2.full.min.js') }}"></script>
   <script>
     $(function () {
       $('#lab-editor').summernote({

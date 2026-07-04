@@ -1,6 +1,6 @@
 {% extends "layouts/base-fullscreen.html" %}
 
-{% block title %} Error 500 {% endblock %} 
+{% block title %} Error 500 {% endblock title %}
 
 <!-- Element injected in the BODY element -->
 {% block body_class %} login-page {% endblock body_class %}
@@ -11,11 +11,11 @@
   <!-- Google Font: Source Sans Pro -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
   <!-- Font Awesome -->
-  <link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/fontawesome-free/css/all.min.css') }}">
   <!-- icheck bootstrap -->
-  <link rel="stylesheet" href="/static/assets/plugins/icheck-bootstrap/icheck-bootstrap.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/icheck-bootstrap/icheck-bootstrap.min.css') }}">
   <!-- Theme style -->
-  <link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/adminlte.min.css') }}">
 
 {% endblock stylesheets %}
 
@@ -125,7 +125,7 @@
             Our team has been notified and is working to resolve the issue as quickly as possible.
         </p>
         <div class="d-flex justify-content-center gap-3 flex-wrap mt-3">
-            <a href="{{ url_for('authentication_blueprint.login')}}" class="btn btn-primary m-2">Return to Home</a>
+            <a href="{{ url_for('authentication_blueprint.login') }}" class="btn btn-primary m-2">Return to Home</a>
             <a href="mailto:support@hackinsdn.com" class="btn btn-secondary m-2">Contact Support</a>
         </div>
     </div>
@@ -138,8 +138,8 @@
 {% block javascripts %}
 
   <!-- jQuery -->
-  <script src="/static/assets/plugins/jquery/jquery.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/jquery/jquery.min.js') }}"></script>
   <!-- Bootstrap 4 -->
-  <script src="/static/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
 
 {% endblock javascripts %}

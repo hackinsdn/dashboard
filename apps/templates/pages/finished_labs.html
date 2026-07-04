@@ -1,9 +1,9 @@
 {% extends "layouts/base.html" %}
 
-{% block title %} Finished Labs {% endblock %} 
+{% block title %} Finished Labs {% endblock title %}
 
 <!-- Element injected in the BODY element -->
-{% block body_class %} sidebar-mini layout-navbar-fixed {% endblock body_class %} 
+{% block body_class %} sidebar-mini layout-navbar-fixed {% endblock body_class %}
 
 <!-- Specific Page CSS goes HERE  -->
 {% block stylesheets %}
@@ -11,19 +11,19 @@
   <!-- Google Font: Source Sans Pro -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
   <!-- Font Awesome -->
-  <link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/fontawesome-free/css/all.min.css') }}">
   <!-- DataTables -->
-  <link rel="stylesheet" href="/static/assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
-  <link rel="stylesheet" href="/static/assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css') }}">
   <!-- icheck bootstrap -->
-  <link rel="stylesheet" href="/static/assets/plugins/icheck-bootstrap/icheck-bootstrap.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/icheck-bootstrap/icheck-bootstrap.min.css') }}">
   <!-- Theme style -->
-  <link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/adminlte.min.css') }}">
   <style type="text/css">
   </style>
 {% endblock stylesheets %}
 
-{% block content %}  
+{% block content %}
 
   <!-- Content Wrapper. Contains page content -->
   <div class="content-wrapper">
@@ -36,7 +36,7 @@
           </div>
           <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
-              <li class="breadcrumb-item"><a href="/index">Home</a></li>
+              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.index') }}">Home</a></li>
               <li class="breadcrumb-item active">Finished Labs</li>
             </ol>
           </div>
@@ -62,9 +62,9 @@
                       <div class="col-md-8">
                         <select name="filter_group" class="form-control" onchange="this.form.submit()">
                           <option value="">My own labs</option>
-                          <option value="all" {{'selected' if filter_group == 'all' else ''}}>All labs</option>
+                          <option value="all" {{ 'selected' if filter_group == 'all' else '' }}>All labs</option>
                           {% for group_id in groups %}
-                          <option value="{{group_id}}" {{'selected' if filter_group == group_id else ''}}>{{groups[group_id].groupname}}</option>
+                          <option value="{{ group_id }}" {{ 'selected' if filter_group == group_id else '' }}>{{ groups[group_id].groupname }}</option>
                           {% endfor %}
                         </select>
 	              </div>
@@ -95,18 +95,18 @@
                 </thead>
                 <tbody>
             	{% for lab in labs %}
-                <tr id="{{lab['lab_instance_id']}}">
+                <tr id="{{ lab['lab_instance_id'] }}">
                   <td>
                     <div class="icheck-primary">
-                      <input type="checkbox" value="" id="checkbox-{{lab['lab_instance_id']}}">
-                      <label for="checkbox-{{lab['lab_instance_id']}}"></label>
+                      <input type="checkbox" value="" id="checkbox-{{ lab['lab_instance_id'] }}">
+                      <label for="checkbox-{{ lab['lab_instance_id'] }}"></label>
                     </div>
                   </td>
-                  <td>{{lab['user']}}</td>
-                  <td>{{lab['title']}}</td>
-                  <td>{{lab['created']}}</td>
-                  <td>{{lab['finished']}}</td>
-                  <td>{{lab['finish_reason']}}</td>
+                  <td>{{ lab['user'] }}</td>
+                  <td>{{ lab['title'] }}</td>
+                  <td>{{ lab['created'] }}</td>
+                  <td>{{ lab['finished'] }}</td>
+                  <td>{{ lab['finish_reason'] }}</td>
                 </tr>
                 {% endfor %}
                 </tbody>
@@ -145,16 +145,16 @@
 {% block javascripts %}
 
   <!-- jQuery -->
-  <script src="/static/assets/plugins/jquery/jquery.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/jquery/jquery.min.js') }}"></script>
   <!-- Bootstrap 4 -->
-  <script src="/static/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
   <!-- DataTables -->
-  <script src="/static/assets/plugins/datatables/jquery.dataTables.min.js"></script>
-  <script src="/static/assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
-  <script src="/static/assets/plugins/datatables-responsive/js/dataTables.responsive.min.js"></script>
-  <script src="/static/assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/datatables/jquery.dataTables.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/datatables-responsive/js/dataTables.responsive.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js') }}"></script>
   <!-- AdminLTE App -->
-  <script src="/static/assets/js/adminlte.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/js/adminlte.min.js') }}"></script>
   <!-- Page Script -->
   <script>
     $(function () {
@@ -256,6 +256,6 @@
     })
   </script>
   <!-- AdminLTE for demo purposes -->
-  <script src="/static/assets/js/demo.js"></script>
+  <script src="{{ url_for('static', filename='assets/js/demo.js') }}"></script>
 
 {% endblock javascripts %}

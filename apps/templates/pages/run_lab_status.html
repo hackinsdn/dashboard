@@ -1,6 +1,6 @@
 {% extends "layouts/base.html" %}
 
-{% block title %} Run Lab - Status {% endblock %} 
+{% block title %} Run Lab - Status {% endblock title %}
 
 <!-- Element injected in the BODY element -->
 {% block body_class %} sidebar-mini pace-primary {% endblock body_class %}
@@ -11,15 +11,15 @@
   <!-- Google Font: Source Sans Pro -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
   <!-- Font Awesome -->
-  <link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/fontawesome-free/css/all.min.css') }}">
   <!-- pace-progress -->
-  <link rel="stylesheet" href="/static/assets/plugins/pace-progress/themes/black/pace-theme-flat-top.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/pace-progress/themes/black/pace-theme-flat-top.css') }}">
   <!-- adminlte-->
-  <link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/adminlte.min.css') }}">
 
 {% endblock stylesheets %}
 
-{% block content %}  
+{% block content %}
 
   <div class="content-wrapper">
     <!-- Content Header (Page header) -->
@@ -65,11 +65,11 @@
                       <div id="loading" class="overlay"><i class="fas fa-3x fa-sync-alt fa-spin"></i><div class="text-bold pt-2">Loading...</div></div>
                       <ul>
                         {% for resource in resources %}
-                        <li><span id="{{resource['kind'] + '__' + resource['name']}}" class="badge badge-secondary status-badge">Unknown</span> {{resource['kind']}}/{{resource['name']}}</li>
+                        <li><span id="{{ resource['kind'] + '__' + resource['name'] }}" class="badge badge-secondary status-badge">Unknown</span> {{ resource['kind'] }}/{{ resource['name'] }}</li>
                         {% endfor %}
                       </ul>
                       <p id="statusText"></p>
-                      <a style="display: none;" id="labLink" class="btn btn-outline-success" href="{{url_for('home_blueprint.view_lab_instance', lab_id=lab_instance_id)}}">Start using the Lab resources and Lab guide!</a>
+                      <a style="display: none;" id="labLink" class="btn btn-outline-success" href="{{ url_for('home_blueprint.view_lab_instance', lab_id=lab_instance_id) }}">Start using the Lab resources and Lab guide!</a>
                     </div>
                   </div>
                 </div>
@@ -92,21 +92,21 @@
 {% block javascripts %}
 
   <!-- jQuery -->
-  <script src="/static/assets/plugins/jquery/jquery.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/jquery/jquery.min.js') }}"></script>
   <!-- Bootstrap 4 -->
-  <script src="/static/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
     <!-- pace-progress -->
-  <script src="/static/assets/plugins/pace-progress/pace.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/pace-progress/pace.min.js') }}"></script>
   <!-- AdminLTE App -->
-  <script src="/static/assets/js/adminlte.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/js/adminlte.min.js') }}"></script>
   <!-- AdminLTE for demo purposes -->
-  <script src="/static/assets/js/demo.js"></script>
+  <script src="{{ url_for('static', filename='assets/js/demo.js') }}"></script>
   <!-- Page script -->
   <script>
     $(function () {
       var checkStatus = function() {
         var request = $.ajax({
-          url: "/api/lab/status/{{lab_instance_id}}",
+          url: "/api/lab/status/{{ lab_instance_id }}",
           type: "GET",
           dataType: "json",
           contentType: "application/json",

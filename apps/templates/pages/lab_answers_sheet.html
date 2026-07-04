@@ -1,6 +1,6 @@
 {% extends "layouts/base.html" %}
 
-{% block title %} Lab Answers Sheet {% endblock %}
+{% block title %} Lab Answers Sheet {% endblock title %}
 
 {% block body_class %} sidebar-mini layout-navbar-fixed {% endblock body_class %}
 
@@ -8,14 +8,14 @@
   <!-- Google Font: Source Sans Pro -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
   <!-- Font Awesome -->
-  <link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/fontawesome-free/css/all.min.css') }}">
   <!-- DataTables -->
-  <link rel="stylesheet" href="/static/assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
-  <link rel="stylesheet" href="/static/assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css') }}">
   <!-- icheck bootstrap -->
-  <link rel="stylesheet" href="/static/assets/plugins/icheck-bootstrap/icheck-bootstrap.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/icheck-bootstrap/icheck-bootstrap.min.css') }}">
   <!-- Theme style -->
-  <link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/adminlte.min.css') }}">
 {% endblock stylesheets %}
 
 {% block content %}
@@ -44,9 +44,9 @@
           </div>
           <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
-              <li class="breadcrumb-item"><a href="{{url_for('home_blueprint.index')}}">Home</a></li>
-	      <li class="breadcrumb-item"><a href="{{url_for('home_blueprint.view_labs')}}">Labs</a></li>
-	      <li class="breadcrumb-item"><a href="{{url_for('home_blueprint.list_lab_answers')}}">Labs Answers</a></li>
+              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.index') }}">Home</a></li>
+	      <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.view_labs') }}">Labs</a></li>
+	      <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.list_lab_answers') }}">Labs Answers</a></li>
               <li class="breadcrumb-item active">Lab Answers Sheet</li>
             </ol>
           </div>
@@ -72,7 +72,7 @@
                       <select name="lab_id" class="form-control" onchange="this.form.submit()">
                           <option value="">--</option>
 			{% for labid in labs %}
-			  <option value="{{labid}}" {{'selected' if labid == lab_id else ''}}>{{labs[labid].title}}</option>
+			  <option value="{{ labid }}" {{ 'selected' if labid == lab_id else '' }}>{{ labs[labid].title }}</option>
 			{% endfor %}
                       </select>
                     </div>
@@ -101,8 +101,8 @@
                   <tbody id="table-body-answers">
                   {% for question in answers %}
                   <tr>
-                    <td><input class="form-control" type="text" name="question" value="{{question}}"></td>
-                    <td><input class="form-control" type="text" name="answer" value="{{answers[question]}}"></td>
+                    <td><input class="form-control" type="text" name="question" value="{{ question }}"></td>
+                    <td><input class="form-control" type="text" name="answer" value="{{ answers[question] }}"></td>
                   </tr>
                   {% endfor %}
 	          <tr id="copy-answer-row">
@@ -135,22 +135,22 @@
 {% block javascripts %}
   <!-- REQUIRED SCRIPTS -->
   <!-- jQuery -->
-  <script src="/static/assets/plugins/jquery/jquery.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/jquery/jquery.min.js') }}"></script>
 
   <!-- Bootstrap -->
-  <script src="/static/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
 
   <!-- DataTables -->
-  <script src="/static/assets/plugins/datatables/jquery.dataTables.min.js"></script>
-  <script src="/static/assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
-  <script src="/static/assets/plugins/datatables-responsive/js/dataTables.responsive.min.js"></script>
-  <script src="/static/assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/datatables/jquery.dataTables.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/datatables-responsive/js/dataTables.responsive.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js') }}"></script>
 
   <!-- overlayScrollbars -->
-  <script src="/static/assets/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js') }}"></script>
 
   <!-- AdminLTE App -->
-  <script src="/static/assets/js/adminlte.js"></script>
+  <script src="{{ url_for('static', filename='assets/js/adminlte.js') }}"></script>
 
   <!-- Custom Script for Delete Functionality -->
   <script>

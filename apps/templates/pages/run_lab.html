@@ -1,6 +1,6 @@
 {% extends "layouts/base.html" %}
 
-{% block title %} Forms Advanced {% endblock %} 
+{% block title %} Forms Advanced {% endblock title %}
 
 <!-- Element injected in the BODY element -->
 {% block body_class %} sidebar-mini {% endblock body_class %}
@@ -11,16 +11,16 @@
   <!-- Google Font: Source Sans Pro -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
   <!-- Font Awesome -->
-  <link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/fontawesome-free/css/all.min.css') }}">
   <!-- Select2 -->
-  <link rel="stylesheet" href="/static/assets/plugins/select2/css/select2.min.css">
-  <link rel="stylesheet" href="/static/assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/select2/css/select2.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css') }}">
   <!-- Theme style -->
-  <link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/adminlte.min.css') }}">
 
 {% endblock stylesheets %}
 
-{% block content %}    
+{% block content %}
 
   <!-- Content Wrapper. Contains page content -->
   <div class="content-wrapper">
@@ -34,7 +34,7 @@
             <div class="alert alert-danger alert-dismissible">
               <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
               <h5><i class="icon fas fa-ban"></i> Fail to execute the lab!</h5>
-              {{msg_fail}}
+              {{ msg_fail }}
             </div>
             {% endif %}
           </div>
@@ -55,22 +55,22 @@
         <!-- SELECT2 EXAMPLE -->
         <div class="card card-default">
           <div class="card-header">
-            <h3 class="card-title">Lab -- {{lab.title}}</h3>
+            <h3 class="card-title">Lab -- {{ lab.title }}</h3>
           </div>
           <!-- /.card-header -->
           <div class="card-body">
-          <form method="POST">
+          <form method="post">
             <h5>Overall information</h5>
             <div class="row">
               <div class="col-md-6">
                 <div class="form-group">
                   <label>Lab title</label>
-                  <input type="text" class="form-control" disabled="disabled" value="{{lab.title}}"/>
+                  <input type="text" class="form-control" disabled="disabled" value="{{ lab.title }}"/>
                 </div>
                 <!-- /.form-group -->
                 <div class="form-group">
                   <label>User label</label>
-                  <input type="text" class="form-control" disabled="disabled" value="{{current_user.email}}"/>
+                  <input type="text" class="form-control" disabled="disabled" value="{{ current_user.email }}"/>
                 </div>
                 <!-- /.form-group -->
               </div>
@@ -78,7 +78,7 @@
               <div class="col-md-6">
                 <div class="form-group">
                   <label>Lab category</label>
-                  <input type="text" class="form-control" disabled="disabled" value="{{lab.category}}"/>
+                  <input type="text" class="form-control" disabled="disabled" value="{{ lab.category }}"/>
                 </div>
                 <!-- /.form-group -->
                 <!--
@@ -110,7 +110,7 @@
                   <label>Lab Duration/Expiration</label>
                   <select name="lab_expiration" class="form-control" required>
                     {% for exp_sec in lab_expirations %}
-                    <option value="{{exp_sec}}">{{lab_expirations[exp_sec]}}</option>
+                    <option value="{{ exp_sec }}">{{ lab_expirations[exp_sec] }}</option>
                     {% endfor %}
                   </select>
 	          <!--
@@ -152,18 +152,18 @@
 {% block javascripts %}
 
   <!-- jQuery -->
-  <script src="/static/assets/plugins/jquery/jquery.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/jquery/jquery.min.js') }}"></script>
   <!-- Bootstrap 4 -->
-  <script src="/static/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
   <!-- Select2 -->
-  <script src="/static/assets/plugins/select2/js/select2.full.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/select2/js/select2.full.min.js') }}"></script>
   <!-- InputMask -->
-  <script src="/static/assets/plugins/moment/moment.min.js"></script>
-  <script src="/static/assets/plugins/inputmask/jquery.inputmask.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/moment/moment.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/inputmask/jquery.inputmask.min.js') }}"></script>
   <!-- Tempusdominus Bootstrap 4 -->
-  <script src="/static/assets/plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js') }}"></script>
   <!-- AdminLTE App -->
-  <script src="/static/assets/js/adminlte.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/js/adminlte.min.js') }}"></script>
   <!-- Page script -->
   <script>
     $(function () {

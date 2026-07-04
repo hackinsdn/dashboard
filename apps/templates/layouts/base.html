@@ -3,14 +3,16 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" href="/static/assets/favicon.ico">
+  <link rel="icon" href="{{ url_for('static', filename='assets/favicon.ico') }}">
+  <meta name="description" content="A web platform for experimenting/training on cybersecurity and networking using Kubernetes.">
+  <meta name="keywords" content="cybersecurity, networking, SDN, Kubernetes, training, labs, HackInSDN">
 
   <title>
-    Dashboard HackInSDN - {% block title %}{% endblock %}
+    Dashboard HackInSDN - {% block title %}{% endblock title %}
   </title>
 
   <!-- Font Awesome (loaded globally so the support chat widget renders on every page) -->
-  <link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/fontawesome-free/css/all.min.css') }}">
 
   {% block stylesheets %}{% endblock stylesheets %}
 
@@ -18,15 +20,15 @@
 <body class="hold-transition {% block body_class %}{% endblock body_class %}">
 <div class="wrapper">
 
-    {% include 'includes/navigation.html' %}
+    {% include "includes/navigation.html" %}
 
-    {% include 'includes/sidebar.html' %}
+    {% include "includes/sidebar.html" %}
 
     {% block content %}{% endblock content %}
 
-    {% include 'includes/footer.html' %}
+    {% include "includes/footer.html" %}
 
-    {% include 'includes/chatbot.html' %}
+    {% include "includes/chatbot.html" %}
 
 </div>
 <!-- ./wrapper -->
@@ -36,9 +38,9 @@
 
 <!-- Analytics measurements -->
 {% if config.GTAG %}
-<script async src="https://www.googletagmanager.com/gtag/js?id={{config.GTAG}}"></script>
+<script async src="https://www.googletagmanager.com/gtag/js?id={{ config.GTAG }}"></script>
 <script>
-window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);};gtag('js',new Date());gtag('config', '{{config.GTAG}}');
+window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);};gtag('js',new Date());gtag('config', '{{ config.GTAG }}');
 </script>
 {% endif %}
 

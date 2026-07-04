@@ -1,6 +1,6 @@
 {% extends "layouts/base.html" %}
 
-{% block title %} Edit Group - {{ group.groupname }} {% endblock %} 
+{% block title %} Edit Group - {{ group.groupname }} {% endblock title %}
 
 <!-- Element injected in the BODY element -->
 {% block body_class %} sidebar-mini {% endblock body_class %}
@@ -11,20 +11,20 @@
   <!-- Google Font: Source Sans Pro -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
   <!-- Font Awesome -->
-  <link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/fontawesome-free/css/all.min.css') }}">
   <!-- daterange picker -->
-  <link rel="stylesheet" href="/static/assets/plugins/daterangepicker/daterangepicker.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/daterangepicker/daterangepicker.css') }}">
   <!-- Select2 -->
-  <link rel="stylesheet" href="/static/assets/plugins/select2/css/select2.min.css">
-  <link rel="stylesheet" href="/static/assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/select2/css/select2.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css') }}">
   <!-- Bootstrap4 Duallistbox -->
-  <link rel="stylesheet" href="/static/assets/plugins/bootstrap4-duallistbox/bootstrap-duallistbox.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/bootstrap4-duallistbox/bootstrap-duallistbox.min.css') }}">
   <!-- Theme style -->
-  <link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/adminlte.min.css') }}">
 
 {% endblock stylesheets %}
 
-{% block content %}    
+{% block content %}
 
   <!-- Content Wrapper. Contains page content -->
   <div class="content-wrapper">
@@ -69,7 +69,7 @@
           </div>
           <!-- /.card-header -->
           <div class="card-body">
-            <form method="POST" action="">
+            <form method="post" action="">
               <div class="row">
                 <div class="col-md-6">
                   <div class="card card-primary">
@@ -135,11 +135,11 @@ user2@ufxpto.edu.br"
                         <select name="group_members" class="duallistbox" multiple="multiple">
 	                {% set members_dict = group.members_dict %}
 	                {% for user_id in users %}
-		        {%   set selected = "" %}
-		        {%   if user_id in members_dict %}
-		        {%     set selected = "selected" %}
-		        {%   endif %}
-		          <option {{selected}} value={{user_id}}>{{users[user_id]}}</option>
+		        {% set selected = "" %}
+		        {% if user_id in members_dict %}
+		        {% set selected = "selected" %}
+		        {% endif %}
+		          <option {{ selected }} value={{ user_id }}>{{ users[user_id] }}</option>
 		        {% endfor %}
                         </select>
                       </div>
@@ -157,11 +157,11 @@ user2@ufxpto.edu.br"
                         <select name="group_assistants" class="duallistbox" multiple="multiple">
 	                {% set assistants_dict = group.assistants_dict %}
 	                {% for user_id in users %}
-		        {%   set selected = "" %}
-		        {%   if user_id in assistants_dict %}
-		        {%     set selected = "selected" %}
-		        {%   endif %}
-		          <option {{selected}} value={{user_id}}>{{users[user_id]}}</option>
+		        {% set selected = "" %}
+		        {% if user_id in assistants_dict %}
+		        {% set selected = "selected" %}
+		        {% endif %}
+		          <option {{ selected }} value={{ user_id }}>{{ users[user_id] }}</option>
 		        {% endfor %}
                         </select>
                       </div>
@@ -179,17 +179,17 @@ user2@ufxpto.edu.br"
                         <select name="group_owners" class="duallistbox" multiple="multiple">
 	                {% set owners_dict = group.owners_dict %}
 	                {% for user_id in users %}
-		        {%   set selected = "" %}
-		        {%   if action_name == "Create" %}
-		        {%     if (current_user.category == "admin" or current_user.category == "teacher") and current_user.id == user_id %}
-		        {%       set selected = "selected" %}
-		        {%     endif %}
-		        {%   else %}
-		        {%     if user_id in owners_dict %}
-		        {%       set selected = "selected" %}
-		        {%     endif %}
-		        {%   endif %}
-		          <option {{selected}} value={{user_id}}>{{users[user_id]}}</option>
+		        {% set selected = "" %}
+		        {% if action_name == "Create" %}
+		        {% if (current_user.category == "admin" or current_user.category == "teacher") and current_user.id == user_id %}
+		        {% set selected = "selected" %}
+		        {% endif %}
+		        {% else %}
+		        {% if user_id in owners_dict %}
+		        {% set selected = "selected" %}
+		        {% endif %}
+		        {% endif %}
+		          <option {{ selected }} value={{ user_id }}>{{ users[user_id] }}</option>
 		        {% endfor %}
                         </select>
                       </div>
@@ -201,7 +201,7 @@ user2@ufxpto.edu.br"
               </div> <!-- /.row -->
 
               <div class="row">
-		<button class="btn btn-primary" type="submit">{{action_name}}</button>
+		<button class="btn btn-primary" type="submit">{{ action_name }}</button>
                 <a href="{{ url_for('home_blueprint.list_groups') }}" class="btn btn-secondary mx-2" role="button" aria-pressed="true">Cancel</a>
               </div>
               <!-- /.row -->
@@ -220,22 +220,22 @@ user2@ufxpto.edu.br"
 {% block javascripts %}
 
   <!-- jQuery -->
-  <script src="/static/assets/plugins/jquery/jquery.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/jquery/jquery.min.js') }}"></script>
   <!-- Bootstrap 4 -->
-  <script src="/static/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
   <!-- Bootstrap4 Duallistbox -->
-  <script src="/static/assets/plugins/bootstrap4-duallistbox/jquery.bootstrap-duallistbox.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/bootstrap4-duallistbox/jquery.bootstrap-duallistbox.min.js') }}"></script>
   <!-- Select2 -->
-  <script src="/static/assets/plugins/select2/js/select2.full.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/select2/js/select2.full.min.js') }}"></script>
   <!-- InputMask -->
-  <script src="/static/assets/plugins/moment/moment.min.js"></script>
-  <script src="/static/assets/plugins/inputmask/jquery.inputmask.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/moment/moment.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/inputmask/jquery.inputmask.min.js') }}"></script>
   <!-- date-range-picker -->
-  <script src="/static/assets/plugins/daterangepicker/daterangepicker.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/daterangepicker/daterangepicker.js') }}"></script>
   <!-- Tempusdominus Bootstrap 4 -->
-  <script src="/static/assets/plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js') }}"></script>
   <!-- AdminLTE App -->
-  <script src="/static/assets/js/adminlte.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/js/adminlte.min.js') }}"></script>
   <!-- Page script -->
   <script>
     $(function () {

@@ -1,9 +1,9 @@
 {% extends "layouts/base.html" %}
 
-{% block title %} Gallery {% endblock %} 
+{% block title %} Gallery {% endblock title %}
 
 <!-- Element injected in the BODY element -->
-{% block body_class %} sidebar-mini layout-navbar-fixed {% endblock body_class %} 
+{% block body_class %} sidebar-mini layout-navbar-fixed {% endblock body_class %}
 
 <!-- Specific Page CSS goes HERE  -->
 {% block stylesheets %}
@@ -11,11 +11,11 @@
   <!-- Google Font: Source Sans Pro -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
   <!-- Font Awesome -->
-  <link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/fontawesome-free/css/all.min.css') }}">
   <!-- Ekko Lightbox -->
-  <link rel="stylesheet" href="/static/assets/plugins/ekko-lightbox/ekko-lightbox.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/ekko-lightbox/ekko-lightbox.css') }}">
   <!-- Theme style -->
-  <link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/adminlte.min.css') }}">
 
 {% endblock stylesheets %}
 
@@ -52,22 +52,22 @@
               <div class="card-body">
                 <div>
                   <div class="btn-group w-100 mb-2">
-                    <a class="btn btn-info active" href="javascript:void(0)" data-filter="all"> All items </a>
-                    <a class="btn btn-info" href="javascript:void(0)" data-filter="1"> Category 1 (WHITE) </a>
-                    <a class="btn btn-info" href="javascript:void(0)" data-filter="2"> Category 2 (BLACK) </a>
-                    <a class="btn btn-info" href="javascript:void(0)" data-filter="3"> Category 3 (COLORED) </a>
-                    <a class="btn btn-info" href="javascript:void(0)" data-filter="4"> Category 4 (COLORED, BLACK) </a>
+                    <a class="btn btn-info active" href="#" data-filter="all"> All items </a>
+                    <a class="btn btn-info" href="#" data-filter="1"> Category 1 (WHITE) </a>
+                    <a class="btn btn-info" href="#" data-filter="2"> Category 2 (BLACK) </a>
+                    <a class="btn btn-info" href="#" data-filter="3"> Category 3 (COLORED) </a>
+                    <a class="btn btn-info" href="#" data-filter="4"> Category 4 (COLORED, BLACK) </a>
                   </div>
                   <div class="mb-2">
-                    <a class="btn btn-secondary" href="javascript:void(0)" data-shuffle> Shuffle items </a>
+                    <a class="btn btn-secondary" href="#" data-shuffle> Shuffle items </a>
                     <div class="float-right">
                       <select class="custom-select" style="width: auto;" data-sortOrder>
                         <option value="index"> Sort by Position </option>
                         <option value="sortData"> Sort by Custom Data </option>
                       </select>
                       <div class="btn-group">
-                        <a class="btn btn-default" href="javascript:void(0)" data-sortAsc> Ascending </a>
-                        <a class="btn btn-default" href="javascript:void(0)" data-sortDesc> Descending </a>
+                        <a class="btn btn-default" href="#" data-sortAsc> Ascending </a>
+                        <a class="btn btn-default" href="#" data-sortDesc> Descending </a>
                       </div>
                     </div>
                   </div>
@@ -224,19 +224,19 @@
 {% block javascripts %}
 
   <!-- jQuery -->
-  <script src="/static/assets/plugins/jquery/jquery.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/jquery/jquery.min.js') }}"></script>
   <!-- Bootstrap 4 -->
-  <script src="/static/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
   <!-- jQuery UI -->
-  <script src="/static/assets/plugins/jquery-ui/jquery-ui.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/jquery-ui/jquery-ui.min.js') }}"></script>
   <!-- Ekko Lightbox -->
-  <script src="/static/assets/plugins/ekko-lightbox/ekko-lightbox.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/ekko-lightbox/ekko-lightbox.min.js') }}"></script>
   <!-- AdminLTE App -->
-  <script src="/static/assets/js/adminlte.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/js/adminlte.min.js') }}"></script>
   <!-- AdminLTE for demo purposes -->
-  <script src="/static/assets/js/demo.js"></script>
+  <script src="{{ url_for('static', filename='assets/js/demo.js') }}"></script>
   <!-- Filterizr-->
-  <script src="/static/assets/plugins/filterizr/jquery.filterizr.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/filterizr/jquery.filterizr.min.js') }}"></script>
   <!-- Page specific script -->
   <script>
     $(function () {

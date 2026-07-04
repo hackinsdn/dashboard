@@ -3,14 +3,16 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" href="/static/assets/favicon.ico">
+  <link rel="icon" href="{{ url_for('static', filename='assets/favicon.ico') }}">
+  <meta name="description" content="A web platform for experimenting/training on cybersecurity and networking using Kubernetes.">
+  <meta name="keywords" content="cybersecurity, networking, SDN, Kubernetes, training, labs, HackInSDN">
   <meta property="og:title" content="Dashboard HackInSDN"/>
   <meta property="og:description" content="A web platform for experimenting/training on cybersecurity and networking using Kubernetes."/>
   <meta property="og:url" content="https://hackinsdn.ufba.br"/>
-  <meta property="og:image"content="/static/assets/img/preview.png"/>
+  <meta property="og:image" content="{{ config.BASE_URL }}{{ url_for('static', filename='assets/img/preview.png') }}"/>
   
   <title>
-    Dashboard HackInSDN - {% block title %}{% endblock %}
+    Dashboard HackInSDN - {% block title %}{% endblock title %}
   </title> 
 
   <!-- Specific Page CSS goes HERE  -->  

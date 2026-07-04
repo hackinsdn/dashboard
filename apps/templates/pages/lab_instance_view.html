@@ -1,9 +1,9 @@
 {% extends "layouts/base.html" %}
 
-{% block title %} View Lab Instance {% endblock %} 
+{% block title %} View Lab Instance {% endblock title %}
 
 <!-- Element injected in the BODY element -->
-{% block body_class %} sidebar-mini layout-navbar-fixed {% endblock body_class %} 
+{% block body_class %} sidebar-mini layout-navbar-fixed {% endblock body_class %}
 
 <!-- Specific Page CSS goes HERE  -->
 {% block stylesheets %}
@@ -11,15 +11,15 @@
   <!-- Google Font: Source Sans Pro -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
   <!-- Font Awesome -->
-  <link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/fontawesome-free/css/all.min.css') }}">
   <!-- DataTables -->
-  <link rel="stylesheet" href="/static/assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
-  <link rel="stylesheet" href="/static/assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css') }}">
   <!-- icheck bootstrap -->
-  <link rel="stylesheet" href="/static/assets/plugins/icheck-bootstrap/icheck-bootstrap.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/icheck-bootstrap/icheck-bootstrap.min.css') }}">
   <!-- Theme style -->
-  <link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
-  <link rel="stylesheet" href="/static/assets/css/alert.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/adminlte.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/alert.css') }}">
   <style type="text/css">
 pre { background-color: #ced4da; 
   position: relative;
@@ -72,7 +72,7 @@ word-break: break-all;
   </style>
 {% endblock stylesheets %}
 
-{% block content %}  
+{% block content %}
 
   <!-- Content Wrapper. Contains page content -->
   <div class="content-wrapper">
@@ -85,8 +85,8 @@ word-break: break-all;
           </div>
           <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
-              <li class="breadcrumb-item"><a href="/index">Home</a></li>
-              <li class="breadcrumb-item"><a href="{{url_for('home_blueprint.running_labs')}}">Running Labs</a></li>
+              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.index') }}">Home</a></li>
+              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.running_labs') }}">Running Labs</a></li>
               <li class="breadcrumb-item active">View Lab</li>
             </ol>
           </div>
@@ -100,9 +100,9 @@ word-break: break-all;
         <div class="col-md-12">
           <div class="card card-dark">
             <div class="card-header" id="lab-header">
-              <h3 class="card-title text single-line">Lab title: {{lab['title']}} / Lab owner: {{lab['user']}}</h3>
+              <h3 class="card-title text single-line">Lab title: {{ lab['title'] }} / Lab owner: {{ lab['user'] }}</h3>
 	      <div class="card-tools">
-                <span id="lab-expiration" class="pr-3" data-expires-at="{{lab['expires_at']|default('', true)}}">Expires at: {{lab['expires_at']|default('Never', true)}}</span>
+                <span id="lab-expiration" class="pr-3" data-expires-at="{{ lab['expires_at']|default('', true) }}">Expires at: {{ lab['expires_at']|default('Never', true) }}</span>
                   <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
                     <i class="fas fa-minus"></i>
                   </button>
@@ -132,35 +132,35 @@ word-break: break-all;
                   <tbody>
                   {% for resource in lab['resources'] %}
                   <tr>
-                    <td>{{resource['display_name']}}</td>
-                    <td>{{resource['ready']}}</td>
-                    <td>{{resource['node_name']}}</td>
-                    <td>{{resource['pod_ip']}}</td>
-                    <td>{{resource['age']}}</td>
+                    <td>{{ resource['display_name'] }}</td>
+                    <td>{{ resource['ready'] }}</td>
+                    <td>{{ resource['node_name'] }}</td>
+                    <td>{{ resource['pod_ip'] }}</td>
+                    <td>{{ resource['age'] }}</td>
                     <td>
                       <div class="d-flex flex-nowrap">
                         {% for link in resource['links'] %}
-                        {%   if resource['kind'] == 'service' %}
-                        {%     set link_icon = 'globe' %}
-                        {%     set link_name = link[0] %}
-                        {%     set link_href = link[1] %}
-                        {%   else %}
-                        {%     set link_icon = 'desktop' %}
-                        {%     set link_name = link %}
-                        {%     set link_href = url_for('home_blueprint.xterm', lab_id=lab['lab_instance_id'], kind=resource['kind'], pod=resource['name'], container=link)  %}
-                        {%   endif %}
-                        <a class="btn btn-outline-dark mr-1 btn-terminal" href="{{link_href}}" target="_blank" role="button"><i class="fas fa-{{link_icon}}"></i> {{link_name}}</a>
+                        {% if resource['kind'] == 'service' %}
+                        {% set link_icon = 'globe' %}
+                        {% set link_name = link[0] %}
+                        {% set link_href = link[1] %}
+                        {% else %}
+                        {% set link_icon = 'desktop' %}
+                        {% set link_name = link %}
+                        {% set link_href = url_for('home_blueprint.xterm', lab_id=lab['lab_instance_id'], kind=resource['kind'], pod=resource['name'], container=link) %}
+                        {% endif %}
+                        <a class="btn btn-outline-dark mr-1 btn-terminal" href="{{ link_href }}" target="_blank" role="button"><i class="fas fa-{{ link_icon }}"></i> {{ link_name }}</a>
                         {% endfor %}
                         {% if lab['is_clab'] and 'clabernetes/topologyNode' in resource['labels'] %}
-                        {%   set link_href = url_for('home_blueprint.xterm', lab_id=lab['lab_instance_id'], kind='clab', pod=resource['name'], container=resource['display_name'])  %}
-                        <a class="btn btn-outline-dark mr-1 btn-terminal" href="{{link_href}}" target="_blank" role="button"><i class="fas fa-server"></i> {{resource['display_name']}} (ssh)</a>
+                        {% set link_href = url_for('home_blueprint.xterm', lab_id=lab['lab_instance_id'], kind='clab', pod=resource['name'], container=resource['display_name']) %}
+                        <a class="btn btn-outline-dark mr-1 btn-terminal" href="{{ link_href }}" target="_blank" role="button"><i class="fas fa-server"></i> {{ resource['display_name'] }} (ssh)</a>
                         {% endif %}
                       </div>
                     </td>
                     <td>
                       <div class="d-flex flex-nowrap">
                         {% for service in resource['services'] %}
-                        <a class="btn btn-outline-dark mr-1 btn-service" href="{{service[1]}}" target="_blank" role="button"><i class="fas fa-globe"></i> {{service[0]}}</a>
+                        <a class="btn btn-outline-dark mr-1 btn-service" href="{{ service[1] }}" target="_blank" role="button"><i class="fas fa-globe"></i> {{ service[0] }}</a>
                         {% endfor %}
                       </div>
                     </td>
@@ -231,7 +231,7 @@ word-break: break-all;
             </div>
             <!-- /.card-header -->
             <div class="card-body" id="lab-guide">
-                {{lab_guide|safe}}
+                {{ lab_guide|safe }}
             </div>
             <!-- /.card-body -->
             <div class="card-footer">
@@ -259,17 +259,17 @@ word-break: break-all;
 {% block javascripts %}
 
   <!-- jQuery -->
-  <script src="/static/assets/plugins/jquery/jquery.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/jquery/jquery.min.js') }}"></script>
   <!-- Bootstrap 4 -->
-  <script src="/static/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
   <!-- DataTables -->
-  <script src="/static/assets/plugins/datatables/jquery.dataTables.min.js"></script>
-  <script src="/static/assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
-  <script src="/static/assets/plugins/datatables-responsive/js/dataTables.responsive.min.js"></script>
-  <script src="/static/assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js"></script>
-  <script src="/static/assets/plugins/clipboard.js/clipboard.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/datatables/jquery.dataTables.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/datatables-responsive/js/dataTables.responsive.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/clipboard.js/clipboard.min.js') }}"></script>
   <!-- AdminLTE App -->
-  <script src="/static/assets/js/adminlte.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/js/adminlte.min.js') }}"></script>
   <!-- Page Script -->
   <script>
     $(function () {
@@ -358,17 +358,17 @@ word-break: break-all;
         $("#delete-lab").html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Finishing... ');
         $("#delete-lab").prop('disabled', true);
         var request = $.ajax({
-          url:  "/api/lab/{{lab['lab_instance_id']}}",
+          url:  "/api/lab/{{ lab['lab_instance_id'] }}",
           type: "DELETE",
           dataType: "json",
           contentType: "application/json",
         });
         request.done(function(data) {
-          location.href = "{{url_for('home_blueprint.view_finished_lab_infos', lab_id=lab['lab_id'])}}";
+          location.href = "{{ url_for('home_blueprint.view_finished_lab_infos', lab_id=lab['lab_id']) }}";
         });
         request.fail(function(xhr) {
           sessionStorage.setItem('msgFail', xhr.responseText);
-          location.href = "{{url_for('home_blueprint.running_labs')}}";
+          location.href = "{{ url_for('home_blueprint.running_labs') }}";
         });
       });
       function saveAnswers(showToast = true) {
@@ -388,7 +388,7 @@ word-break: break-all;
           return;
         }
         var request = $.ajax({
-          url:  "/api/lab_answers/{{lab['lab_instance_id']}}",
+          url:  "/api/lab_answers/{{ lab['lab_instance_id'] }}",
           type: "POST",
           data: JSON.stringify(answers),
           dataType: "json",
@@ -428,7 +428,7 @@ word-break: break-all;
       // load answers
       $(window).on("load", function () {
         var request = $.ajax({
-          url:  "/api/lab_answers/{{lab['lab_instance_id']}}",
+          url:  "/api/lab_answers/{{ lab['lab_instance_id'] }}",
           type: "GET",
         });
         request.done(function(data) {
@@ -467,7 +467,7 @@ word-break: break-all;
     // Extends lab expiration
     function extendLabExpiration(hours) {
       var request = $.ajax({
-        url:  "/api/lab/{{lab['lab_instance_id']}}/extend",
+        url:  "/api/lab/{{ lab['lab_instance_id'] }}/extend",
         type: "POST",
         dataType: "json",
         contentType: "application/json",
@@ -494,6 +494,6 @@ word-break: break-all;
     }
   </script>
   <!-- AdminLTE for demo purposes -->
-  <script src="/static/assets/js/demo.js"></script>
+  <script src="{{ url_for('static', filename='assets/js/demo.js') }}"></script>
 
 {% endblock javascripts %}

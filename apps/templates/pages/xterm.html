@@ -3,8 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0" />
-    <title>{{container}} - xterm</title>
-    <link rel="icon" href="/static/assets/favicon.ico">
+    <meta name="description" content="Interactive terminal session for HackInSDN lab environments.">
+    <meta name="keywords" content="terminal, xterm, cybersecurity, networking, labs, HackInSDN">
+    <title>{{ container }} - xterm</title>
+    <link rel="icon" href="{{ url_for('static', filename='assets/favicon.ico') }}">
     <style>
 html {
   font-family: arial;
@@ -40,11 +42,11 @@ body {
   }
 }
     </style>
-    <link rel="stylesheet" href="/static/assets/plugins/xterm/xterm/css/xterm.css"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/xterm/xterm/css/xterm.css') }}"/>
   </head>
   <body>
     <div style="display: flex;">
-      <a href="https://hackinsdn.ufba.br" target="_blank" style="font-size: 1.4em; text-decoration: none; color:black"><img style="height: 50px" src="/static/assets/img/hackinsdn-horizontal.png" /></a>
+      <a href="https://hackinsdn.ufba.br" target="_blank" style="font-size: 1.4em; text-decoration: none; color:black"><img alt="hackinsdn" style="height: 50px" src="{{ url_for('static', filename='assets/img/hackinsdn-horizontal.png') }}" /></a>
         <span style="font-size: small; display: flex; flex-wrap: wrap; gap: .1em; justify-content: flex-end; margin: auto 0 auto auto;">
           status:
           <span style="font-size: small" id="status">connecting...</span>
@@ -67,18 +69,18 @@ body {
 
     <!-- Analytics measurements -->
     {% if config.ANALYTICS_JSFILE %}
-    <script async src="{{config.ANALYTICS_JSFILE}}"></script>
+    <script async src="{{ config.ANALYTICS_JSFILE }}"></script>
     {% endif %}
     {% if config.ANALYTICS_SCRIPT %}
     <script>
-    {{config.ANALYTICS_SCRIPT|safe}}
+    {{ config.ANALYTICS_SCRIPT|safe }}
     </script>
     {% endif %}
     <!-- xterm -->
-    <script src="/static/assets/plugins/xterm/xterm/lib/xterm.js"></script>
-    <script src="/static/assets/plugins/xterm/addon-fit/lib/addon-fit.js"></script>
-    <script src="/static/assets/plugins/xterm/addon-web-links/lib/addon-web-links.js"></script>
-    <script src="/static/assets/plugins/xterm/addon-search/lib/addon-search.js"></script>
+    <script src="{{ url_for('static', filename='assets/plugins/xterm/xterm/lib/xterm.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/plugins/xterm/addon-fit/lib/addon-fit.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/plugins/xterm/addon-web-links/lib/addon-web-links.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/plugins/xterm/addon-search/lib/addon-search.js') }}"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.min.js"></script>
 
     <script>
@@ -148,7 +150,7 @@ body {
       fit.fit();
       term.resize(15, 50);
       fit.fit();
-      term.writeln("Welcome to {{host}}");
+      term.writeln("Welcome to {{ host }}");
       term.writeln('')
       term.writeln("You can copy with ctrl+shift+c or ctrl+shift+x");
       term.writeln("You can paste with ctrl+shift+v");
@@ -167,13 +169,13 @@ body {
           data = String.fromCharCode(27, data.codePointAt(0));
           shouldClear = true;
         }
-        socket.emit("pty-input", { input: data, host: "{{host}}" });
+        socket.emit("pty-input", { input: data, host: "{{ host }}" });
         if (shouldClear) {
           clearVirtualKeyboard();
         }
       });
 
-      const socket = io.connect("/pty?host={{host}}");
+      const socket = io.connect("/pty?host={{ host }}");
       const status = document.getElementById("status");
 
       socket.on("pty-output", function (data) {
@@ -209,7 +211,7 @@ body {
         }
         fit.fit();
         const dims = { cols: term.cols, rows: term.rows };
-        socket.emit("resize", { dims: dims, host: "{{host}}" });
+        socket.emit("resize", { dims: dims, host: "{{ host }}" });
       }
 
       function debounce(func, wait_ms) {
@@ -271,7 +273,7 @@ body {
       function handleVirtualKeyboard(evt) {
         evt.preventDefault();
         if (evt.target.id in specialKeyMap) {
-          socket.emit("pty-input", { input: specialKeyMap[evt.target.id], host: "{{host}}" });
+          socket.emit("pty-input", { input: specialKeyMap[evt.target.id], host: "{{ host }}" });
           clearVirtualKeyboard();
         } else if (evt.target.id === "ctrl") {
           ctrlButton.style.backgroundColor = "lightblue";
@@ -301,7 +303,7 @@ body {
       }
 
       window.onbeforeunload = function () {
-        socket.emit('disconnect', {'host': "{{host}}"});
+        socket.emit('disconnect', {'host': "{{ host }}"});
       }
     </script>
   </body>

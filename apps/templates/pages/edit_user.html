@@ -1,6 +1,6 @@
 {% extends "layouts/base.html" %}
 
-{% block title %} Profile - {{user.name}} {% endblock %} 
+{% block title %} Profile - {{ user.name }} {% endblock title %}
 
 <!-- Element injected in the BODY element -->
 {% block body_class %} sidebar-mini {% endblock body_class %}
@@ -11,13 +11,13 @@
   <!-- Google Font: Source Sans Pro -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
   <!-- Font Awesome -->
-  <link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/fontawesome-free/css/all.min.css') }}">
   <!-- Theme style -->
-  <link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/adminlte.min.css') }}">
 
 {% endblock stylesheets %}
 
-{% block content %}    
+{% block content %}
 
   <!-- Content Wrapper. Contains page content -->
   <div class="content-wrapper">
@@ -31,22 +31,22 @@
             <div class="alert alert-success alert-dismissible">
               <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
               <h5><i class="icon fas fa-check"></i> User updated successfully!</h5>
-              {{msg_ok}}
+              {{ msg_ok }}
             </div>
             {% endif %}
             {% if msg_fail %}
             <div class="alert alert-danger alert-dismissible">
               <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
               <h5><i class="icon fas fa-ban"></i> Fail to update user!</h5>
-              {{msg_fail}}
+              {{ msg_fail }}
             </div>
             {% endif %}
           </div>
           <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
               <li class="breadcrumb-item"><a href="/">Home</a></li>
-              <li class="breadcrumb-item"><a href="/users">Users</a></li>
-              <li class="breadcrumb-item active">{{user.name}}</li>
+              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.view_users') }}">Users</a></li>
+              <li class="breadcrumb-item active">{{ user.name }}</li>
             </ol>
           </div>
         </div>
@@ -58,32 +58,32 @@
       <div class="container-fluid">
         <div class="card card-default">
           <div class="card-header">
-            <h3 class="card-title">User - {{user.uid}}</h3>
+            <h3 class="card-title">User - {{ user.uid }}</h3>
           </div>
           <!-- /.card-header -->
           <div class="card-body">
-          <form id="userForm" method="POST">
+          <form id="userForm" method="post">
             <h5>User information</h5>
             <div class="row">
               <div class="col-md-6">
                 <div class="form-group">
                   <label>Username</label>
-                  <input name="username" type="text" class="form-control is-valid" value="{{user.username}}" {{'disabled' if user.id != current_user.id and current_user.category != 'admin' else ''}}/>
+                  <input name="username" type="text" class="form-control is-valid" value="{{ user.username }}" {{ 'disabled' if user.id != current_user.id and current_user.category != 'admin' else '' }}/>
                 </div>
                 <!-- /.form-group -->
                 <div class="form-group">
                   <label>E-mail</label>
-                  <input name="email" type="text" class="form-control" value="{{user.email|default('', true)}}" {{'disabled' if user.id != current_user.id and current_user.category != 'admin' else ''}}/>
+                  <input name="email" type="text" class="form-control" value="{{ user.email|default('', true) }}" {{ 'disabled' if user.id != current_user.id and current_user.category != 'admin' else '' }}/>
                 </div>
                 <!-- /.form-group -->
                 <div class="form-group">
                   <label>First Name</label>
-                  <input name="given_name" type="text" class="form-control" value="{{user.given_name|default('', true)}}" {{'disabled' if user.id != current_user.id and current_user.category != 'admin' else ''}}/>
+                  <input name="given_name" type="text" class="form-control" value="{{ user.given_name|default('', true) }}" {{ 'disabled' if user.id != current_user.id and current_user.category != 'admin' else '' }}/>
                 </div>
                 <!-- /.form-group -->
                 <div class="form-group">
                   <label>Last Name</label>
-                  <input name="family_name" type="text" class="form-control" value="{{user.family_name|default('', true)}}" {{'disabled' if user.id != current_user.id and current_user.category != 'admin' else ''}}/>
+                  <input name="family_name" type="text" class="form-control" value="{{ user.family_name|default('', true) }}" {{ 'disabled' if user.id != current_user.id and current_user.category != 'admin' else '' }}/>
                 </div>
                 <!-- /.form-group -->
                 {% if current_user.id == user.id or current_user.category == 'admin' %}
@@ -97,14 +97,14 @@
                   <label>User category</label>
                   {% if current_user.category == "admin" %}
                   <select name="user_category" class="form-control">
-                    <option {{'selected' if user.category == 'user' else ''}}>user</option>
-                    <option {{'selected' if user.category == 'student' else ''}}>student</option>
-                    <option {{'selected' if user.category == 'labcreator' else ''}} value="labcreator">lab creator</option>
-                    <option {{'selected' if user.category == 'teacher' else ''}}>teacher</option>
-                    <option {{'selected' if user.category == 'admin' else ''}}>admin</option>
+                    <option {{ 'selected' if user.category == 'user' else '' }}>user</option>
+                    <option {{ 'selected' if user.category == 'student' else '' }}>student</option>
+                    <option {{ 'selected' if user.category == 'labcreator' else '' }} value="labcreator">lab creator</option>
+                    <option {{ 'selected' if user.category == 'teacher' else '' }}>teacher</option>
+                    <option {{ 'selected' if user.category == 'admin' else '' }}>admin</option>
                   </select>
 		  {% else %}
-                  <input type="text" class="form-control" disabled="disabled" value="{{current_user.category}}"/>
+                  <input type="text" class="form-control" disabled="disabled" value="{{ current_user.category }}"/>
 		  {% endif %}
                 </div>
               </div>
@@ -112,14 +112,14 @@
                 <!-- /.form-group -->
                 <div class="form-group">
                   <label>Issuer</label>
-                  <input type="text" class="form-control" value="{{user.issuer|default('LOCAL', true)}}" disabled/>
+                  <input type="text" class="form-control" value="{{ user.issuer|default('LOCAL', true) }}" disabled/>
                 </div>
                 <!-- /.form-group -->
                 <div class="form-group">
                   <label>Member of groups:</label>
                   <select name="member_of_groups" multiple class="form-control" disabled>
                     {% for group in user.member_of_groups %}
-		    <option>{{group.groupname}}</option>
+		    <option>{{ group.groupname }}</option>
                     {% endfor %}
                   </select>
                 </div>
@@ -127,7 +127,7 @@
                   <label>Assistant of groups:</label>
                   <select name="assistant_of_groups" multiple class="form-control" disabled>
                     {% for group in user.assistant_of_groups %}
-		    <option>{{group.groupname}}</option>
+		    <option>{{ group.groupname }}</option>
                     {% endfor %}
                   </select>
                 </div>
@@ -135,7 +135,7 @@
                   <label>Owner of groups:</label>
                   <select name="owner_of_groups" multiple class="form-control" disabled>
                     {% for group in user.owner_of_groups %}
-		    <option>{{group.groupname}}</option>
+		    <option>{{ group.groupname }}</option>
                     {% endfor %}
                   </select>
                 </div>
@@ -144,7 +144,7 @@
 
             <div class="row">
               <button class="btn btn-primary" type="submit">Save</button>
-              <a href="{{url_for(return_path|default('home_blueprint.index', true))}}" class="btn btn-secondary mx-2" role="button" aria-pressed="true">Cancel</a>
+              <a href="{{ url_for(return_path|default('home_blueprint.index', true)) }}" class="btn btn-secondary mx-2" role="button" aria-pressed="true">Cancel</a>
             </div>
             <!-- /.row -->
           </form>
@@ -162,19 +162,19 @@
 {% block javascripts %}
 
   <!-- jQuery -->
-  <script src="/static/assets/plugins/jquery/jquery.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/jquery/jquery.min.js') }}"></script>
   <!-- Bootstrap 4 -->
-  <script src="/static/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
   <!-- jquery-validation -->
-  <script src="/static/assets/plugins/jquery-validation/jquery.validate.min.js"></script>
-  <script src="/static/assets/plugins/jquery-validation/additional-methods.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/jquery-validation/jquery.validate.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/jquery-validation/additional-methods.min.js') }}"></script>
   <!-- InputMask -->
-  <script src="/static/assets/plugins/moment/moment.min.js"></script>
-  <script src="/static/assets/plugins/inputmask/jquery.inputmask.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/moment/moment.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/inputmask/jquery.inputmask.min.js') }}"></script>
   <!-- Tempusdominus Bootstrap 4 -->
-  <script src="/static/assets/plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js') }}"></script>
   <!-- AdminLTE App -->
-  <script src="/static/assets/js/adminlte.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/js/adminlte.min.js') }}"></script>
   <!-- Page script -->
   <script>
     $(function () {

@@ -1,6 +1,6 @@
 {% extends "layouts/base.html" %}
 
-{% block title %} Home {% endblock %}
+{% block title %} Home {% endblock title %}
 
 <!-- Element injected in the BODY element -->
 {% block body_class %} sidebar-mini layout-navbar-fixed {% endblock body_class %}
@@ -11,13 +11,13 @@
   <!-- Google Font: Source Sans Pro -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
   <!-- Font Awesome Icons -->
-  <link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/fontawesome-free/css/all.min.css') }}">
   <!-- overlayScrollbars -->
-  <link rel="stylesheet" href="/static/assets/plugins/overlayScrollbars/css/OverlayScrollbars.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/overlayScrollbars/css/OverlayScrollbars.min.css') }}">
   <!-- Leaflet -->
-  <link rel="stylesheet" href="/static/assets/plugins/leaflet/leaflet.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/leaflet/leaflet.css') }}">
   <!-- Theme style -->
-  <link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/adminlte.min.css') }}">
 
 {% endblock stylesheets %}
 
@@ -70,13 +70,13 @@
                       {% if current_user.category == "admin" %}
                       <div class="float-right">
                         {% if feedback.is_hidden %}
-                        <form action="{{ url_for('home_blueprint.hide_feedback') }}" method="POST" class="d-inline">
+                        <form action="{{ url_for('home_blueprint.hide_feedback') }}" method="post" class="d-inline">
                           <input type="hidden" name="feedback_id" value="{{ feedback.id }}">
                           <input type="hidden" name="action" value="unhide">
                           <button type="submit" class="btn btn-info btn-sm">Unhide</button>
                         </form>
                         {% else %}
-                        <form action="{{ url_for('home_blueprint.hide_feedback') }}" method="POST" class="d-inline">
+                        <form action="{{ url_for('home_blueprint.hide_feedback') }}" method="post" class="d-inline">
                           <input type="hidden" name="feedback_id" value="{{ feedback.id }}">
                           <input type="hidden" name="action" value="hide">
                           <button type="submit" class="btn btn-warning btn-sm">Hide</button>
@@ -105,9 +105,9 @@
 <!-- Specific Page JS goes HERE  -->
 {% block javascripts %}
   <!-- jQuery -->
-  <script src="/static/assets/plugins/jquery/jquery.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/jquery/jquery.min.js') }}"></script>
   <!-- Bootstrap 4 -->
-  <script src="/static/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
   <!-- Page Script -->
   <script>
     $(function () {
