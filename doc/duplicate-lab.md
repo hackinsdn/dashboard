@@ -55,7 +55,7 @@ found" page used elsewhere, so the route does not leak Lab existence.
 - Lab Guide (markdown)
 - Kubernetes manifest
 - Goals
-- Lab Guide attachments — copied on disk, see below
+- Lab Guide attachments — shared with the source lab, see below
 
 The audit log (`HomeLogging`) records a `duplicate_lab` action with the
 *source* Lab id when the form is opened; saving the copy goes through the
@@ -82,20 +82,27 @@ separate save path:
 ### Guide attachments (uploads)
 
 Lab Guide attachments are tracked in `LabMetadata.md["uploads"]` and stored
-under `UPLOAD_DIR`. Deleting an attachment from a Lab **removes the file
-from disk**, so the duplicate must never share filenames with the source:
+under `UPLOAD_DIR`. The duplicate **shares** the source's files instead of
+copying them — the duplicate GET writes nothing to disk, so abandoning the
+form leaves no orphan files behind:
 
-1. Each source attachment is copied on disk to a fresh
-   `uuid4().hex + extension` filename (files missing on disk are skipped
-   with a warning).
-2. References to the old filename are rewritten to the new one in the
-   copied Lab Guide markdown and extended description.
-3. The copies are handed to the form as *pending uploads* — the same
-   mechanism used when attaching files while creating a brand new Lab — so
-   the `edit_lab` POST handler associates them with the new Lab on save.
+1. The source's uploads list is handed to the form as *pending uploads* —
+   the same mechanism used when attaching files while creating a brand new
+   Lab. The pre-filled guide keeps its original `/uploads/<filename>`
+   references, which stay valid.
+2. On save, the `edit_lab` POST handler associates the same filenames with
+   the new Lab's `LabMetadata`; both Labs now reference one file on disk.
+3. Attachment deletion (`DELETE /labs/<id>/uploads/<filename>`) is
+   **reference-counted**: the entry is always removed from the requesting
+   Lab's uploads list, but the file is only removed from disk when no other
+   Lab's metadata still references that filename. This holds for arbitrary
+   duplicate chains — the last Lab holding a reference deletes the file.
+   The check is a substring match on the metadata JSON, which is precise
+   because uploaded filenames are unique `uuid4().hex` values.
 
-If the user abandons the form, the copied files remain as orphans on disk;
-this is the same exposure the pre-existing new-lab upload flow already has.
+Files are immutable after upload (there is no edit-in-place), so sharing
+them between Labs is safe, and `serve_upload` has no per-lab access
+control that sharing could bypass.
 
 Images embedded in the extended description via the rich-text editor are
 uploaded without per-lab tracking (shared URLs by design), so they need no
@@ -110,12 +117,17 @@ special handling.
   is on); clab duplication is left for a follow-up.
 - Answer sheets, schedules and statistics are not copied — the duplicate is
   a fresh Lab with no usage history.
+- Uploading a file while creating a brand-new Lab and then abandoning the
+  form still orphans that file (pre-existing behavior, unrelated to
+  duplication). A follow-up sweeper could delete `UPLOAD_DIR` files older
+  than N days that no Lab metadata or content references.
 
 ## Tests
 
 `tests/test_labs.py::TestDuplicate` covers: role gating (student denied),
 unknown/deleted source rejection, form prefill with `-- Copy` title and all
-source values, the guarantee that the GET persists nothing, submitting the
-prefilled form as a new Lab, title truncation, labcreator scope (own,
-group-shared, unshared-denied), on-disk copy of attachments with guide
-rewriting, and Duplicate button visibility on the list page.
+source values, the guarantee that the GET persists nothing to the database
+and writes nothing to disk, submitting the prefilled form as a new Lab,
+title truncation, labcreator scope (own, group-shared, unshared-denied),
+attachment sharing on save, reference-counted attachment deletion, and
+Duplicate button visibility on the list page.

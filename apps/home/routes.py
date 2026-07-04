@@ -7,7 +7,6 @@ import uuid
 import os
 import re
 import json
-import shutil
 from collections import OrderedDict
 from types import SimpleNamespace
 
@@ -600,32 +599,12 @@ def duplicate_lab(lab_id):
     lab_guide_md = source.lab_guide_md_str if source.lab_guide_md else ""
     extended_desc = source.extended_desc_str if source.extended_desc else ""
 
-    # copy guide attachments on disk so that deleting an upload from one lab
-    # does not remove the file referenced by the other, and rewrite the guide
-    # references to the new filenames
-    lab_uploads = []
-    source_uploads = source.lab_metadata.md.get("uploads", []) if source.lab_metadata else []
-    upload_dir = current_app.config['UPLOAD_DIR']
-    for upload in source_uploads:
-        old_filename = upload["filename"]
-        old_path = os.path.join(upload_dir, old_filename)
-        if not os.path.exists(old_path):
-            current_app.logger.warning(f"Upload file not found on disk while duplicating lab {source.id}: {old_filename}")
-            continue
-        _, ext = os.path.splitext(old_filename)
-        new_filename = f"{uuid.uuid4().hex}{ext.lower()}"
-        try:
-            shutil.copyfile(old_path, os.path.join(upload_dir, new_filename))
-        except Exception as exc:
-            current_app.logger.error(f"Failed to copy upload {old_filename} while duplicating lab {source.id}: {exc}")
-            continue
-        lab_guide_md = lab_guide_md.replace(old_filename, new_filename)
-        extended_desc = extended_desc.replace(old_filename, new_filename)
-        lab_uploads.append({
-            "filename": new_filename,
-            "original_name": upload["original_name"],
-            "url": url_for('home_blueprint.serve_upload', filename=new_filename),
-        })
+    # guide attachments are shared with the source lab (same filenames and
+    # URLs): nothing is written to disk on this GET, so an abandoned duplicate
+    # leaves no orphan files behind. Deletion is reference-counted in
+    # delete_lab_upload, so removing the attachment from one lab does not
+    # break the other.
+    lab_uploads = source.lab_metadata.md.get("uploads", []) if source.lab_metadata else []
 
     # plain prefill object (not a Labs instance) so the source lab and its
     # relationships are never mutated nor flushed to the session; with id=None
@@ -1453,14 +1432,22 @@ def delete_lab_upload(lab_id, filename):
     md["uploads"] = uploads
     lab_md.md = md
 
-    upload_dir = current_app.config["UPLOAD_DIR"]
-    fpath = os.path.join(upload_dir, filename)
-    try:
-        os.remove(fpath)
-    except FileNotFoundError:
-        current_app.logger.warning(f"Upload file not found on disk during delete: {filename}")
-    except Exception as exc:
-        current_app.logger.error(f"Failed to delete upload file {filename}: {exc}")
+    # lab duplication shares attachment files instead of copying them, so the
+    # same filename may be referenced by other labs: only remove the file from
+    # disk when this lab held the last reference
+    still_referenced = LabMetadata.query.filter(
+        LabMetadata.id != lab_md.id,
+        LabMetadata._md.contains(filename),
+    ).first()
+    if not still_referenced:
+        upload_dir = current_app.config["UPLOAD_DIR"]
+        fpath = os.path.join(upload_dir, filename)
+        try:
+            os.remove(fpath)
+        except FileNotFoundError:
+            current_app.logger.warning(f"Upload file not found on disk during delete: {filename}")
+        except Exception as exc:
+            current_app.logger.error(f"Failed to delete upload file {filename}: {exc}")
 
     try:
         db.session.commit()

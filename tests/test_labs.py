@@ -16,9 +16,11 @@ in the catalog with ?show_deleted=1, and open a deleted lab in the editor to
 restore it (all covered by TestRestore).
 
 GET /labs/duplicate/<id> (TestDuplicate) prefills the "new lab" form with a
-copy of an existing lab ("<title> -- Copy") without persisting anything;
-admin/teacher may fork any non-deleted lab, labcreator any lab they can view
-(group-shared or own), and guide attachments are copied on disk.
+copy of an existing lab ("<title> -- Copy") without persisting anything or
+writing to disk; admin/teacher may fork any non-deleted lab, labcreator any
+lab they can view (group-shared or own). Guide attachments are shared
+between source and duplicate, with reference-counted deletion in
+DELETE /labs/<id>/uploads/<filename>.
 
 Runs entirely against a throwaway temporary SQLite database created in a temp
 directory - it never touches the real dev/production database
@@ -634,7 +636,7 @@ class TestDuplicate:
         assert b"Lab not found" in resp.data
         logout(client)
 
-    def test_duplicate_copies_uploads_and_rewrites_guide(self, client, ids):
+    def test_duplicate_shares_uploads_and_writes_nothing_to_disk(self, client, ids):
         login(client, "lbadmin", "admin123")
         upload_dir = flask_app.config["UPLOAD_DIR"]
         os.makedirs(upload_dir, exist_ok=True)
@@ -645,28 +647,67 @@ class TestDuplicate:
         lab = Labs(title="Dup Upload Lab", description="x")
         lab.set_extended_desc("")
         lab.set_lab_guide_md(f"see [notes.txt](/uploads/{src_filename})")
-        lab.categories.append(db.session.get(LabCategories, ids["category_id"]))
         db.session.add(lab)
+        lab.categories.append(db.session.get(LabCategories, ids["category_id"]))
         lab_md = LabMetadata(lab=lab, is_clab=False)
         lab_md.md = {"uploads": [{"filename": src_filename, "original_name": "notes.txt", "url": f"/uploads/{src_filename}"}]}
         db.session.add(lab_md)
         db.session.commit()
 
+        files_before = sorted(os.listdir(upload_dir))
         resp = client.get(f"/labs/duplicate/{lab.id}")
         assert resp.status_code == 200
-        # the copy must reference a fresh file, never the source filename
-        assert src_filename.encode() not in resp.data
-        import re
-        new_filenames = set(re.findall(rb"/uploads/([0-9a-f]{32}\.txt)", resp.data))
-        assert len(new_filenames) == 1
-        new_filename = new_filenames.pop().decode()
-        new_path = os.path.join(upload_dir, new_filename)
-        assert os.path.exists(new_path)
-        with open(new_path) as f:
-            assert f.read() == "attachment body"
-        # source file and metadata are untouched
-        assert os.path.exists(os.path.join(upload_dir, src_filename))
+        assert b"Dup Upload Lab -- Copy" in resp.data
+        # the duplicate references the source's file as-is (shared)...
+        assert src_filename.encode() in resp.data
+        # ...so an abandoned duplicate leaves no orphan copies behind
+        assert sorted(os.listdir(upload_dir)) == files_before
+        # source metadata is untouched
         assert lab.lab_metadata.md["uploads"][0]["filename"] == src_filename
+
+    def test_submitting_duplicate_associates_shared_upload(self, client, ids):
+        source = Labs.query.filter_by(title="Dup Upload Lab").first()
+        resp = client.post(
+            "/labs/edit/new",
+            data=lab_form(
+                lab_title="Dup Upload Lab -- Copy",
+                lab_guide=source.lab_guide_md_str,
+                lab_categories=str(ids["category_id"]),
+                pending_upload_filenames='["dupsource.txt"]',
+                pending_upload_orignames='["notes.txt"]',
+            ),
+            follow_redirects=True,
+        )
+        assert resp.status_code == 200
+
+        copy = Labs.query.filter_by(title="Dup Upload Lab -- Copy").first()
+        assert copy is not None
+        uploads = copy.lab_metadata.md.get("uploads", [])
+        assert [u["filename"] for u in uploads] == ["dupsource.txt"]
+        # both labs reference the same single file on disk
+        assert source.lab_metadata.md["uploads"][0]["filename"] == "dupsource.txt"
+        assert os.path.exists(os.path.join(flask_app.config["UPLOAD_DIR"], "dupsource.txt"))
+
+    def test_delete_shared_upload_keeps_file_until_last_reference(self, client, ids):
+        source = Labs.query.filter_by(title="Dup Upload Lab").first()
+        copy = Labs.query.filter_by(title="Dup Upload Lab -- Copy").first()
+        fpath = os.path.join(flask_app.config["UPLOAD_DIR"], "dupsource.txt")
+
+        # removing the attachment from the duplicate keeps the file on disk:
+        # the source lab still references it
+        resp = client.delete(f"/labs/{copy.id}/uploads/dupsource.txt")
+        assert resp.status_code == 200
+        assert os.path.exists(fpath)
+        db.session.expire_all()
+        assert copy.lab_metadata.md.get("uploads") == []
+        assert source.lab_metadata.md["uploads"][0]["filename"] == "dupsource.txt"
+
+        # removing the last reference deletes the file from disk
+        resp = client.delete(f"/labs/{source.id}/uploads/dupsource.txt")
+        assert resp.status_code == 200
+        assert not os.path.exists(fpath)
+        db.session.expire_all()
+        assert source.lab_metadata.md.get("uploads") == []
 
     def test_duplicate_button_visibility_on_labs_view(self, client, ids):
         resp = client.get("/labs/view")
