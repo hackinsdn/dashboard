@@ -45,7 +45,7 @@
       <div class="container-fluid">
         <div class="row">
           <div class="col-12">
-            <h4>Wait while checking for resource statuses...</h4>
+            <h4>Wait while checking for resource statuses... <span id="elapsedTimer" class="badge badge-info"></span></h4>
           </div>
         </div>
         <div class="row">
@@ -69,6 +69,7 @@
                         {% endfor %}
                       </ul>
                       <p id="statusText"></p>
+                      <p id="waitMessage" class="text-muted"></p>
                       <a style="display: none;" id="labLink" class="btn btn-outline-success" href="{{ url_for('home_blueprint.view_lab_instance', lab_id=lab_instance_id) }}">Start using the Lab resources and Lab guide!</a>
                     </div>
                   </div>
@@ -104,6 +105,55 @@
   <!-- Page script -->
   <script>
     $(function () {
+      // elapsed time since the lab instance was requested (server-provided so
+      // a page refresh resumes at the right stage; falls back to page load)
+      var requestedTs = {{ lab_requested_ts|default(none)|tojson }};
+      var startTime = requestedTs ? requestedTs * 1000 : Date.now();
+      var gaveUp = false;
+      var giveUpSeconds = 300;
+      // staged wait messages: highest matching threshold (seconds) wins
+      var waitMessages = [
+        [giveUpSeconds, "We could not confirm all resources became ready within 5 minutes. Your Lab may still be provisioning in the background — open the Lab page below to check it."],
+        [240, "Taking more than expected, but still waiting for resources."],
+        [180, "Almost there — provisioning can take a few minutes on busy clusters. Please bear with us a little longer."],
+        [120, "Still waiting for all resources to be provisioned."],
+        [60, "This is taking a little longer than usual — thank you for your patience!"]
+      ];
+
+      function elapsedSeconds() {
+        return Math.max(0, Math.floor((Date.now() - startTime) / 1000));
+      }
+
+      function stopWaiting() {
+        clearInterval(timerInterval);
+        $("#waitMessage").text("");
+        document.getElementById("loading").style.display = "none";
+      }
+
+      function giveUp() {
+        gaveUp = true;
+        clearInterval(timerInterval);
+        document.getElementById("loading").style.display = "none";
+        $("#labLink").text("Check the running Lab").show();
+      }
+
+      function updateElapsed() {
+        var elapsed = elapsedSeconds();
+        $("#elapsedTimer").text("Waiting for " + elapsed + "s");
+        for (var i = 0; i < waitMessages.length; i++) {
+          if (elapsed >= waitMessages[i][0]) {
+            $("#waitMessage").text(waitMessages[i][1]);
+            break;
+          }
+        }
+        if (elapsed >= giveUpSeconds && !gaveUp) {
+          giveUp();
+        }
+      }
+
+      var timerInterval = setInterval(updateElapsed, 1000);
+      updateElapsed();
+
       var checkStatus = function() {
         var request = $.ajax({
           url: "/api/lab/status/{{ lab_instance_id }}",
@@ -114,7 +164,7 @@
         request.done(function(data) {
           if (data.status != "ok") {
             $("#statusText").text("Failed to get data");
-            document.getElementById("loading").style.display = "none";
+            stopWaiting();
             return;
           }
           var allOk = true;
@@ -130,18 +180,18 @@
           });
           if (allOk) {
             $("#statusText").text("All resources are ready!");
-            $("#labLink").show();
+            $("#labLink").text("Start using the Lab resources and Lab guide!").show();
             $(".status-badge").text("Ready");
             $(".status-badge").removeClass("badge-secondary");
             $(".status-badge").addClass("badge-success");
-            document.getElementById("loading").style.display = "none"
-          } else {
+            stopWaiting();
+          } else if (!gaveUp) {
             setTimeout(checkStatus, 2000);
           }
         });
         request.fail(function(xhr) {
           $("#statusText").text("Failed to process request: " + xhr.responseText);
-          document.getElementById("loading").style.display = "none"
+          stopWaiting();
         });
       };
       setTimeout(checkStatus, 3000);
