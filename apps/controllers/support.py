@@ -2,15 +2,10 @@
 """Support chat thread lifecycle helpers.
 
 A "thread" is one support conversation. Each user may have multiple threads over
-time. A thread is considered active while it is ``open`` and the user has
-interacted with it within ``SUPPORT_THREAD_INACTIVITY_HOURS``. Once that window
-lapses, or the user explicitly finishes it, the thread is ``finished`` and the
-next user message starts a brand new thread.
+time. A thread stays ``open`` until the user or the support team explicitly
+finishes it; the next user message after that starts a brand new thread.
 """
 
-from datetime import timedelta
-
-from flask import current_app
 from sqlalchemy import desc
 
 from apps import db
@@ -18,22 +13,9 @@ from apps.audit_mixin import utcnow
 from apps.home.models import SupportThreads, SupportMessages
 
 
-def _inactivity_delta():
-    hours = current_app.config.get("SUPPORT_THREAD_INACTIVITY_HOURS", 2)
-    return timedelta(hours=hours)
-
-
-def _aware(dt):
-    """Return a timezone-aware datetime (DB may return naive UTC values)."""
-    if dt is not None and dt.tzinfo is None:
-        return dt.replace(tzinfo=utcnow().tzinfo)
-    return dt
-
-
 FINISH_MESSAGES = {
     "user": "Conversation finished by the user.",
     "support": "Conversation finished by the support team.",
-    "inactivity": "Conversation closed automatically due to inactivity.",
 }
 
 
@@ -52,25 +34,15 @@ def finish_thread(thread, by="user"):
 
 
 def get_active_thread(user):
-    """Return the user's active (open, non-stale) thread, or None.
+    """Return the user's active (open) thread, or None.
 
-    If the latest open thread has been inactive for longer than the configured
-    window, it is auto-finished and None is returned so a new thread can start.
+    Threads stay open until explicitly finished by the user or the support team.
     """
-    thread = (
+    return (
         SupportThreads.query.filter_by(user_id=user.id, status="open")
         .order_by(desc(SupportThreads.updated_at))
         .first()
     )
-    if thread is None:
-        return None
-
-    last_activity = _aware(thread.updated_at) or _aware(thread.created_at)
-    if last_activity is not None and utcnow() - last_activity > _inactivity_delta():
-        finish_thread(thread, by="inactivity")
-        db.session.commit()
-        return None
-    return thread
 
 
 def get_or_create_active_thread(user):
@@ -134,14 +106,9 @@ def user_unread_thread_count(user):
     return sum(1 for t in threads if t.has_unseen_for_user)
 
 
-def admin_unread_thread_count():
-    """Number of threads with at least one unread user message (needs staff attention)."""
-    return (
-        db.session.query(SupportMessages.thread_id)
-        .filter(SupportMessages.sender == "user", SupportMessages.is_read.is_(False))
-        .distinct()
-        .count()
-    )
+def open_thread_count():
+    """Number of open support cases; feeds the admin sidebar "Support" badge."""
+    return SupportThreads.query.filter_by(status="open").count()
 
 
 def generate_support_reply(thread, body):

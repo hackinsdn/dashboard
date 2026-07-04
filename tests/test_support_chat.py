@@ -1,9 +1,9 @@
 """Pytest suite for the Support Chat feature.
 
 Exercises the user-facing widget endpoints (start/continue a thread, finish,
-history scoped to the current user, empty-body validation, the 2h inactivity
-boundary) and the admin thread-management page + staff-reply endpoint
-(role gating, reply creation, marking user messages read).
+history scoped to the current user, empty-body validation, reuse of an open
+thread regardless of its age) and the admin thread-management page +
+staff-reply endpoint (role gating, reply creation, marking user messages read).
 
 Runs entirely against a throwaway temporary SQLite database - it never touches
 the real dev/production database.
@@ -141,21 +141,22 @@ class TestUserThreadFlow:
         assert len(threads) == 1
         assert len(threads[0].messages) == 2
 
-    def test_inactivity_starts_new_thread(self, client, ids):
+    def test_old_open_thread_is_reused_not_auto_finished(self, client, ids):
+        # cases are only finished by the user or an admin - never by inactivity
         thread = SupportThreads.query.filter_by(user_id=ids["alice_id"]).one()
         old_id = thread.id
-        # backdate last activity beyond the 2h window
-        thread.updated_at = utcnow() - timedelta(hours=3)
+        # backdate last activity far into the past
+        thread.updated_at = utcnow() - timedelta(hours=48)
         db.session.commit()
 
         resp = post_json(client, "/api/support/thread/messages", {"body": "much later"})
         assert resp.status_code == 201
-        threads = SupportThreads.query.filter_by(user_id=ids["alice_id"]).order_by(SupportThreads.id).all()
-        assert len(threads) == 2
+        threads = SupportThreads.query.filter_by(user_id=ids["alice_id"]).all()
+        assert len(threads) == 1
         old = db.session.get(SupportThreads, old_id)
-        assert old.status == "finished"
-        assert old.finished_at is not None
-        assert threads[-1].status == "open"
+        assert old.status == "open"
+        assert old.finished_at is None
+        assert len(old.messages) == 3
 
     def test_finish_thread(self, client, ids):
         resp = post_json(client, "/api/support/thread/finish", {})
@@ -435,10 +436,10 @@ class TestBatchEmail:
         logout(client)
 
 
-# --- admin sidebar unread badge count ----------------------------------
-class TestAdminUnreadCount:
-    def test_admin_unread_count_tracks_pending_then_reply(self, client, ids):
-        base = support.admin_unread_thread_count()
+# --- admin sidebar open-cases badge count -------------------------------
+class TestAdminOpenCount:
+    def test_open_count_tracks_new_case_then_finish(self, client, ids):
+        base = support.open_thread_count()
 
         heidi = make_user("sc_heidi")
         logout(client)
@@ -446,18 +447,22 @@ class TestAdminUnreadCount:
         post_json(client, "/api/support/thread/messages", {"body": "heidi needs help"})
         thread = SupportThreads.query.filter_by(user_id=heidi.id).one()
 
-        # one more thread now has an unread user message
-        assert support.admin_unread_thread_count() == base + 1
+        # one more case is open
+        assert support.open_thread_count() == base + 1
 
-        # the sidebar badge is rendered on an admin page
+        # the sidebar badge is rendered on an admin page (warning style)
         logout(client)
         login(client, "sc_admin", "admin123")
         resp = client.get("/support/threads")
-        assert f'badge-danger right">{base + 1}<'.encode() in resp.data
+        assert f'badge-warning right">{base + 1}<'.encode() in resp.data
 
-        # replying clears that thread's unread state -> count drops back
+        # replying does NOT close the case -> count unchanged
         post_json(client, f"/api/support/threads/{thread.id}/messages", {"body": "on it"})
-        assert support.admin_unread_thread_count() == base
+        assert support.open_thread_count() == base + 1
+
+        # finishing the case drops the count back
+        post_json(client, f"/api/support/threads/{thread.id}/finish", {})
+        assert support.open_thread_count() == base
         logout(client)
 
 
