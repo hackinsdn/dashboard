@@ -568,6 +568,9 @@
       function uploadSummernoteImage(file) {
         var data = new FormData();
         data.append("file", file);
+        if (labId) {
+          data.append("lab_id", labId);
+        }
         $.ajax({
           url: "/labs/upload-file",
           cache: false,
@@ -578,6 +581,7 @@
           success: function(response) {
             if (response.status === "ok") {
               $('#lab-editor').summernote("insertImage", response.url, response.filename);
+              registerUpload(response);
             } else {
               alert("Failed to upload image: " + response.result);
             }
@@ -623,6 +627,25 @@
         });
       }
 
+      // track a finished upload: existing lab -> refresh the list from the
+      // server response; new-lab mode -> pending arrays submitted with the form
+      function registerUpload(response) {
+        if (labId) {
+          renderUploads(response.uploads);
+        } else {
+          pendingFilenames.push(response.saved_filename);
+          pendingOrignames.push(response.filename);
+          $('#lab-uploads-list').append(
+            '<li class="list-group-item d-flex justify-content-between align-items-center"' +
+            ' data-filename="' + response.saved_filename + '" data-url="' + response.url + '">' +
+            '<a href="' + response.url + '" target="_blank">' + response.filename + '</a>' +
+            '<button type="button" class="btn btn-sm btn-outline-danger remove-upload-btn"' +
+            ' data-filename="' + response.saved_filename + '" data-original-name="' + response.filename + '">' +
+            '<i class="fas fa-trash"></i> Remove</button></li>'
+          );
+        }
+      }
+
       $(document).on('click', '.remove-upload-btn', function() {
         var btn = $(this);
         var filename = btn.data('filename');
@@ -630,6 +653,11 @@
         var content = editorLabGuide.getValue();
         if (content.indexOf(filename) !== -1 || content.indexOf(origName) !== -1) {
           alert('Warning: this file is still referenced in the Lab Guide. Remove the reference before deleting.');
+          return;
+        }
+        var extendedDesc = $('#lab-editor').summernote('code');
+        if (extendedDesc.indexOf(filename) !== -1 || extendedDesc.indexOf(origName) !== -1) {
+          alert('Warning: this file is still referenced in the Lab extended description. Remove the reference before deleting.');
           return;
         }
         if (labId) {
@@ -732,21 +760,7 @@
                 replacement = "[" + response.filename + "](" + response.url + ")";
               }
               replacePlaceholder(placeholder, replacement);
-
-              if (labId) {
-                renderUploads(response.uploads);
-              } else {
-                pendingFilenames.push(response.saved_filename);
-                pendingOrignames.push(response.filename);
-                $('#lab-uploads-list').append(
-                  '<li class="list-group-item d-flex justify-content-between align-items-center"' +
-                  ' data-filename="' + response.saved_filename + '" data-url="' + response.url + '">' +
-                  '<a href="' + response.url + '" target="_blank">' + response.filename + '</a>' +
-                  '<button type="button" class="btn btn-sm btn-outline-danger remove-upload-btn"' +
-                  ' data-filename="' + response.saved_filename + '" data-original-name="' + response.filename + '">' +
-                  '<i class="fas fa-trash"></i> Remove</button></li>'
-                );
-              }
+              registerUpload(response);
             } else {
               replacePlaceholder(placeholder, "<!-- Upload failed: " + response.result + " -->");
               alert("Upload failed: " + response.result);

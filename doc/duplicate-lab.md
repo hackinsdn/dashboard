@@ -104,9 +104,13 @@ Files are immutable after upload (there is no edit-in-place), so sharing
 them between Labs is safe, and `serve_upload` has no per-lab access
 control that sharing could bypass.
 
-Images embedded in the extended description via the rich-text editor are
-uploaded without per-lab tracking (shared URLs by design), so they need no
-special handling.
+Images embedded in the extended description via the rich-text editor
+(summernote) are registered in `LabMetadata.md["uploads"]` exactly like
+guide attachments, so they follow the same sharing and reference-counted
+deletion rules. The "remove attachment" button refuses to delete a file
+that is still referenced in either the Lab Guide or the extended
+description. (Images uploaded before this tracking existed remain
+untracked shared URLs.)
 
 ## Limitations / future work
 
