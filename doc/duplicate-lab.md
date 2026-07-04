@@ -21,11 +21,13 @@ unchanged.
 - **Lab edit page** (`/labs/edit/<lab_id>`): a **Duplicate** button next to
   Submit/Cancel, shown when editing an existing, non-deleted Lab.
 
-As part of this change the Labs list card buttons were shortened to fit the
-extra action: `View Lab` → `View`, `Start Lab` → `Start`, `Resume Lab` →
-`Resume`, `Update Lab`/`Update ContainerLab` → `Update`, `Restore Lab` →
-`Restore` and `Delete Lab` → `Delete`. Confirmation modals keep the full
-wording.
+As part of this change the Labs list card buttons became icon-only so the
+action row fits on one line: the label (View, Start/Resume, Duplicate,
+Update, Restore, Delete) is shown as a tooltip on hover and kept as an
+`aria-label` for screen readers. When a single Lab is displayed
+(`/labs/view/<id>`) the card has room, so a small script appends the label
+inline next to the icon and disposes the redundant tooltip. Confirmation
+modals keep the full wording.
 
 ## Permissions
 
