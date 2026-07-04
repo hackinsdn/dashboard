@@ -66,6 +66,13 @@
               {{ msg_fail }}
             </div>
             {% endif %}
+            {% if duplicated_from %}
+            <div class="alert alert-info alert-dismissible">
+              <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+              <h5><i class="icon fas fa-copy"></i> Duplicating Lab</h5>
+              You are duplicating "{{ duplicated_from }}". Nothing is saved until you press Submit.
+            </div>
+            {% endif %}
           </div>
           <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
@@ -445,6 +452,9 @@
           <div class="col-md-12 mb-2">
             <button type="submit" class="btn btn-primary">Submit</button>
             <a href="{{ url_for('home_blueprint.view_labs', lab_id=lab.id) if lab.id else url_for('home_blueprint.view_labs') }}" class="btn btn-secondary mx-2" role="button" aria-pressed="true">Cancel</a>
+            {% if lab and lab.id and not lab.is_deleted %}
+            <a href="{{ url_for('home_blueprint.duplicate_lab', lab_id=lab.id) }}" class="btn btn-info" role="button"><i class="fas fa-copy"></i> Duplicate</a>
+            {% endif %}
             {% if lab and lab.id %}
               {% if lab.is_deleted %}
             <button type="button" class="btn btn-success float-right" data-toggle="modal" data-target="#modal-restore-lab"><i class="fas fa-trash-restore"></i> Restore Lab</button>
@@ -594,8 +604,9 @@
       editorLabGuide.setSize("100%", 600);
 
       var labId = "{{ lab.id|default('', true) }}";
-      var pendingFilenames = [];
-      var pendingOrignames = [];
+      var initialPendingUploads = {{ pending_uploads|default([], true)|tojson }};
+      var pendingFilenames = initialPendingUploads.map(function(upload) { return upload.filename; });
+      var pendingOrignames = initialPendingUploads.map(function(upload) { return upload.original_name; });
 
       function renderUploads(uploads) {
         var list = $('#lab-uploads-list');

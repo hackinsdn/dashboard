@@ -7,7 +7,9 @@ import uuid
 import os
 import re
 import json
+import shutil
 from collections import OrderedDict
+from types import SimpleNamespace
 
 from apps import db, cache
 from apps.home import blueprint
@@ -569,6 +571,93 @@ def edit_lab(lab_id):
         return redirect(url_for('home_blueprint.view_labs', lab_id=lab.id))
     else:
         return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, msg_fail=msg, segment="/labs/edit", groups=groups, allowed_groups=lab.allowed_groups, lab_uploads=lab_uploads)
+
+@blueprint.route('/labs/duplicate/<lab_id>', methods=["GET"])
+@login_required
+@check_user_category(["admin", "teacher", "labcreator"])
+def duplicate_lab(lab_id):
+    source = db.session.get(Labs, lab_id)
+    if not source or source.is_deleted:
+        return render_template("pages/labs_edit.html", lab=None, segment="/labs/edit", msg_fail="Lab not found")
+    if current_user.category == "labcreator" and source.updated_by != current_user.id:
+        # labcreators may duplicate any lab they can view (same predicate as
+        # view_labs): shared with one of their groups or their own
+        source_group_ids = {group.id for group in source.allowed_groups}
+        if not source_group_ids.intersection(current_user.all_group_ids):
+            return render_template("pages/labs_edit.html", lab=None, segment="/labs/edit", msg_fail="Lab not found")
+
+    lab_categories = {cat.id: cat for cat in LabCategories.query.filter_by(is_deleted=False).all()}
+    if not lab_categories:
+        return render_template("pages/labs_edit.html", segment="/labs/edit", msg_fail="No Lab Categories found. Please create a Lab Category first.", lab=None)
+
+    groups = Groups.query.filter_by(is_deleted=False).all()
+
+    # Labs.title is String(255): truncate the source title so the suffix fits
+    new_title = f"{source.title} -- Copy"
+    if len(new_title) > 255:
+        new_title = source.title[:247] + " -- Copy"
+
+    lab_guide_md = source.lab_guide_md_str if source.lab_guide_md else ""
+    extended_desc = source.extended_desc_str if source.extended_desc else ""
+
+    # copy guide attachments on disk so that deleting an upload from one lab
+    # does not remove the file referenced by the other, and rewrite the guide
+    # references to the new filenames
+    lab_uploads = []
+    source_uploads = source.lab_metadata.md.get("uploads", []) if source.lab_metadata else []
+    upload_dir = current_app.config['UPLOAD_DIR']
+    for upload in source_uploads:
+        old_filename = upload["filename"]
+        old_path = os.path.join(upload_dir, old_filename)
+        if not os.path.exists(old_path):
+            current_app.logger.warning(f"Upload file not found on disk while duplicating lab {source.id}: {old_filename}")
+            continue
+        _, ext = os.path.splitext(old_filename)
+        new_filename = f"{uuid.uuid4().hex}{ext.lower()}"
+        try:
+            shutil.copyfile(old_path, os.path.join(upload_dir, new_filename))
+        except Exception as exc:
+            current_app.logger.error(f"Failed to copy upload {old_filename} while duplicating lab {source.id}: {exc}")
+            continue
+        lab_guide_md = lab_guide_md.replace(old_filename, new_filename)
+        extended_desc = extended_desc.replace(old_filename, new_filename)
+        lab_uploads.append({
+            "filename": new_filename,
+            "original_name": upload["original_name"],
+            "url": url_for('home_blueprint.serve_upload', filename=new_filename),
+        })
+
+    # plain prefill object (not a Labs instance) so the source lab and its
+    # relationships are never mutated nor flushed to the session; with id=None
+    # the template renders in "new lab" mode and the form posts to /labs/edit/new
+    lab = SimpleNamespace(
+        id=None,
+        is_deleted=False,
+        lab_metadata=None,
+        title=new_title,
+        description=source.description,
+        goals=source.goals,
+        manifest=source.manifest,
+        categories=list(source.categories),
+        extended_desc_str=extended_desc,
+        lab_guide_md_str=lab_guide_md,
+    )
+
+    duplicate_lab_log = HomeLogging(ipaddr=get_remote_addr(), action="duplicate_lab", success=True, lab_id=source.id, user_id=current_user.id)
+    db.session.add(duplicate_lab_log)
+    db.session.commit()
+
+    return render_template(
+        "pages/labs_edit.html",
+        lab=lab,
+        lab_categories=lab_categories,
+        groups=groups,
+        allowed_groups=source.allowed_groups,
+        segment="/labs/edit",
+        lab_uploads=lab_uploads,
+        pending_uploads=lab_uploads,
+        duplicated_from=source.title,
+    )
 
 @blueprint.route('/users')
 @login_required
