@@ -59,6 +59,8 @@ class Labs(db.Model, AuditMixin):
     __tablename__ = 'labs'
     id = db.Column(db.String(40), primary_key=True, default=generate_uuid)
     is_deleted = db.Column(db.Boolean, default=False, nullable=False, server_default=db.text('false'))
+    # position in the Labs listing: ascending, ties broken by title
+    display_order = db.Column(db.Integer, default=1000, nullable=False, server_default=db.text('1000'))
     title = db.Column(db.String(255))
     description = db.Column(db.String)
     extended_desc = db.Column(db.LargeBinary)

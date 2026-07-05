@@ -110,6 +110,13 @@
                     <label>Short Description</label>
                     <input name="lab_description" type="text" class="form-control" placeholder="Max 255 characters" value="{{ lab.description|default('', true) }}">
                   </div>
+                  {% if current_user.category == "admin" %}
+                  <div class="form-group">
+                    <label>Display order</label>
+                    <input name="lab_display_order" type="number" class="form-control" value="{{ lab.display_order|default(1000, true) }}">
+                    <small class="form-text text-muted">Labs are listed by ascending display order, then by title. Default is 1000.</small>
+                  </div>
+                  {% endif %}
                   <div class="form-group">
                     <label>Lab categories</label>
                     <select name="lab_categories" class="form-control select2" multiple="multiple" data-placeholder="Select one or more categories" style="width: 100%;">

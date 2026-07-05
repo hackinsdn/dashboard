@@ -717,3 +717,113 @@ class TestFork:
         resp = client.get("/labs/view")
         assert b"/labs/fork/" not in resp.data
         logout(client)
+
+
+# --- listing order --------------------------------------------------------
+class TestLabOrdering:
+    def test_new_lab_gets_default_display_order(self, client, ids):
+        login(client, "lbadmin", "admin123")
+        resp = client.post(
+            "/labs/edit/new",
+            data=lab_form(
+                lab_title="Order Default Lab",
+                lab_categories=str(ids["category_id"]),
+            ),
+            follow_redirects=True,
+        )
+        assert resp.status_code == 200
+        lab = Labs.query.filter_by(title="Order Default Lab").first()
+        assert lab is not None
+        assert lab.display_order == 1000
+
+    def test_labs_view_sorts_by_display_order_then_title(self, client, ids):
+        lab1 = _make_lab(ids, "ZZ Ordered First")
+        db.session.get(Labs, lab1).display_order = 1
+        lab2 = _make_lab(ids, "YY Ordered Second")
+        db.session.get(Labs, lab2).display_order = 2
+        # default display_order (1000): sorted among themselves by title,
+        # case-insensitively
+        _make_lab(ids, "aa ordered tie lower")
+        _make_lab(ids, "AB Ordered Tie Upper")
+        db.session.commit()
+
+        resp = client.get("/labs/view")
+        body = resp.data
+        pos = {title: body.index(title.encode()) for title in [
+            "ZZ Ordered First",
+            "YY Ordered Second",
+            "aa ordered tie lower",
+            "AB Ordered Tie Upper",
+        ]}
+        assert pos["ZZ Ordered First"] < pos["YY Ordered Second"]
+        assert pos["YY Ordered Second"] < pos["aa ordered tie lower"]
+        assert pos["aa ordered tie lower"] < pos["AB Ordered Tie Upper"]
+
+    def test_edit_sets_and_clears_display_order(self, client, ids):
+        lab_id = _make_lab(ids, "Order Editable Lab")
+        resp = client.post(
+            f"/labs/edit/{lab_id}",
+            data=lab_form(
+                lab_title="Order Editable Lab",
+                lab_categories=str(ids["category_id"]),
+                lab_display_order="5",
+            ),
+            follow_redirects=True,
+        )
+        assert resp.status_code == 200
+        assert db.session.get(Labs, lab_id).display_order == 5
+
+        # an empty value resets to the default
+        resp = client.post(
+            f"/labs/edit/{lab_id}",
+            data=lab_form(
+                lab_title="Order Editable Lab",
+                lab_categories=str(ids["category_id"]),
+                lab_display_order="",
+            ),
+            follow_redirects=True,
+        )
+        assert resp.status_code == 200
+        assert db.session.get(Labs, lab_id).display_order == 1000
+
+    def test_edit_rejects_non_numeric_display_order(self, client, ids):
+        lab_id = _make_lab(ids, "Order Invalid Lab")
+        resp = client.post(
+            f"/labs/edit/{lab_id}",
+            data=lab_form(
+                lab_title="Order Invalid Lab",
+                lab_categories=str(ids["category_id"]),
+                lab_display_order="abc",
+            ),
+        )
+        assert b"Invalid display order" in resp.data
+        assert db.session.get(Labs, lab_id).display_order == 1000
+
+    def test_fork_prefills_display_order(self, client, ids):
+        lab_id = _make_lab(ids, "Order Fork Source")
+        db.session.get(Labs, lab_id).display_order = 7
+        db.session.commit()
+        resp = client.get(f"/labs/fork/{lab_id}")
+        assert resp.status_code == 200
+        assert b'name="lab_display_order" type="number" class="form-control" value="7"' in resp.data
+        logout(client)
+
+    def test_non_admin_cannot_change_display_order(self, client, ids):
+        lab_id = _make_lab(ids, "Order Teacher Lab", updated_by=ids["teacher_id"])
+        login(client, "lbteacher", "teach123")
+        # the field is not rendered for non-admins...
+        resp = client.get(f"/labs/edit/{lab_id}")
+        assert b"lab_display_order" not in resp.data
+        # ...and a crafted POST value is ignored
+        resp = client.post(
+            f"/labs/edit/{lab_id}",
+            data=lab_form(
+                lab_title="Order Teacher Lab",
+                lab_categories=str(ids["category_id"]),
+                lab_display_order="5",
+            ),
+            follow_redirects=True,
+        )
+        assert resp.status_code == 200
+        assert db.session.get(Labs, lab_id).display_order == 1000
+        logout(client)
