@@ -514,6 +514,14 @@ def edit_lab(lab_id):
     selected_group_ids = request.form.getlist('lab_allowed_groups')
     lab.allowed_groups = Groups.query.filter(Groups.id.in_(selected_group_ids), Groups.is_deleted==False).all()
 
+    # only admins may reposition labs in the listing
+    if current_user.category == "admin":
+        display_order_raw = request.form.get("lab_display_order", "").strip()
+        try:
+            lab.display_order = int(display_order_raw) if display_order_raw else 1000
+        except ValueError:
+            return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, msg_fail="Invalid display order: must be an integer number.", segment="/labs/edit", groups=groups, allowed_groups=lab.allowed_groups, lab_uploads=lab_uploads)
+
     if not lab.categories or invalid_lab_category:
         return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, msg_fail=invalid_lab_category+"Please select at least one category", segment="/labs/edit", groups=groups, allowed_groups=lab.allowed_groups, lab_uploads=lab_uploads)
 
@@ -618,6 +626,7 @@ def fork_lab(lab_id):
         description=source.description,
         goals=source.goals,
         manifest=source.manifest,
+        display_order=source.display_order,
         categories=list(source.categories),
         extended_desc_str=extended_desc,
         lab_guide_md_str=lab_guide_md,
@@ -817,7 +826,7 @@ def view_labs(lab_id=None):
     if lab_id:
         labs = labs.filter(Labs.id == lab_id)
 
-    labs = labs.all()
+    labs = labs.order_by(Labs.display_order, db.func.lower(Labs.title)).all()
     user_labs_status = {}
     for lab in LabInstances.query.filter_by(user_id=current_user.id).all():
         user_labs_status.setdefault(lab.lab_id, {"is_running": False, "is_completed": False})

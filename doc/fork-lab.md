@@ -57,6 +57,8 @@ found" page used elsewhere, so the route does not leak Lab existence.
 - Lab Guide (markdown)
 - Kubernetes manifest
 - Goals
+- Display order (admin-only field: forks made by non-admins reset it to the
+  default 1000)
 - Lab Guide attachments — shared with the source lab, see below
 
 The audit log (`HomeLogging`) records a `fork_lab` action with the
