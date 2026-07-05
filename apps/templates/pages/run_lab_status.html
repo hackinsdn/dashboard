@@ -46,6 +46,7 @@
         <div class="row">
           <div class="col-12">
             <h4>Wait while checking for resource statuses... <span id="elapsedTimer" class="badge badge-info"></span></h4>
+            <p id="waitMessage" class="text-muted"></p>
           </div>
         </div>
         <div class="row">
@@ -69,7 +70,7 @@
                         {% endfor %}
                       </ul>
                       <p id="statusText"></p>
-                      <p id="waitMessage" class="text-muted"></p>
+                      <p id="resourceExtraInfo" class="text-muted"></p>
                       <a style="display: none;" id="labLink" class="btn btn-outline-success" href="{{ url_for('home_blueprint.view_lab_instance', lab_id=lab_instance_id) }}">Start using the Lab resources and Lab guide!</a>
                     </div>
                   </div>
@@ -135,6 +136,8 @@
         clearInterval(timerInterval);
         document.getElementById("loading").style.display = "none";
         $("#labLink").text("Check the running Lab").show();
+        $("#elapsedTimer").removeClass('badge-info');
+        $("#elapsedTimer").addClass('badge-danger');
       }
 
       function updateElapsed() {
