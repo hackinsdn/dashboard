@@ -57,6 +57,7 @@ class Users(db.Model, UserMixin, AuditMixin):
     issuer = db.Column(db.String(255))
     is_deleted = db.Column(db.Boolean, default=False)
     last_login = db.Column(db.DateTime)
+    notes = db.Column(db.Text, nullable=True)
 
     member_of_groups: Mapped[List[Groups]] = db.relationship(
         secondary=group_members, back_populates="members"

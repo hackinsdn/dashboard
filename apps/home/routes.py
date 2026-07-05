@@ -309,6 +309,7 @@ def edit_user(user_id=None):
     has_changed = False
     if current_user.category == "admin":
         user.category = request.form["user_category"]
+        user.notes = request.form.get("notes", user.notes)
         has_changed = True
 
     if current_user.category == "admin" or current_user.id == user.id:

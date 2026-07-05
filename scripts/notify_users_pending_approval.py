@@ -19,7 +19,7 @@ def send_email():
         users = Users.query.filter(
                 Users.category == "user",
                 Users.created_at <= utcnow() - timedelta(hours=1),
-                Users.active==True
+                Users.is_deleted == False
             ).all()
 
         if not users:
@@ -27,7 +27,7 @@ def send_email():
 
         body = "List of users pending approval:\n\n"
         for user in users:
-            body += f"Name: {user.username}, Email: {user.email}, Created-At: {user.created_at}\n"
+            body += f"Name: {user.username}, Email: {user.email}, Created-At: {user.created_at}, Notes: {user.notes or '--'}\n"
 
         msg = Message(
             subject="[Dashboard HackInSDN] Pending User Approvals",
