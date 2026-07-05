@@ -15,11 +15,11 @@ Admins can undelete via POST /api/labs/<id>/restore, reveal soft-deleted labs
 in the catalog with ?show_deleted=1, and open a deleted lab in the editor to
 restore it (all covered by TestRestore).
 
-GET /labs/duplicate/<id> (TestDuplicate) prefills the "new lab" form with a
-copy of an existing lab ("<title> -- Copy") without persisting anything or
+GET /labs/fork/<id> (TestFork) prefills the "new lab" form with a
+copy of an existing lab ("<title> -- Fork") without persisting anything or
 writing to disk; admin/teacher may fork any non-deleted lab, labcreator any
 lab they can view (group-shared or own). Guide attachments are shared
-between source and duplicate, with reference-counted deletion in
+between source and fork, with reference-counted deletion in
 DELETE /labs/<id>/uploads/<filename>.
 
 Runs entirely against a throwaway temporary SQLite database created in a temp
@@ -530,60 +530,60 @@ class TestRestore:
         logout(client)
 
 
-# --- duplicate (fork) -----------------------------------------------------
-class TestDuplicate:
-    def test_student_cannot_duplicate_lab(self, client, ids):
-        lab_id = _make_lab(ids, "Dup Student Denied")
+# --- fork a lab ------------------------------------------------------------
+class TestFork:
+    def test_student_cannot_fork_lab(self, client, ids):
+        lab_id = _make_lab(ids, "Fork Student Denied")
         logout(client)
         login(client, "lbstudent", "stud123")
-        resp = client.get(f"/labs/duplicate/{lab_id}")
+        resp = client.get(f"/labs/fork/{lab_id}")
         assert b"Unauthorized request" in resp.data
         logout(client)
 
-    def test_duplicate_missing_lab_is_rejected(self, client, ids):
+    def test_fork_missing_lab_is_rejected(self, client, ids):
         login(client, "lbadmin", "admin123")
-        resp = client.get("/labs/duplicate/does-not-exist")
+        resp = client.get("/labs/fork/does-not-exist")
         assert b"Lab not found" in resp.data
 
-    def test_duplicate_deleted_lab_is_rejected(self, client, ids):
-        lab_id = _make_lab(ids, "Dup Deleted Source")
+    def test_fork_deleted_lab_is_rejected(self, client, ids):
+        lab_id = _make_lab(ids, "Fork Deleted Source")
         db.session.get(Labs, lab_id).is_deleted = True
         db.session.commit()
-        resp = client.get(f"/labs/duplicate/{lab_id}")
+        resp = client.get(f"/labs/fork/{lab_id}")
         assert b"Lab not found" in resp.data
 
-    def test_admin_duplicate_prefills_form_without_saving(self, client, ids):
-        lab = Labs(title="Dup Source Lab", description="dup short desc")
-        lab.set_extended_desc("dup extended desc")
-        lab.set_lab_guide_md("# dup guide")
-        lab.manifest = "apiVersion: v1 # dup manifest"
+    def test_admin_fork_prefills_form_without_saving(self, client, ids):
+        lab = Labs(title="Fork Source Lab", description="fork short desc")
+        lab.set_extended_desc("fork extended desc")
+        lab.set_lab_guide_md("# fork guide")
+        lab.manifest = "apiVersion: v1 # fork manifest"
         db.session.add(lab)
         lab.categories.append(db.session.get(LabCategories, ids["category_id"]))
         lab.allowed_groups.append(db.session.get(Groups, ids["student_group_id"]))
         db.session.commit()
 
         labs_before = Labs.query.count()
-        resp = client.get(f"/labs/duplicate/{lab.id}")
+        resp = client.get(f"/labs/fork/{lab.id}")
         assert resp.status_code == 200
-        assert b"Dup Source Lab -- Copy" in resp.data
-        assert b"dup short desc" in resp.data
-        assert b"dup extended desc" in resp.data
-        assert b"# dup guide" in resp.data
-        assert b"apiVersion: v1 # dup manifest" in resp.data
+        assert b"Fork Source Lab -- Fork" in resp.data
+        assert b"fork short desc" in resp.data
+        assert b"fork extended desc" in resp.data
+        assert b"# fork guide" in resp.data
+        assert b"apiVersion: v1 # fork manifest" in resp.data
         # renders in "new lab" mode: form posts to /labs/edit/new
         assert b'action="/labs/edit/new"' in resp.data
-        # a duplicate GET must never persist a new lab nor touch the source
+        # a fork GET must never persist a new lab nor touch the source
         assert Labs.query.count() == labs_before
-        source = Labs.query.filter_by(title="Dup Source Lab").first()
+        source = Labs.query.filter_by(title="Fork Source Lab").first()
         assert source is not None
-        assert Labs.query.filter_by(title="Dup Source Lab -- Copy").first() is None
+        assert Labs.query.filter_by(title="Fork Source Lab -- Fork").first() is None
 
-    def test_submitting_duplicate_creates_new_lab(self, client, ids):
-        source = Labs.query.filter_by(title="Dup Source Lab").first()
+    def test_submitting_fork_creates_new_lab(self, client, ids):
+        source = Labs.query.filter_by(title="Fork Source Lab").first()
         resp = client.post(
             "/labs/edit/new",
             data=lab_form(
-                lab_title="Dup Source Lab -- Copy",
+                lab_title="Fork Source Lab -- Fork",
                 lab_description=source.description,
                 lab_guide=source.lab_guide_md_str,
                 lab_manifest=source.manifest,
@@ -593,58 +593,58 @@ class TestDuplicate:
         )
         assert resp.status_code == 200
 
-        copy = Labs.query.filter_by(title="Dup Source Lab -- Copy").first()
+        copy = Labs.query.filter_by(title="Fork Source Lab -- Fork").first()
         assert copy is not None
         assert copy.id != source.id
         assert copy.manifest == source.manifest
         # the source keeps its own title/values
-        assert db.session.get(Labs, source.id).title == "Dup Source Lab"
+        assert db.session.get(Labs, source.id).title == "Fork Source Lab"
 
-    def test_duplicate_truncates_long_title(self, client, ids):
+    def test_fork_truncates_long_title(self, client, ids):
         lab_id = _make_lab(ids, "T" * 255)
-        resp = client.get(f"/labs/duplicate/{lab_id}")
-        assert ("T" * 247 + " -- Copy").encode() in resp.data
+        resp = client.get(f"/labs/fork/{lab_id}")
+        assert ("T" * 247 + " -- Fork").encode() in resp.data
         logout(client)
 
-    def test_labcreator_can_duplicate_own_lab(self, client, ids):
-        lab_id = _make_lab(ids, "Dup Creator Own Lab", updated_by=ids["labcreator_id"])
+    def test_labcreator_can_fork_own_lab(self, client, ids):
+        lab_id = _make_lab(ids, "Fork Creator Own Lab", updated_by=ids["labcreator_id"])
         login(client, "lblabcreator", "lc123")
-        resp = client.get(f"/labs/duplicate/{lab_id}")
+        resp = client.get(f"/labs/fork/{lab_id}")
         assert resp.status_code == 200
-        assert b"Dup Creator Own Lab -- Copy" in resp.data
+        assert b"Fork Creator Own Lab -- Fork" in resp.data
 
-    def test_labcreator_can_duplicate_group_shared_lab(self, client, ids):
+    def test_labcreator_can_fork_group_shared_lab(self, client, ids):
         # owned by the admin, but shared with a group the labcreator belongs
         # to: forking any lab you can view is allowed
-        group = Groups(groupname="DupCreatorGroup", organization="ORG1")
+        group = Groups(groupname="ForkCreatorGroup", organization="ORG1")
         group.members.append(db.session.get(Users, ids["labcreator_id"]))
         db.session.add(group)
-        lab = Labs(title="Dup Shared With Creator", description="x")
+        lab = Labs(title="Fork Shared With Creator", description="x")
         lab.categories.append(db.session.get(LabCategories, ids["category_id"]))
         lab.allowed_groups.append(group)
         lab.updated_by = ids["admin_id"]
         db.session.add(lab)
         db.session.commit()
 
-        resp = client.get(f"/labs/duplicate/{lab.id}")
+        resp = client.get(f"/labs/fork/{lab.id}")
         assert resp.status_code == 200
-        assert b"Dup Shared With Creator -- Copy" in resp.data
+        assert b"Fork Shared With Creator -- Fork" in resp.data
 
-    def test_labcreator_cannot_duplicate_unshared_lab(self, client, ids):
-        lab_id = _make_lab(ids, "Dup Not Shared", updated_by=ids["admin_id"])
-        resp = client.get(f"/labs/duplicate/{lab_id}")
+    def test_labcreator_cannot_fork_unshared_lab(self, client, ids):
+        lab_id = _make_lab(ids, "Fork Not Shared", updated_by=ids["admin_id"])
+        resp = client.get(f"/labs/fork/{lab_id}")
         assert b"Lab not found" in resp.data
         logout(client)
 
-    def test_duplicate_shares_uploads_and_writes_nothing_to_disk(self, client, ids):
+    def test_fork_shares_uploads_and_writes_nothing_to_disk(self, client, ids):
         login(client, "lbadmin", "admin123")
         upload_dir = flask_app.config["UPLOAD_DIR"]
         os.makedirs(upload_dir, exist_ok=True)
-        src_filename = "dupsource.txt"
+        src_filename = "forksource.txt"
         with open(os.path.join(upload_dir, src_filename), "w") as f:
             f.write("attachment body")
 
-        lab = Labs(title="Dup Upload Lab", description="x")
+        lab = Labs(title="Fork Upload Lab", description="x")
         lab.set_extended_desc("")
         lab.set_lab_guide_md(f"see [notes.txt](/uploads/{src_filename})")
         db.session.add(lab)
@@ -655,65 +655,65 @@ class TestDuplicate:
         db.session.commit()
 
         files_before = sorted(os.listdir(upload_dir))
-        resp = client.get(f"/labs/duplicate/{lab.id}")
+        resp = client.get(f"/labs/fork/{lab.id}")
         assert resp.status_code == 200
-        assert b"Dup Upload Lab -- Copy" in resp.data
-        # the duplicate references the source's file as-is (shared)...
+        assert b"Fork Upload Lab -- Fork" in resp.data
+        # the fork references the source's file as-is (shared)...
         assert src_filename.encode() in resp.data
-        # ...so an abandoned duplicate leaves no orphan copies behind
+        # ...so an abandoned fork leaves no orphan copies behind
         assert sorted(os.listdir(upload_dir)) == files_before
         # source metadata is untouched
         assert lab.lab_metadata.md["uploads"][0]["filename"] == src_filename
 
-    def test_submitting_duplicate_associates_shared_upload(self, client, ids):
-        source = Labs.query.filter_by(title="Dup Upload Lab").first()
+    def test_submitting_fork_associates_shared_upload(self, client, ids):
+        source = Labs.query.filter_by(title="Fork Upload Lab").first()
         resp = client.post(
             "/labs/edit/new",
             data=lab_form(
-                lab_title="Dup Upload Lab -- Copy",
+                lab_title="Fork Upload Lab -- Fork",
                 lab_guide=source.lab_guide_md_str,
                 lab_categories=str(ids["category_id"]),
-                pending_upload_filenames='["dupsource.txt"]',
+                pending_upload_filenames='["forksource.txt"]',
                 pending_upload_orignames='["notes.txt"]',
             ),
             follow_redirects=True,
         )
         assert resp.status_code == 200
 
-        copy = Labs.query.filter_by(title="Dup Upload Lab -- Copy").first()
+        copy = Labs.query.filter_by(title="Fork Upload Lab -- Fork").first()
         assert copy is not None
         uploads = copy.lab_metadata.md.get("uploads", [])
-        assert [u["filename"] for u in uploads] == ["dupsource.txt"]
+        assert [u["filename"] for u in uploads] == ["forksource.txt"]
         # both labs reference the same single file on disk
-        assert source.lab_metadata.md["uploads"][0]["filename"] == "dupsource.txt"
-        assert os.path.exists(os.path.join(flask_app.config["UPLOAD_DIR"], "dupsource.txt"))
+        assert source.lab_metadata.md["uploads"][0]["filename"] == "forksource.txt"
+        assert os.path.exists(os.path.join(flask_app.config["UPLOAD_DIR"], "forksource.txt"))
 
     def test_delete_shared_upload_keeps_file_until_last_reference(self, client, ids):
-        source = Labs.query.filter_by(title="Dup Upload Lab").first()
-        copy = Labs.query.filter_by(title="Dup Upload Lab -- Copy").first()
-        fpath = os.path.join(flask_app.config["UPLOAD_DIR"], "dupsource.txt")
+        source = Labs.query.filter_by(title="Fork Upload Lab").first()
+        copy = Labs.query.filter_by(title="Fork Upload Lab -- Fork").first()
+        fpath = os.path.join(flask_app.config["UPLOAD_DIR"], "forksource.txt")
 
-        # removing the attachment from the duplicate keeps the file on disk:
+        # removing the attachment from the fork keeps the file on disk:
         # the source lab still references it
-        resp = client.delete(f"/labs/{copy.id}/uploads/dupsource.txt")
+        resp = client.delete(f"/labs/{copy.id}/uploads/forksource.txt")
         assert resp.status_code == 200
         assert os.path.exists(fpath)
         db.session.expire_all()
         assert copy.lab_metadata.md.get("uploads") == []
-        assert source.lab_metadata.md["uploads"][0]["filename"] == "dupsource.txt"
+        assert source.lab_metadata.md["uploads"][0]["filename"] == "forksource.txt"
 
         # removing the last reference deletes the file from disk
-        resp = client.delete(f"/labs/{source.id}/uploads/dupsource.txt")
+        resp = client.delete(f"/labs/{source.id}/uploads/forksource.txt")
         assert resp.status_code == 200
         assert not os.path.exists(fpath)
         db.session.expire_all()
         assert source.lab_metadata.md.get("uploads") == []
 
-    def test_duplicate_button_visibility_on_labs_view(self, client, ids):
+    def test_fork_button_visibility_on_labs_view(self, client, ids):
         resp = client.get("/labs/view")
-        assert b"/labs/duplicate/" in resp.data
+        assert b"/labs/fork/" in resp.data
         logout(client)
         login(client, "lbstudent", "stud123")
         resp = client.get("/labs/view")
-        assert b"/labs/duplicate/" not in resp.data
+        assert b"/labs/fork/" not in resp.data
         logout(client)
