@@ -22,6 +22,10 @@ FINISH_MESSAGES = {
 def finish_thread(thread, by="user"):
     """Mark a thread finished and record a closing system message.
 
+    When the support team finishes a case, its user messages are marked read:
+    closing it implies staff has handled them (this also keeps the batched
+    e-mail job from reporting a case staff already dealt with).
+
     Idempotent: a thread that is already finished is left untouched (no duplicate
     system message). Caller is responsible for committing.
     """
@@ -29,6 +33,8 @@ def finish_thread(thread, by="user"):
         return thread
     thread.status = "finished"
     thread.finished_at = utcnow()
+    if by == "support":
+        mark_thread_read(thread)
     add_message(thread, "system", FINISH_MESSAGES.get(by, FINISH_MESSAGES["user"]), is_read=True)
     return thread
 

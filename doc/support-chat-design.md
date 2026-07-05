@@ -96,6 +96,12 @@ refinements, and describes the resulting architecture.
 20. The admin **sidebar "Support" badge** now shows the **number of open cases**
     (supersedes requirement 9's unread-threads count) and uses the **warning** (yellow)
     style instead of danger (red), so it matches the open-cases list the entry links to.
+21. The batched e-mail job no longer reports cases staff already dealt with (refines
+    requirement 4): finishing a case as **support** marks its user messages read, and
+    the flush stamps (without sending) pending messages of finished cases whose
+    messages staff already saw in-app. A case finished by the **user** with
+    **never-seen** messages is still e-mailed — immediately, skipping the quiet
+    window, since a finished conversation is locked and cannot grow.
 
 ---
 
@@ -145,7 +151,8 @@ Schema is created by migration `2.0.7 → 2.0.8`
 - `add_message(thread, sender, body, is_read)` — append a message and bump the thread's
   last-activity time. User messages start with `emailed_at = NULL`.
 - `finish_thread(thread, by="user")` — mark `finished` + set `finished_at`, and record a
-  `system` closing message (`FINISH_MESSAGES[by]` for `user` / `support`).
+  `system` closing message (`FINISH_MESSAGES[by]` for `user` / `support`). Finishing as
+  `support` also marks the thread's user messages read (staff handled the case).
   Idempotent: a thread already `finished` is left untouched.
 - `mark_thread_read(thread)` — staff-side: mark user messages read.
 - `mark_thread_seen_by_user(thread)` — user-side: set `user_last_read_at = now`.
@@ -219,9 +226,13 @@ Support is **not** e-mailed from the request path; notifications are batched (be
 Support notifications are grouped and sent by the `flush-support-emails` CLI command
 (`apps/cli/support_notify.py`, registered in `apps/cli/routes.py`), triggered by cron —
 see [DEV.md](./DEV.md#scheduled-jobs-cron). It finds threads with un-e-mailed user
-messages whose newest message is older than `SUPPORT_EMAIL_BATCH_MINUTES` (default 10),
-sends **one** e-mail per thread to `MAIL_SENDTO` (including telemetry), and stamps the
-messages `emailed_at`. The e-mail body is `templates/mail/support_message.html`.
+messages, sends **one** e-mail per thread to `MAIL_SENDTO` (including telemetry), and
+stamps the messages `emailed_at`. For **open** threads it waits until the oldest pending
+message is older than `SUPPORT_EMAIL_BATCH_MINUTES` (default 10). **Finished** threads
+whose pending messages staff already saw in-app (`is_read`) are stamped without sending
+— no e-mails about cases already dealt with; a finished thread with never-seen messages
+(e.g. written and closed by the user) is e-mailed immediately, since it is locked and
+cannot grow. The e-mail body is `templates/mail/support_message.html`.
 
 ### Configuration (`apps/config.py`)
 

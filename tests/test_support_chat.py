@@ -370,6 +370,14 @@ class TestBatchEmail:
         monkeypatch.setattr(support_notify, "Mail", FakeMail)
         monkeypatch.setitem(flask_app.config, "MAIL_SENDTO", "support@test.local")
 
+        # neutralize pending messages left behind by the earlier workflow tests
+        # (e.g. user-finished threads with never-seen messages, which the flush
+        # reports immediately) so this test only observes grace's thread
+        db.session.query(SupportMessages).filter(
+            SupportMessages.sender == "user", SupportMessages.emailed_at.is_(None)
+        ).update({"emailed_at": utcnow()}, synchronize_session=False)
+        db.session.commit()
+
         grace = make_user("sc_grace")
         logout(client)
         login(client, "sc_grace", "pw123456")
@@ -433,6 +441,84 @@ class TestBatchEmail:
         # both pending messages grouped into a single e-mail and marked
         assert all(m.emailed_at is not None for m in thread.messages if m.sender == "user")
         assert any("olga old" in (m.body or "") for m in sent)
+        logout(client)
+
+    def test_flush_skips_finished_thread_already_seen_by_staff(self, client, ids, monkeypatch):
+        """A case handled in-app (staff saw the messages) and finished must not be
+        e-mailed; its pending messages are stamped so later runs don't re-scan it."""
+        from apps.cli import support_notify
+
+        sent = []
+
+        class FakeMail:
+            def __init__(self, app):
+                pass
+
+            def send(self, msg):
+                sent.append(msg)
+
+        monkeypatch.setattr(support_notify, "Mail", FakeMail)
+        monkeypatch.setitem(flask_app.config, "MAIL_SENDTO", "support@test.local")
+
+        pat = make_user("sc_pat")
+        logout(client)
+        login(client, "sc_pat", "pw123456")
+        post_json(client, "/api/support/thread/messages", {"body": "pat question"})
+        thread = SupportThreads.query.filter_by(user_id=pat.id).one()
+        for m in thread.messages:
+            m.created_at = utcnow() - timedelta(minutes=30)
+        db.session.commit()
+
+        # support finishes the case (marks the user messages read)
+        logout(client)
+        login(client, "sc_admin", "admin123")
+        post_json(client, f"/api/support/threads/{thread.id}/finish", {})
+
+        support_notify.flush_support_emails(flask_app)
+        assert sent == []
+
+        # pending messages were stamped without sending -> nothing lingers
+        db.session.refresh(thread)
+        assert all(m.emailed_at is not None for m in thread.messages if m.sender == "user")
+        support_notify.flush_support_emails(flask_app)
+        assert sent == []
+        logout(client)
+
+    def test_flush_reports_user_finished_thread_with_unseen_messages(self, client, ids, monkeypatch):
+        """A case the user wrote and closed before staff ever saw it is still
+        e-mailed - immediately, without waiting for the quiet window."""
+        from apps.cli import support_notify
+
+        sent = []
+
+        class FakeMail:
+            def __init__(self, app):
+                pass
+
+            def send(self, msg):
+                sent.append(msg)
+
+        monkeypatch.setattr(support_notify, "Mail", FakeMail)
+        monkeypatch.setitem(flask_app.config, "MAIL_SENDTO", "support@test.local")
+
+        quinn = make_user("sc_quinn")
+        logout(client)
+        login(client, "sc_quinn", "pw123456")
+        post_json(client, "/api/support/thread/messages", {"body": "quinn drive-by question"})
+        # user finishes right away; messages are recent (inside the quiet window)
+        post_json(client, "/api/support/thread/finish", {})
+        thread = SupportThreads.query.filter_by(user_id=quinn.id).one()
+        assert thread.status == "finished"
+
+        support_notify.flush_support_emails(flask_app)
+        assert len(sent) == 1
+        assert "quinn drive-by question" in sent[0].body
+
+        db.session.refresh(thread)
+        assert all(m.emailed_at is not None for m in thread.messages if m.sender == "user")
+        # second run sends nothing more
+        support_notify.flush_support_emails(flask_app)
+        assert len(sent) == 1
         logout(client)
 
 
@@ -524,6 +610,8 @@ class TestFinishConversation:
         db.session.refresh(thread)
         assert thread.status == "finished"
         assert _system_bodies(thread) == ["Conversation finished by the support team."]
+        # support finishing a case marks its user messages read
+        assert thread.unread_count == 0
 
         # the closing note is rendered on the admin thread view
         page = client.get(f"/support/threads/{thread.id}")

@@ -361,7 +361,9 @@ class SupportMessages(db.Model, AuditMixin):
     sender = db.Column(db.String(16), nullable=False, default="user")  # user | support | assistant
     body = db.Column(db.Text, nullable=False)
     is_read = db.Column(db.Boolean, default=False, nullable=False)  # unread = staff hasn't seen a user msg
-    emailed_at = db.Column(db.DateTime, nullable=True)  # null = not yet included in a batch e-mail
+    # null = not yet included in a batch e-mail; also stamped without sending when
+    # the thread was finished after staff already saw the message in-app
+    emailed_at = db.Column(db.DateTime, nullable=True)
 
     def as_dict(self):
         return {
