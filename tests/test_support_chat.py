@@ -1,9 +1,9 @@
 """Pytest suite for the Support Chat feature.
 
 Exercises the user-facing widget endpoints (start/continue a thread, finish,
-history scoped to the current user, empty-body validation, the 2h inactivity
-boundary) and the admin thread-management page + staff-reply endpoint
-(role gating, reply creation, marking user messages read).
+history scoped to the current user, empty-body validation, reuse of an open
+thread regardless of its age) and the admin thread-management page +
+staff-reply endpoint (role gating, reply creation, marking user messages read).
 
 Runs entirely against a throwaway temporary SQLite database - it never touches
 the real dev/production database.
@@ -141,21 +141,22 @@ class TestUserThreadFlow:
         assert len(threads) == 1
         assert len(threads[0].messages) == 2
 
-    def test_inactivity_starts_new_thread(self, client, ids):
+    def test_old_open_thread_is_reused_not_auto_finished(self, client, ids):
+        # cases are only finished by the user or an admin - never by inactivity
         thread = SupportThreads.query.filter_by(user_id=ids["alice_id"]).one()
         old_id = thread.id
-        # backdate last activity beyond the 2h window
-        thread.updated_at = utcnow() - timedelta(hours=3)
+        # backdate last activity far into the past
+        thread.updated_at = utcnow() - timedelta(hours=48)
         db.session.commit()
 
         resp = post_json(client, "/api/support/thread/messages", {"body": "much later"})
         assert resp.status_code == 201
-        threads = SupportThreads.query.filter_by(user_id=ids["alice_id"]).order_by(SupportThreads.id).all()
-        assert len(threads) == 2
+        threads = SupportThreads.query.filter_by(user_id=ids["alice_id"]).all()
+        assert len(threads) == 1
         old = db.session.get(SupportThreads, old_id)
-        assert old.status == "finished"
-        assert old.finished_at is not None
-        assert threads[-1].status == "open"
+        assert old.status == "open"
+        assert old.finished_at is None
+        assert len(old.messages) == 3
 
     def test_finish_thread(self, client, ids):
         resp = post_json(client, "/api/support/thread/finish", {})
@@ -369,6 +370,14 @@ class TestBatchEmail:
         monkeypatch.setattr(support_notify, "Mail", FakeMail)
         monkeypatch.setitem(flask_app.config, "MAIL_SENDTO", "support@test.local")
 
+        # neutralize pending messages left behind by the earlier workflow tests
+        # (e.g. user-finished threads with never-seen messages, which the flush
+        # reports immediately) so this test only observes grace's thread
+        db.session.query(SupportMessages).filter(
+            SupportMessages.sender == "user", SupportMessages.emailed_at.is_(None)
+        ).update({"emailed_at": utcnow()}, synchronize_session=False)
+        db.session.commit()
+
         grace = make_user("sc_grace")
         logout(client)
         login(client, "sc_grace", "pw123456")
@@ -434,11 +443,89 @@ class TestBatchEmail:
         assert any("olga old" in (m.body or "") for m in sent)
         logout(client)
 
+    def test_flush_skips_finished_thread_already_seen_by_staff(self, client, ids, monkeypatch):
+        """A case handled in-app (staff saw the messages) and finished must not be
+        e-mailed; its pending messages are stamped so later runs don't re-scan it."""
+        from apps.cli import support_notify
 
-# --- admin sidebar unread badge count ----------------------------------
-class TestAdminUnreadCount:
-    def test_admin_unread_count_tracks_pending_then_reply(self, client, ids):
-        base = support.admin_unread_thread_count()
+        sent = []
+
+        class FakeMail:
+            def __init__(self, app):
+                pass
+
+            def send(self, msg):
+                sent.append(msg)
+
+        monkeypatch.setattr(support_notify, "Mail", FakeMail)
+        monkeypatch.setitem(flask_app.config, "MAIL_SENDTO", "support@test.local")
+
+        pat = make_user("sc_pat")
+        logout(client)
+        login(client, "sc_pat", "pw123456")
+        post_json(client, "/api/support/thread/messages", {"body": "pat question"})
+        thread = SupportThreads.query.filter_by(user_id=pat.id).one()
+        for m in thread.messages:
+            m.created_at = utcnow() - timedelta(minutes=30)
+        db.session.commit()
+
+        # support finishes the case (marks the user messages read)
+        logout(client)
+        login(client, "sc_admin", "admin123")
+        post_json(client, f"/api/support/threads/{thread.id}/finish", {})
+
+        support_notify.flush_support_emails(flask_app)
+        assert sent == []
+
+        # pending messages were stamped without sending -> nothing lingers
+        db.session.refresh(thread)
+        assert all(m.emailed_at is not None for m in thread.messages if m.sender == "user")
+        support_notify.flush_support_emails(flask_app)
+        assert sent == []
+        logout(client)
+
+    def test_flush_reports_user_finished_thread_with_unseen_messages(self, client, ids, monkeypatch):
+        """A case the user wrote and closed before staff ever saw it is still
+        e-mailed - immediately, without waiting for the quiet window."""
+        from apps.cli import support_notify
+
+        sent = []
+
+        class FakeMail:
+            def __init__(self, app):
+                pass
+
+            def send(self, msg):
+                sent.append(msg)
+
+        monkeypatch.setattr(support_notify, "Mail", FakeMail)
+        monkeypatch.setitem(flask_app.config, "MAIL_SENDTO", "support@test.local")
+
+        quinn = make_user("sc_quinn")
+        logout(client)
+        login(client, "sc_quinn", "pw123456")
+        post_json(client, "/api/support/thread/messages", {"body": "quinn drive-by question"})
+        # user finishes right away; messages are recent (inside the quiet window)
+        post_json(client, "/api/support/thread/finish", {})
+        thread = SupportThreads.query.filter_by(user_id=quinn.id).one()
+        assert thread.status == "finished"
+
+        support_notify.flush_support_emails(flask_app)
+        assert len(sent) == 1
+        assert "quinn drive-by question" in sent[0].body
+
+        db.session.refresh(thread)
+        assert all(m.emailed_at is not None for m in thread.messages if m.sender == "user")
+        # second run sends nothing more
+        support_notify.flush_support_emails(flask_app)
+        assert len(sent) == 1
+        logout(client)
+
+
+# --- admin sidebar open-cases badge count -------------------------------
+class TestAdminOpenCount:
+    def test_open_count_tracks_new_case_then_finish(self, client, ids):
+        base = support.open_thread_count()
 
         heidi = make_user("sc_heidi")
         logout(client)
@@ -446,18 +533,22 @@ class TestAdminUnreadCount:
         post_json(client, "/api/support/thread/messages", {"body": "heidi needs help"})
         thread = SupportThreads.query.filter_by(user_id=heidi.id).one()
 
-        # one more thread now has an unread user message
-        assert support.admin_unread_thread_count() == base + 1
+        # one more case is open
+        assert support.open_thread_count() == base + 1
 
-        # the sidebar badge is rendered on an admin page
+        # the sidebar badge is rendered on an admin page (warning style)
         logout(client)
         login(client, "sc_admin", "admin123")
         resp = client.get("/support/threads")
-        assert f'badge-danger right">{base + 1}<'.encode() in resp.data
+        assert f'badge-warning right">{base + 1}<'.encode() in resp.data
 
-        # replying clears that thread's unread state -> count drops back
+        # replying does NOT close the case -> count unchanged
         post_json(client, f"/api/support/threads/{thread.id}/messages", {"body": "on it"})
-        assert support.admin_unread_thread_count() == base
+        assert support.open_thread_count() == base + 1
+
+        # finishing the case drops the count back
+        post_json(client, f"/api/support/threads/{thread.id}/finish", {})
+        assert support.open_thread_count() == base
         logout(client)
 
 
@@ -519,6 +610,8 @@ class TestFinishConversation:
         db.session.refresh(thread)
         assert thread.status == "finished"
         assert _system_bodies(thread) == ["Conversation finished by the support team."]
+        # support finishing a case marks its user messages read
+        assert thread.unread_count == 0
 
         # the closing note is rendered on the admin thread view
         page = client.get(f"/support/threads/{thread.id}")

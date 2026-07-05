@@ -3,8 +3,12 @@
 
 Instead of e-mailing support on every message, a user's messages are grouped and
 sent as a single e-mail once the user has been quiet for at least
-``SUPPORT_EMAIL_BATCH_MINUTES``. Invoked from cron via the ``flush-support-emails``
-CLI command (see apps/cli/routes.py), mirroring apps/cli/lab_schedule.py.
+``SUPPORT_EMAIL_BATCH_MINUTES``. A case finished after staff already saw its
+pending messages in-app is stamped without sending; a finished case with
+never-seen messages (e.g. written and closed by the user) is still reported,
+immediately, since the conversation is locked. Invoked from cron via the
+``flush-support-emails`` CLI command (see apps/cli/routes.py), mirroring
+apps/cli/lab_schedule.py.
 """
 from datetime import timedelta
 
@@ -49,6 +53,7 @@ def flush_support_emails(app):
 
     mail = Mail(app)
     sent = 0
+    skipped = 0
     for thread_id in thread_ids:
         thread = db.session.get(SupportThreads, thread_id)
         if thread is None:
@@ -59,14 +64,29 @@ def flush_support_emails(app):
         ]
         if not pending:
             continue
-        # Flush once the OLDEST un-e-mailed message has waited at least
-        # SUPPORT_EMAIL_BATCH_MINUTES. Basing this on the oldest (not the newest)
-        # message means an ongoing conversation can no longer defer the notification
-        # indefinitely — support is told within ~the batch window of the first
-        # unreported message, and all pending messages are still grouped into one e-mail.
-        stamps = [_aware(m.created_at) for m in pending if m.created_at]
-        if not stamps or min(stamps) > cutoff:
-            continue
+        if thread.status == "finished":
+            if all(m.is_read for m in pending):
+                # Staff already saw every pending message in-app and the case is
+                # closed: nothing to report. Stamp them so later runs don't
+                # re-scan the thread.
+                now = utcnow()
+                for m in pending:
+                    m.emailed_at = now
+                db.session.commit()
+                skipped += 1
+                continue
+            # A finished case with never-seen messages (e.g. the user wrote and
+            # closed it themselves) is still reported — immediately, skipping the
+            # quiet window, since the thread is locked and cannot grow anymore.
+        else:
+            # Flush once the OLDEST un-e-mailed message has waited at least
+            # SUPPORT_EMAIL_BATCH_MINUTES. Basing this on the oldest (not the newest)
+            # message means an ongoing conversation can no longer defer the notification
+            # indefinitely — support is told within ~the batch window of the first
+            # unreported message, and all pending messages are still grouped into one e-mail.
+            stamps = [_aware(m.created_at) for m in pending if m.created_at]
+            if not stamps or min(stamps) > cutoff:
+                continue
 
         user = thread.user or db.session.get(Users, thread.user_id)
         try:
@@ -90,7 +110,10 @@ def flush_support_emails(app):
         db.session.commit()
         sent += 1
 
-    app.logger.info(f"flush_support_emails: sent {sent} e-mail(s)")
+    app.logger.info(
+        f"flush_support_emails: sent {sent} e-mail(s),"
+        f" skipped {skipped} finished thread(s) already seen by staff"
+    )
     return sent
 
 

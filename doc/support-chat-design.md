@@ -86,6 +86,23 @@ refinements, and describes the resulting architecture.
     viewport, which previously made the `vw`/`right`-anchored panel larger than the phone
     screen).
 
+### Refinements (fifth follow-up)
+
+19. The **inactivity auto-finish rule was removed** (supersedes the "> 2 h" part of
+    requirement 5 and the "automatically due to inactivity" part of requirement 14): a
+    case is only finished **explicitly**, by the user or by an admin. An open thread is
+    reused for the next user message no matter how old it is. The
+    `SUPPORT_THREAD_INACTIVITY_HOURS` setting was dropped.
+20. The admin **sidebar "Support" badge** now shows the **number of open cases**
+    (supersedes requirement 9's unread-threads count) and uses the **warning** (yellow)
+    style instead of danger (red), so it matches the open-cases list the entry links to.
+21. The batched e-mail job no longer reports cases staff already dealt with (refines
+    requirement 4): finishing a case as **support** marks its user messages read, and
+    the flush stamps (without sending) pending messages of finished cases whose
+    messages staff already saw in-app. A case finished by the **user** with
+    **never-seen** messages is still e-mailed — immediately, skipping the quiet
+    window, since a finished conversation is locked and cannot grow.
+
 ---
 
 ## Architecture
@@ -127,14 +144,15 @@ Schema is created by migration `2.0.7 → 2.0.8`
 
 ### Thread lifecycle (`apps/controllers/support.py`)
 
-- `get_active_thread(user)` — latest `open` thread within
-  `SUPPORT_THREAD_INACTIVITY_HOURS` (default 2 h). A stale open thread is
-  auto-finished and `None` is returned.
+- `get_active_thread(user)` — the user's latest `open` thread, or `None`. Threads stay
+  open until explicitly finished by the user or the support team (no inactivity
+  auto-finish).
 - `get_or_create_active_thread(user)` — returns the active thread or creates a new one.
 - `add_message(thread, sender, body, is_read)` — append a message and bump the thread's
   last-activity time. User messages start with `emailed_at = NULL`.
 - `finish_thread(thread, by="user")` — mark `finished` + set `finished_at`, and record a
-  `system` closing message (`FINISH_MESSAGES[by]` for `user` / `support` / `inactivity`).
+  `system` closing message (`FINISH_MESSAGES[by]` for `user` / `support`). Finishing as
+  `support` also marks the thread's user messages read (staff handled the case).
   Idempotent: a thread already `finished` is left untouched.
 - `mark_thread_read(thread)` — staff-side: mark user messages read.
 - `mark_thread_seen_by_user(thread)` — user-side: set `user_last_read_at = now`.
@@ -142,8 +160,8 @@ Schema is created by migration `2.0.7 → 2.0.8`
   (only when a thread is created).
 - `recent_threads_for_user(user, limit)` / `user_unread_thread_count(user)` — feed the
   navbar dropdown (the user's own unseen staff replies).
-- `admin_unread_thread_count()` — number of threads with at least one unread user
-  message; feeds the admin sidebar "Support" badge.
+- `open_thread_count()` — number of open support cases; feeds the admin sidebar
+  "Support" badge.
 - `generate_support_reply(thread, body)` — **AI seam**; returns `None` today, so replies
   come from humans. Returning text here would persist an `assistant` message.
 
@@ -171,7 +189,7 @@ Support is **not** e-mailed from the request path; notifications are batched (be
   (404 for someone else's); opening marks staff replies seen.
 - `@blueprint.app_context_processor inject_support_dropdown` — provides
   `support_recent_threads`, `support_unread_count` (user, for the navbar), and
-  `support_admin_unread_count` (admins only, for the sidebar badge) to every page.
+  `support_admin_open_count` (admins only, for the sidebar badge) to every page.
 
 ### UI components
 
@@ -194,7 +212,8 @@ Support is **not** e-mailed from the request path; notifications are batched (be
   user's recent threads, an unread badge (`support_unread_count`), and "See All
   Messages" → `/support/my`.
 - **Sidebar "Support" entry** — `apps/templates/includes/sidebar.html` (admin only);
-  right-aligned badge showing `support_admin_unread_count` when > 0.
+  right-aligned warning (yellow) badge showing `support_admin_open_count` (the number
+  of open cases) when > 0.
 - **Admin pages** — `pages/support_threads.html` (list + open/all toggle),
   `pages/support_thread_view.html` (conversation, telemetry block, reply form, **finish
   button**, 30 s poll). Both thread-view pages render `system` messages as centered notes
@@ -207,15 +226,18 @@ Support is **not** e-mailed from the request path; notifications are batched (be
 Support notifications are grouped and sent by the `flush-support-emails` CLI command
 (`apps/cli/support_notify.py`, registered in `apps/cli/routes.py`), triggered by cron —
 see [DEV.md](./DEV.md#scheduled-jobs-cron). It finds threads with un-e-mailed user
-messages whose newest message is older than `SUPPORT_EMAIL_BATCH_MINUTES` (default 10),
-sends **one** e-mail per thread to `MAIL_SENDTO` (including telemetry), and stamps the
-messages `emailed_at`. The e-mail body is `templates/mail/support_message.html`.
+messages, sends **one** e-mail per thread to `MAIL_SENDTO` (including telemetry), and
+stamps the messages `emailed_at`. For **open** threads it waits until the oldest pending
+message is older than `SUPPORT_EMAIL_BATCH_MINUTES` (default 10). **Finished** threads
+whose pending messages staff already saw in-app (`is_read`) are stamped without sending
+— no e-mails about cases already dealt with; a finished thread with never-seen messages
+(e.g. written and closed by the user) is e-mailed immediately, since it is locked and
+cannot grow. The e-mail body is `templates/mail/support_message.html`.
 
 ### Configuration (`apps/config.py`)
 
 | Setting | Default | Meaning |
 | --- | --- | --- |
-| `SUPPORT_THREAD_INACTIVITY_HOURS` | `2` | idle time before an open thread auto-finishes |
 | `SUPPORT_EMAIL_BATCH_MINUTES` | `10` | quiet time before pending messages are e-mailed |
 | `MAIL_SENDTO` | — | support inbox; batched e-mails are skipped if unset |
 
@@ -231,15 +253,16 @@ messages `emailed_at`. The e-mail body is `templates/mail/support_message.html`.
 
 ## Testing
 
-`tests/test_support_chat.py` covers the widget flow (start/continue/finish, the 2 h
-boundary, per-user scoping), admin management (role gating, reply + mark-read, open-vs-all
-filter), telemetry capture on a new thread, the read-endpoint authorization, the navbar
-unread indicator (including the rendered badge), the admin sidebar unread count
-(`admin_unread_thread_count`, rising with a pending message and dropping after a reply),
-multi-line message persistence, conversation finishing (user + admin, the closing `system`
-message, admin-route authorization, and idempotency), posting into a specific thread
-(append vs. the `409` rejection on a finished thread, and ownership 404s), and the
-batch-flush timing boundary (with a mocked mailer).
+`tests/test_support_chat.py` covers the widget flow (start/continue/finish, reuse of an
+old open thread with no inactivity auto-finish, per-user scoping), admin management (role
+gating, reply + mark-read, open-vs-all filter), telemetry capture on a new thread, the
+read-endpoint authorization, the navbar unread indicator (including the rendered badge),
+the admin sidebar open-cases count (`open_thread_count`, rising with a new case, unchanged
+by a staff reply, and dropping when the case is finished), multi-line message persistence,
+conversation finishing (user + admin, the closing `system` message, admin-route
+authorization, and idempotency), posting into a specific thread (append vs. the `409`
+rejection on a finished thread, and ownership 404s), and the batch-flush timing boundary
+(with a mocked mailer).
 
 ## Future work
 
