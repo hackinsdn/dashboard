@@ -182,6 +182,14 @@ def datetime_from_ts(timestamp):
         return None
 
 
+def epoch_from_datetime(dt):
+    """Epoch seconds from a datetime; naive values are assumed to be UTC
+    (utcnow() stores UTC, but SQLite returns them back naive)."""
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=datetime.timezone.utc)
+    return int(dt.timestamp())
+
+
 def secure_filename(filename: str) -> str:
     r"""Pass it a filename and it will return a secure version of it.  This
     filename can then safely be stored on a regular file system and passed

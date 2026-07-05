@@ -59,6 +59,7 @@ from run import app as flask_app  # noqa: E402
 from apps import db  # noqa: E402
 from apps.authentication.models import Users, Groups  # noqa: E402
 from apps.home.models import Labs, LabInstances, HomeLogging  # noqa: E402
+from apps.utils import epoch_from_datetime  # noqa: E402
 
 flask_app.config["TESTING"] = True
 flask_app.config["WTF_CSRF_ENABLED"] = False
@@ -215,6 +216,12 @@ class TestRunLab:
         log = HomeLogging.query.filter_by(action="create_lab", success=True, lab_id=ids["lab_b_id"], user_id=ids["student_id"]).first()
         assert log is not None
 
+        # the status page embeds the request time so the elapsed-wait timer
+        # survives page refreshes
+        assert b'id="elapsedTimer"' in resp.data
+        assert b'id="waitMessage"' in resp.data
+        assert f"var requestedTs = {epoch_from_datetime(inst.created_at)};".encode() in resp.data
+
     def test_post_failure_logs_error(self, client, ids, monkeypatch):
         monkeypatch.setattr("apps.home.routes.k8s.create_lab", lambda *a, **k: (False, "boom"))
         resp = client.post(f"/run_lab/{ids['lab_c_id']}", data={"lab_expiration": "4"})
@@ -240,6 +247,8 @@ class TestCheckLabStatus:
     def test_owner_sees_status(self, client, ids):
         resp = client.get(f"/lab_status/{ids['inst_student_id']}")
         assert resp.status_code == 200
+        inst = db.session.get(LabInstances, ids["inst_student_id"])
+        assert f"var requestedTs = {epoch_from_datetime(inst.created_at)};".encode() in resp.data
         logout(client)
 
 

@@ -21,7 +21,7 @@ from flask_login import login_required, current_user
 from jinja2 import TemplateNotFound
 from apps.audit_mixin import get_remote_addr, check_user_category
 from apps.authentication.forms import GroupForm
-from apps.utils import update_running_labs_stats, parse_lab_expiration, datetime_from_ts, update_category_stats, update_stats_lab_instances_answers, utcnow
+from apps.utils import update_running_labs_stats, parse_lab_expiration, datetime_from_ts, epoch_from_datetime, update_category_stats, update_stats_lab_instances_answers, utcnow
 from sqlalchemy import desc
 
 
@@ -244,7 +244,7 @@ def run_lab(lab_id):
         running_labs = LabInstances.query.filter_by(is_deleted=False, user_id=current_user.id).count()
         cache.set(f"running_labs-{current_user.id}", running_labs)
 
-        return render_template("pages/run_lab_status.html", resources=msg, lab_instance_id=pod_hash)
+        return render_template("pages/run_lab_status.html", resources=msg, lab_instance_id=pod_hash, lab_requested_ts=epoch_from_datetime(lab_inst.created_at))
     else:
         create_lab_log_error = HomeLogging(ipaddr=get_remote_addr(), action="create_lab", success=False, lab_id=lab.id, user_id=current_user.id)
         db.session.add(create_lab_log_error)
@@ -264,7 +264,7 @@ def check_lab_status(lab_id):
     if lab.user_id != current_user.id:
         return render_template("pages/error.html", title="Error checking lab status", msg="You are not authorized to run this lab")
 
-    return render_template("pages/run_lab_status.html", resources=lab.k8s_resources, lab_instance_id=lab_id)
+    return render_template("pages/run_lab_status.html", resources=lab.k8s_resources, lab_instance_id=lab_id, lab_requested_ts=epoch_from_datetime(lab.created_at))
 
 @blueprint.route('/xterm/<lab_id>/<kind>/<pod>/<container>', methods=["GET"])
 @login_required
