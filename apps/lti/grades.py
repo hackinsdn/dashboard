@@ -9,6 +9,7 @@ from flask import current_app as app
 from pylti1p3.assignments_grades import AssignmentsGradesService
 from pylti1p3.exception import LtiServiceException
 from pylti1p3.grade import Grade
+from pylti1p3.lineitem import LineItem
 from pylti1p3.service_connector import ServiceConnector
 
 from apps.audit_mixin import utcnow
@@ -77,7 +78,7 @@ def send_lab_result_to_lms(user, lab):
     if AGS_SCORE_SCOPE not in (ags_claim.get("scope") or []):
         app.logger.info(f"LTI grade passback skipped (no score scope) {log_ref}")
         return "skipped: platform did not grant the AGS score scope"
-    if not ags_claim.get("lineitem"):
+    if not ags_claim.get("lineitem") and not ags_claim.get("lineitems"):
         app.logger.info(f"LTI grade passback skipped (no lineitem) {log_ref}")
         return "skipped: LMS activity has no gradebook line item"
 
@@ -110,7 +111,19 @@ def send_lab_result_to_lms(user, lab):
     connector = ServiceConnector(registration, get_requests_session())
     ags = AssignmentsGradesService(connector, ags_claim)
     try:
-        ags.put_grade(grade)
+        lineitem = None
+        if not ags_claim.get("lineitem"):
+            lineitem = _resolve_lineitem(ags, context, lab)
+            if lineitem is None:
+                app.logger.info(
+                    f"LTI grade passback skipped (no lineitem resolved) {log_ref} "
+                    f"ags_claim={ags_claim}"
+                )
+                return "skipped: no gradebook line item could be resolved for this activity"
+        if lineitem:
+            ags.put_grade(grade, lineitem)
+        else:
+            ags.put_grade(grade)
     except LtiServiceException as exc:
         # a 400 here is usually Moodle refusing scores for users without a
         # gradable enrolment (teacher/admin launches) - known behavior
@@ -119,3 +132,26 @@ def send_lab_result_to_lms(user, lab):
 
     app.logger.info(f"LTI grade passback sent {log_ref} score={score}")
     return "sent"
+
+
+def _resolve_lineitem(ags, context, lab):
+    """Moodle only sends a default `lineitem` claim when the activity has a
+    coupled gradebook column; with plain "grade sync" (no column
+    management) or course-level tools only the `lineitems` collection URL
+    arrives. Locate the activity's column there by resource link, or create
+    one when the platform granted the full lineitem scope."""
+    if not ags.can_read_lineitem():
+        return None
+    if context.resource_link_id:
+        lineitem = ags.find_lineitem_by_resource_link_id(context.resource_link_id)
+        if lineitem:
+            return lineitem
+    if ags.can_create_lineitem():
+        new_lineitem = LineItem()
+        new_lineitem.set_tag(f"hackinsdn-lab-{lab.id}")
+        new_lineitem.set_label(lab.title or f"Lab {lab.id}")
+        new_lineitem.set_score_maximum(100)
+        if context.resource_link_id:
+            new_lineitem.set_resource_link_id(context.resource_link_id)
+        return ags.find_or_create_lineitem(new_lineitem)
+    return None

@@ -159,7 +159,12 @@ Assignment and Grade Services:
   launched through the LMS at least once (after this feature is deployed)
   before their finishes can be graded; refreshing the finished page
   re-sends and simply overwrites the same gradebook cell (Moodle keeps
-  grade history).
+  grade history);
+- when the launch carries no default gradebook line item (Moodle with
+  plain "grade sync", course-level tools), the column is located in the
+  platform's line-item collection by resource link — and created on the
+  fly when the platform granted column management (the full `lineitem`
+  scope, requested by our dynamic registration).
 
 Setup notes:
 

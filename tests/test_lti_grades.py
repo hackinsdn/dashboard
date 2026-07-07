@@ -154,18 +154,45 @@ def login(client, username, password="lg-pass"):
 # --- fake AGS plumbing ----------------------------------------------------------
 
 class FakeAGS:
-    calls = []          # list of {"claim":..., "payload":...}
+    calls = []          # list of {"claim":..., "payload":..., "lineitem_id":...}
     raise_exc = None
+    platform_lineitems = []   # dicts the fake "lineitems collection" holds
+    created_lineitems = []
 
     def __init__(self, connector, service_data):
         self.service_data = service_data
 
-    def put_grade(self, grade):
+    # scope checks mirror pylti1p3's AssignmentsGradesService
+    def can_read_lineitem(self):
+        scopes = self.service_data.get("scope") or []
+        return (
+            "https://purl.imsglobal.org/spec/lti-ags/scope/lineitem.readonly" in scopes
+            or "https://purl.imsglobal.org/spec/lti-ags/scope/lineitem" in scopes
+        )
+
+    def can_create_lineitem(self):
+        scopes = self.service_data.get("scope") or []
+        return "https://purl.imsglobal.org/spec/lti-ags/scope/lineitem" in scopes
+
+    def find_lineitem_by_resource_link_id(self, resource_link_id):
+        from pylti1p3.lineitem import LineItem
+        for item in FakeAGS.platform_lineitems:
+            if item.get("resourceLinkId") == resource_link_id:
+                return LineItem(dict(item))
+        return None
+
+    def find_or_create_lineitem(self, new_lineitem):
+        new_lineitem.set_id("https://lg-moodle.example/lineitem/CREATED")
+        FakeAGS.created_lineitems.append(new_lineitem)
+        return new_lineitem
+
+    def put_grade(self, grade, lineitem=None):
         if FakeAGS.raise_exc:
             raise FakeAGS.raise_exc
         FakeAGS.calls.append({
             "claim": self.service_data,
             "payload": json.loads(grade.get_value()),
+            "lineitem_id": lineitem.get_id() if lineitem else None,
         })
         return {"body": "", "headers": {}}
 
@@ -180,6 +207,8 @@ def fake_ags(monkeypatch):
     )
     FakeAGS.calls = []
     FakeAGS.raise_exc = None
+    FakeAGS.platform_lineitems = []
+    FakeAGS.created_lineitems = []
     yield FakeAGS
 
 
@@ -402,6 +431,78 @@ class TestFinishedLabTrigger:
             resp = client.get(f"/finished-lab-infos/{seed['lab_sheet']}")
         assert resp.status_code == 200
         assert "rejected by platform" in caplog.text
+
+    def test_moodle_grade_sync_claim_resolved_from_collection(self, client, seed, fake_ags):
+        """Regression: Moodle with plain "grade sync" (no column management)
+        sends no default lineitem - only the lineitems collection URL plus
+        lineitem.readonly/result.readonly/score scopes. The column must be
+        located in the collection by resource link id."""
+        context = db.session.get(LtiLaunchContext, seed["context_id"])
+        original = context.ags
+        context.ags = {
+            "scope": [
+                "https://purl.imsglobal.org/spec/lti-ags/scope/lineitem.readonly",
+                "https://purl.imsglobal.org/spec/lti-ags/scope/result.readonly",
+                SCORE_SCOPE,
+            ],
+            "lineitems": "https://lg-moodle.example/mod/lti/services.php/2/lineitems?type_id=1",
+        }
+        db.session.commit()
+        fake_ags.platform_lineitems = [
+            {"id": "https://lg-moodle.example/li/42", "resourceLinkId": "rl-1",
+             "label": "HackInSDN", "scoreMaximum": 100},
+        ]
+        try:
+            assert login(client, "lg_lti")
+            resp = client.get(f"/finished-lab-infos/{seed['lab_sheet']}")
+            assert resp.status_code == 200
+            assert b"sent to your course gradebook" in resp.data
+            assert len(fake_ags.calls) == 1
+            assert fake_ags.calls[0]["lineitem_id"] == "https://lg-moodle.example/li/42"
+            assert fake_ags.calls[0]["payload"]["scoreGiven"] == 50.0
+        finally:
+            context.ags = original
+            db.session.commit()
+
+    def test_collection_without_match_and_no_create_scope_skipped(self, client, seed, fake_ags):
+        context = db.session.get(LtiLaunchContext, seed["context_id"])
+        original = context.ags
+        context.ags = {
+            "scope": ["https://purl.imsglobal.org/spec/lti-ags/scope/lineitem.readonly",
+                      SCORE_SCOPE],
+            "lineitems": "https://lg-moodle.example/lineitems",
+        }
+        db.session.commit()
+        try:
+            assert login(client, "lg_lti")
+            resp = client.get(f"/finished-lab-infos/{seed['lab_sheet']}")
+            assert resp.status_code == 200
+            assert fake_ags.calls == []
+        finally:
+            context.ags = original
+            db.session.commit()
+
+    def test_collection_without_match_creates_column_with_full_scope(self, client, seed, fake_ags):
+        context = db.session.get(LtiLaunchContext, seed["context_id"])
+        original = context.ags
+        context.ags = {
+            "scope": ["https://purl.imsglobal.org/spec/lti-ags/scope/lineitem",
+                      SCORE_SCOPE],
+            "lineitems": "https://lg-moodle.example/lineitems",
+        }
+        db.session.commit()
+        try:
+            assert login(client, "lg_lti")
+            resp = client.get(f"/finished-lab-infos/{seed['lab_sheet']}")
+            assert resp.status_code == 200
+            assert len(fake_ags.calls) == 1
+            assert fake_ags.calls[0]["lineitem_id"] == "https://lg-moodle.example/lineitem/CREATED"
+            created = fake_ags.created_lineitems[0]
+            assert created.get_tag() == f"hackinsdn-lab-{seed['lab_sheet']}"
+            assert created.get_score_maximum() == 100
+        finally:
+            context.ags = original
+            db.session.commit()
 
     def test_context_selection_prefers_next_url_match(self, client, seed, fake_ags):
         # a second, NEWER context without a deep link...

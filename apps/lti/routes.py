@@ -47,9 +47,12 @@ LTI_TOOL_CONF_CLAIM = "https://purl.imsglobal.org/spec/lti-tool-configuration"
 LTI_AGS_CLAIM = "https://purl.imsglobal.org/spec/lti-ags/claim/endpoint"
 LTI_DEPLOYMENT_ID_CLAIM = "https://purl.imsglobal.org/spec/lti/claim/deployment_id"
 LTI_RESOURCE_LINK_CLAIM = "https://purl.imsglobal.org/spec/lti/claim/resource_link"
-# requested at dynamic registration so the platform grants grade passback
+# requested at dynamic registration so the platform grants grade passback;
+# the full lineitem scope lets the tool create a gradebook column when the
+# activity has none (Moodle: "grade sync and column management")
 LTI_AGS_SCOPES = (
     "https://purl.imsglobal.org/spec/lti-ags/scope/score "
+    "https://purl.imsglobal.org/spec/lti-ags/scope/lineitem "
     "https://purl.imsglobal.org/spec/lti-ags/scope/lineitem.readonly"
 )
 
