@@ -25,6 +25,7 @@ services:
       - MOODLE_PASSWORD=${MOODLE_PASSWORD:-demo_password123}
     volumes:
       - moodle_data:/bitnami
+      - ./docker-certs:/opt/bitnami/apache/conf.default/bitnami/certs
     depends_on:
       - mariadb
 
