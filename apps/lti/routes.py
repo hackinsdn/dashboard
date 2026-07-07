@@ -5,7 +5,7 @@ registration, plus the `flask lti ...` CLI commands."""
 import hmac
 import secrets
 from datetime import timedelta
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlsplit
 
 import click
 import requests
@@ -37,6 +37,7 @@ from apps.lti.tool_conf import DbToolConf
 from apps.utils import check_pre_approved
 
 LTI_ROLES_CLAIM = "https://purl.imsglobal.org/spec/lti/claim/roles"
+LTI_CUSTOM_CLAIM = "https://purl.imsglobal.org/spec/lti/claim/custom"
 LTI_TOOL_CONF_CLAIM = "https://purl.imsglobal.org/spec/lti-tool-configuration"
 
 REGISTRATION_CLOSE_PAGE = """<!doctype html>
@@ -156,11 +157,71 @@ def launch():
         f"category={user.category}"
     )
 
+    # deep-link support: set before the e-mail check so the destination
+    # survives the /email/required detour (that flow pops session next_url)
+    apply_custom_next_url(launch_data)
+
     if not user.email:
         return redirect(url_for("authentication_blueprint.require_email"))
     if "next_url" in session:
         return redirect(session.pop("next_url"))
     return redirect(url_for("home_blueprint.index"))
+
+
+def is_safe_redirect_url(url):
+    """Accept only redirect targets that stay on this Dashboard: a relative
+    path, or an absolute URL whose scheme and host:port exactly match
+    BASE_URL. Everything else - external hosts, protocol-relative //host,
+    javascript:, userinfo/lookalike-host and backslash tricks - is
+    rejected. Never use prefix/substring matching here."""
+    if not isinstance(url, str) or not url:
+        return False
+    if any(char == "\\" or char.isspace() or ord(char) < 0x20 for char in url):
+        return False
+    try:
+        parts = urlsplit(url)
+    except ValueError:
+        return False
+    if not parts.scheme and not parts.netloc:
+        return url.startswith("/") and not url.startswith("//")
+    base = urlsplit(app_config.BASE_URL)
+    return (
+        parts.scheme.lower() == base.scheme.lower()
+        and parts.netloc.lower() == base.netloc.lower()
+    )
+
+
+def apply_custom_next_url(launch_data):
+    """Platforms can send a custom parameter `next_url` (Moodle: the
+    activity's "Custom parameters" field, `next_url=/labs/...`) through the
+    LTI custom claim to deep-link the launch into a specific page. The value
+    is attacker-influenceable, so only safe same-host targets are honored -
+    stored in session["next_url"] (overwriting any stale value: the fresh
+    launch intent wins); rejected values are logged and the launch proceeds
+    to the default redirect."""
+    issuer = launch_data.get("iss")
+    custom_claims = launch_data.get(LTI_CUSTOM_CLAIM)
+    if custom_claims is None:
+        return
+    if not isinstance(custom_claims, dict):
+        app.logger.warning(
+            f"LTI launch custom claim ignored (not a dict) issuer={issuer} "
+            f"value={custom_claims!r}"
+        )
+        return
+    next_url = custom_claims.get("next_url")
+    if not next_url:
+        return
+    if is_safe_redirect_url(next_url):
+        session["next_url"] = next_url
+        app.logger.info(
+            f"LTI launch next_url accepted issuer={issuer} next_url={next_url}"
+        )
+    else:
+        app.logger.warning(
+            f"LTI launch next_url rejected (unsafe redirect) issuer={issuer} "
+            f"next_url={next_url!r}"
+        )
 
 
 def get_or_create_lti_user(launch_data):

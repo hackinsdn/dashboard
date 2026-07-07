@@ -526,6 +526,99 @@ class TestLaunchProvisioning:
         assert log is not None
 
 
+# --- custom claim next_url (deep-link redirect) -----------------------------------
+
+class TestCustomNextUrl:
+    BASE_URL = None  # set in _fake_launch from the app config
+
+    @pytest.fixture(autouse=True)
+    def _fake_launch(self, monkeypatch):
+        monkeypatch.setattr("apps.lti.routes.FlaskMessageLaunch", _FakeMessageLaunch)
+        from apps.config import app_config
+        type(self).BASE_URL = app_config.BASE_URL.rstrip("/")
+        yield
+        _FakeMessageLaunch.error = None
+
+    def _launch_with_custom(self, client, custom, sub="lti-sub-nexturl",
+                            email="lti-nexturl@example.com"):
+        claims = _launch_claims(sub, [ROLE_LEARNER], email=email)
+        if custom is not None:
+            claims["https://purl.imsglobal.org/spec/lti/claim/custom"] = custom
+        _FakeMessageLaunch.launch_data = claims
+        return client.post("/lti/launch/")
+
+    def test_no_custom_claim_keeps_default_redirect(self, client):
+        resp = self._launch_with_custom(client, None)
+        assert resp.status_code == 302
+        default_location = resp.headers["Location"]
+
+        # claim present but without next_url behaves the same
+        resp = self._launch_with_custom(client, {"other_param": "x"})
+        assert resp.headers["Location"] == default_location
+
+    def test_relative_next_url_redirects(self, client):
+        resp = self._launch_with_custom(client, {"next_url": "/labs/abc?tab=2"})
+        assert resp.status_code == 302
+        assert resp.headers["Location"] == "/labs/abc?tab=2"
+        with client.session_transaction() as sess:
+            assert "next_url" not in sess
+
+    def test_same_host_absolute_next_url_redirects(self, client):
+        target = self.BASE_URL + "/labs/abc"
+        resp = self._launch_with_custom(client, {"next_url": target})
+        assert resp.status_code == 302
+        assert resp.headers["Location"] == target
+
+    def test_unsafe_next_urls_rejected(self, client, caplog):
+        base_host = self.BASE_URL.split("://", 1)[1]
+        resp = self._launch_with_custom(client, None)
+        default_location = resp.headers["Location"]
+        unsafe = [
+            "https://evil.example/x",
+            "//evil.example/x",
+            "/\\evil.example/x",
+            "javascript:alert(1)",
+            "labs/abc",                                 # not /-prefixed
+            "",
+            ["/labs/abc"],                              # non-string
+            f"https://{base_host}@evil.example/",       # userinfo trick
+            f"https://{base_host}.evil.example/",       # lookalike subdomain
+            f"https://{base_host}:8443/x",              # port swap
+            self.BASE_URL.replace("https://", "http://") + "/x",  # scheme downgrade
+        ]
+        for value in unsafe:
+            with caplog.at_level("WARNING"):
+                caplog.clear()
+                resp = self._launch_with_custom(client, {"next_url": value})
+            assert resp.status_code == 302, value
+            assert resp.headers["Location"] == default_location, value
+            if value:  # empty/missing values are silently ignored, not logged
+                assert "next_url rejected" in caplog.text, value
+
+    def test_non_dict_custom_claim_rejected(self, client, caplog):
+        resp = self._launch_with_custom(client, None)
+        default_location = resp.headers["Location"]
+        with caplog.at_level("WARNING"):
+            resp = self._launch_with_custom(client, "next_url=/labs/abc")
+        assert resp.headers["Location"] == default_location
+        assert "custom claim ignored" in caplog.text
+
+    def test_custom_next_url_overrides_stale_session_value(self, client):
+        with client.session_transaction() as sess:
+            sess["next_url"] = "/stale/destination"
+        resp = self._launch_with_custom(client, {"next_url": "/labs/fresh"})
+        assert resp.headers["Location"] == "/labs/fresh"
+
+    def test_next_url_survives_require_email_detour(self, client):
+        resp = self._launch_with_custom(
+            client, {"next_url": "/labs/abc"},
+            sub="lti-sub-nexturl-noemail", email=None)
+        assert resp.status_code == 302
+        assert resp.headers["Location"] == "/email/required"
+        with client.session_transaction() as sess:
+            assert sess.get("next_url") == "/labs/abc"
+
+
 # --- OIDC login ------------------------------------------------------------------
 
 class TestOidcLogin:

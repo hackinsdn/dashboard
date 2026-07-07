@@ -121,6 +121,23 @@ Logins appear in the `login_logging` table with `auth_provider=lti`, and the
 compare them with the LMS tool configuration when a launch fails (this
 solves most integration problems; see the field guide in PLAYBOOK.md).
 
+### Deep links (custom parameter `next_url`)
+
+An LMS activity can land the user on a specific Dashboard page after the
+launch. In Moodle, set the activity's (or tool's) **Custom parameters**
+field to e.g.:
+
+```
+next_url=/labs/abc123
+```
+
+The value arrives in the LTI custom claim and is honored only if it stays
+on this Dashboard: a relative path, or an absolute URL whose scheme and
+host:port exactly match `BASE_URL`. External URLs (and tricks like
+`//host`, `javascript:`, userinfo `@` or lookalike hosts) are ignored and
+logged with a warning — the launch then falls back to the home page. The
+destination also survives the first-launch e-mail confirmation detour.
+
 ## 5. Key rollover
 
 Publish-then-switch, per registration:
