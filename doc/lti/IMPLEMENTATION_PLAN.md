@@ -341,3 +341,85 @@ Single PR (the pieces are not independently useful once dynamic
 registration is the only onboarding path), reviewed in the phase order
 above: skeleton/model/migration → keys+jwks+register → login/launch/
 provisioning → config/docs/tests.
+
+---
+
+# Follow-up feature: custom claim `next_url` (deep-link redirect)
+
+Let the platform send the tool a post-launch destination via LTI custom
+parameters, so an LMS activity can land the user directly on a specific
+Dashboard page (e.g. a lab) instead of the home page.
+
+## Claim source
+
+Custom parameters configured on the platform (Moodle: the *Custom
+parameters* field on the External tool / activity, one `key=value` per
+line, e.g. `next_url=/labs/abc123`) arrive in the id_token under
+`https://purl.imsglobal.org/spec/lti/claim/custom` as a flat dict of
+string values. No pylti1p3 helper needed — read it from
+`message_launch.get_launch_data()` like the roles claim.
+
+## Changes (all in `apps/lti/routes.py` + tests + docs)
+
+1. **Constant** `LTI_CUSTOM_CLAIM = "https://purl.imsglobal.org/spec/lti/claim/custom"`
+   next to the existing roles-claim constant.
+
+2. **Validator `is_safe_redirect_url(url)`** — the security core. The value
+   is attacker-influenceable (anyone who can edit an LMS activity, or a
+   rogue platform), so redirecting to it unvalidated is an open redirect,
+   and a `javascript:` URL would be script injection. Policy: **same-app
+   relative paths only** — strictly simpler and safer than allowlisting
+   hosts against BASE_URL:
+   - must be a `str`, non-empty, starting with a single `/`;
+   - reject `//...` (protocol-relative) and `/\...` (browsers treat `\`
+     as `/`, bypassing naive `//` checks); safest is rejecting any `\`
+     or whitespace/control characters anywhere in the value;
+   - after `urllib.parse.urlsplit(url)`: `scheme == "" and netloc == ""`
+     (belt-and-braces against `javascript:`, `https:` and exotic forms).
+   Anything rejected is **logged at WARNING with the offending value and
+   the issuer** and the launch proceeds to the default redirect — a bad
+   `next_url` must never break the launch.
+
+3. **Launch integration.** In `launch()`, after `login_user(user)`:
+   extract `launch_data.get(LTI_CUSTOM_CLAIM, {})` (guard: must be a
+   dict), take `custom["next_url"]`, validate, and on success store it in
+   `session["next_url"]` — *overwriting* any stale value (the fresh launch
+   intent wins) and *before* the e-mail check. Reusing the existing
+   session mechanism (instead of redirecting directly) keeps both exits
+   working with no extra branching:
+   - user has an e-mail → the existing `if "next_url" in session` pop
+     redirects to it;
+   - user has no e-mail yet → they detour through `/email/required`, and
+     the require-email confirmation flow already pops `session["next_url"]`
+     (apps/authentication/routes.py) — the deep link survives the detour.
+   Log one INFO line when a next_url is accepted (issuer + path) for the
+   same debuggability reason as the /login/ lines.
+
+4. **Tests** (`tests/test_lti.py`, new `TestCustomNextUrl` class using the
+   existing `_FakeMessageLaunch`):
+   - accepted: `/labs/abc`, `/labs/abc?tab=2` → 302 Location equals the
+     value, session emptied afterwards;
+   - rejected (302 to home + warning in caplog):
+     `https://evil.example/x`, `//evil.example`, `/\evil.example`,
+     `javascript:alert(1)`, `..%2f` style non-`/`-prefixed values, empty
+     string, non-string values (list/int), claim present but not a dict;
+   - claim absent → unchanged default redirect (regression guard);
+   - custom next_url overrides a pre-seeded stale `session["next_url"]`;
+   - no-e-mail launch with valid next_url → redirects to
+     `/email/required` while `session["next_url"]` still holds the value
+     (assert via `client.session_transaction()`).
+
+5. **Docs** (`doc/lti/DASHBOARD.md`): short section under "Users,
+   accounts and roles" — how to set *Custom parameters* in Moodle
+   (`next_url=/labs/...`), and the rule that only same-site relative
+   paths are honored (absolute/external URLs are ignored and logged).
+
+## Explicit non-goals
+
+- No other custom parameters are interpreted yet (the extraction helper
+  should still return the whole dict so future params — e.g. auto-starting
+  a specific lab — reuse it).
+- No `target_link_uri`-based deep linking and no LTI Deep Linking message
+  type — this is only about the custom-parameters claim.
+- No allowlisting of absolute URLs (even same-host): relative-only keeps
+  the validator trivially auditable.
