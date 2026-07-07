@@ -1,4 +1,8 @@
-# Plan: reorder `check_pre_approved` so group auto-membership always runs
+# Plan (alternative A): reorder `check_pre_approved` so group auto-membership always runs
+
+> See also [pre-approved-membership-on-create-plan.md](pre-approved-membership-on-create-plan.md)
+> (alternative B), which keeps `check_pre_approved` untouched and instead
+> applies memberships at user-creation time plus a CLI sweep.
 
 ## Current behavior and its problems
 
