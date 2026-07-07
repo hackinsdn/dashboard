@@ -1,8 +1,8 @@
 """Add LTI 1.3 tables: lti_config (platform registrations keyed by issuer)
 and lti_registration_tokens (one-time dynamic registration credentials)
 
-Revision ID: 2.0.11
-Revises: 2.0.10
+Revision ID: 2.0.12
+Revises: 2.0.11
 Create Date: 2026-07-07 12:00:00.000000
 
 """
@@ -11,8 +11,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '2.0.11'
-down_revision = '2.0.10'
+revision = '2.0.12'
+down_revision = '2.0.11'
 branch_labels = None
 depends_on = None
 
