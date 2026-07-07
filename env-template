@@ -43,3 +43,8 @@ ENABLE_CLABS=true
 #export LTI_TOOL_NAME="HackInSDN Dashboard"
 # LTI launches inside an LMS iframe need Secure/SameSite=None cookies (HTTPS):
 #export COOKIES_SECURE=True
+
+# certificates to allow validation of LTI openid config
+# you can paste custom certs into /usr/local/share/ca-certificates/xxxx.crt
+# and then run `update-ca-certificates`
+export REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
