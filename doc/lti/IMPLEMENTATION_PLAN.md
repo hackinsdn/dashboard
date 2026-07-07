@@ -367,15 +367,24 @@ string values. No pylti1p3 helper needed — read it from
 2. **Validator `is_safe_redirect_url(url)`** — the security core. The value
    is attacker-influenceable (anyone who can edit an LMS activity, or a
    rogue platform), so redirecting to it unvalidated is an open redirect,
-   and a `javascript:` URL would be script injection. Policy: **same-app
-   relative paths only** — strictly simpler and safer than allowlisting
-   hosts against BASE_URL:
-   - must be a `str`, non-empty, starting with a single `/`;
-   - reject `//...` (protocol-relative) and `/\...` (browsers treat `\`
-     as `/`, bypassing naive `//` checks); safest is rejecting any `\`
-     or whitespace/control characters anywhere in the value;
-   - after `urllib.parse.urlsplit(url)`: `scheme == "" and netloc == ""`
-     (belt-and-braces against `javascript:`, `https:` and exotic forms).
+   and a `javascript:` URL would be script injection. Policy: **relative
+   paths, or absolute URLs on the Dashboard's own host (BASE_URL) only**.
+   Pre-checks on the raw value (before parsing):
+   - must be a non-empty `str`;
+   - reject any backslash (browsers treat `\` as `/`, which defeats
+     naive prefix checks) and any whitespace/control characters.
+   Then `urllib.parse.urlsplit(url)` and accept exactly two shapes:
+   - **relative path**: starts with a single `/` and
+     `scheme == "" and netloc == ""` — this also rejects `//host`
+     (protocol-relative) and `javascript:` forms;
+   - **absolute same-host URL**: `scheme` and `netloc` both equal to
+     BASE_URL's (parse BASE_URL once, compare lowercased). Full-netloc
+     equality is what keeps the classic bypasses out: userinfo tricks
+     (`https://dashboard.example@evil.com/` has netloc
+     `dashboard.example@evil.com`), lookalike subdomains
+     (`dashboard.example.evil.com`), port swaps and http→https scheme
+     downgrades all fail the exact match. No `startswith`/substring
+     matching anywhere.
    Anything rejected is **logged at WARNING with the offending value and
    the issuer** and the launch proceeds to the default redirect — a bad
    `next_url` must never break the launch.
@@ -397,12 +406,17 @@ string values. No pylti1p3 helper needed — read it from
 
 4. **Tests** (`tests/test_lti.py`, new `TestCustomNextUrl` class using the
    existing `_FakeMessageLaunch`):
-   - accepted: `/labs/abc`, `/labs/abc?tab=2` → 302 Location equals the
+   - accepted: `/labs/abc`, `/labs/abc?tab=2`, and the absolute
+     same-host form `BASE_URL + "/labs/abc"` → 302 Location equals the
      value, session emptied afterwards;
    - rejected (302 to home + warning in caplog):
      `https://evil.example/x`, `//evil.example`, `/\evil.example`,
      `javascript:alert(1)`, `..%2f` style non-`/`-prefixed values, empty
-     string, non-string values (list/int), claim present but not a dict;
+     string, non-string values (list/int), claim present but not a dict,
+     and the same-host bypass attempts — userinfo
+     (`https://<base-host>@evil.example/`), lookalike subdomain
+     (`https://<base-host>.evil.example/`), wrong port and http→https
+     scheme mismatch;
    - claim absent → unchanged default redirect (regression guard);
    - custom next_url overrides a pre-seeded stale `session["next_url"]`;
    - no-e-mail launch with valid next_url → redirects to
@@ -411,8 +425,9 @@ string values. No pylti1p3 helper needed — read it from
 
 5. **Docs** (`doc/lti/DASHBOARD.md`): short section under "Users,
    accounts and roles" — how to set *Custom parameters* in Moodle
-   (`next_url=/labs/...`), and the rule that only same-site relative
-   paths are honored (absolute/external URLs are ignored and logged).
+   (`next_url=/labs/...`), and the rule that only relative paths or
+   absolute URLs on the Dashboard's own BASE_URL host are honored
+   (external URLs are ignored and logged).
 
 ## Explicit non-goals
 
@@ -421,5 +436,6 @@ string values. No pylti1p3 helper needed — read it from
   a specific lab — reuse it).
 - No `target_link_uri`-based deep linking and no LTI Deep Linking message
   type — this is only about the custom-parameters claim.
-- No allowlisting of absolute URLs (even same-host): relative-only keeps
-  the validator trivially auditable.
+- No cross-host allowlist (e.g. sibling deployments or the LMS itself):
+  the only absolute URLs honored are exact scheme+netloc matches against
+  BASE_URL.
