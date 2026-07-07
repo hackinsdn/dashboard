@@ -186,6 +186,9 @@ class Config(object):
     # -------- LTI 1.3 (optional module "lti") --------
     ENABLE_LTI = "lti" in OPTIONAL_MODULES
     LTI_TOOL_NAME = os.getenv("LTI_TOOL_NAME", "HackInSDN Dashboard")
+    # icon shown by the LMS for the tool (sent as logo_uri during dynamic
+    # registration); path relative to BASE_URL, or a full URL
+    LTI_TOOL_LOGO = os.getenv("LTI_TOOL_LOGO", "/static/assets/img/hackinsdn.png")
     # static credentials for /lti/register/ (fallback to one-time tokens
     # minted with 'flask lti mint-registration-token'); endpoint is disabled
     # when neither is configured

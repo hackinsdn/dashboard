@@ -41,6 +41,8 @@ ENABLE_CLABS=true
 #export LTI_REGISTRATION_SECRET=xxx
 # Tool name shown in the LMS during dynamic registration:
 #export LTI_TOOL_NAME="HackInSDN Dashboard"
+# Tool icon sent to the LMS (path under BASE_URL or full URL; empty disables):
+#export LTI_TOOL_LOGO=/static/assets/img/hackinsdn.png
 # LTI launches inside an LMS iframe need Secure/SameSite=None cookies (HTTPS):
 #export COOKIES_SECURE=True
 

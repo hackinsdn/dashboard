@@ -313,6 +313,9 @@ class TestDynamicRegistration:
         assert payload["token_endpoint_auth_method"] == "private_key_jwt"
         # AGS scopes must be requested so grade passback works
         assert "https://purl.imsglobal.org/spec/lti-ags/scope/score" in payload["scope"]
+        # tool icon shown by the LMS, absolute URL built from BASE_URL
+        assert payload["logo_uri"].startswith("http")
+        assert payload["logo_uri"].endswith("/static/assets/img/hackinsdn.png")
 
         # config row upserted with the platform's client/deployment ids
         row = LtiConfig.query.filter_by(issuer=REG_ISSUER).first()

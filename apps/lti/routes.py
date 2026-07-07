@@ -402,6 +402,9 @@ def register():
     login_url = lti_base_url() + "/login/"
     launch_url = lti_base_url() + "/launch/"
     tool_name = app.config.get("LTI_TOOL_NAME", "HackInSDN Dashboard")
+    tool_logo = app.config.get("LTI_TOOL_LOGO") or ""
+    if tool_logo and not tool_logo.startswith(("http://", "https://")):
+        tool_logo = app_config.BASE_URL.rstrip("/") + tool_logo
     registration_payload = {
         "application_type": "web",
         "response_types": ["id_token"],
@@ -423,6 +426,9 @@ def register():
             }],
         },
     }
+    if tool_logo:
+        # icon the LMS shows for the tool (set LTI_TOOL_LOGO="" to disable)
+        registration_payload["logo_uri"] = tool_logo
     headers = {"Content-Type": "application/json"}
     if registration_token:
         headers["Authorization"] = "Bearer " + registration_token
