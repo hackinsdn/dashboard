@@ -142,10 +142,11 @@ def _resolve_lineitem(ags, context, lab):
     one when the platform granted the full lineitem scope."""
     if not ags.can_read_lineitem():
         return None
+    lineitems = ags.get_lineitems()
     if context.resource_link_id:
-        lineitem = ags.find_lineitem_by_resource_link_id(context.resource_link_id)
-        if lineitem:
-            return lineitem
+        for item in lineitems:
+            if item.get("resourceLinkId") == context.resource_link_id:
+                return LineItem(dict(item))
     if ags.can_create_lineitem():
         new_lineitem = LineItem()
         new_lineitem.set_tag(f"hackinsdn-lab-{lab.id}")
@@ -154,4 +155,12 @@ def _resolve_lineitem(ags, context, lab):
         if context.resource_link_id:
             new_lineitem.set_resource_link_id(context.resource_link_id)
         return ags.find_or_create_lineitem(new_lineitem)
+    # distinguish "activity has no gradebook column at all" (empty
+    # collection: set a Grade on the Moodle activity) from a resource-link
+    # mismatch - this log line is the difference
+    app.logger.info(
+        f"LTI lineitems collection: {len(lineitems)} item(s), none matching "
+        f"resource_link_id={context.resource_link_id}, no create scope; "
+        f"items={[(i.get('id'), i.get('resourceLinkId'), i.get('label')) for i in lineitems[:10]]}"
+    )
     return None

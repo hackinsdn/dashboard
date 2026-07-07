@@ -174,12 +174,8 @@ class FakeAGS:
         scopes = self.service_data.get("scope") or []
         return "https://purl.imsglobal.org/spec/lti-ags/scope/lineitem" in scopes
 
-    def find_lineitem_by_resource_link_id(self, resource_link_id):
-        from pylti1p3.lineitem import LineItem
-        for item in FakeAGS.platform_lineitems:
-            if item.get("resourceLinkId") == resource_link_id:
-                return LineItem(dict(item))
-        return None
+    def get_lineitems(self):
+        return [dict(item) for item in FakeAGS.platform_lineitems]
 
     def find_or_create_lineitem(self, new_lineitem):
         new_lineitem.set_id("https://lg-moodle.example/lineitem/CREATED")

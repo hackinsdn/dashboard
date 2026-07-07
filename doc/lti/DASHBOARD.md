@@ -207,6 +207,24 @@ verify our token request. Check, in order:
    (Note: key rotation via `flask lti rotate-key` then requires re-pasting
    the new key — keyset URL mode picks rotations up automatically.)
 
+### Troubleshooting: `skipped (no lineitem resolved)`
+
+The Dashboard listed the platform's line-item collection but found no
+column for the activity and had no permission to create one. The follow-up
+log line (`LTI lineitems collection: N item(s), ...`) tells which case:
+
+- **0 items** — the Moodle activity has **no grade configured**: edit the
+  activity → *Grade* section → set Type to **Point** (e.g. maximum 100).
+  Moodle creates the column immediately; the next finished-lab visit sends
+  (no re-launch needed — the column lookup is live).
+- **items exist but none match the resource link** — the launch context is
+  stale or the column belongs to another activity; re-launch from the LMS
+  to refresh the context.
+- Alternatively, set the tool's *IMS LTI Assignment and Grade Services* to
+  **"grade sync and column management"** — the Dashboard then creates the
+  column itself. Scopes are captured at launch, so users must re-launch
+  once after that change.
+
 ## 6. Key rollover
 
 Publish-then-switch, per registration:
