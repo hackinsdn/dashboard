@@ -118,6 +118,10 @@ class Config(object):
     # been quiet for at least this many minutes (sent by the flush-support-emails CLI job)
     SUPPORT_EMAIL_BATCH_MINUTES = int(os.getenv("SUPPORT_EMAIL_BATCH_MINUTES", 10))
 
+    # Lab field version control: how many versions to keep per lab per field
+    # (manifest, lab_guide, extended_desc); the oldest are pruned beyond this cap
+    LAB_FIELD_VERSIONS_MAX = int(os.getenv("LAB_FIELD_VERSIONS_MAX", 50))
+
     # Flask Cache (https://flask-caching.readthedocs.io/en/latest/)
     # Multi-worker deployments (gunicorn -w N) that enable the "lti" optional
     # module MUST use a shared backend (CACHE_TYPE=RedisCache + CACHE_REDIS_URL):

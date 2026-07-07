@@ -14,6 +14,7 @@ from apps import db, cache
 from apps.home import blueprint
 from apps.controllers import k8s, c9s
 from apps.controllers import support
+from apps.controllers import lab_versions
 from apps.home.models import Labs, LabInstances, LabCategories, LabAnswers, LabAnswerSheet, HomeLogging, UserLikes, UserFeedbacks, LabMetadata, SupportThreads, SupportMessages
 from apps.authentication.models import Users, Groups
 from flask import render_template, request, current_app, redirect, url_for, session, send_from_directory, jsonify
@@ -492,6 +493,18 @@ def edit_lab(lab_id):
     # validate manifest using k8s dry-run?
     # validate mandatory fields
     # ...
+    # detect tracked-field changes before the new values overwrite the lab
+    new_field_values = {
+        "manifest": request.form["lab_manifest"],
+        "lab_guide": request.form["lab_guide"],
+        "extended_desc": request.form["lab_extended_desc"],
+    }
+    changed_fields = {
+        field: value
+        for field, value in new_field_values.items()
+        if (value or "") != lab_versions.current_value(lab, field)
+    }
+
     db.session.add(lab)
     lab.title = request.form["lab_title"]
     lab.description = request.form["lab_description"]
@@ -524,6 +537,10 @@ def edit_lab(lab_id):
 
     if not lab.categories or invalid_lab_category:
         return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, msg_fail=invalid_lab_category+"Please select at least one category", segment="/labs/edit", groups=groups, allowed_groups=lab.allowed_groups, lab_uploads=lab_uploads)
+
+    # snapshot the changed fields in the same transaction as the lab save
+    for field, value in changed_fields.items():
+        lab_versions.record_version(lab, field, value or "")
 
     try:
         db.session.commit()

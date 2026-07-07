@@ -182,12 +182,11 @@
                 </h3>
                 <!-- tools box -->
                 <div class="card-tools">
-                  <button type="button" class="btn btn-tool btn-sm" data-card-widget="collapse" title="Collapse">
-                    <i class="fas fa-minus"></i>
+                  {% if lab and lab.id %}
+                  <button type="button" class="btn btn-tool btn-sm lab-field-history-btn" data-field="extended_desc" title="Version history">
+                    <i class="fas fa-history"></i> Versions
                   </button>
-                  <button type="button" class="btn btn-tool btn-sm" data-card-widget="remove" title="Remove">
-                    <i class="fas fa-times"></i>
-                  </button>
+                  {% endif %}
                 </div>
                 <!-- /. tools -->
               </div>
@@ -214,6 +213,13 @@
                 <h3 class="card-title">
                   Kubernetes Lab Manifest
                 </h3>
+                {% if lab and lab.id %}
+                <div class="card-tools">
+                  <button type="button" class="btn btn-tool btn-sm lab-field-history-btn" data-field="manifest" title="Version history">
+                    <i class="fas fa-history"></i> Versions
+                  </button>
+                </div>
+                {% endif %}
               </div>
               <!-- /.card-header -->
               <div class="card-body">
@@ -253,6 +259,13 @@
                 <h3 class="card-title">
                   Lab Guide
                 </h3>
+                {% if lab and lab.id %}
+                <div class="card-tools">
+                  <button type="button" class="btn btn-tool btn-sm lab-field-history-btn" data-field="lab_guide" title="Version history">
+                    <i class="fas fa-history"></i> Versions
+                  </button>
+                </div>
+                {% endif %}
               </div>
               <!-- /.card-header -->
               <div class="card-body">
@@ -521,6 +534,40 @@
       </div>
       <!-- /.modal -->
         {% endif %}
+      {% endif %}
+
+      {% if lab and lab.id %}
+      <div class="modal fade" id="modal-field-history">
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">Version history: <span id="field-history-title"></span></h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <p class="text-muted">Restoring a version loads it back into the editor; it becomes a new version once you save the Lab.</p>
+              <table class="table table-sm table-striped">
+                <thead>
+                  <tr><th>Version</th><th>Saved at (UTC)</th><th>Author</th><th>Actions</th></tr>
+                </thead>
+                <tbody id="field-history-items"></tbody>
+              </table>
+              <div id="field-history-detail" class="d-none">
+                <h6 id="field-history-detail-title"></h6>
+                <pre id="field-history-detail-content" class="border p-2" style="max-height: 300px; overflow: auto; white-space: pre-wrap;"></pre>
+              </div>
+            </div>
+            <div class="modal-footer justify-content-between">
+              <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+          <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+      </div>
+      <!-- /.modal -->
       {% endif %}
     </section>
     <!-- /.content -->
@@ -997,6 +1044,90 @@
       $('#restore-lab').on('click', function () {
         LabsActions.run({ labId: editLabId, action: "restore", redirectUrl: labsViewUrl, onFail: "alert", modalId: "#modal-restore-lab" });
       });
+
+      // --- version history of tracked lab fields ---
+      var fieldHistoryLabels = {
+        manifest: "Kubernetes Lab Manifest",
+        lab_guide: "Lab Guide",
+        extended_desc: "Lab extended description",
+      };
+      var fieldHistoryField = null;
+
+      function restoreFieldVersion(field, content) {
+        if (field === "manifest") {
+          $('#lab-edit-manifest').val(content);
+        } else if (field === "lab_guide") {
+          $('#lab-edit-guide').val(content);
+        } else if (field === "extended_desc") {
+          $('#lab-editor').summernote('code', content);
+        }
+      }
+
+      $('.lab-field-history-btn').on('click', async function () {
+        fieldHistoryField = $(this).data('field');
+        $('#field-history-title').text(fieldHistoryLabels[fieldHistoryField]);
+        $('#field-history-detail').addClass('d-none');
+        var items = $('#field-history-items');
+        items.html('<tr><td colspan="4">Loading...</td></tr>');
+        $('#modal-field-history').modal('show');
+        try {
+          const response = await fetch(`/api/labs/${editLabId}/field_versions/${fieldHistoryField}`);
+          const data = await response.json();
+          if (!response.ok) throw new Error(data.result || "request failed");
+          items.empty();
+          if (!data.result.length) {
+            items.append('<tr><td colspan="4">No versions recorded yet.</td></tr>');
+            return;
+          }
+          data.result.forEach(function (v, idx) {
+            var row = $('<tr>');
+            row.append($('<td>').text('v' + v.version + (idx === 0 ? ' (latest)' : '')));
+            row.append($('<td>').text(v.created_at || '--'));
+            row.append($('<td>').text(v.author || '--'));
+            var actions = $('<td>');
+            actions.append(
+              $('<button type="button" class="btn btn-sm btn-outline-secondary mr-1">Diff vs current</button>')
+                .on('click', function () { showFieldVersion(v.version, true); })
+            );
+            actions.append(
+              $('<button type="button" class="btn btn-sm btn-outline-primary mr-1">View</button>')
+                .on('click', function () { showFieldVersion(v.version, false); })
+            );
+            actions.append(
+              $('<button type="button" class="btn btn-sm btn-outline-success">Restore into editor</button>')
+                .on('click', function () { restoreFieldVersionFromApi(v.version); })
+            );
+            row.append(actions);
+            items.append(row);
+          });
+        } catch (err) {
+          items.html($('<tr><td colspan="4"></td></tr>').find('td').text('Failed to load history: ' + err.message).end());
+        }
+      });
+
+      async function showFieldVersion(version, diff) {
+        var url = `/api/labs/${editLabId}/field_versions/${fieldHistoryField}/${version}` + (diff ? '?diff=1' : '');
+        const response = await fetch(url);
+        const data = await response.json();
+        if (!response.ok) {
+          alert('Failed to load version: ' + (data.result || 'request failed'));
+          return;
+        }
+        $('#field-history-detail-title').text((diff ? 'Diff v' + version + ' -> current: ' : 'Content of v' + version + ': ') + fieldHistoryLabels[fieldHistoryField]);
+        $('#field-history-detail-content').text(data.result || (diff ? '(no differences against the saved Lab)' : '(empty)'));
+        $('#field-history-detail').removeClass('d-none');
+      }
+
+      async function restoreFieldVersionFromApi(version) {
+        const response = await fetch(`/api/labs/${editLabId}/field_versions/${fieldHistoryField}/${version}`);
+        const data = await response.json();
+        if (!response.ok) {
+          alert('Failed to load version: ' + (data.result || 'request failed'));
+          return;
+        }
+        restoreFieldVersion(fieldHistoryField, data.result || '');
+        $('#modal-field-history').modal('hide');
+      }
   </script>
 
 {% endblock javascripts %}

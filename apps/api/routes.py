@@ -7,6 +7,7 @@ from apps import db, cache
 from apps.api import blueprint
 from apps.controllers import k8s, git
 from apps.controllers import support
+from apps.controllers import lab_versions
 from apps.home.models import Labs, LabInstances, LabAnswers, LabAnswerSheet, UserLikes, UserFeedbacks, lab_groups, LabCategories, SupportThreads, SupportMessages
 from apps.authentication.models import Users, Groups, DeletedGroupUsers, group_members, group_owners
 from apps.audit_mixin import check_user_category, get_remote_addr
@@ -752,3 +753,55 @@ def post_support_reply(thread_id):
     support.mark_thread_read(thread)
     db.session.commit()
     return {"thread_id": thread.id, "messages": [message.as_dict()]}, 201
+
+
+def _get_lab_for_versions(lab_id):
+    """Access rules mirror edit_lab: admin/teacher, labcreator only for own labs."""
+    if current_user.category not in ("admin", "teacher", "labcreator"):
+        return None, ({"status": "fail", "result": "Unauthorized"}, 403)
+    lab = db.session.get(Labs, lab_id)
+    if not lab or (lab.is_deleted and current_user.category != "admin"):
+        return None, ({"status": "fail", "result": "Lab not found"}, 404)
+    if current_user.category == "labcreator" and lab.updated_by != current_user.id:
+        return None, ({"status": "fail", "result": "Unauthorized"}, 403)
+    return lab, None
+
+
+@blueprint.route('/labs/<lab_id>/field_versions/<field>', methods=["GET"])
+@login_required
+def list_lab_field_versions(lab_id, field):
+    """History of a tracked Lab field (manifest, lab_guide, extended_desc)."""
+    lab, error = _get_lab_for_versions(lab_id)
+    if error:
+        return error
+    if field not in lab_versions.TRACKED_FIELDS:
+        return {"status": "fail", "result": f"Unknown field, tracked fields: {', '.join(lab_versions.TRACKED_FIELDS)}"}, 400
+
+    versions = []
+    for v in lab_versions.list_versions(lab, field):
+        author = db.session.get(Users, v.updated_by) if v.updated_by else None
+        versions.append({
+            "version": v.version,
+            "created_at": v.created_at.strftime('%Y-%m-%d %H:%M') if v.created_at else None,
+            "author": author.name if author else None,
+        })
+    return {"status": "ok", "result": versions}, 200
+
+
+@blueprint.route('/labs/<lab_id>/field_versions/<field>/<int:version>', methods=["GET"])
+@login_required
+def get_lab_field_version(lab_id, field, version):
+    """Content of one stored version; ?diff=1 returns a unified diff vs the current value."""
+    lab, error = _get_lab_for_versions(lab_id)
+    if error:
+        return error
+    if field not in lab_versions.TRACKED_FIELDS:
+        return {"status": "fail", "result": f"Unknown field, tracked fields: {', '.join(lab_versions.TRACKED_FIELDS)}"}, 400
+
+    row = lab_versions.get_version(lab, field, version)
+    if not row:
+        return {"status": "fail", "result": "Version not found"}, 404
+
+    if request.args.get("diff"):
+        return {"status": "ok", "result": lab_versions.diff_against_current(lab, row)}, 200
+    return {"status": "ok", "result": row.content or ""}, 200

@@ -104,6 +104,26 @@ class Labs(db.Model, AuditMixin):
         return list(self.lab_metadata.md.get("secrets", {}).get("name", {}).keys())
 
 
+class LabFieldVersions(db.Model, AuditMixin):
+    """Snapshot of an editable Lab field, recorded whenever the field changes.
+
+    One row per (lab, field, version); ``version`` is a per-lab-per-field
+    ascending sequence. ``updated_by`` (from AuditMixin) records who saved it.
+    """
+    __tablename__ = 'lab_field_versions'
+    id = db.Column(db.Integer, primary_key=True)
+    lab_id = db.Column(db.String(40), db.ForeignKey("labs.id"), nullable=False)
+    field = db.Column(db.String(32), nullable=False, default="manifest")
+    version = db.Column(db.Integer, nullable=False)
+    content = db.Column(db.Text)
+
+    lab = db.relationship("Labs", backref="field_versions")
+
+    __table_args__ = (
+        db.UniqueConstraint('lab_id', 'field', 'version', name='uq_lab_field_version'),
+    )
+
+
 class LabInstances(db.Model, AuditMixin):
     __tablename__ = 'lab_instances'
     id = db.Column(db.String(15), primary_key=True, default=generate_uuid_14)
