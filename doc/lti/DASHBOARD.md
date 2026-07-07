@@ -182,6 +182,31 @@ Setup notes:
   a teacher/admin launching and finishing a lab gets a rejected score
   (logged as INFO, page unaffected). Test with an enrolled student.
 
+### Troubleshooting: `token.php: 404` + `jwks_helper::fix_jwks_alg(): ... null given`
+
+The grade POST is the **first platform→tool call** (launches never need
+one), so this is where keyset reachability problems surface: Moodle could
+not fetch the Dashboard's `/lti/jwks/` **from the Moodle server** to
+verify our token request. Check, in order:
+
+1. `BASE_URL` was correct when the tool was registered — the registered
+   `jwks_uri` is `BASE_URL + /lti/jwks/`; a wrong/unset `BASE_URL` bakes
+   an unreachable URL into the Moodle tool entry;
+2. from a shell **on the Moodle host** (inside the container, if
+   dockerized): `curl https://<dashboard>/lti/jwks/` — watch for DNS,
+   firewall, `localhost`-in-docker and TLS-trust failures (Moodle's PHP
+   curl must trust the Dashboard's certificate);
+3. as a workaround that removes the server-side fetch entirely: edit the
+   tool in Moodle, set *Public key type* to **RSA key** and paste the
+   output of:
+
+   ```bash
+   flask lti show-public-key --issuer https://<moodle-base-url>
+   ```
+
+   (Note: key rotation via `flask lti rotate-key` then requires re-pasting
+   the new key — keyset URL mode picks rotations up automatically.)
+
 ## 6. Key rollover
 
 Publish-then-switch, per registration:

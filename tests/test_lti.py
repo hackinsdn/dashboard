@@ -180,6 +180,15 @@ class TestKeysAndJwks:
             new_kid = lti_keys._jwk_from_pem(f.read())["kid"]
         assert new_kid in kids
 
+    def test_show_public_key_prints_pem(self, client):
+        runner = flask_app.test_cli_runner()
+        result = runner.invoke(args=["lti", "show-public-key", "--issuer", ISSUER])
+        assert result.exception is None, result.output
+        assert "BEGIN PUBLIC KEY" in result.output
+        # unknown issuer fails cleanly
+        result = runner.invoke(args=["lti", "show-public-key", "--issuer", "https://nope.example"])
+        assert "No lti_config entry" in result.output
+
     def test_purge_retired_keys_after_grace_period(self, client):
         runner = flask_app.test_cli_runner()
         result = runner.invoke(args=["lti", "purge-retired-keys", "--older-than-days", "0"])

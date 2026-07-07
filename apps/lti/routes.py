@@ -518,6 +518,29 @@ def list_registration_tokens():
         )
 
 
+@blueprint.cli.command("show-public-key")
+@click.option("--issuer", required=True, help="Platform issuer (LMS base URL)")
+@click.option("--client-id", default=None, help="Registration (default: the issuer's default one)")
+def show_public_key(issuer, client_id):
+    """Print a registration's public key (PEM). Paste it into the LMS as
+    'RSA key' when the platform cannot fetch /lti/jwks/ server-side -
+    Moodle's symptom is a token.php 404 with
+    'jwks_helper::fix_jwks_alg(): ... null given' on the first grade/roster
+    call (launches still work, they never need platform->tool calls)."""
+    row = LtiConfig.query.filter_by(issuer=normalize_issuer(issuer), is_deleted=False).first()
+    if not row:
+        raise click.ClickException(f"No lti_config entry for issuer {issuer}")
+    registration = row.get_registration(client_id)
+    if not registration:
+        raise click.ClickException(f"No registration with client_id {client_id} for issuer {issuer}")
+    public_key_file = registration.get("public_key_file")
+    if not public_key_file:
+        raise click.ClickException("Registration has no public key file recorded")
+    from apps.lti.keys import abs_key_path
+    with open(abs_key_path(public_key_file)) as f:
+        click.echo(f.read().strip())
+
+
 @blueprint.cli.command("rotate-key")
 @click.option("--issuer", required=True, help="Platform issuer (LMS base URL)")
 @click.option("--client-id", default=None, help="Registration to rotate (default: the issuer's default one)")
