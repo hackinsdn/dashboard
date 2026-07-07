@@ -27,3 +27,19 @@ export TESTBED_TITLE=xxxx
 
 # Enable or disable the Collaborative Labs feature
 ENABLE_CLABS=true
+
+# Optional modules (CSV). Add "lti" to enable the LTI 1.3 integration:
+#export OPTIONAL_MODULES=clabs,lti
+
+# LTI 1.3 (optional module "lti")
+# Multi-worker gunicorn REQUIRES a shared cache backend for LTI:
+#export CACHE_TYPE=RedisCache
+#export CACHE_REDIS_URL=redis://localhost:6379/0
+# Static credentials for /lti/register/ (or mint one-time tokens with
+# 'flask lti mint-registration-token'):
+#export LTI_REGISTRATION_KEY=xxx
+#export LTI_REGISTRATION_SECRET=xxx
+# Tool name shown in the LMS during dynamic registration:
+#export LTI_TOOL_NAME="HackInSDN Dashboard"
+# LTI launches inside an LMS iframe need Secure/SameSite=None cookies (HTTPS):
+#export COOKIES_SECURE=True
