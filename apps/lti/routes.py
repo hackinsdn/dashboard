@@ -32,13 +32,26 @@ from apps.lti.keys import (
     purge_retired_keys,
     retire_keypair,
 )
-from apps.lti.models import LtiConfig, LtiRegistrationToken, normalize_issuer
+from apps.lti.models import (
+    LtiConfig,
+    LtiLaunchContext,
+    LtiRegistrationToken,
+    normalize_issuer,
+)
 from apps.lti.tool_conf import DbToolConf
 from apps.utils import check_pre_approved
 
 LTI_ROLES_CLAIM = "https://purl.imsglobal.org/spec/lti/claim/roles"
 LTI_CUSTOM_CLAIM = "https://purl.imsglobal.org/spec/lti/claim/custom"
 LTI_TOOL_CONF_CLAIM = "https://purl.imsglobal.org/spec/lti-tool-configuration"
+LTI_AGS_CLAIM = "https://purl.imsglobal.org/spec/lti-ags/claim/endpoint"
+LTI_DEPLOYMENT_ID_CLAIM = "https://purl.imsglobal.org/spec/lti/claim/deployment_id"
+LTI_RESOURCE_LINK_CLAIM = "https://purl.imsglobal.org/spec/lti/claim/resource_link"
+# requested at dynamic registration so the platform grants grade passback
+LTI_AGS_SCOPES = (
+    "https://purl.imsglobal.org/spec/lti-ags/scope/score "
+    "https://purl.imsglobal.org/spec/lti-ags/scope/lineitem.readonly"
+)
 
 REGISTRATION_CLOSE_PAGE = """<!doctype html>
 <html><body>
@@ -64,11 +77,20 @@ def _warn_simplecache(state):
         )
 
 
+class _TimeoutSession(requests.Session):
+    """requests.Session with a default timeout: pylti1p3's ServiceConnector
+    never sets one, and grade passback runs inline in a page request - a
+    hung platform must not hang the Dashboard."""
+    def request(self, method, url, **kwargs):
+        kwargs.setdefault("timeout", 15)
+        return super().request(method, url, **kwargs)
+
+
 def get_requests_session():
     """One requests.Session for every tool->platform call, so TLS behavior
     is controlled in a single place (INSECURE_SSL is for dev setups with
     self-signed LMS certificates; prefer REQUESTS_CA_BUNDLE)."""
-    http_session = requests.Session()
+    http_session = _TimeoutSession()
     if app.config.get("INSECURE_SSL"):
         http_session.verify = False
     return http_session
@@ -159,7 +181,10 @@ def launch():
 
     # deep-link support: set before the e-mail check so the destination
     # survives the /email/required detour (that flow pops session next_url)
-    apply_custom_next_url(launch_data)
+    next_url = apply_custom_next_url(launch_data)
+    # AGS grade-passback context (used when the user finishes a lab)
+    store_launch_context(user, launch_data, next_url)
+    db.session.commit()
 
     if not user.email:
         return redirect(url_for("authentication_blueprint.require_email"))
@@ -198,30 +223,61 @@ def apply_custom_next_url(launch_data):
     is attacker-influenceable, so only safe same-host targets are honored -
     stored in session["next_url"] (overwriting any stale value: the fresh
     launch intent wins); rejected values are logged and the launch proceeds
-    to the default redirect."""
+    to the default redirect. Returns the accepted next_url, or None."""
     issuer = launch_data.get("iss")
     custom_claims = launch_data.get(LTI_CUSTOM_CLAIM)
     if custom_claims is None:
-        return
+        return None
     if not isinstance(custom_claims, dict):
         app.logger.warning(
             f"LTI launch custom claim ignored (not a dict) issuer={issuer} "
             f"value={custom_claims!r}"
         )
-        return
+        return None
     next_url = custom_claims.get("next_url")
     if not next_url:
-        return
+        return None
     if is_safe_redirect_url(next_url):
         session["next_url"] = next_url
         app.logger.info(
             f"LTI launch next_url accepted issuer={issuer} next_url={next_url}"
         )
-    else:
-        app.logger.warning(
-            f"LTI launch next_url rejected (unsafe redirect) issuer={issuer} "
-            f"next_url={next_url!r}"
+        return next_url
+    app.logger.warning(
+        f"LTI launch next_url rejected (unsafe redirect) issuer={issuer} "
+        f"next_url={next_url!r}"
+    )
+    return None
+
+
+def store_launch_context(user, launch_data, next_url=None):
+    """Persist the launch's AGS context (one row per user + LMS activity,
+    refreshed on every launch) so grades can be sent back long after the
+    launch, when the pylti1p3 cache is gone. Skipped when the platform did
+    not send the AGS endpoint claim (activity without a grade service)."""
+    ags_claim = launch_data.get(LTI_AGS_CLAIM)
+    if not ags_claim or not isinstance(ags_claim, dict):
+        return
+    aud = launch_data.get("aud")
+    client_id = aud[0] if isinstance(aud, (list, tuple)) else aud
+    issuer = normalize_issuer(launch_data.get("iss"))
+    resource_link = launch_data.get(LTI_RESOURCE_LINK_CLAIM) or {}
+    resource_link_id = resource_link.get("id")
+    context = LtiLaunchContext.query.filter_by(
+        user_id=user.id, issuer=issuer, client_id=client_id,
+        resource_link_id=resource_link_id,
+    ).first()
+    if not context:
+        context = LtiLaunchContext(
+            user_id=user.id, issuer=issuer, client_id=client_id,
+            resource_link_id=resource_link_id,
         )
+        db.session.add(context)
+    context.deployment_id = launch_data.get(LTI_DEPLOYMENT_ID_CLAIM)
+    context.ags = ags_claim
+    context.custom_next_url = next_url
+    # explicit bump: an unchanged re-launch must still count as most recent
+    context.updated_at = utcnow()
 
 
 def get_or_create_lti_user(launch_data):
@@ -355,7 +411,7 @@ def register():
         "client_name": tool_name,
         "jwks_uri": lti_base_url() + "/jwks/",
         "token_endpoint_auth_method": "private_key_jwt",
-        "scope": "",
+        "scope": LTI_AGS_SCOPES,
         LTI_TOOL_CONF_CLAIM: {
             "domain": urlparse(app_config.BASE_URL).netloc,
             "target_link_uri": launch_url,

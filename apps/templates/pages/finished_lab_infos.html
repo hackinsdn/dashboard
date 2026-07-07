@@ -88,6 +88,13 @@
                   You can execute this laboratory again as many times as you want.
                 </p>
 
+                {% if lti_grade_status == "sent" %}
+                <div class="alert alert-info" role="alert">
+                  <i class="fas fa-graduation-cap"></i>
+                  Your answers and grade were sent to your course gradebook.
+                </div>
+                {% endif %}
+
                 <div class="success-actions">
                   <a href="{{ url_for('home_blueprint.view_labs', lab_id=lab_id) }}" type="button" class="btn btn-primary btn-lg mr-2" id="retry-lab">
                     <i class="fas fa-redo"></i> Execute Again

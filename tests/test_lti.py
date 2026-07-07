@@ -311,6 +311,8 @@ class TestDynamicRegistration:
         assert payload["redirect_uris"][0].endswith("/lti/launch/")
         assert payload["jwks_uri"].endswith("/lti/jwks/")
         assert payload["token_endpoint_auth_method"] == "private_key_jwt"
+        # AGS scopes must be requested so grade passback works
+        assert "https://purl.imsglobal.org/spec/lti-ags/scope/score" in payload["scope"]
 
         # config row upserted with the platform's client/deployment ids
         row = LtiConfig.query.filter_by(issuer=REG_ISSUER).first()

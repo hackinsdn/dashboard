@@ -141,7 +141,43 @@ host:port exactly match `BASE_URL`. External URLs (and tricks like
 logged with a warning — the launch then falls back to the home page. The
 destination also survives the first-launch e-mail confirmation detour.
 
-## 5. Key rollover
+## 5. Grade passback (AGS)
+
+When an LTI-launched user finishes a lab (the congratulations page), the
+Dashboard automatically posts the result to the course gradebook via LTI
+Assignment and Grade Services:
+
+- the user's **answers** are always sent as the gradebook feedback
+  comment, one line per question — including questions left unanswered
+  (listed as "(not answered)");
+- a **score** (0–100) is sent only when the lab has an **answer sheet**
+  registered (same computation as the teachers' "check with answer sheet"
+  listing: regex matching plus manual-grade overrides); labs without a
+  sheet post the comment with grading progress *PendingManual* so the
+  teacher can grade in Moodle;
+- the AGS context is captured **at launch time**, so a user must have
+  launched through the LMS at least once (after this feature is deployed)
+  before their finishes can be graded; refreshing the finished page
+  re-sends and simply overwrites the same gradebook cell (Moodle keeps
+  grade history).
+
+Setup notes:
+
+- Dynamic registration now requests the AGS scopes automatically.
+  **Platforms registered before this feature** must have the service
+  enabled by hand: edit the tool in Moodle and set *IMS LTI Assignment and
+  Grade Services* to "Use this service for grade sync" — or simply
+  re-register.
+- For grades to land in the right column, create **one External tool
+  activity per lab** and point it at the lab with the `next_url` custom
+  parameter (section above); the Dashboard prefers the launch context
+  whose deep link matches the finished lab, falling back to the most
+  recent launch.
+- Moodle only accepts scores for users enrolled with a gradable role —
+  a teacher/admin launching and finishing a lab gets a rejected score
+  (logged as INFO, page unaffected). Test with an enrolled student.
+
+## 6. Key rollover
 
 Publish-then-switch, per registration:
 
@@ -158,8 +194,8 @@ platform keeps validating cached tokens. After the grace period:
 flask lti purge-retired-keys --older-than-days 30   # cron-friendly
 ```
 
-## 6. Out of scope (for now)
+## 7. Out of scope (for now)
 
-Deep linking, grade passback (AGS), roster (NRPS), submission review and
-merging LTI accounts with pre-existing local accounts. See the future-work
-notes in IMPLEMENTATION_PLAN.md.
+Deep linking, roster (NRPS), submission review and merging LTI accounts
+with pre-existing local accounts. See the future-work notes in
+IMPLEMENTATION_PLAN.md and GRADE_PASSBACK_PLAN.md.

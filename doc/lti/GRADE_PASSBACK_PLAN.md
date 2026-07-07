@@ -1,5 +1,10 @@
 # Plan: automatic grade/answers passback to the LMS (LTI AGS)
 
+> **Status: implemented** — model/migration 2.0.13, `apps/lti/grades.py`,
+> launch-context capture in `apps/lti/routes.py`, trigger in
+> `view_finished_lab_infos`, tests in `tests/test_lti_grades.py`, user
+> docs in DASHBOARD.md section 5.
+
 When an LTI-launched user reaches `/finished-lab-infos/<lab_id>`, post
 their lab answers back to the platform gradebook as a feedback comment,
 and — when the lab has an answer sheet — a computed score, via LTI
@@ -36,7 +41,7 @@ Requirements mapping:
 
 ## Design
 
-### 1. Persist the AGS context at launch (new model + migration 2.0.12)
+### 1. Persist the AGS context at launch (new model + migration 2.0.13)
 
 The grade is sent long after the launch (hours later, possibly from
 another worker), so the AGS claim must be persisted — the pylti1p3 launch
@@ -63,7 +68,7 @@ absent — activity has no grade service), the `resource_link` claim id,
 `deployment_id`, `client_id` from `aud` (string or first list element),
 and the already-extracted custom `next_url`; upsert on the unique key.
 One row per LMS activity the user launched, `updated_at` refreshed per
-launch. Migration `2.0.11 → 2.0.12` creates the table.
+launch. Migration `2.0.12 → 2.0.13` creates the table.
 
 **Context selection at send time** (a user may have launched several
 activities): prefer the context whose `custom_next_url` points at the
@@ -239,7 +244,7 @@ seeds, registers the lti blueprint like tests/test_lti.py):
 
 ## Rollout
 
-Single PR: model + migration 2.0.12, registration scope change,
+Single PR: model + migration 2.0.13, registration scope change,
 `compute_lab_score` refactor, `apps/lti/grades.py`, trigger, tests, docs.
 After deploy: platforms registered before this feature need AGS enabled
 (re-register or edit the Moodle tool); users must launch once more from

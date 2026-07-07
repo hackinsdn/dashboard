@@ -332,8 +332,9 @@ teacher to verify both category mappings.
 - Rate-limit `/lti/register/`; keys directory backed up with `DATA_DIR`;
   schedule `purge-retired-keys` in cron alongside the existing CLI jobs.
 - Out of scope for this iteration (future work, per playbook Phases 4–5):
-  deep linking, AGS grade passback, NRPS roster, submission review, account
-  merging with existing local accounts (same-email case).
+  deep linking, NRPS roster, submission review, and account merging with
+  existing local accounts (same-email case). AGS grade passback was
+  implemented later — see GRADE_PASSBACK_PLAN.md.
 
 ## Delivery
 
