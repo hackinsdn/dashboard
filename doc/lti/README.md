@@ -171,6 +171,18 @@ button to push a grade into the gradebook, and a button to list course members.
   the contents of `configs/public.key`. Alternatively keep *Keyset URL* but use
   an address reachable from the container (e.g.
   `https://host.docker.internal:9001/jwks/`) with a certificate Moodle trusts.
+  To keep the Keyset URL approach (it's what you'd use in production, since it
+  allows key rotation), you'd need to register a keyset URL that's reachable
+  from inside the container — https://host.docker.internal:9001/jwks/ on Docker
+  Desktop for Mac — and make Moodle trust your tool's self-signed certificate,
+  plus make sure host.docker.internal isn't on Moodle's cURL blocked hosts list
+  (Site administration → General → Security → HTTP security) - pay attention to
+  the block for IP address and also add the port to the allowed list. To make
+  Moodle trust the cert:
+```
+openssl s_client -connect host.docker.internal:9001 </dev/null 2>/dev/null | openssl x509 > /usr/local/share/ca-certificates/flask-lti.crt
+update-ca-certificates
+```
 - **`CERTIFICATE_VERIFY_FAILED` fetching `/mod/lti/certs.php`**: the tool
   verifies launches by fetching Moodle's keyset server-side, and a self-signed
   Moodle certificate fails that check. Either point Python at the cert
