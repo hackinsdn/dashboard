@@ -1,5 +1,9 @@
 # Plan (alternative B): apply pre-approved group membership at user creation + CLI sweep
 
+> **Status: implemented** — listener in `apps/authentication/models.py`,
+> helper in `apps/utils.py`, CLI in `apps/cli/routes.py`, tests in
+> `tests/test_pre_approved_membership.py`, ops docs in `doc/DEV.md`.
+
 Alternative to [check-pre-approved-reorder-plan.md](check-pre-approved-reorder-plan.md)
 (alternative A, which reorders `check_pre_approved` itself). Here
 **`check_pre_approved()` stays exactly as it is**; instead:

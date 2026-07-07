@@ -104,7 +104,10 @@ On the first launch the Dashboard auto-provisions a `Users` row keyed by
 **issuer + subject**, so the same LMS person always maps to the same
 account; name/e-mail are refreshed from the launch claims on every launch.
 LTI accounts have no password (the local sign-in form rejects them; the
-password-reset flow can add one later).
+password-reset flow can add one later). If the launch e-mail appears in a
+group's pre-approved users list, the new account is joined to that group
+automatically at creation (see `sync-pre-approved-users` in
+[doc/DEV.md](../DEV.md) for backfilling pre-existing accounts).
 
 Role mapping is **promotion-only**:
 

@@ -24,6 +24,16 @@ def utcnow():
     return datetime.datetime.now(datetime.timezone.utc)
 
 
+def find_pre_approved_groups(email):
+    """Return the groups (not deleted, non-empty approved list) whose
+    pre-approved users list contains this e-mail. Shared by the Users
+    after_insert listener and the sync-pre-approved-users CLI command."""
+    if not email:
+        return []
+    groups = Groups.query.filter(Groups.is_deleted==False, Groups.approved_users!="").all()
+    return [group for group in groups if email in group.approved_users_list]
+
+
 def check_pre_approved(user):
     """Given an user, check if this is user is on the list of pre-approved users or member of any group"""
     if user.category != "user":
