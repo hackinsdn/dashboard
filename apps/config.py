@@ -123,8 +123,14 @@ class Config(object):
     LAB_FIELD_VERSIONS_MAX = int(os.getenv("LAB_FIELD_VERSIONS_MAX", 50))
 
     # Flask Cache (https://flask-caching.readthedocs.io/en/latest/)
-    CACHE_TYPE = "SimpleCache"
+    # Multi-worker deployments (gunicorn -w N) that enable the "lti" optional
+    # module MUST use a shared backend (CACHE_TYPE=RedisCache + CACHE_REDIS_URL):
+    # the LTI OIDC state/nonce/launch data live in this cache and the /login/
+    # and /launch/ requests may hit different workers.
+    CACHE_TYPE = os.getenv("CACHE_TYPE", "SimpleCache")
     CACHE_DEFAULT_TIMEOUT = int(os.getenv("CACHE_DEFAULT_TIMEOUT", 300))
+    if os.getenv("CACHE_REDIS_URL"):
+        CACHE_REDIS_URL = os.getenv("CACHE_REDIS_URL")
 
     # Analytics measurement
     GTAG = os.getenv("GTAG", "")
@@ -176,6 +182,29 @@ class Config(object):
 
     # E-mail validation token expiration time
     EMAIL_TOKEN_EXPIRY_MINUTES = int(os.getenv("EMAIL_TOKEN_EXPIRY_MINUTES", 15))
+
+    # -------- LTI 1.3 (optional module "lti") --------
+    ENABLE_LTI = "lti" in OPTIONAL_MODULES
+    LTI_TOOL_NAME = os.getenv("LTI_TOOL_NAME", "HackInSDN Dashboard")
+    # icon shown by the LMS for the tool (sent as logo_uri during dynamic
+    # registration); path relative to BASE_URL, or a full URL
+    LTI_TOOL_LOGO = os.getenv("LTI_TOOL_LOGO", "/static/assets/img/hackinsdn.png")
+    # static credentials for /lti/register/ (fallback to one-time tokens
+    # minted with 'flask lti mint-registration-token'); endpoint is disabled
+    # when neither is configured
+    LTI_REGISTRATION_KEY = os.getenv("LTI_REGISTRATION_KEY", "")
+    LTI_REGISTRATION_SECRET = os.getenv("LTI_REGISTRATION_SECRET", "")
+    # dev only: disable TLS verification on tool->platform calls (self-signed
+    # LMS certificates); prefer REQUESTS_CA_BUNDLE in anything but dev
+    INSECURE_SSL = os.getenv("INSECURE_SSL", "False") == "True"
+
+    # LTI launches render inside an LMS iframe, which requires the session
+    # cookie to be "Secure; SameSite=None" (HTTPS only) - env-gated because
+    # plain-HTTP dev setups break with Secure cookies
+    if os.getenv("COOKIES_SECURE", "False") == "True":
+        SESSION_COOKIE_SECURE = True
+        SESSION_COOKIE_SAMESITE = "None"
+        REMEMBER_COOKIE_SECURE = True
 
 class ProductionConfig(Config):
     DEBUG = False

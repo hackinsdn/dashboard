@@ -24,6 +24,48 @@ def utcnow():
     return datetime.datetime.now(datetime.timezone.utc)
 
 
+def compute_lab_score(answers, manual_grades, answer_sheet):
+    """Score a user's lab answers: questions = union(answer-sheet keys,
+    manual-grade keys); a numeric manual grade contributes grade/100,
+    otherwise the answer must full-match the sheet's expected regex.
+    Returns (score_pct or None, correct, total) - None when there are no
+    gradable questions. Shared by the teacher answers listing and the LTI
+    grade passback so the two never disagree."""
+    answers = answers or {}
+    manual_grades = manual_grades or {}
+    answer_sheet = answer_sheet or {}
+    questions = set()
+    questions.update(answer_sheet)
+    questions.update(manual_grades)
+    total, correct = 0, 0
+    for question in questions:
+        total += 1
+        grade_value = manual_grades.get(question)
+        if isinstance(grade_value, (int, float)):
+            correct += float(grade_value) / 100
+            continue
+        if not (expected_answer := answer_sheet.get(question)):
+            continue
+        try:
+            if re.match(fr"^{expected_answer}$", answers.get(question)):
+                correct += 1
+        except:
+            continue
+    if total == 0:
+        return None, 0, 0
+    return 100 * correct / total, correct, total
+
+
+def find_pre_approved_groups(email):
+    """Return the groups (not deleted, non-empty approved list) whose
+    pre-approved users list contains this e-mail. Shared by the Users
+    after_insert listener and the sync-pre-approved-users CLI command."""
+    if not email:
+        return []
+    groups = Groups.query.filter(Groups.is_deleted==False, Groups.approved_users!="").all()
+    return [group for group in groups if email in group.approved_users_list]
+
+
 def check_pre_approved(user):
     """Given an user, check if this is user is on the list of pre-approved users or member of any group"""
     if user.category != "user":

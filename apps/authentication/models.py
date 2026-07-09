@@ -240,3 +240,21 @@ def add_user_to_sysgrp_everybody(mapper, connection, user):
     if not everybody:
         return
     connection.execute(insert(group_members), dict(user_id=user.id, group_id=everybody.id))
+
+
+@event.listens_for(Users, 'after_insert')
+def add_user_to_pre_approved_groups(mapper, connection, user):
+    """Opportunistically join a brand-new user (LTI, OAuth or local signup)
+    to every group whose pre-approved list contains their e-mail. Raw
+    connection inserts only: ORM collections must not be mutated inside a
+    flush event (same pattern as the Everybody listener above). Category
+    promotion is left to check_pre_approved(), which every auth flow calls
+    right after creating the user, in the same transaction."""
+    # local import: apps.utils imports Groups from this module
+    from apps.utils import find_pre_approved_groups
+    if not user.email:
+        return
+    for group in find_pre_approved_groups(user.email):
+        if group.organization == "SYSTEM":
+            continue
+        connection.execute(insert(group_members), dict(user_id=user.id, group_id=group.id))

@@ -22,7 +22,7 @@ from flask_login import login_required, current_user
 from jinja2 import TemplateNotFound
 from apps.audit_mixin import get_remote_addr, check_user_category
 from apps.authentication.forms import GroupForm
-from apps.utils import update_running_labs_stats, parse_lab_expiration, datetime_from_ts, epoch_from_datetime, update_category_stats, update_stats_lab_instances_answers, utcnow
+from apps.utils import update_running_labs_stats, parse_lab_expiration, datetime_from_ts, epoch_from_datetime, update_category_stats, update_stats_lab_instances_answers, utcnow, compute_lab_score
 from sqlalchemy import desc
 
 
@@ -1122,24 +1122,8 @@ def list_lab_answers():
             continue
         answers = lab_answer.answers_dict
         grades = lab_answer.grades_dict
-        questions = set()
-        questions.update(answer_sheet)
-        questions.update(grades)
-        total, correct = 0, 0
-        for question in questions:
-            total += 1
-            grade_value = grades.get(question)
-            if isinstance(grade_value, (int, float)):
-                correct += float(grade_value) / 100
-                continue
-            if not (expected_answer := answer_sheet.get(question)):
-                continue
-            try:
-                if re.match(fr"^{expected_answer}$", answers.get(question)):
-                    correct += 1
-            except:
-                continue
-        score = "%.2f" % (100*correct/total) if total > 0 else "--"
+        score_value, _correct, _total = compute_lab_score(answers, grades, answer_sheet)
+        score = "%.2f" % score_value if score_value is not None else "--"
         lab_answers.append({
             "id": lab_answer.id,
             "lab_title": lab.title,
@@ -1331,7 +1315,23 @@ def view_contact():
 @blueprint.route("/finished-lab-infos/<lab_id>", methods=["GET"])
 @login_required
 def view_finished_lab_infos(lab_id):
-    return render_template("pages/finished_lab_infos.html", lab_id=lab_id)
+    # LTI grade passback: best-effort, the congratulations page must render
+    # no matter what happens on the platform side (lazy import: the lti
+    # module is optional and this blueprint is core)
+    lti_grade_status = None
+    lab = db.session.get(Labs, lab_id)
+    if lab and current_app.config.get("ENABLE_LTI"):
+        try:
+            from apps.lti.grades import send_lab_result_to_lms
+            lti_grade_status = send_lab_result_to_lms(current_user, lab)
+        except Exception as exc:
+            current_app.logger.warning(
+                f"LTI grade passback failed user={current_user.username} lab={lab_id}: {exc}"
+            )
+    return render_template(
+        "pages/finished_lab_infos.html", lab_id=lab_id,
+        lti_grade_status=lti_grade_status,
+    )
 
 
 @blueprint.route('/uploads/<path:filename>')

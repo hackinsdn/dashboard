@@ -152,6 +152,24 @@ used to run the server:
 | `flask --app run.py cli notify-expiring-labs --send-email` | E-mail users whose lab instances are about to expire | every 30 min |
 | `flask --app run.py cli remove-expired-labs` | Delete lab instances past their expiration tolerance | every 10 min |
 | `flask --app run.py cli flush-support-emails` | Send **batched** support-chat notifications to the support inbox | every 2–5 min |
+| `flask --app run.py cli sync-pre-approved-users` | Backfill group memberships from the groups' pre-approved e-mail lists | on demand / daily |
+
+### `sync-pre-approved-users`
+
+New users are joined to matching pre-approved groups automatically at
+creation (a `Users` after-insert listener), but users that already existed
+when an e-mail was added to a group's pre-approved list are not. This job
+closes that gap: for every active user whose e-mail appears in a group's
+pre-approved list, it adds the missing membership (never duplicating, never
+touching SYSTEM groups or soft-deleted users). Options:
+
+- `--dry-run` — print the would-be changes and roll back;
+- `--promote` — also switch `category` from `user` to `student` for users
+  that received a new membership (the same promotion their next login would
+  perform via `check_pre_approved`).
+
+Run it once after upgrading to this feature, then on demand (or daily) for
+deployments that edit pre-approved lists frequently.
 
 ### `flush-support-emails`
 
