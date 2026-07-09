@@ -60,7 +60,7 @@ def build_answers_comment(lab_title, answers, answer_sheet, score_info):
         lines.append(
             f"Auto-grade from answer sheet: {score:.2f}% ({correct:g} of {total} correct)"
         )
-    return "\n".join(lines)
+    return "\n<br/>".join(lines)
 
 
 def send_lab_result_to_lms(user, lab):
