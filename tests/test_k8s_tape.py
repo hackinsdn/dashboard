@@ -17,11 +17,13 @@ Usage:
     pytest tests/test_k8s_cluster_pods.py -v
 """
 
+import copy
 import importlib
 import os
 import sys
 import tempfile
 import types
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -153,6 +155,7 @@ def ctrl(monkeypatch):
     monkeypatch.setattr(k8s_module.config, "load_kube_config", lambda **k: None)
     monkeypatch.setattr(k8s_module.client, "CoreV1Api", lambda: MagicMock())
     monkeypatch.setattr(k8s_module.client, "AppsV1Api", lambda: MagicMock())
+    monkeypatch.setattr(k8s_module.client, "DiscoveryV1Api", lambda: MagicMock())
     monkeypatch.setattr(k8s_module.client, "ApiClient", lambda: MagicMock())
     controller = K8sController()
     controller.k8s_avoid_nodes = set()
@@ -253,16 +256,34 @@ class TestCreateLab:
 
 # --- get_lab_resources --------------------------------------------------
 class TestGetLabResources:
-    def test_links_pod_service_and_node_ip(self, ctrl):
-        """Given the owning deployment+service uids, get_lab_resources() walks the
-        deployment -> replicaset -> pod -> service chain from the tape and builds a
-        NodePort URL using the node InternalIP."""
+    # owner uids of the lab's deployment and service (as create_lab would return)
+    RESOURCES = [
+        {"uid": "8755b19e-1ccf-43d1-a277-a99981a542af"},  # deployment
+        {"uid": "755f9dba-bb5c-4cde-ad83-36f390ad27a5"},  # service
+    ]
+    SVC_UID = "755f9dba-bb5c-4cde-ad83-36f390ad27a5"       # helloworld service
+    POD_UID = "10e078e9-acd1-4347-bdfc-33626bc0c7b8"       # helloworld pod (owned)
+    FOREIGN_POD_UID = "a11da0d1-6b78-4f38-878f-1b9ab5bd908a"  # mnsec-proxy pod (not owned)
+    NODEPORT_LINK = ["http-helloworld-webserver", "http://198.51.100.10:30996"]
+
+    @staticmethod
+    def _endpoint_slice(endpoints, owner_uids):
+        """Minimal EndpointSlice stand-in: the controller only reads
+        .endpoints[].target_ref.uid and .metadata.owner_references[].uid."""
+        return SimpleNamespace(
+            endpoints=endpoints,
+            metadata=SimpleNamespace(
+                owner_references=(
+                    [SimpleNamespace(uid=uid) for uid in owner_uids]
+                    if owner_uids is not None else None
+                )
+            ),
+        )
+
+    def _get_lab_resources(self, ctrl, service_list=None, endpoint_slices=None):
+        """Drive get_lab_resources() with the taped objects, allowing the
+        service list and the endpoint-slice collection to be overridden."""
         ctrl.nodes_last_updated = 0
-        # owner uids of the lab's deployment and service (as create_lab would return)
-        resources = [
-            {"uid": "8755b19e-1ccf-43d1-a277-a99981a542af"},  # deployment
-            {"uid": "755f9dba-bb5c-4cde-ad83-36f390ad27a5"},  # service
-        ]
         with patch.object(
             ctrl.apps_v1_api,
             "list_namespaced_deployment",
@@ -276,11 +297,31 @@ class TestGetLabResources:
         ), patch.object(
             ctrl.v1_api,
             "list_namespaced_service",
-            return_value=TAPE_OBJECTS["service_list"],
+            return_value=service_list if service_list is not None else TAPE_OBJECTS["service_list"],
         ), patch.object(
             ctrl.v1_api, "list_node", return_value=TAPE_OBJECTS["node_list"]
+        ), patch.object(
+            ctrl.discovery_api,
+            "list_namespaced_endpoint_slice",
+            return_value=SimpleNamespace(items=endpoint_slices or []),
         ):
-            labs = ctrl.get_lab_resources(resources)
+            return ctrl.get_lab_resources(self.RESOURCES)
+
+    def _selectorless_service_list(self):
+        """The taped services with the helloworld service made selectorless,
+        so only the endpoint-slice fallback can associate its pods."""
+        service_list = copy.deepcopy(TAPE_OBJECTS["service_list"])
+        for srv in service_list.items:
+            if srv.metadata.uid == self.SVC_UID:
+                srv.spec.selector = None
+        return service_list
+
+    def test_links_pod_service_and_node_ip(self, ctrl):
+        """Given the owning deployment+service uids, get_lab_resources() walks the
+        deployment -> replicaset -> pod -> service chain from the tape and builds a
+        NodePort URL using the node InternalIP (selector match; no endpoint
+        slices needed)."""
+        labs = self._get_lab_resources(ctrl)
 
         # only the helloworld pod belongs to the requested owners (the mnsec-proxy
         # pod/service are unrelated and must be filtered out).
@@ -290,9 +331,72 @@ class TestGetLabResources:
         assert lab["node_name"] == "k8s-testing"
         assert lab["containers"] == ["helloworld-hackinsdn"]
         # NodePort 30996 exposed via the node InternalIP (redacted in the tape)
-        assert lab["services"] == [
-            ["http-helloworld-webserver", "http://198.51.100.10:30996"]
+        assert lab["services"] == [self.NODEPORT_LINK]
+
+    def test_selectorless_service_resolved_via_endpoint_slices(self, ctrl):
+        """A service without a selector cannot be matched through pod labels;
+        its pods are found through the Discovery API endpoint slices (slice
+        owned by the service, endpoints targeting the pod by uid)."""
+        slices = [
+            self._endpoint_slice(
+                endpoints=[SimpleNamespace(target_ref=SimpleNamespace(uid=self.POD_UID))],
+                owner_uids=[self.SVC_UID],
+            ),
         ]
+        labs = self._get_lab_resources(
+            ctrl, service_list=self._selectorless_service_list(), endpoint_slices=slices)
+
+        assert len(labs) == 1
+        assert labs[0]["services"] == [self.NODEPORT_LINK]
+
+    def test_selector_match_wins_over_endpoint_slices(self, ctrl):
+        """When the selector already associates pods, the endpoint-slice
+        mapping is not consulted (here a slice pointing the service at the
+        foreign mnsec pod must be ignored)."""
+        slices = [
+            self._endpoint_slice(
+                endpoints=[SimpleNamespace(target_ref=SimpleNamespace(uid=self.FOREIGN_POD_UID))],
+                owner_uids=[self.SVC_UID],
+            ),
+        ]
+        labs = self._get_lab_resources(ctrl, endpoint_slices=slices)
+
+        assert len(labs) == 1
+        assert labs[0]["services"] == [self.NODEPORT_LINK]
+
+    def test_degenerate_endpoint_slices_are_tolerated(self, ctrl):
+        """Slices without endpoints, endpoints without targetRef (external
+        IPs), unknown pod uids, slices without ownerReferences and slices
+        mapping pods that do not belong to the lab must neither crash nor
+        attach wrong service links."""
+        slices = [
+            # endpoints list missing entirely
+            self._endpoint_slice(endpoints=None, owner_uids=[self.SVC_UID]),
+            # endpoint without targetRef + endpoint targeting an unknown pod
+            self._endpoint_slice(
+                endpoints=[
+                    SimpleNamespace(target_ref=None),
+                    SimpleNamespace(target_ref=SimpleNamespace(uid="unknown-uid")),
+                ],
+                owner_uids=[self.SVC_UID],
+            ),
+            # slice not owned by any service
+            self._endpoint_slice(
+                endpoints=[SimpleNamespace(target_ref=SimpleNamespace(uid=self.POD_UID))],
+                owner_uids=None,
+            ),
+            # slice mapping a pod that is not part of the requested lab
+            self._endpoint_slice(
+                endpoints=[SimpleNamespace(target_ref=SimpleNamespace(uid=self.FOREIGN_POD_UID))],
+                owner_uids=[self.SVC_UID],
+            ),
+        ]
+        labs = self._get_lab_resources(
+            ctrl, service_list=self._selectorless_service_list(), endpoint_slices=slices)
+
+        assert len(labs) == 1
+        # none of the degenerate slices may produce a service link
+        assert labs[0]["services"] == []
 
 
 # --- delete_resources_by_name -------------------------------------------

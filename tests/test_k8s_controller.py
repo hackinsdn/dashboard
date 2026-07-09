@@ -73,6 +73,7 @@ def ctrl(monkeypatch):
     monkeypatch.setattr(k8s_module.config, "load_kube_config", lambda **k: None)
     monkeypatch.setattr(k8s_module.client, "CoreV1Api", lambda: MagicMock())
     monkeypatch.setattr(k8s_module.client, "AppsV1Api", lambda: MagicMock())
+    monkeypatch.setattr(k8s_module.client, "DiscoveryV1Api", lambda: MagicMock())
     monkeypatch.setattr(k8s_module.client, "ApiClient", lambda: MagicMock())
     controller = K8sController()
     return controller

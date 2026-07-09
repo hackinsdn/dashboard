@@ -43,6 +43,7 @@ class K8sController():
             return
         self.v1_api = client.CoreV1Api()
         self.apps_v1_api = client.AppsV1Api()
+        self.discovery_api = client.DiscoveryV1Api()
         self.k8s_client = client.ApiClient()
         self.k8s_avoid_nodes = set(app_config.K8S_AVOID_NODES)
         self.k8s_nodes_geotag = app_config.TESTBED_NODES_GEOTAG
@@ -177,10 +178,12 @@ class K8sController():
         pod_services = {}
         pod_names = {}
         app_pod_map = defaultdict(list)
+        pods_by_uid = {}
         pods = self.v1_api.list_namespaced_pod(
             namespace=self.namespace
         )
         for pod in pods.items:
+            pods_by_uid[pod.metadata.uid] = pod
             pod_labels = pod.metadata.labels or {}
             app = pod_labels.get("app")
             if app:
@@ -222,6 +225,20 @@ class K8sController():
                 "more": str(pod),
             })
 
+        service_to_pods = defaultdict(list)
+        endpoint_slices = self.discovery_api.list_namespaced_endpoint_slice(
+            namespace=self.namespace
+        )
+        for slice_item in endpoint_slices.items:
+            slice_pods = []
+            for ep in slice_item.endpoints or []:
+                # targetRef is optional (e.g. endpoints backing external IPs)
+                if ep.target_ref and ep.target_ref.uid in pods_by_uid:
+                    slice_pods.append(pods_by_uid[ep.target_ref.uid])
+            # ownerReferences is optional (manually managed slices)
+            for own_ref in slice_item.metadata.owner_references or []:
+                service_to_pods[own_ref.uid].extend(slice_pods)
+
         services = self.v1_api.list_namespaced_service(
             namespace=self.namespace,
         )
@@ -233,9 +250,19 @@ class K8sController():
                 is_child = False
             if srv.metadata.uid not in owners and not is_child:
                 continue
-            pods = app_pod_map.get(srv.spec.selector.get("app"), [])
-            if not pods and (clab_name := srv.spec.selector.get("clabernetes/name")):
+            # selector is optional: selectorless services are resolved via
+            # their endpoint slices below
+            selector = srv.spec.selector or {}
+            pods = app_pod_map.get(selector.get("app"), [])
+            if not pods and (clab_name := selector.get("clabernetes/name")):
                 pods = app_pod_map.get(clab_name, [])
+            if not pods:
+                # only pods that belong to this lab (they are the ones with a
+                # pod_services entry) - a slice may reference foreign pods
+                pods = [
+                    pod for pod in service_to_pods.get(srv.metadata.uid, [])
+                    if pod.metadata.uid in pod_services
+                ]
 
             for port in srv.spec.ports:
                 port_name = port.name if port.name else f"{port.port}/{port.protocol}"
