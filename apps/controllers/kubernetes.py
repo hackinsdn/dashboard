@@ -580,7 +580,7 @@ class K8sController():
         """Delete k8s resource using kubectl."""
         try:
             result = subprocess.run(
-                ["kubectl", "delete", resource["kind"], resource["name"]],
+                ["kubectl", "delete", resource["kind"], resource["name"], "--timeout=10s"],
                 capture_output=True,
                 text=True,
                 check=True
@@ -815,7 +815,7 @@ class K8sController():
     def delete_resources_by_name(self, resources):
         """Delete resources by their name and kind."""
         results = []
-        for resource in resources:
+        for resource in reversed(resources):
             if resource["kind"] == "Pod":
                 results.append(self.delete_pod_by_name(resource))
             elif resource["kind"] == "Service":
