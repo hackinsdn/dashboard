@@ -67,3 +67,26 @@ jobs:
         # Fails the job if overall coverage drops below the floor. Bump this up
         # over time as coverage improves.
         run: python -m coverage report --fail-under=85
+
+  js-test:
+    name: JavaScript regression tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        working-directory: tests/js
+        run: npm install
+
+      - name: Run JavaScript tests
+        # Exercises the inline template JS (e.g. duplicate-question detection in
+        # labs_edit.html) with jsdom + the project's real jQuery/marked builds.
+        working-directory: tests/js
+        run: npm test

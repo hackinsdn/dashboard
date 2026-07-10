@@ -1,0 +1,12 @@
+{
+  "name": "hackinsdn-dashboard-js-tests",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Regression tests for inline JavaScript in the dashboard templates",
+  "scripts": {
+    "test": "node parseLabGuide.test.js"
+  },
+  "devDependencies": {
+    "jsdom": "^24.0.0"
+  }
+}

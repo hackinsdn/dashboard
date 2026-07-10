@@ -36,5 +36,7 @@ apps/static/assets/node_modules
 apps/static/assets/yarn.lock
 apps/static/assets/.temp
 
+tests/js/node_modules
+
 *.pem
 kube-config.yaml
