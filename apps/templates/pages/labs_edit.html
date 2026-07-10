@@ -888,11 +888,20 @@
             $(this).css('border', '2px solid red');
             return;
           }
-          if (seenNames[name] && this.type !== 'radio' && this.type !== 'checkbox') {
+          // radio/checkbox inputs may legitimately repeat a name (they form a
+          // single option group), so a repeated name is only accepted when both
+          // the first occurrence and this one are radio/checkbox. Any other
+          // repeat (e.g. a second select, or a select reusing a radio's name)
+          // is a duplicate question.
+          var groupable = (this.type === 'radio' || this.type === 'checkbox');
+          if (seenNames.hasOwnProperty(name)) {
+            if (groupable && seenNames[name]) {
+              return;
+            }
             duplicates.push(name);
             $(this).css('border', '2px solid red');
           } else {
-            seenNames[name] = true;
+            seenNames[name] = groupable;
           }
         });
         questionCounter = Object.keys(seenNames).length;
