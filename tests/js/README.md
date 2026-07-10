@@ -23,3 +23,12 @@ npm test
   caught. Covers the fix where a `<select>` question name reused by another
   field (including a following radio/checkbox) must be reported as a duplicate,
   while legitimate radio/checkbox option groups are not.
+
+- `labAnswers.test.js` — verifies `saveAnswers()` / `applyAnswers()` in
+  `apps/templates/pages/lab_instance_view.html`, which serialize the lab-guide
+  form and repopulate it when the instance is reopened. Both functions are
+  extracted from the template at test time. Covers text/textarea/select values,
+  radio selections that aren't the last option, checkbox groups (stored as a
+  sorted `", "`-joined string), value-aware reloading of checkboxes, untouched
+  fields whose name is absent from the saved data, and a full save→apply
+  round-trip.
