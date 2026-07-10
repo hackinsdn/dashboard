@@ -181,7 +181,7 @@ def save_lab_answers(lab_inst_id):
         return {}, 404
 
     content = request.get_json(silent=True)
-    if not content:
+    if not isinstance(content, dict) or not content:
         return {"status": "fail", "result": "invalid content"}, 400
 
     lab_inst = db.session.get(LabInstances, lab_inst_id)
@@ -196,7 +196,17 @@ def save_lab_answers(lab_inst_id):
         lab_answers = LabAnswers(user_id=current_user.id, lab_id=lab_inst.lab_id)
         db.session.add(lab_answers)
 
-    lab_answers.answers = json.dumps(content)
+    # Merge into the stored answers rather than replacing them: keep keys not
+    # present in this payload, and don't let an empty incoming value wipe an
+    # answer that was already saved (guards against a partial/early auto-save
+    # clobbering existing work).
+    merged = lab_answers.answers_dict
+    for name, value in content.items():
+        if (value is None or value == "") and merged.get(name):
+            continue
+        merged[name] = value
+
+    lab_answers.answers = json.dumps(merged)
     db.session.commit()
 
     return {"status": "ok", "result": "Answers saved successfully"}, 200
