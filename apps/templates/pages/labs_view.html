@@ -109,8 +109,8 @@
           {% for cat in lab.categories %}
             {% set _ = category_classes.append("category-" ~ cat.id) %}
           {% endfor %}
-          <div class="{{ card_size }}">
-            <div class="card {% if lab.is_deleted %}card-danger{% else %}card-dark{% endif %} filter {{ category_classes|join(' ') }} {% if is_completed %}lab-completed{% else %}lab-not-completed{% endif %} mh-100">
+          <div class="{{ card_size }} filter {{ category_classes|join(' ') }} {% if is_completed %}lab-completed{% else %}lab-not-completed{% endif %}">
+            <div class="card {% if lab.is_deleted %}card-danger{% else %}card-dark{% endif %} mh-100">
               <div class="card-header">
                 <h2 class="card-title">
                   {{ lab.title }}
