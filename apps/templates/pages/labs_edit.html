@@ -1123,8 +1123,33 @@
           return;
         }
         $('#field-history-detail-title').text((diff ? 'Diff v' + version + ' -> current: ' : 'Content of v' + version + ': ') + fieldHistoryLabels[fieldHistoryField]);
-        $('#field-history-detail-content').text(data.result || (diff ? '(no differences against the saved Lab)' : '(empty)'));
+        var detail = $('#field-history-detail-content');
+        if (diff && data.result) {
+          detail.html(renderDiff(data.result));
+        } else {
+          detail.text(data.result || (diff ? '(no differences against the saved Lab)' : '(empty)'));
+        }
         $('#field-history-detail').removeClass('d-none');
+      }
+
+      function escapeHtml(text) {
+        return $('<div>').text(text).html();
+      }
+
+      function renderDiff(diffText) {
+        return diffText.split('\n').map(function (line) {
+          var html = escapeHtml(line);
+          if (line.startsWith('+++') || line.startsWith('---') || line.startsWith('@@')) {
+            return '<span style="color: #6c757d;">' + html + '</span>';
+          }
+          if (line.startsWith('+')) {
+            return '<span style="background-color: #d4f8d4; display: block;">' + html + '</span>';
+          }
+          if (line.startsWith('-')) {
+            return '<span style="background-color: #f8d4d4; display: block;">' + html + '</span>';
+          }
+          return html;
+        }).join('\n');
       }
 
       async function restoreFieldVersionFromApi(version) {
