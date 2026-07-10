@@ -675,3 +675,120 @@ class TestOidcLogin:
         assert location.startswith(ISSUER + "/mod/lti/auth.php")
         assert "state=" in location and "nonce=" in location
         assert "client_id=client-1" in location
+
+
+# --- admin management web UI --------------------------------------------------
+
+def _ensure_user(username, category):
+    """Create (once) a password-login user for the web UI tests."""
+    user = Users.query.filter_by(username=username).first()
+    if not user:
+        user = Users(
+            username=username, password="lti-web-pass",
+            email=f"{username}@lti-web.example", category=category,
+        )
+        db.session.add(user)
+        db.session.commit()
+    return user
+
+
+def _web_login(client, username):
+    return client.post(
+        "/login/",
+        data={"identifier": username, "password": "lti-web-pass", "login": "1"},
+    )
+
+
+class TestManagementWebUI:
+    def test_non_admin_is_rejected(self, client):
+        _ensure_user("ltiwebstudent", "student")
+        _web_login(client, "ltiwebstudent")
+        resp = client.get("/lti/manage")
+        assert b"Unauthorized request" in resp.data
+        client.get("/logout")
+
+    def test_admin_dashboard_lists_registrations(self, client):
+        _seed_registration()
+        _ensure_user("ltiwebadmin", "admin")
+        _web_login(client, "ltiwebadmin")
+        resp = client.get("/lti/manage")
+        assert resp.status_code == 200
+        assert b"LTI Management" in resp.data
+        assert ISSUER.encode() in resp.data
+        assert b"client-1" in resp.data
+
+    def test_mint_token_creates_row_and_returns_url(self, client):
+        _web_login(client, "ltiwebadmin")
+        before = LtiRegistrationToken.query.count()
+        resp = client.post("/lti/manage/mint-token", data={
+            "label": "web-ui token", "ttl_hours": "12",
+        })
+        assert resp.status_code == 200
+        data = resp.get_json()
+        assert "/lti/register/?token=" in data["url"]
+        assert LtiRegistrationToken.query.count() == before + 1
+        row = LtiRegistrationToken.query.order_by(
+            LtiRegistrationToken.id.desc()).first()
+        assert row.label == "web-ui token"
+        # only the hash is stored, never the plaintext token
+        token_value = data["url"].split("token=", 1)[1]
+        assert row.token_hash == LtiRegistrationToken.hash_token(token_value)
+
+    def test_mint_token_requires_label(self, client):
+        _web_login(client, "ltiwebadmin")
+        resp = client.post("/lti/manage/mint-token", data={"label": "  "})
+        assert resp.status_code == 400
+        assert "label" in resp.get_json()["error"].lower()
+
+    def test_show_public_key(self, client):
+        _web_login(client, "ltiwebadmin")
+        resp = client.get("/lti/manage/public-key", query_string={
+            "issuer": ISSUER, "client_id": "client-1",
+        })
+        assert resp.status_code == 200
+        assert "BEGIN PUBLIC KEY" in resp.get_json()["public_key"]
+        # unknown issuer -> 404 with a reason
+        resp = client.get("/lti/manage/public-key", query_string={
+            "issuer": "https://nope.example",
+        })
+        assert resp.status_code == 404
+        assert "No lti_config entry" in resp.get_json()["error"]
+
+    def test_rotate_key_publish_then_switch(self, client):
+        _web_login(client, "ltiwebadmin")
+        row = LtiConfig.query.filter_by(issuer=ISSUER).first()
+        old_public = row.get_registration("client-1")["public_key_file"]
+        resp = client.post("/lti/manage/rotate-key", data={
+            "issuer": ISSUER, "client_id": "client-1",
+        })
+        assert resp.status_code == 200
+        assert "Rotated key" in resp.get_json()["result"]
+        db.session.expire_all()
+        row = LtiConfig.query.filter_by(issuer=ISSUER).first()
+        assert row.get_registration("client-1")["public_key_file"] != old_public
+        assert not os.path.exists(lti_keys.abs_key_path(old_public))
+        assert os.path.basename(old_public) in os.listdir(lti_keys.retired_dir())
+
+    def test_rotate_key_unknown_issuer(self, client):
+        _web_login(client, "ltiwebadmin")
+        resp = client.post("/lti/manage/rotate-key", data={
+            "issuer": "https://nope.example",
+        })
+        assert resp.status_code == 404
+        assert "No lti_config entry" in resp.get_json()["error"]
+
+    def test_purge_retired_keys(self, client):
+        _web_login(client, "ltiwebadmin")
+        # the rotate test above left a retired key behind: the dashboard must
+        # render it (exercises the retired-key row / timestamp formatting)
+        assert os.listdir(lti_keys.retired_dir()) != []
+        resp = client.get("/lti/manage")
+        assert resp.status_code == 200
+        assert b"Retired Keys" in resp.data
+        resp = client.post("/lti/manage/purge-retired-keys", data={
+            "older_than_days": "0",
+        })
+        assert resp.status_code == 200
+        assert "Removed" in resp.get_json()["result"]
+        assert os.listdir(lti_keys.retired_dir()) == []
+        client.get("/logout")

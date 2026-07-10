@@ -10,8 +10,8 @@ from urllib.parse import urlparse, urlsplit
 import click
 import requests
 from flask import current_app as app
-from flask import jsonify, redirect, request, session, url_for
-from flask_login import login_user
+from flask import jsonify, redirect, render_template, request, session, url_for
+from flask_login import current_user, login_required, login_user
 from pylti1p3.contrib.flask import (
     FlaskCacheDataStorage,
     FlaskMessageLaunch,
@@ -19,16 +19,18 @@ from pylti1p3.contrib.flask import (
     FlaskRequest,
 )
 from apps import cache, db
-from apps.audit_mixin import get_remote_addr, utcnow
+from apps.audit_mixin import check_user_category, get_remote_addr, utcnow
 from apps.authentication.models import LoginLogging, Users
 from apps.config import app_config
 from apps.lti import blueprint
 from apps.lti.keys import (
     JWKS_CACHE_KEY,
     JWKS_CACHE_TIMEOUT,
+    abs_key_path,
     build_jwks,
     delete_keypair,
     generate_keypair,
+    list_retired_keys,
     purge_retired_keys,
     retire_keypair,
 )
@@ -490,13 +492,18 @@ def register():
     return REGISTRATION_CLOSE_PAGE
 
 
-# ----------------------------------------------------------------------- CLI
+# ------------------------------------------------------- shared management ops
+# The operations below back both the `flask lti ...` CLI commands and the
+# admin web UI (/lti/manage); LtiError carries a human-readable reason the
+# caller maps to a click.ClickException (CLI) or an HTTP error (web).
 
-@blueprint.cli.command("mint-registration-token")
-@click.option("--label", required=True, help="Who this token is for (audit)")
-@click.option("--ttl-hours", default=24, type=int, help="Token validity in hours")
+class LtiError(Exception):
+    """A management operation failed for a reason worth showing the admin."""
+
+
 def mint_registration_token(label, ttl_hours):
-    """Mint a one-time dynamic registration token and print its URL."""
+    """Create a one-time dynamic registration token and return its URL. The
+    plaintext token is only available here (only its hash is stored)."""
     token = secrets.token_urlsafe(32)
     db.session.add(LtiRegistrationToken(
         token_hash=LtiRegistrationToken.hash_token(token),
@@ -504,8 +511,179 @@ def mint_registration_token(label, ttl_hours):
         expires_at=utcnow() + timedelta(hours=ttl_hours),
     ))
     db.session.commit()
+    return f"{lti_base_url()}/register/?token={token}"
+
+
+def _find_registration(issuer, client_id):
+    """Return (row, registration) for the issuer/client_id or raise LtiError."""
+    row = LtiConfig.query.filter_by(
+        issuer=normalize_issuer(issuer), is_deleted=False
+    ).first()
+    if not row:
+        raise LtiError(f"No lti_config entry for issuer {issuer}")
+    registration = row.get_registration(client_id)
+    if not registration:
+        raise LtiError(f"No registration with client_id {client_id} for issuer {issuer}")
+    return row, registration
+
+
+def get_registration_public_key(issuer, client_id=None):
+    """Return a registration's public key PEM (raises LtiError if missing)."""
+    _, registration = _find_registration(issuer, client_id)
+    public_key_file = registration.get("public_key_file")
+    if not public_key_file:
+        raise LtiError("Registration has no public key file recorded")
+    with open(abs_key_path(public_key_file)) as f:
+        return f.read().strip()
+
+
+def rotate_registration_key(issuer, client_id=None):
+    """Rotate a registration's keypair (publish-then-switch): the new key is
+    published in /lti/jwks/, the registration switches to it, and the old key
+    is retired but stays published until purge_retired_keys(). Returns
+    (issuer, client_id, new_private_rel)."""
+    row, registration = _find_registration(issuer, client_id)
+    old_private = registration.get("private_key_file")
+    old_public = registration.get("public_key_file")
+    private_rel, public_rel = generate_keypair(row.issuer, registration["client_id"])
+    registration["private_key_file"] = private_rel
+    registration["public_key_file"] = public_rel
+    row.upsert_registration(registration)
+    db.session.commit()
+    retire_keypair(old_private, old_public)
+    cache.delete(JWKS_CACHE_KEY)
+    return row.issuer, registration["client_id"], private_rel
+
+
+def purge_retired_keys_op(older_than_days):
+    """Delete retired key files older than the grace period; returns names."""
+    removed = purge_retired_keys(older_than_days)
+    cache.delete(JWKS_CACHE_KEY)
+    return removed
+
+
+def list_registrations():
+    """Flat list of every active registration across all issuers, for the
+    management UI (rotate-key/show-public-key act on issuer + client_id)."""
+    result = []
+    for row in LtiConfig.query.filter_by(is_deleted=False).order_by(LtiConfig.issuer).all():
+        for reg in row.config:
+            result.append({
+                "issuer": row.issuer,
+                "client_id": reg.get("client_id"),
+                "deployment_ids": reg.get("deployment_ids") or [],
+                "is_default": bool(reg.get("default")),
+            })
+    return result
+
+
+# ----------------------------------------------------------------- admin web UI
+
+@blueprint.route("/manage", methods=["GET"])
+@login_required
+@check_user_category(["admin"])
+def manage():
+    """LTI management dashboard (MANAGEMENT sidebar): the web equivalent of
+    the `flask lti ...` commands - registrations (rotate key / show public
+    key), one-time registration tokens (mint / list) and retired keys
+    (purge)."""
+    return render_template(
+        "pages/lti_management.html",
+        registrations=list_registrations(),
+        tokens=LtiRegistrationToken.query.order_by(
+            LtiRegistrationToken.id.desc()
+        ).all(),
+        retired_keys=list_retired_keys(),
+    )
+
+
+@blueprint.route("/manage/mint-token", methods=["POST"])
+@login_required
+@check_user_category(["admin"])
+def manage_mint_token():
+    label = (request.form.get("label") or "").strip()
+    if not label:
+        return jsonify({"error": "A label is required (who the token is for)"}), 400
+    try:
+        ttl_hours = int(request.form.get("ttl_hours") or 24)
+    except ValueError:
+        return jsonify({"error": "TTL must be a whole number of hours"}), 400
+    if ttl_hours <= 0:
+        return jsonify({"error": "TTL must be a positive number of hours"}), 400
+    url = mint_registration_token(label, ttl_hours)
+    app.logger.info(
+        f"LTI registration token minted by {current_user.username} "
+        f"label={label!r} ttl_hours={ttl_hours}"
+    )
+    return jsonify({"url": url, "label": label, "ttl_hours": ttl_hours})
+
+
+@blueprint.route("/manage/public-key", methods=["GET"])
+@login_required
+@check_user_category(["admin"])
+def manage_public_key():
+    issuer = request.args.get("issuer", "")
+    client_id = request.args.get("client_id") or None
+    try:
+        pem = get_registration_public_key(issuer, client_id)
+    except LtiError as exc:
+        return jsonify({"error": str(exc)}), 404
+    return jsonify({"issuer": issuer, "client_id": client_id, "public_key": pem})
+
+
+@blueprint.route("/manage/rotate-key", methods=["POST"])
+@login_required
+@check_user_category(["admin"])
+def manage_rotate_key():
+    issuer = request.form.get("issuer", "")
+    client_id = request.form.get("client_id") or None
+    try:
+        issuer, client_id, _ = rotate_registration_key(issuer, client_id)
+    except LtiError as exc:
+        return jsonify({"error": str(exc)}), 404
+    app.logger.info(
+        f"LTI key rotated by {current_user.username} issuer={issuer} client_id={client_id}"
+    )
+    return jsonify({
+        "result": (
+            f"Rotated key for {client_id} @ {issuer}. The old key is retired "
+            "but stays published in /lti/jwks/ until you purge it after the "
+            "grace period."
+        ),
+    })
+
+
+@blueprint.route("/manage/purge-retired-keys", methods=["POST"])
+@login_required
+@check_user_category(["admin"])
+def manage_purge_retired_keys():
+    try:
+        older_than_days = int(request.form.get("older_than_days") or 30)
+    except ValueError:
+        return jsonify({"error": "Grace period must be a whole number of days"}), 400
+    if older_than_days < 0:
+        return jsonify({"error": "Grace period cannot be negative"}), 400
+    removed = purge_retired_keys_op(older_than_days)
+    app.logger.info(
+        f"LTI retired keys purged by {current_user.username} "
+        f"older_than_days={older_than_days} removed={len(removed)}"
+    )
+    return jsonify({
+        "result": f"Removed {len(removed)} retired key file(s)",
+        "removed": removed,
+    })
+
+
+# ----------------------------------------------------------------------- CLI
+
+@blueprint.cli.command("mint-registration-token")
+@click.option("--label", required=True, help="Who this token is for (audit)")
+@click.option("--ttl-hours", default=24, type=int, help="Token validity in hours")
+def mint_registration_token_cmd(label, ttl_hours):
+    """Mint a one-time dynamic registration token and print its URL."""
+    url = mint_registration_token(label, ttl_hours)
     click.echo("Registration URL (shown once, hand it to the LMS admin):")
-    click.echo(f"{lti_base_url()}/register/?token={token}")
+    click.echo(url)
 
 
 @blueprint.cli.command("list-registration-tokens")
@@ -527,18 +705,10 @@ def show_public_key(issuer, client_id):
     Moodle's symptom is a token.php 404 with
     'jwks_helper::fix_jwks_alg(): ... null given' on the first grade/roster
     call (launches still work, they never need platform->tool calls)."""
-    row = LtiConfig.query.filter_by(issuer=normalize_issuer(issuer), is_deleted=False).first()
-    if not row:
-        raise click.ClickException(f"No lti_config entry for issuer {issuer}")
-    registration = row.get_registration(client_id)
-    if not registration:
-        raise click.ClickException(f"No registration with client_id {client_id} for issuer {issuer}")
-    public_key_file = registration.get("public_key_file")
-    if not public_key_file:
-        raise click.ClickException("Registration has no public key file recorded")
-    from apps.lti.keys import abs_key_path
-    with open(abs_key_path(public_key_file)) as f:
-        click.echo(f.read().strip())
+    try:
+        click.echo(get_registration_public_key(issuer, client_id))
+    except LtiError as exc:
+        raise click.ClickException(str(exc))
 
 
 @blueprint.cli.command("rotate-key")
@@ -548,24 +718,12 @@ def rotate_key(issuer, client_id):
     """Rotate a registration's keypair (publish-then-switch): the new key is
     published in /lti/jwks/, the registration switches to it, and the old
     key is retired but stays published until purge-retired-keys."""
-    row = LtiConfig.query.filter_by(issuer=normalize_issuer(issuer), is_deleted=False).first()
-    if not row:
-        raise click.ClickException(f"No lti_config entry for issuer {issuer}")
-    registration = row.get_registration(client_id)
-    if not registration:
-        raise click.ClickException(f"No registration with client_id {client_id} for issuer {issuer}")
-
-    old_private = registration.get("private_key_file")
-    old_public = registration.get("public_key_file")
-    private_rel, public_rel = generate_keypair(row.issuer, registration["client_id"])
-    registration["private_key_file"] = private_rel
-    registration["public_key_file"] = public_rel
-    row.upsert_registration(registration)
-    db.session.commit()
-    retire_keypair(old_private, old_public)
-    cache.delete(JWKS_CACHE_KEY)
+    try:
+        issuer, client_id, private_rel = rotate_registration_key(issuer, client_id)
+    except LtiError as exc:
+        raise click.ClickException(str(exc))
     click.echo(
-        f"Rotated key for issuer={row.issuer} client_id={registration['client_id']}: "
+        f"Rotated key for issuer={issuer} client_id={client_id}: "
         f"new key {private_rel}, old key retired (still published in /lti/jwks/; "
         f"run 'flask lti purge-retired-keys' after the grace period)"
     )
@@ -575,8 +733,7 @@ def rotate_key(issuer, client_id):
 @click.option("--older-than-days", default=30, type=int, help="Grace period in days")
 def purge_retired_keys_cmd(older_than_days):
     """Delete retired key files older than the grace period."""
-    removed = purge_retired_keys(older_than_days)
-    cache.delete(JWKS_CACHE_KEY)
+    removed = purge_retired_keys_op(older_than_days)
     click.echo(f"Removed {len(removed)} retired key file(s)")
     for fname in removed:
         click.echo(f"  {fname}")

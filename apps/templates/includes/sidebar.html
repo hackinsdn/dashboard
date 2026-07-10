@@ -147,6 +147,16 @@
               </p>
             </a>
           </li>
+          {% if config.get('ENABLE_LTI') and current_user.category == "admin" %}
+          <li class="nav-item">
+            <a href="{{ url_for('lti_blueprint.manage') }}" class="nav-link {% if request.url_rule.endpoint == 'lti_blueprint.manage' %} active {% endif %}">
+              <i class="nav-icon fas fa-graduation-cap"></i>
+              <p>
+                LTI
+              </p>
+            </a>
+          </li>
+          {% endif %}
           <li class="nav-item has-treeview {% if request.url_rule.endpoint.startswith('k8s_blueprint') %} menu-open {% endif %}">
             <a href="#" class="nav-link {% if request.url_rule.endpoint.startswith('k8s_blueprint') %} active {% endif %}">
               <i class="nav-icon far fa-dharmachakra"></i>
