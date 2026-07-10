@@ -72,6 +72,15 @@ def get_version(lab, field, version):
     ).first()
 
 
+def delete_version(lab, field, version):
+    """Remove a single stored version. Returns True when a row was deleted."""
+    row = get_version(lab, field, version)
+    if not row:
+        return False
+    db.session.delete(row)
+    return True
+
+
 def diff_against_current(lab, version_row):
     """Unified diff from the stored version to the lab's current field value."""
     old = (version_row.content or "").splitlines()

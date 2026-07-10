@@ -356,3 +356,89 @@ class TestRetention:
         # other fields are unaffected by the manifest pruning
         assert [v.version for v in versions_of(lab.id, "lab_guide")] == [1]
         logout(client)
+
+
+# --- delete a single version ------------------------------------------------
+class TestVersionDelete:
+    """DELETE /api/labs/<lab>/field_versions/<field>/<version>.
+
+    Uses its own lab ("lv Delete Lab") so removing versions never disturbs the
+    other stateful classes above.
+    """
+
+    def _make_lab(self, client, ids):
+        login(client, "lvadmin", "admin123")
+        client.post(
+            "/labs/edit/new",
+            data=lab_form(
+                lab_title="lv Delete Lab",
+                lab_description="x",
+                lab_categories=str(ids["category_id"]),
+                lab_manifest="apiVersion: del-v1",
+            ),
+            follow_redirects=True,
+        )
+        lab = get_lab("lv Delete Lab")
+        # add a second manifest version so we have v1 and v2 to work with
+        client.post(
+            f"/labs/edit/{lab.id}",
+            data=lab_form(
+                lab_title="lv Delete Lab",
+                lab_description="x",
+                lab_categories=str(ids["category_id"]),
+                lab_manifest="apiVersion: del-v2",
+            ),
+            follow_redirects=True,
+        )
+        return lab
+
+    def test_admin_deletes_a_version(self, client, ids):
+        logout(client)
+        lab = self._make_lab(client, ids)
+        assert [v.version for v in versions_of(lab.id, "manifest")] == [1, 2]
+
+        resp = client.delete(f"/api/labs/{lab.id}/field_versions/manifest/1")
+        assert resp.status_code == 200
+        assert resp.get_json()["status"] == "ok"
+
+        # only v1 is gone; v2 and other fields untouched
+        assert [v.version for v in versions_of(lab.id, "manifest")] == [2]
+        assert [v.version for v in versions_of(lab.id, "lab_guide")] == [1]
+        logout(client)
+
+    def test_delete_unknown_version_404(self, client, ids):
+        login(client, "lvadmin", "admin123")
+        lab = get_lab("lv Delete Lab")
+        resp = client.delete(f"/api/labs/{lab.id}/field_versions/manifest/999")
+        assert resp.status_code == 404
+        logout(client)
+
+    def test_delete_unknown_field_rejected(self, client, ids):
+        login(client, "lvadmin", "admin123")
+        lab = get_lab("lv Delete Lab")
+        resp = client.delete(f"/api/labs/{lab.id}/field_versions/title/1")
+        assert resp.status_code == 400
+        logout(client)
+
+    def test_delete_missing_lab_404(self, client, ids):
+        login(client, "lvadmin", "admin123")
+        resp = client.delete("/api/labs/does-not-exist/field_versions/manifest/1")
+        assert resp.status_code == 404
+        logout(client)
+
+    def test_student_denied_delete(self, client, ids):
+        login(client, "lvstudent", "stud123")
+        lab = get_lab("lv Delete Lab")
+        resp = client.delete(f"/api/labs/{lab.id}/field_versions/manifest/2")
+        assert resp.status_code == 403
+        # nothing was removed
+        assert [v.version for v in versions_of(lab.id, "manifest")] == [2]
+        logout(client)
+
+    def test_labcreator_denied_on_others_lab(self, client, ids):
+        login(client, "lvlabcreator", "lc123")
+        lab = get_lab("lv Delete Lab")  # owned by admin
+        resp = client.delete(f"/api/labs/{lab.id}/field_versions/manifest/2")
+        assert resp.status_code == 403
+        assert [v.version for v in versions_of(lab.id, "manifest")] == [2]
+        logout(client)

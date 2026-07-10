@@ -1076,9 +1076,13 @@
         fieldHistoryField = $(this).data('field');
         $('#field-history-title').text(fieldHistoryLabels[fieldHistoryField]);
         $('#field-history-detail').addClass('d-none');
+        $('#modal-field-history').modal('show');
+        loadFieldHistory();
+      });
+
+      async function loadFieldHistory() {
         var items = $('#field-history-items');
         items.html('<tr><td colspan="4">Loading...</td></tr>');
-        $('#modal-field-history').modal('show');
         try {
           const response = await fetch(`/api/labs/${editLabId}/field_versions/${fieldHistoryField}`);
           const data = await response.json();
@@ -1095,16 +1099,20 @@
             row.append($('<td>').text(v.author || '--'));
             var actions = $('<td>');
             actions.append(
-              $('<button type="button" class="btn btn-sm btn-outline-secondary mr-1">Diff vs current</button>')
+              $('<button type="button" class="btn btn-sm btn-outline-secondary mr-1" title="Diff vs current">Diff</button>')
                 .on('click', function () { showFieldVersion(v.version, true); })
             );
             actions.append(
-              $('<button type="button" class="btn btn-sm btn-outline-primary mr-1">View</button>')
+              $('<button type="button" class="btn btn-sm btn-outline-primary mr-1" title="View content">View</button>')
                 .on('click', function () { showFieldVersion(v.version, false); })
             );
             actions.append(
-              $('<button type="button" class="btn btn-sm btn-outline-success">Restore into editor</button>')
+              $('<button type="button" class="btn btn-sm btn-outline-success mr-1" title="Restore into editor">Restore</button>')
                 .on('click', function () { restoreFieldVersionFromApi(v.version); })
+            );
+            actions.append(
+              $('<button type="button" class="btn btn-sm btn-outline-danger" title="Delete this version">Delete</button>')
+                .on('click', function () { deleteFieldVersionFromApi(v.version); })
             );
             row.append(actions);
             items.append(row);
@@ -1112,7 +1120,7 @@
         } catch (err) {
           items.html($('<tr><td colspan="4"></td></tr>').find('td').text('Failed to load history: ' + err.message).end());
         }
-      });
+      }
 
       async function showFieldVersion(version, diff) {
         var url = `/api/labs/${editLabId}/field_versions/${fieldHistoryField}/${version}` + (diff ? '?diff=1' : '');
@@ -1161,6 +1169,23 @@
         }
         restoreFieldVersion(fieldHistoryField, data.result || '');
         $('#modal-field-history').modal('hide');
+      }
+
+      async function deleteFieldVersionFromApi(version) {
+        if (!confirm('Delete version v' + version + '? This cannot be undone.')) {
+          return;
+        }
+        const response = await fetch(`/api/labs/${editLabId}/field_versions/${fieldHistoryField}/${version}`, {
+          method: 'DELETE',
+          credentials: 'same-origin'
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          alert('Failed to delete version: ' + (data.result || 'request failed'));
+          return;
+        }
+        $('#field-history-detail').addClass('d-none');
+        loadFieldHistory();
       }
   </script>
 
