@@ -1,0 +1,435 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} LTI Management {% endblock title %}
+
+<!-- Element injected in the BODY element -->
+{% block body_class %} sidebar-mini layout-navbar-fixed {% endblock body_class %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}
+
+  <!-- Google Font: Source Sans Pro -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/fontawesome-free/css/all.min.css') }}">
+  <!-- DataTables -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css') }}">
+  <!-- Theme style -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/adminlte.min.css') }}">
+{% endblock stylesheets %}
+
+{% block content %}
+
+  <!-- Content Wrapper. Contains page content -->
+  <div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+      <div class="container-fluid">
+        <div class="row mb-2">
+          <div class="col-sm-6">
+            <h1>LTI Management</h1>
+          </div>
+          <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.index') }}">Home</a></li>
+              <li class="breadcrumb-item active">LTI</li>
+            </ol>
+          </div>
+        </div>
+      </div><!-- /.container-fluid -->
+    </section>
+
+    <!-- Main content -->
+    <section class="content">
+
+      <!-- Registrations -->
+      <div class="row">
+        <div class="col-md-12">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fas fa-plug mr-1"></i> Platform Registrations</h3>
+            </div>
+            <div class="card-body">
+              <p class="text-muted">
+                LTI 1.3 platform registrations (created by dynamic registration).
+                Rotate a registration's signing key or show its public key (PEM) to
+                paste into the LMS when it cannot fetch <code>/lti/jwks/</code>.
+              </p>
+              <table id="tableRegistrations" class="table table-striped display">
+                <thead>
+                  <tr>
+                    <th>Issuer</th>
+                    <th>Client ID</th>
+                    <th>Deployment IDs</th>
+                    <th>Default</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for reg in registrations %}
+                <tr>
+                  <td>{{ reg.issuer }}</td>
+                  <td>{{ reg.client_id }}</td>
+                  <td>{{ reg.deployment_ids | join(', ') }}</td>
+                  <td>{% if reg.is_default %}<span class="badge badge-success">default</span>{% endif %}</td>
+                  <td>
+                    <button type="button" class="btn btn-outline-dark btn-sm btn-show-key"
+                            data-issuer="{{ reg.issuer }}" data-client-id="{{ reg.client_id }}">
+                      <i class="fas fa-key"></i> Public Key
+                    </button>
+                    <button type="button" class="btn btn-outline-warning btn-sm btn-rotate-key"
+                            data-issuer="{{ reg.issuer }}" data-client-id="{{ reg.client_id }}">
+                      <i class="fas fa-sync-alt"></i> Rotate Key
+                    </button>
+                  </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Registration tokens -->
+      <div class="row">
+        <div class="col-md-12">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fas fa-ticket-alt mr-1"></i> Registration Tokens</h3>
+              <div class="float-right">
+                <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#modal-mint-token">
+                  <i class="fas fa-plus"></i> Mint Token
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <p class="text-muted">
+                One-time credentials for the dynamic registration endpoint. The token
+                itself is shown only once, at mint time; only its hash is stored.
+              </p>
+              <table id="tableTokens" class="table table-striped display">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Label</th>
+                    <th>Created</th>
+                    <th>Expires</th>
+                    <th>Used</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for token in tokens %}
+                <tr>
+                  <td>{{ token.id }}</td>
+                  <td>{{ token.label }}</td>
+                  <td>{{ token.created_at.strftime('%Y-%m-%d %H:%M') if token.created_at else '-' }}</td>
+                  <td>{{ token.expires_at.strftime('%Y-%m-%d %H:%M') if token.expires_at else '-' }}</td>
+                  <td>{{ token.used_at.strftime('%Y-%m-%d %H:%M') if token.used_at else '-' }}</td>
+                  <td>
+                    {% if token.used_at %}
+                      <span class="badge badge-secondary">used</span>
+                    {% elif token.is_expired %}
+                      <span class="badge badge-danger">expired</span>
+                    {% else %}
+                      <span class="badge badge-success">valid</span>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Retired keys -->
+      <div class="row">
+        <div class="col-md-12">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fas fa-archive mr-1"></i> Retired Keys</h3>
+              <div class="float-right">
+                <button type="button" class="btn btn-danger btn-sm" data-toggle="modal" data-target="#modal-purge-keys">
+                  <i class="far fa-trash-alt"></i> Purge Retired Keys
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <p class="text-muted">
+                Rotated keys stay published in <code>/lti/jwks/</code> during a grace
+                period so platforms validating cached tokens keep finding the old key.
+                Purge them once the grace period has passed.
+              </p>
+              <table id="tableRetired" class="table table-striped display">
+                <thead>
+                  <tr>
+                    <th>Key File</th>
+                    <th>Retired At (UTC)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for key in retired_keys %}
+                <tr>
+                  <td>{{ key.name }}</td>
+                  <td>{{ key.retired_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mint token modal -->
+      <div class="modal fade" id="modal-mint-token">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">Mint Registration Token</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <div class="form-group">
+                <label for="mint-label">Label (who this token is for)</label>
+                <input type="text" class="form-control" id="mint-label" placeholder="e.g. Prof. Smith / Moodle prod">
+              </div>
+              <div class="form-group">
+                <label for="mint-ttl">Validity (hours)</label>
+                <input type="number" class="form-control" id="mint-ttl" value="24" min="1">
+              </div>
+              <div id="mint-result" class="d-none">
+                <label>Registration URL (shown once — hand it to the LMS admin):</label>
+                <div class="input-group">
+                  <input type="text" class="form-control" id="mint-url" readonly>
+                  <div class="input-group-append">
+                    <button type="button" class="btn btn-default" id="mint-copy" title="Copy URL"><i class="far fa-copy"></i></button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer justify-content-between">
+              <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+              <button type="button" class="btn btn-primary" id="mint-submit">Mint Token</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rotate key confirmation modal -->
+      <div class="modal fade" id="modal-rotate-key">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">Rotate Signing Key</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <p>Rotate the signing key for this registration?</p>
+              <ul>
+                <li><strong>Issuer:</strong> <span id="rotate-issuer"></span></li>
+                <li><strong>Client ID:</strong> <span id="rotate-client-id"></span></li>
+              </ul>
+              <p class="text-muted">
+                The new key is published immediately; the old key is retired but stays
+                published in <code>/lti/jwks/</code> until you purge it after the grace period.
+              </p>
+            </div>
+            <div class="modal-footer justify-content-between">
+              <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+              <button type="button" class="btn btn-warning" id="rotate-confirm">Rotate Key</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Purge retired keys modal -->
+      <div class="modal fade" id="modal-purge-keys">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">Purge Retired Keys</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <p>Delete retired key files older than the grace period.</p>
+              <div class="form-group">
+                <label for="purge-days">Grace period (days)</label>
+                <input type="number" class="form-control" id="purge-days" value="30" min="0">
+              </div>
+            </div>
+            <div class="modal-footer justify-content-between">
+              <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+              <button type="button" class="btn btn-danger" id="purge-confirm">Purge</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Show public key modal -->
+      <div class="modal fade" id="modal-show-key">
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">Registration Public Key</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <p class="text-muted">Paste this into the LMS as the tool's RSA key when it cannot fetch <code>/lti/jwks/</code>.</p>
+              <pre id="show-key-pem" style="white-space: pre-wrap; word-break: break-all;"></pre>
+            </div>
+            <div class="modal-footer justify-content-between">
+              <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+              <button type="button" class="btn btn-primary" id="show-key-copy"><i class="far fa-copy"></i> Copy</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+    <!-- /.content -->
+  </div>
+  <!-- /.content-wrapper -->
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+  <!-- jQuery -->
+  <script src="{{ url_for('static', filename='assets/plugins/jquery/jquery.min.js') }}"></script>
+  <!-- Bootstrap 4 -->
+  <script src="{{ url_for('static', filename='assets/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+  <!-- DataTables -->
+  <script src="{{ url_for('static', filename='assets/plugins/datatables/jquery.dataTables.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/datatables-responsive/js/dataTables.responsive.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js') }}"></script>
+  <!-- AdminLTE App -->
+  <script src="{{ url_for('static', filename='assets/js/adminlte.min.js') }}"></script>
+  <!-- Page Script -->
+  <script>
+    $(function () {
+      $("#tableRegistrations").DataTable({ responsive: true, autoWidth: false,
+        language: { emptyTable: 'No platform registrations yet' } });
+      $("#tableTokens").DataTable({ responsive: true, autoWidth: false, order: [[0, 'desc']],
+        language: { emptyTable: 'No registration tokens minted yet' } });
+      $("#tableRetired").DataTable({ responsive: true, autoWidth: false,
+        language: { emptyTable: 'No retired keys' } });
+
+      function toast(cls, title, body) {
+        $(document).Toasts('create', { class: cls, title: title, body: body, autohide: true, delay: 5000 });
+      }
+      function showFail(xhr) {
+        var msg = 'Request failed';
+        try { msg = JSON.parse(xhr.responseText).error || msg; } catch (e) {}
+        toast('bg-danger', 'Failure', msg);
+      }
+      function copyText(text) {
+        if (navigator.clipboard) { navigator.clipboard.writeText(text); }
+      }
+
+      // pop success toasts persisted across a reload
+      if (sessionStorage.getItem('msgSuccess')) {
+        toast('bg-success', 'Success', sessionStorage.getItem('msgSuccess'));
+        sessionStorage.removeItem('msgSuccess');
+      }
+
+      // --- mint token -----------------------------------------------------
+      $('#modal-mint-token').on('show.bs.modal', function () {
+        $('#mint-result').addClass('d-none');
+        $('#mint-url').val('');
+        $('#mint-submit').prop('disabled', false);
+      });
+      $('#mint-submit').click(function () {
+        var label = $('#mint-label').val().trim();
+        if (!label) { toast('bg-warning', 'Missing label', 'Please enter a label'); return; }
+        $('#mint-submit').prop('disabled', true);
+        $.ajax({
+          url: '{{ url_for("lti_blueprint.manage_mint_token") }}',
+          type: 'POST',
+          data: { label: label, ttl_hours: $('#mint-ttl').val() },
+        }).done(function (data) {
+          $('#mint-url').val(data.url);
+          $('#mint-result').removeClass('d-none');
+        }).fail(function (xhr) {
+          showFail(xhr);
+          $('#mint-submit').prop('disabled', false);
+        });
+      });
+      $('#mint-copy').click(function () { copyText($('#mint-url').val()); });
+
+      // --- show public key ------------------------------------------------
+      $('.btn-show-key').click(function () {
+        var issuer = $(this).data('issuer');
+        var clientId = $(this).data('client-id');
+        $('#show-key-pem').text('Loading...');
+        $('#modal-show-key').modal('show');
+        $.ajax({
+          url: '{{ url_for("lti_blueprint.manage_public_key") }}',
+          type: 'GET',
+          data: { issuer: issuer, client_id: clientId },
+        }).done(function (data) {
+          $('#show-key-pem').text(data.public_key);
+        }).fail(function (xhr) {
+          $('#modal-show-key').modal('hide');
+          showFail(xhr);
+        });
+      });
+      $('#show-key-copy').click(function () { copyText($('#show-key-pem').text()); });
+
+      // --- rotate key -----------------------------------------------------
+      $('.btn-rotate-key').click(function () {
+        $('#rotate-issuer').text($(this).data('issuer'));
+        $('#rotate-client-id').text($(this).data('client-id'));
+        $('#rotate-confirm')
+          .data('issuer', $(this).data('issuer'))
+          .data('client-id', $(this).data('client-id'));
+        $('#modal-rotate-key').modal('show');
+      });
+      $('#rotate-confirm').click(function () {
+        $(this).prop('disabled', true);
+        $.ajax({
+          url: '{{ url_for("lti_blueprint.manage_rotate_key") }}',
+          type: 'POST',
+          data: { issuer: $(this).data('issuer'), client_id: $(this).data('client-id') },
+        }).done(function (data) {
+          sessionStorage.setItem('msgSuccess', data.result);
+          location.reload();
+        }).fail(function (xhr) {
+          showFail(xhr);
+          $('#rotate-confirm').prop('disabled', false);
+        });
+      });
+
+      // --- purge retired keys --------------------------------------------
+      $('#purge-confirm').click(function () {
+        $(this).prop('disabled', true);
+        $.ajax({
+          url: '{{ url_for("lti_blueprint.manage_purge_retired_keys") }}',
+          type: 'POST',
+          data: { older_than_days: $('#purge-days').val() },
+        }).done(function (data) {
+          sessionStorage.setItem('msgSuccess', data.result);
+          location.reload();
+        }).fail(function (xhr) {
+          showFail(xhr);
+          $('#purge-confirm').prop('disabled', false);
+        });
+      });
+    });
+  </script>
+
+{% endblock javascripts %}

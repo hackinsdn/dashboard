@@ -7,6 +7,7 @@ halves stay published in /lti/jwks/ until purged, so platforms validating
 cached tokens keep finding the old kid (publish-then-switch rollover).
 Key file paths are stored in lti_config relative to DATA_DIR.
 """
+import datetime
 import hashlib
 import json
 import os
@@ -90,6 +91,26 @@ def retire_keypair(private_rel, public_rel):
         if not os.path.exists(src):
             continue
         os.replace(src, os.path.join(retired_dir(), os.path.basename(rel_path)))
+
+
+def list_retired_keys():
+    """Return retired key files as {name, retired_at} (mtime), newest first,
+    for the management UI's overview of what is still published in the JWKS
+    during its grace period."""
+    entries = []
+    if not os.path.isdir(retired_dir()):
+        return entries
+    for fname in sorted(os.listdir(retired_dir())):
+        path = os.path.join(retired_dir(), fname)
+        if os.path.isfile(path):
+            entries.append({
+                "name": fname,
+                "retired_at": datetime.datetime.fromtimestamp(
+                    os.path.getmtime(path), tz=datetime.timezone.utc
+                ),
+            })
+    entries.sort(key=lambda e: e["retired_at"], reverse=True)
+    return entries
 
 
 def purge_retired_keys(older_than_days):
