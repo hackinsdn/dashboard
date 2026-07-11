@@ -410,6 +410,16 @@ word-break: break-all;
         if (!answers || Object.keys(answers).length === 0) {
           return;
         }
+        // Never overwrite stored answers with an all-blank form. Firefox's
+        // form-state restoration re-blanks fields after load and fires change
+        // events; without this guard that would auto-save an empty payload and
+        // wipe the user's answers.
+        var hasValue = Object.keys(answers).some(function(k){
+          return answers[k] !== "" && answers[k] != null;
+        });
+        if (!hasValue) {
+          return;
+        }
         var request = $.ajax({
           url:  "/api/lab_answers/{{ lab['lab_instance_id'] }}",
           type: "POST",
@@ -441,6 +451,9 @@ word-break: break-all;
       $('.save-answers').click(function () {
 	saveAnswers();
       });
+      // stop Firefox from restoring/re-blanking these fields after load, which
+      // otherwise fights the answer loader and triggers empty auto-saves
+      $("#lab-guide input, #lab-guide textarea, #lab-guide select").attr('autocomplete', 'off');
       var timeoutSave;
       $("#lab-guide input, #lab-guide textarea, #lab-guide select").on('input propertychange change', function() {
           // don't auto-save until the initial load has settled, otherwise a
