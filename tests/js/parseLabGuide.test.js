@@ -5,7 +5,8 @@
  * parseLabGuide() previews the lab guide Markdown and rejects the form when two
  * questions share the same `name` attribute. radio/checkbox inputs are allowed
  * to repeat a name (they form a single option group); every other repeat is a
- * duplicate question.
+ * duplicate question. Separately, every input `id` must be unique (a repeated id
+ * breaks the <label for="..."> associations of radio/checkbox options).
  *
  * These tests extract the real function from the template (rather than copying
  * its body) and exercise it with the project's actual jQuery and marked builds,
@@ -72,50 +73,76 @@ const TEXT = (n) => `<input type='text' name='${n}' placeholder='x'>\n`;
 const TEXTAREA = (n) => `<textarea name='${n}' rows='6' cols='80'> </textarea>\n`;
 const RADIO = (n) => `<input type='radio' name='${n}' value='1'/>\n`;
 const CHECKBOX = (n) => `<input type='checkbox' name='${n}' value='1'/>\n`;
+// radio/checkbox option with an explicit id + matching label, like the
+// "Add checkbox question" button inserts (name repeats, ids must be unique).
+const RADIO_ID = (n, id) => `<input type='radio' name='${n}' id='${id}' value='1'/> <label for='${id}'>x</label><br>\n`;
+const CHECK_ID = (n, id) => `<input type='checkbox' name='${n}' id='${id}' value='1'/> <label for='${id}'>x</label><br>\n`;
+const TEXT_ID = (n, id) => `<input type='text' name='${n}' id='${id}'>\n`;
+// A full 3-option radio group (name `n`, ids `${p}-1..3`) — the button output.
+const RADIO_GROUP = (n, p) => RADIO_ID(n, `${p}-1`) + RADIO_ID(n, `${p}-2`) + RADIO_ID(n, `${p}-3`);
 
-// { name: [markdown, expectDuplicate] }
+// { label: [markdown, expect] } where expect is { name: bool, id: bool }.
+// Omitted keys default to false; the form must abort iff name || id is true.
 const cases = {
   // --- the reported bug: a select name reused by another field ------------
-  'two identical selects':               [SELECT('q1') + SELECT('q1'), true],
-  'multi-selects same name':             [SELECT_MULTI('q1') + SELECT_MULTI('q1'), true],
-  'select then radio (regression)':      [SELECT('q1') + RADIO('q1'), true],
-  'select then checkbox (regression)':   [SELECT('q1') + CHECKBOX('q1'), true],
-  'radio then select':                   [RADIO('q1') + SELECT('q1'), true],
-  'checkbox then select':                [CHECKBOX('q1') + SELECT('q1'), true],
-  'text then select':                    [TEXT('q1') + SELECT('q1'), true],
-  'select then text':                    [SELECT('q1') + TEXT('q1'), true],
-  'textarea then select':                [TEXTAREA('q1') + SELECT('q1'), true],
-  'selects split by markdown':           [`## Q1\ntext\n\n${SELECT('q1')}\n## Q2\n\n${SELECT('q1')}`, true],
+  'two identical selects':               [SELECT('q1') + SELECT('q1'), { name: true }],
+  'multi-selects same name':             [SELECT_MULTI('q1') + SELECT_MULTI('q1'), { name: true }],
+  'select then radio (regression)':      [SELECT('q1') + RADIO('q1'), { name: true }],
+  'select then checkbox (regression)':   [SELECT('q1') + CHECKBOX('q1'), { name: true }],
+  'radio then select':                   [RADIO('q1') + SELECT('q1'), { name: true }],
+  'checkbox then select':                [CHECKBOX('q1') + SELECT('q1'), { name: true }],
+  'text then select':                    [TEXT('q1') + SELECT('q1'), { name: true }],
+  'select then text':                    [SELECT('q1') + TEXT('q1'), { name: true }],
+  'textarea then select':                [TEXTAREA('q1') + SELECT('q1'), { name: true }],
+  'selects split by markdown':           [`## Q1\ntext\n\n${SELECT('q1')}\n## Q2\n\n${SELECT('q1')}`, { name: true }],
 
   // --- non-select duplicates still caught --------------------------------
-  'two text inputs same name':           [TEXT('q1') + TEXT('q1'), true],
-  'two textareas same name':             [TEXTAREA('q1') + TEXTAREA('q1'), true],
+  'two text inputs same name':           [TEXT('q1') + TEXT('q1'), { name: true }],
+  'two textareas same name':             [TEXTAREA('q1') + TEXTAREA('q1'), { name: true }],
+
+  // --- duplicate ids on radio/checkbox groups (the new check) ------------
+  'duplicate id within radio group':     [RADIO_ID('q1', 'id1-1') + RADIO_ID('q1', 'id1-1'), { id: true }],
+  'two radio groups reuse ids':          [RADIO_GROUP('q1', 'id1') + RADIO_GROUP('q2', 'id1'), { id: true }],
+  'duplicate id within checkbox group':  [CHECK_ID('q1', 'c1') + CHECK_ID('q1', 'c1'), { id: true }],
+  'duplicate id on text inputs':         [TEXT_ID('q1', 'dup') + TEXT_ID('q2', 'dup'), { id: true }],
+  'duplicate name and duplicate id':     [RADIO_ID('q1', 'x') + RADIO_ID('q1', 'x') + SELECT('q1'), { name: true, id: true }],
 
   // --- legitimate content that must NOT be flagged -----------------------
-  'single select':                       [SELECT('q1'), false],
-  'distinct selects':                    [SELECT('q1') + SELECT('q2'), false],
-  'radio option group':                  [RADIO('q1') + RADIO('q1') + RADIO('q1'), false],
-  'checkbox option group':               [CHECKBOX('q1') + CHECKBOX('q1'), false],
-  'one of each distinct':                [TEXT('q1') + SELECT('q2') + TEXTAREA('q3') + RADIO('q4') + RADIO('q4'), false],
-  'empty guide':                         ['', false],
+  'single select':                       [SELECT('q1'), {}],
+  'distinct selects':                    [SELECT('q1') + SELECT('q2'), {}],
+  'radio option group (no ids)':         [RADIO('q1') + RADIO('q1') + RADIO('q1'), {}],
+  'checkbox option group (no ids)':      [CHECKBOX('q1') + CHECKBOX('q1'), {}],
+  'radio group with unique ids':         [RADIO_GROUP('q1', 'id1'), {}],
+  'two radio groups distinct ids':       [RADIO_GROUP('q1', 'id1') + RADIO_GROUP('q2', 'id2'), {}],
+  'one of each distinct':                [TEXT('q1') + SELECT('q2') + TEXTAREA('q3') + RADIO('q4') + RADIO('q4'), {}],
+  'empty guide':                         ['', {}],
 };
 
 // --- Run -------------------------------------------------------------------
 const run = makeRunner();
 let failures = 0;
-for (const [label, [md, expectDup]] of Object.entries(cases)) {
+for (const [label, [md, expect]] of Object.entries(cases)) {
+  const expectName = !!expect.name;
+  const expectId = !!expect.id;
+  const expectAbort = expectName || expectId;
+
   const { ret, alert, prevented } = run(md);
-  const gotDup = ret === false;
+  const gotAbort = ret === false;
+  const hasNameMsg = !!alert && /Duplicated question name found/.test(alert);
+  const hasIdMsg = !!alert && /Duplicated input id found/.test(alert);
+
   const ok =
-    gotDup === expectDup &&
-    (expectDup ? alert && /Duplicated question name found/.test(alert) && prevented
-               : alert === null && !prevented);
+    gotAbort === expectAbort &&
+    prevented === expectAbort &&
+    hasNameMsg === expectName &&
+    hasIdMsg === expectId;
+
   if (ok) {
     console.log(`  ok    ${label}`);
   } else {
     failures++;
     console.error(`  FAIL  ${label}`);
-    console.error(`        expected duplicate=${expectDup}, got=${gotDup}, alert=${JSON.stringify(alert)}, prevented=${prevented}`);
+    console.error(`        expected {name:${expectName}, id:${expectId}}, got abort=${gotAbort}, name=${hasNameMsg}, id=${hasIdMsg}, prevented=${prevented}, alert=${JSON.stringify(alert)}`);
   }
 }
 
