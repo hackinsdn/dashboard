@@ -196,6 +196,11 @@ def save_lab_answers(lab_inst_id):
         lab_answers = LabAnswers(user_id=current_user.id, lab_id=lab_inst.lab_id)
         db.session.add(lab_answers)
 
+    current_app.logger.info(
+        f"Save lab_answers id={lab_answers.id} user={current_user.username} "
+        f"lab={lab_inst.lab_id} request-answers={content}"
+    )
+
     # Merge into the stored answers rather than replacing them: keep keys not
     # present in this payload, and don't let an empty incoming value wipe an
     # answer that was already saved (guards against a partial/early auto-save
