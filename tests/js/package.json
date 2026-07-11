@@ -4,7 +4,7 @@
   "private": true,
   "description": "Regression tests for inline JavaScript in the dashboard templates",
   "scripts": {
-    "test": "node parseLabGuide.test.js"
+    "test": "node parseLabGuide.test.js && node labAnswers.test.js"
   },
   "devDependencies": {
     "jsdom": "^24.0.0"

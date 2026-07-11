@@ -371,18 +371,41 @@ word-break: break-all;
           location.href = "{{ url_for('home_blueprint.running_labs') }}";
         });
       });
+      var answersLoaded = false;   // suppress auto-save until the initial load settles
       function saveAnswers(showToast = true) {
         var answers = {};
+        var checkboxGroups = {};   // name -> list of checked values (multi-select groups)
         $("#lab-guide input, #lab-guide textarea, #lab-guide select").each(function(){
           var input = $(this);
-          var inputVal = input.val();
-          if ((input.attr('type') == "radio" || input.attr('type') == "checkbox") && !this.checked) {
-            inputVal = "";
+          var name = input.attr('name');
+          if (!name) {
+            return;
           }
-          if (!input.val()) {
-            inputVal = "";
+          var type = input.attr('type');
+          if (type == "checkbox") {
+            // accumulate every checked box sharing this name so groups round-trip
+            if (!(name in checkboxGroups)) {
+              checkboxGroups[name] = [];
+            }
+            if (this.checked) {
+              checkboxGroups[name].push(input.val());
+            }
+          } else if (type == "radio") {
+            // only the checked radio contributes; never let an unchecked
+            // sibling overwrite the selected value with ""
+            if (this.checked) {
+              answers[name] = input.val();
+            } else if (!(name in answers)) {
+              answers[name] = "";
+            }
+          } else {
+            answers[name] = input.val() || "";
           }
-          answers[input.attr('name')] = inputVal;
+        });
+        // store checkbox groups as a stable, sorted string so they load back
+        // correctly and still grade as text (answer sheet compares via regex)
+        $.each(checkboxGroups, function(name, values) {
+          answers[name] = values.sort().join(", ");
         });
         if (!answers || Object.keys(answers).length === 0) {
           return;
@@ -420,38 +443,56 @@ word-break: break-all;
       });
       var timeoutSave;
       $("#lab-guide input, #lab-guide textarea, #lab-guide select").on('input propertychange change', function() {
+          // don't auto-save until the initial load has settled, otherwise a
+          // half-populated form could overwrite the stored answers with blanks
+          if (!answersLoaded) {
+            return;
+          }
           clearTimeout(timeoutSave);
           timeoutSave = setTimeout(function() {
               saveAnswers(true);
           }, 1000);
       });
-      // load answers
-      $(window).on("load", function () {
-        var request = $.ajax({
-          url:  "/api/lab_answers/{{ lab['lab_instance_id'] }}",
-          type: "GET",
-        });
-        request.done(function(data) {
-          if (!data.result || $.isEmptyObject(data.result)) {
+      // ---- load answers ----
+      function applyAnswers(result) {
+        $("#lab-guide input, #lab-guide textarea, #lab-guide select").each(function(){
+          var input = $(this);
+          var name = input.attr('name');
+          if (!name || !(name in result)) {
             return;
           }
-          $("#lab-guide input, #lab-guide textarea, #lab-guide select").each(function(){
-            var input = $(this);
-            if (input.attr('name') in data.result) {
-              if (input.attr('type') == "radio") {
-                if (input.val() == data.result[input.attr('name')]) {
-                  this.checked = true;
-                }
-              } else if (input.attr('type') == "checkbox") {
-                input.prop("checked", true);
-              } else {
-                input.val(data.result[input.attr('name')]);
-              }
-            }
-          });
+          var saved = result[name];
+          var type = input.attr('type');
+          if (type == "radio") {
+            input.prop("checked", String(input.val()) === String(saved));
+          } else if (type == "checkbox") {
+            // saved is a sorted, ", "-joined list of the checked values
+            var selected = String(saved == null ? "" : saved).split(", ");
+            input.prop("checked", selected.indexOf(String(input.val())) !== -1);
+          } else {
+            input.val(saved);
+          }
         });
-        request.fail(function(xhr) {
-          if (xhr.status == 401) {
+      }
+      function loadAnswers(attempt) {
+        attempt = attempt || 1;
+        $.ajax({
+          url:  "/api/lab_answers/{{ lab['lab_instance_id'] }}",
+          type: "GET",
+        }).done(function(data) {
+          if (data.result && !$.isEmptyObject(data.result)) {
+            applyAnswers(data.result);
+          }
+          answersLoaded = true;   // only now is it safe to auto-save
+        }).fail(function(xhr) {
+          if (xhr.status == 401 || xhr.status == 404) {
+            // no answers to load (unauthorized / not applicable), not transient
+            answersLoaded = true;
+            return;
+          }
+          if (attempt < 3) {
+            // retry transient failures with a small backoff before giving up
+            setTimeout(function() { loadAnswers(attempt + 1); }, 1000 * attempt);
             return;
           }
           $(document).Toasts('create', {
@@ -462,7 +503,11 @@ word-break: break-all;
             body: xhr.responseText
           });
         });
-      });
+      }
+      // the lab guide is server-rendered inline, so the inputs already exist
+      // here; run immediately instead of waiting for window "load" (which can
+      // be delayed by images or may have already fired)
+      loadAnswers();
     })
     // Extends lab expiration
     function extendLabExpiration(hours) {
