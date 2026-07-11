@@ -163,7 +163,7 @@ class Config(object):
 
     # -------- Optional modules & feature flags --------
     # Canonical optional modules control (CSV -> list). Default includes "clabs".
-    OPTIONAL_MODULES = [m.strip() for m in os.getenv("OPTIONAL_MODULES", "clabs").split(",") if m.strip()]
+    OPTIONAL_MODULES = [m.strip() for m in os.getenv("OPTIONAL_MODULES", "clabs,lti").split(",") if m.strip()]
     ENABLE_CLABS = "clabs" in OPTIONAL_MODULES
 
     # Hide Feedback Seconds: how many seconds to hide the involuntanry
