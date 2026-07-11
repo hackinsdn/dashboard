@@ -147,11 +147,24 @@ const { $ } = env;
   eq('save: first radio not clobbered by later unchecked siblings', post.q_radio, 'A');
 }
 
-// === saveAnswers: empty / unchecked groups serialize as "" =================
+// === saveAnswers: a fully-blank form is NOT posted (never wipe answers) =====
+// Firefox re-blanks the guide inputs after load and fires change events; the
+// guard in saveAnswers must skip the POST entirely so an all-empty payload
+// can't overwrite previously saved answers.
 {
   env.setForm(FORM);
   const post = env.save();
-  eq('save: empty text',              post.q_text, '');
+  eq('save: blank form suppresses POST', post, undefined);
+}
+
+// === saveAnswers: blank fields still serialize as "" in a partial save ======
+// When at least one field has a value the POST goes through, and the empty
+// fields must still serialize as "" so they round-trip via applyAnswers.
+{
+  env.setForm(FORM);
+  $("input[name=q_text]").val('answered');
+  const post = env.save();
+  eq('save: partial POST happens',     post && post.q_text, 'answered');
   eq('save: unchecked checkbox group', post.q_cb, '');
   eq('save: no radio selected',        post.q_radio, '');
 }
