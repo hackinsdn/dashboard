@@ -880,8 +880,26 @@
         const htmlLabGuide = marked.parse(editorLabGuide.getValue());
         document.getElementById('custom-tabs-labguide-preview').innerHTML = htmlLabGuide;
         var seenNames = {};
+        var seenIds = {};
         var duplicates = [];
+        var duplicateIds = [];
         $('#custom-tabs-labguide-preview').find(':input').each(function () {
+          // Every input id must be unique. radio/checkbox options repeat their
+          // name (they form a single group) but each option still needs its own
+          // id, otherwise the <label for="..."> associations collide and only
+          // the first matching option reacts to the label.
+          var id = $(this).attr("id");
+          if (id) {
+            if (seenIds.hasOwnProperty(id)) {
+              if (duplicateIds.indexOf(id) === -1) {
+                duplicateIds.push(id);
+              }
+              $(this).css('border', '2px solid red');
+            } else {
+              seenIds[id] = true;
+            }
+          }
+
           var name = $(this).attr("name");
           if (!name) {
             duplicates.push("this-input-is-missing-its-name!");
@@ -905,9 +923,16 @@
           }
         });
         questionCounter = Object.keys(seenNames).length;
-        if (duplicates.length > 0) {
+        if (duplicates.length > 0 || duplicateIds.length > 0) {
 	  if (shouldAbort) event.preventDefault();
-          alert('Duplicated question name found: ' + duplicates.join(', '));
+          var messages = [];
+          if (duplicates.length > 0) {
+            messages.push('Duplicated question name found: ' + duplicates.join(', '));
+          }
+          if (duplicateIds.length > 0) {
+            messages.push('Duplicated input id found: ' + duplicateIds.join(', '));
+          }
+          alert(messages.join('\n'));
           return false;
         }
       }
