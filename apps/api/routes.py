@@ -815,3 +815,19 @@ def get_lab_field_version(lab_id, field, version):
     if request.args.get("diff"):
         return {"status": "ok", "result": lab_versions.diff_against_current(lab, row)}, 200
     return {"status": "ok", "result": row.content or ""}, 200
+
+
+@blueprint.route('/labs/<lab_id>/field_versions/<field>/<int:version>', methods=["DELETE"])
+@login_required
+def delete_lab_field_version(lab_id, field, version):
+    """Delete one stored version of a tracked Lab field."""
+    lab, error = _get_lab_for_versions(lab_id)
+    if error:
+        return error
+    if field not in lab_versions.TRACKED_FIELDS:
+        return {"status": "fail", "result": f"Unknown field, tracked fields: {', '.join(lab_versions.TRACKED_FIELDS)}"}, 400
+
+    if not lab_versions.delete_version(lab, field, version):
+        return {"status": "fail", "result": "Version not found"}, 404
+    db.session.commit()
+    return {"status": "ok", "result": f"Version v{version} deleted"}, 200
