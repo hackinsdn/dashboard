@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-07-12 20:22-0300\n"
+"POT-Creation-Date: 2026-07-13 06:25-0300\n"
 "PO-Revision-Date: 2026-07-12 19:36-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -55,15 +55,17 @@ msgstr "Concordo com os termos"
 msgid "You must agree to the terms."
 msgstr "Você deve concordar com os termos."
 
-#: apps/authentication/forms.py:54
+#: apps/authentication/forms.py:54 apps/templates/pages/groups_edit.html:81
+#: apps/templates/pages/groups_list.html:75
 msgid "Group Name"
 msgstr "Nome do Grupo"
 
-#: apps/authentication/forms.py:57
+#: apps/authentication/forms.py:57 apps/templates/pages/groups_edit.html:86
 msgid "Description"
 msgstr "Descrição"
 
-#: apps/authentication/forms.py:58
+#: apps/authentication/forms.py:58 apps/templates/pages/groups_edit.html:91
+#: apps/templates/pages/groups_list.html:76
 msgid "Organization"
 msgstr "Organização"
 
@@ -90,9 +92,18 @@ msgstr "Confirmação de senha"
 
 #: apps/templates/includes/navigation.html:10 apps/templates/pages/error.html:32
 #: apps/templates/pages/finished_labs.html:39 apps/templates/pages/gallery.html:35
+#: apps/templates/pages/groups_edit.html:54
+#: apps/templates/pages/groups_list.html:47
+#: apps/templates/pages/k8s_dep_list.html:37
+#: apps/templates/pages/k8s_pod_list.html:37
+#: apps/templates/pages/k8s_srv_list.html:37
 #: apps/templates/pages/lab_categories_edit.html:47
 #: apps/templates/pages/lab_categories_list.html:47
 #: apps/templates/pages/labs_view.html:37
+#: apps/templates/pages/my_support_thread_view.html:27
+#: apps/templates/pages/my_support_threads.html:25
+#: apps/templates/pages/support_thread_view.html:29
+#: apps/templates/pages/support_threads.html:29
 #: apps/templates/pages/waiting_approval.html:3
 #: apps/templates/pages/waiting_approval.html:50
 msgid "Home"
@@ -112,6 +123,8 @@ msgid "Support cases"
 msgstr "Casos de suporte"
 
 #: apps/templates/includes/navigation.html:49
+#: apps/templates/pages/my_support_thread_view.html:29
+#: apps/templates/pages/my_support_threads.html:44
 msgid "Case"
 msgstr "Caso"
 
@@ -152,6 +165,11 @@ msgid "Dashboard"
 msgstr "Painel"
 
 #: apps/templates/includes/sidebar.html:53
+#: apps/templates/pages/groups_edit.html:55
+#: apps/templates/pages/groups_list.html:3
+#: apps/templates/pages/groups_list.html:29
+#: apps/templates/pages/groups_list.html:48
+#: apps/templates/pages/groups_list.html:61
 msgid "Groups"
 msgstr "Grupos"
 
@@ -201,6 +219,13 @@ msgid "Users"
 msgstr "Usuários"
 
 #: apps/templates/includes/sidebar.html:134
+#: apps/templates/pages/my_support_thread_view.html:68
+#: apps/templates/pages/my_support_thread_view.html:130
+#: apps/templates/pages/support_thread_view.html:30
+#: apps/templates/pages/support_thread_view.html:86
+#: apps/templates/pages/support_thread_view.html:156
+#: apps/templates/pages/support_threads.html:3
+#: apps/templates/pages/support_threads.html:30
 msgid "Support"
 msgstr "Suporte"
 
@@ -218,14 +243,17 @@ msgid "New"
 msgstr "Novo"
 
 #: apps/templates/includes/sidebar.html:173
+#: apps/templates/pages/k8s_pod_list.html:39
 msgid "Pods"
 msgstr "Pods"
 
 #: apps/templates/includes/sidebar.html:179
+#: apps/templates/pages/k8s_dep_list.html:39
 msgid "Deployments"
 msgstr "Deployments"
 
 #: apps/templates/includes/sidebar.html:185
+#: apps/templates/pages/k8s_srv_list.html:39
 msgid "Services"
 msgstr "Serviços"
 
@@ -331,6 +359,10 @@ msgid "All labs"
 msgstr "Todos os laboratórios"
 
 #: apps/templates/pages/finished_labs.html:89
+#: apps/templates/pages/support_thread_view.html:69
+#: apps/templates/pages/support_thread_view.html:78
+#: apps/templates/pages/support_thread_view.html:124
+#: apps/templates/pages/support_threads.html:59
 msgid "User"
 msgstr "Usuário"
 
@@ -355,20 +387,37 @@ msgid "No finished labs"
 msgstr "Nenhum laboratório concluído"
 
 #: apps/templates/pages/finished_labs.html:184
+#: apps/templates/pages/groups_list.html:214
+#: apps/templates/pages/k8s_dep_list.html:238
+#: apps/templates/pages/k8s_pod_list.html:244
+#: apps/templates/pages/k8s_srv_list.html:232
 #: apps/templates/pages/lab_categories_list.html:180
 msgid "Success"
 msgstr "Sucesso"
 
 #: apps/templates/pages/finished_labs.html:192
+#: apps/templates/pages/groups_list.html:222
+#: apps/templates/pages/k8s_dep_list.html:246
+#: apps/templates/pages/k8s_pod_list.html:252
+#: apps/templates/pages/k8s_srv_list.html:240
 #: apps/templates/pages/lab_categories_list.html:188
 msgid "Failure"
 msgstr "Falha"
 
 #: apps/templates/pages/finished_labs.html:200
+#: apps/templates/pages/k8s_dep_list.html:254
+#: apps/templates/pages/k8s_pod_list.html:260
+#: apps/templates/pages/k8s_srv_list.html:248
 msgid "Deleting"
 msgstr "Excluindo"
 
 #: apps/templates/pages/finished_labs.html:200
+#: apps/templates/pages/k8s_dep_list.html:254
+#: apps/templates/pages/k8s_dep_list.html:283
+#: apps/templates/pages/k8s_pod_list.html:260
+#: apps/templates/pages/k8s_pod_list.html:289
+#: apps/templates/pages/k8s_srv_list.html:248
+#: apps/templates/pages/k8s_srv_list.html:277
 msgid "row(s)..."
 msgstr "linha(s)..."
 
@@ -380,6 +429,419 @@ msgstr "Nenhum laboratório selecionado!"
 #: apps/templates/pages/gallery.html:36
 msgid "Gallery"
 msgstr "Galeria"
+
+#: apps/templates/pages/groups_edit.html:3
+#: apps/templates/pages/groups_edit.html:36
+msgid "Edit Group"
+msgstr "Editar Grupo"
+
+#: apps/templates/pages/groups_edit.html:40
+msgid "Group updated successfully!"
+msgstr "Grupo atualizado com sucesso!"
+
+#: apps/templates/pages/groups_edit.html:47
+msgid "Fail to update group!"
+msgstr "Falha ao atualizar o grupo!"
+
+#: apps/templates/pages/groups_edit.html:68
+msgid "Group"
+msgstr "Grupo"
+
+#: apps/templates/pages/groups_edit.html:77
+msgid "General Information"
+msgstr "Informações Gerais"
+
+#: apps/templates/pages/groups_edit.html:95
+#: apps/templates/pages/groups_list.html:148
+#: apps/templates/pages/groups_list.html:150
+msgid "Access Token"
+msgstr "Token de Acesso"
+
+#: apps/templates/pages/groups_edit.html:96
+msgid ""
+"Access token is a method of allowing <i>self enrolment/auto join</i> to a "
+"group. Users will be asked to supply the access token to be authorized as a "
+"member of the group."
+msgstr ""
+"O token de acesso é um método que permite a <i>auto-inscrição/entrada "
+"automática</i> em um grupo. Os usuários deverão fornecer o token de acesso "
+"para serem autorizados como membros do grupo."
+
+#: apps/templates/pages/groups_edit.html:98
+msgid "Generate Random Token"
+msgstr "Gerar Token Aleatório"
+
+#: apps/templates/pages/groups_edit.html:103
+msgid "Expiration Date"
+msgstr "Data de Expiração"
+
+#: apps/templates/pages/groups_edit.html:104
+msgid ""
+"The date after which this group and its resources will no longer be "
+"available. Can be used, for instance, to setup a due date for running a lab "
+"(for an exam, contest, CTF, etc). Default: never expires."
+msgstr ""
+"A data após a qual este grupo e seus recursos deixarão de estar disponíveis."
+" Pode ser usada, por exemplo, para definir um prazo para a execução de um "
+"laboratório (para uma prova, competição, CTF, etc). Padrão: nunca expira."
+
+#: apps/templates/pages/groups_edit.html:114
+msgid "Pre-Approved Users"
+msgstr "Usuários Pré-Aprovados"
+
+#: apps/templates/pages/groups_edit.html:115
+msgid ""
+"Please provide a list of users (e-mail addresses, one per line) to be "
+"automatically approved when they first login."
+msgstr ""
+"Forneça uma lista de usuários (endereços de e-mail, um por linha) a serem "
+"aprovados automaticamente no primeiro login."
+
+#: apps/templates/pages/groups_edit.html:130
+msgid "Members"
+msgstr "Membros"
+
+#: apps/templates/pages/groups_edit.html:134
+msgid ""
+"Select the users (left) which will be <i>members</i> of the group (right). "
+"Group members cannot change any attribute of the group (only used for Labs "
+"access control)."
+msgstr ""
+"Selecione os usuários (à esquerda) que serão <i>membros</i> do grupo (à "
+"direita). Os membros do grupo não podem alterar nenhum atributo do grupo "
+"(usado apenas para controle de acesso aos Laboratórios)."
+
+#: apps/templates/pages/groups_edit.html:152
+msgid "Assistants"
+msgstr "Assistentes"
+
+#: apps/templates/pages/groups_edit.html:156
+msgid ""
+"Select the users (left) which will be <i>assistants</i> of the group "
+"(right). Group assistants are only allowed to modify the list of members and"
+" access group resources (labs and lab instances)."
+msgstr ""
+"Selecione os usuários (à esquerda) que serão <i>assistentes</i> do grupo (à "
+"direita). Os assistentes do grupo só podem modificar a lista de membros e "
+"acessar os recursos do grupo (laboratórios e instâncias de laboratório)."
+
+#: apps/templates/pages/groups_edit.html:174
+msgid "Owners"
+msgstr "Proprietários"
+
+#: apps/templates/pages/groups_edit.html:178
+msgid ""
+"Select the users (left) which will be <i>owners</i> of the group (right). "
+"Group owner are allowed to modify any attribute of the group, as well as "
+"remove it."
+msgstr ""
+"Selecione os usuários (à esquerda) que serão <i>proprietários</i> do grupo "
+"(à direita). Os proprietários do grupo podem modificar qualquer atributo do "
+"grupo, bem como removê-lo."
+
+#: apps/templates/pages/groups_edit.html:205
+#: apps/templates/pages/groups_list.html:127
+#: apps/templates/pages/groups_list.html:155
+#: apps/templates/pages/k8s_dep_list.html:134
+#: apps/templates/pages/k8s_dep_list.html:157
+#: apps/templates/pages/k8s_pod_list.html:138
+#: apps/templates/pages/k8s_pod_list.html:161
+#: apps/templates/pages/k8s_srv_list.html:128
+#: apps/templates/pages/k8s_srv_list.html:151
+#: apps/templates/pages/lab_categories_edit.html:88
+#: apps/templates/pages/lab_categories_list.html:124
+#: apps/templates/pages/labs_view.html:195 apps/templates/pages/labs_view.html:218
+msgid "Cancel"
+msgstr "Cancelar"
+
+#: apps/templates/pages/groups_list.html:33
+msgid "List Groups"
+msgstr "Listar Grupos"
+
+#: apps/templates/pages/groups_list.html:40
+#: apps/templates/pages/lab_categories_list.html:40
+msgid "Ops! A failure happened.."
+msgstr "Ops! Ocorreu uma falha.."
+
+#: apps/templates/pages/groups_list.html:65
+msgid "Create New Group"
+msgstr "Criar Novo Grupo"
+
+#: apps/templates/pages/groups_list.html:77
+#: apps/templates/pages/k8s_dep_list.html:73
+#: apps/templates/pages/k8s_pod_list.html:75
+#: apps/templates/pages/k8s_srv_list.html:70
+#: apps/templates/pages/lab_categories_list.html:77
+#: apps/templates/pages/my_support_threads.html:47
+#: apps/templates/pages/support_threads.html:63
+msgid "Actions"
+msgstr "Ações"
+
+#: apps/templates/pages/groups_list.html:87
+msgid "Join group"
+msgstr "Entrar no grupo"
+
+#: apps/templates/pages/groups_list.html:88
+msgid "Join/Auto-Enrol"
+msgstr "Entrar/Auto-inscrição"
+
+#: apps/templates/pages/groups_list.html:93
+msgid "Edit/View"
+msgstr "Editar/Ver"
+
+#: apps/templates/pages/groups_list.html:95
+#: apps/templates/pages/groups_list.html:128
+msgid "Delete group"
+msgstr "Excluir grupo"
+
+#: apps/templates/pages/groups_list.html:96
+#: apps/templates/pages/lab_categories_list.html:93
+#: apps/templates/pages/labs_view.html:170
+msgid "Delete"
+msgstr "Excluir"
+
+#: apps/templates/pages/groups_list.html:117
+msgid "Confirm delete group"
+msgstr "Confirmar exclusão do grupo"
+
+#: apps/templates/pages/groups_list.html:124
+#: apps/templates/pages/groups_list.html:191
+msgid "Are you sure you want to delete this group?"
+msgstr "Tem certeza de que deseja excluir este grupo?"
+
+#: apps/templates/pages/groups_list.html:140
+msgid "Please provide the access token to join the group"
+msgstr "Forneça o token de acesso para entrar no grupo"
+
+#: apps/templates/pages/groups_list.html:156
+msgid "Join the group"
+msgstr "Entrar no grupo"
+
+#: apps/templates/pages/groups_list.html:199
+msgid "No group"
+msgstr "Nenhum grupo"
+
+#: apps/templates/pages/k8s_dep_list.html:3
+#: apps/templates/pages/k8s_dep_list.html:33
+#: apps/templates/pages/k8s_dep_list.html:52
+msgid "Kubernetes Deployments"
+msgstr "Deployments do Kubernetes"
+
+#: apps/templates/pages/k8s_dep_list.html:54
+msgid "Select all Deployments"
+msgstr "Selecionar todos os Deployments"
+
+#: apps/templates/pages/k8s_dep_list.html:55
+msgid "Delete selected Deployments"
+msgstr "Excluir Deployments selecionados"
+
+#: apps/templates/pages/k8s_dep_list.html:58
+#: apps/templates/pages/k8s_dep_list.html:108
+#: apps/templates/pages/k8s_pod_list.html:58
+#: apps/templates/pages/k8s_pod_list.html:112
+msgid "Approve selected users"
+msgstr "Aprovar usuários selecionados"
+
+#: apps/templates/pages/k8s_dep_list.html:69
+#: apps/templates/pages/k8s_pod_list.html:69
+#: apps/templates/pages/k8s_srv_list.html:66
+msgid "Name"
+msgstr "Nome"
+
+#: apps/templates/pages/k8s_dep_list.html:70
+#: apps/templates/pages/k8s_pod_list.html:70
+msgid "Ready"
+msgstr "Pronto"
+
+#: apps/templates/pages/k8s_dep_list.html:71
+#: apps/templates/pages/k8s_pod_list.html:72
+#: apps/templates/pages/k8s_srv_list.html:68
+msgid "Age"
+msgstr "Idade"
+
+#: apps/templates/pages/k8s_dep_list.html:72
+msgid "Containers"
+msgstr "Contêineres"
+
+#: apps/templates/pages/k8s_dep_list.html:90
+msgid "Show deployment yaml"
+msgstr "Mostrar YAML do deployment"
+
+#: apps/templates/pages/k8s_dep_list.html:90
+msgid "Deployment information in YAML format:"
+msgstr "Informações do Deployment em formato YAML:"
+
+#: apps/templates/pages/k8s_dep_list.html:104
+#: apps/templates/pages/k8s_pod_list.html:108
+msgid "Select all users"
+msgstr "Selecionar todos os usuários"
+
+#: apps/templates/pages/k8s_dep_list.html:105
+#: apps/templates/pages/k8s_pod_list.html:109
+msgid "Delete selected users"
+msgstr "Excluir usuários selecionados"
+
+#: apps/templates/pages/k8s_dep_list.html:124
+#: apps/templates/pages/k8s_pod_list.html:128
+#: apps/templates/pages/k8s_srv_list.html:118
+msgid "Confirm User removal"
+msgstr "Confirmar remoção de Usuário"
+
+#: apps/templates/pages/k8s_dep_list.html:130
+#: apps/templates/pages/k8s_pod_list.html:134
+#: apps/templates/pages/k8s_srv_list.html:124
+msgid "Are you sure you want to remove the selected Users?"
+msgstr "Tem certeza de que deseja remover os Usuários selecionados?"
+
+#: apps/templates/pages/k8s_dep_list.html:135
+#: apps/templates/pages/k8s_pod_list.html:139
+#: apps/templates/pages/k8s_srv_list.html:129
+msgid "Delete Users"
+msgstr "Excluir Usuários"
+
+#: apps/templates/pages/k8s_dep_list.html:147
+#: apps/templates/pages/k8s_pod_list.html:151
+#: apps/templates/pages/k8s_srv_list.html:141
+msgid "Confirm Approve Users"
+msgstr "Confirmar Aprovação de Usuários"
+
+#: apps/templates/pages/k8s_dep_list.html:153
+#: apps/templates/pages/k8s_pod_list.html:157
+#: apps/templates/pages/k8s_srv_list.html:147
+msgid ""
+"Are you sure you want to approve the selected Users? Approved users have "
+"access to run Labs."
+msgstr ""
+"Tem certeza de que deseja aprovar os Usuários selecionados? Usuários "
+"aprovados têm acesso para executar Laboratórios."
+
+#: apps/templates/pages/k8s_dep_list.html:158
+#: apps/templates/pages/k8s_pod_list.html:162
+#: apps/templates/pages/k8s_srv_list.html:152
+msgid "Approve Users"
+msgstr "Aprovar Usuários"
+
+#: apps/templates/pages/k8s_dep_list.html:170
+msgid "Show Deployment YAML"
+msgstr "Mostrar YAML do Deployment"
+
+#: apps/templates/pages/k8s_dep_list.html:179
+#: apps/templates/pages/k8s_pod_list.html:183
+#: apps/templates/pages/k8s_srv_list.html:173
+msgid "Close"
+msgstr "Fechar"
+
+#: apps/templates/pages/k8s_dep_list.html:217
+msgid "No Deployment running"
+msgstr "Nenhum Deployment em execução"
+
+#: apps/templates/pages/k8s_dep_list.html:283
+#: apps/templates/pages/k8s_pod_list.html:289
+#: apps/templates/pages/k8s_srv_list.html:277
+msgid "Approving"
+msgstr "Aprovando"
+
+#: apps/templates/pages/k8s_dep_list.html:312
+msgid "No Deployment selected!"
+msgstr "Nenhum Deployment selecionado!"
+
+#: apps/templates/pages/k8s_dep_list.html:327
+#: apps/templates/pages/k8s_pod_list.html:333
+#: apps/templates/pages/k8s_srv_list.html:321
+msgid "No user selected!"
+msgstr "Nenhum usuário selecionado!"
+
+#: apps/templates/pages/k8s_pod_list.html:3
+#: apps/templates/pages/k8s_pod_list.html:33
+#: apps/templates/pages/k8s_pod_list.html:52
+msgid "Kubernetes Pods"
+msgstr "Pods do Kubernetes"
+
+#: apps/templates/pages/k8s_pod_list.html:54
+msgid "Select all Pods"
+msgstr "Selecionar todos os Pods"
+
+#: apps/templates/pages/k8s_pod_list.html:55
+msgid "Delete selected Pods"
+msgstr "Excluir Pods selecionados"
+
+#: apps/templates/pages/k8s_pod_list.html:71
+#: apps/templates/pages/my_support_threads.html:45
+#: apps/templates/pages/support_threads.html:60
+msgid "Status"
+msgstr "Status"
+
+#: apps/templates/pages/k8s_pod_list.html:73
+msgid "IP"
+msgstr "IP"
+
+#: apps/templates/pages/k8s_pod_list.html:74
+msgid "Node"
+msgstr "Nó"
+
+#: apps/templates/pages/k8s_pod_list.html:94
+msgid "Show pod yaml"
+msgstr "Mostrar YAML do pod"
+
+#: apps/templates/pages/k8s_pod_list.html:94
+msgid "Pod information in YAML format:"
+msgstr "Informações do Pod em formato YAML:"
+
+#: apps/templates/pages/k8s_pod_list.html:174
+msgid "Show Pod YAML"
+msgstr "Mostrar YAML do Pod"
+
+#: apps/templates/pages/k8s_pod_list.html:221
+msgid "No Pod running"
+msgstr "Nenhum Pod em execução"
+
+#: apps/templates/pages/k8s_pod_list.html:318
+msgid "No Pod selected!"
+msgstr "Nenhum Pod selecionado!"
+
+#: apps/templates/pages/k8s_srv_list.html:3
+#: apps/templates/pages/k8s_srv_list.html:33
+#: apps/templates/pages/k8s_srv_list.html:52
+msgid "Kubernetes Services"
+msgstr "Serviços do Kubernetes"
+
+#: apps/templates/pages/k8s_srv_list.html:54
+#: apps/templates/pages/k8s_srv_list.html:101
+msgid "Select all Services"
+msgstr "Selecionar todos os Serviços"
+
+#: apps/templates/pages/k8s_srv_list.html:55
+#: apps/templates/pages/k8s_srv_list.html:102
+msgid "Delete selected Services"
+msgstr "Excluir Serviços selecionados"
+
+#: apps/templates/pages/k8s_srv_list.html:67
+msgid "Type"
+msgstr "Tipo"
+
+#: apps/templates/pages/k8s_srv_list.html:69
+msgid "Ports"
+msgstr "Portas"
+
+#: apps/templates/pages/k8s_srv_list.html:87
+msgid "Show service yaml"
+msgstr "Mostrar YAML do serviço"
+
+#: apps/templates/pages/k8s_srv_list.html:87
+msgid "Service information in YAML format:"
+msgstr "Informações do Serviço em formato YAML:"
+
+#: apps/templates/pages/k8s_srv_list.html:164
+msgid "Show Service YAML"
+msgstr "Mostrar YAML do Serviço"
+
+#: apps/templates/pages/k8s_srv_list.html:211
+msgid "No Service running"
+msgstr "Nenhum Serviço em execução"
+
+#: apps/templates/pages/k8s_srv_list.html:306
+msgid "No Service selected!"
+msgstr "Nenhum Serviço selecionado!"
 
 #: apps/templates/pages/lab_categories_edit.html:3
 #: apps/templates/pages/lab_categories_edit.html:29
@@ -411,19 +873,9 @@ msgstr "Nome da Categoria"
 msgid "Color"
 msgstr "Cor"
 
-#: apps/templates/pages/lab_categories_edit.html:88
-#: apps/templates/pages/lab_categories_list.html:124
-#: apps/templates/pages/labs_view.html:195 apps/templates/pages/labs_view.html:218
-msgid "Cancel"
-msgstr "Cancelar"
-
 #: apps/templates/pages/lab_categories_list.html:33
 msgid "List Lab Categories"
 msgstr "Listar Categorias de Laboratório"
-
-#: apps/templates/pages/lab_categories_list.html:40
-msgid "Ops! A failure happened.."
-msgstr "Ops! Ocorreu uma falha.."
 
 #: apps/templates/pages/lab_categories_list.html:65
 msgid "Create New Lab Category"
@@ -433,10 +885,6 @@ msgstr "Criar Nova Categoria de Laboratório"
 msgid "Category"
 msgstr "Categoria"
 
-#: apps/templates/pages/lab_categories_list.html:77
-msgid "Actions"
-msgstr "Ações"
-
 #: apps/templates/pages/lab_categories_list.html:88
 msgid "Edit"
 msgstr "Editar"
@@ -444,11 +892,6 @@ msgstr "Editar"
 #: apps/templates/pages/lab_categories_list.html:92
 msgid "Delete lab category"
 msgstr "Excluir categoria de laboratório"
-
-#: apps/templates/pages/lab_categories_list.html:93
-#: apps/templates/pages/labs_view.html:170
-msgid "Delete"
-msgstr "Excluir"
 
 #: apps/templates/pages/lab_categories_list.html:114
 msgid "Confirm delete Lab Category"
@@ -534,6 +977,7 @@ msgid "Start"
 msgstr "Iniciar"
 
 #: apps/templates/pages/labs_view.html:156
+#: apps/templates/pages/my_support_threads.html:69
 msgid "View"
 msgstr "Visualizar"
 
@@ -596,6 +1040,88 @@ msgstr "Entrar"
 #: apps/templates/pages/login.html:82
 msgid "Forgot Password"
 msgstr "Esqueci a senha"
+
+#: apps/templates/pages/my_support_thread_view.html:3
+msgid "My Support Case"
+msgstr "Meu Caso de Suporte"
+
+#: apps/templates/pages/my_support_thread_view.html:23
+msgid "Support Case"
+msgstr "Caso de Suporte"
+
+#: apps/templates/pages/my_support_thread_view.html:28
+#: apps/templates/pages/my_support_threads.html:3
+#: apps/templates/pages/my_support_threads.html:26
+msgid "My Support"
+msgstr "Meu Suporte"
+
+#: apps/templates/pages/my_support_thread_view.html:42
+msgid "Conversation"
+msgstr "Conversa"
+
+#: apps/templates/pages/my_support_thread_view.html:44
+#: apps/templates/pages/my_support_threads.html:61
+#: apps/templates/pages/support_thread_view.html:46
+#: apps/templates/pages/support_threads.html:72
+#: apps/templates/pages/support_threads.html:87
+msgid "Open"
+msgstr "Aberto"
+
+#: apps/templates/pages/my_support_thread_view.html:46
+#: apps/templates/pages/my_support_threads.html:63
+#: apps/templates/pages/support_thread_view.html:48
+#: apps/templates/pages/support_threads.html:74
+msgid "Finished"
+msgstr "Finalizado"
+
+#: apps/templates/pages/my_support_thread_view.html:60
+#: apps/templates/pages/my_support_thread_view.html:130
+msgid "You"
+msgstr "Você"
+
+#: apps/templates/pages/my_support_thread_view.html:68
+#: apps/templates/pages/my_support_thread_view.html:130
+#: apps/templates/pages/support_thread_view.html:86
+#: apps/templates/pages/support_thread_view.html:156
+msgid "Assistant"
+msgstr "Assistente"
+
+#: apps/templates/pages/my_support_thread_view.html:79
+msgid ""
+"Use the chat button at the bottom-right of any page to continue this "
+"conversation."
+msgstr ""
+"Use o botão de chat no canto inferior direito de qualquer página para "
+"continuar esta conversa."
+
+#: apps/templates/pages/my_support_thread_view.html:81
+msgid ""
+"This conversation is finished. Start a new one from the chat button at the "
+"bottom-right."
+msgstr ""
+"Esta conversa foi finalizada. Inicie uma nova pelo botão de chat no canto "
+"inferior direito."
+
+#: apps/templates/pages/my_support_threads.html:21
+msgid "My Support Cases"
+msgstr "Meus Casos de Suporte"
+
+#: apps/templates/pages/my_support_threads.html:38
+msgid "Your conversations with support"
+msgstr "Suas conversas com o suporte"
+
+#: apps/templates/pages/my_support_threads.html:46
+#: apps/templates/pages/support_threads.html:62
+msgid "Last activity"
+msgstr "Última atividade"
+
+#: apps/templates/pages/my_support_threads.html:56
+msgid "new reply"
+msgstr "nova resposta"
+
+#: apps/templates/pages/my_support_threads.html:98
+msgid "You have no support cases yet"
+msgstr "Você ainda não tem casos de suporte"
 
 #: apps/templates/pages/page-403.html:3
 msgid "Error 403"
@@ -693,6 +1219,75 @@ msgstr "Digite seu e-mail ou nome de usuário"
 #: apps/templates/pages/reset_password.html:49
 msgid "Email or username"
 msgstr "E-mail ou nome de usuário"
+
+#: apps/templates/pages/support_thread_view.html:3
+#: apps/templates/pages/support_thread_view.html:25
+msgid "Support Chat"
+msgstr "Chat de Suporte"
+
+#: apps/templates/pages/support_thread_view.html:31
+msgid "Thread"
+msgstr "Conversa"
+
+#: apps/templates/pages/support_thread_view.html:54
+msgid "Finish conversation"
+msgstr "Encerrar conversa"
+
+#: apps/templates/pages/support_thread_view.html:61
+msgid "Started from:"
+msgstr "Iniciado em:"
+
+#: apps/templates/pages/support_thread_view.html:62
+msgid "IP:"
+msgstr "IP:"
+
+#: apps/templates/pages/support_thread_view.html:63
+msgid "Browser:"
+msgstr "Navegador:"
+
+#: apps/templates/pages/support_thread_view.html:98
+msgid "Type your reply ..."
+msgstr "Digite sua resposta ..."
+
+#: apps/templates/pages/support_thread_view.html:100
+msgid "Send"
+msgstr "Enviar"
+
+#: apps/templates/pages/support_thread_view.html:174
+msgid "Finish this conversation?"
+msgstr "Encerrar esta conversa?"
+
+#: apps/templates/pages/support_thread_view.html:196
+msgid "Failed to send reply"
+msgstr "Falha ao enviar a resposta"
+
+#: apps/templates/pages/support_threads.html:25
+msgid "Support Chats"
+msgstr "Chats de Suporte"
+
+#: apps/templates/pages/support_threads.html:42
+msgid "All support threads"
+msgstr "Todas as conversas de suporte"
+
+#: apps/templates/pages/support_threads.html:42
+msgid "Open support threads"
+msgstr "Conversas de suporte abertas"
+
+#: apps/templates/pages/support_threads.html:46
+msgid "Show open only"
+msgstr "Mostrar apenas abertas"
+
+#: apps/templates/pages/support_threads.html:50
+msgid "Show all threads"
+msgstr "Mostrar todas as conversas"
+
+#: apps/templates/pages/support_threads.html:61
+msgid "Unread"
+msgstr "Não lidas"
+
+#: apps/templates/pages/support_threads.html:116
+msgid "No open conversations or unread messages"
+msgstr "Nenhuma conversa aberta ou mensagem não lida"
 
 #: apps/templates/pages/waiting_approval.html:32
 msgid "Unauthorized user"

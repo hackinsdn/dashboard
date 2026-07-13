@@ -1,6 +1,6 @@
 {% extends "layouts/base.html" %}
 
-{% block title %} Support {% endblock title %}
+{% block title %} {{ _('Support') }} {% endblock title %}
 
 {% block body_class %} sidebar-mini layout-navbar-fixed {% endblock body_class %}
 
@@ -22,12 +22,12 @@
       <div class="container-fluid">
         <div class="row mb-2">
           <div class="col-sm-6">
-            <h1>Support Chats</h1>
+            <h1>{{ _('Support Chats') }}</h1>
           </div>
           <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
-              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.index') }}">Home</a></li>
-              <li class="breadcrumb-item active">Support</li>
+              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.index') }}">{{ _('Home') }}</a></li>
+              <li class="breadcrumb-item active">{{ _('Support') }}</li>
             </ol>
           </div>
         </div>
@@ -39,15 +39,15 @@
         <div class="col-md-12">
           <div class="card">
             <div class="card-header">
-              <h3 class="card-title">{{ "All support threads" if show_all else "Open support threads" }}</h3>
+              <h3 class="card-title">{{ _("All support threads") if show_all else _("Open support threads") }}</h3>
               <div class="float-right">
                 {% if show_all %}
                   <a class="btn btn-sm btn-outline-primary" href="{{ url_for('home_blueprint.list_support_threads') }}" role="button">
-                    <i class="fas fa-filter"></i> Show open only
+                    <i class="fas fa-filter"></i> {{ _('Show open only') }}
                   </a>
                 {% else %}
                   <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('home_blueprint.list_support_threads', show='all') }}" role="button">
-                    <i class="fas fa-list"></i> Show all threads
+                    <i class="fas fa-list"></i> {{ _('Show all threads') }}
                   </a>
                 {% endif %}
               </div>
@@ -56,11 +56,11 @@
               <table id="tableSupportThreads" class="table table-striped display">
                 <thead>
                   <tr>
-                    <th>User</th>
-                    <th>Status</th>
-                    <th>Unread</th>
-                    <th>Last activity</th>
-                    <th class="text-right">Actions</th>
+                    <th>{{ _('User') }}</th>
+                    <th>{{ _('Status') }}</th>
+                    <th>{{ _('Unread') }}</th>
+                    <th>{{ _('Last activity') }}</th>
+                    <th class="text-right">{{ _('Actions') }}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -69,9 +69,9 @@
                   <td>{{ thread.user.name if thread.user else thread.user_id }}</td>
                   <td>
                     {% if thread.status == "open" %}
-                      <span class="badge badge-success">Open</span>
+                      <span class="badge badge-success">{{ _('Open') }}</span>
                     {% else %}
-                      <span class="badge badge-secondary">Finished</span>
+                      <span class="badge badge-secondary">{{ _('Finished') }}</span>
                     {% endif %}
                   </td>
                   <td>
@@ -84,7 +84,7 @@
                   <td>{{ thread.updated_at.strftime('%Y-%m-%d %H:%M') if thread.updated_at else '' }} UTC</td>
                   <td class="text-right">
                     <a href="{{ url_for('home_blueprint.view_support_thread', thread_id=thread.id) }}" class="btn btn-outline-primary" role="button">
-                      <i class="fas fa-comments"></i> Open
+                      <i class="fas fa-comments"></i> {{ _('Open') }}
                     </a>
                   </td>
                 </tr>
@@ -113,7 +113,7 @@
       $("#tableSupportThreads").DataTable({
         responsive: true,
         autoWidth: false,
-        language: { emptyTable: 'No open conversations or unread messages' },
+        language: { emptyTable: '{{ _("No open conversations or unread messages") }}' },
         order: [[3, 'desc']],
         columnDefs: [{ orderable: false, targets: 4 }]
       });

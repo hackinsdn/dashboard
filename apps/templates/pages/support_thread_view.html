@@ -1,6 +1,6 @@
 {% extends "layouts/base.html" %}
 
-{% block title %} Support Chat {% endblock title %}
+{% block title %} {{ _('Support Chat') }} {% endblock title %}
 
 {% block body_class %} sidebar-mini layout-navbar-fixed {% endblock body_class %}
 
@@ -22,13 +22,13 @@
       <div class="container-fluid">
         <div class="row mb-2">
           <div class="col-sm-6">
-            <h1>Support Chat</h1>
+            <h1>{{ _('Support Chat') }}</h1>
           </div>
           <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
-              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.index') }}">Home</a></li>
-              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.list_support_threads') }}">Support</a></li>
-              <li class="breadcrumb-item active">Thread #{{ thread.id }}</li>
+              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.index') }}">{{ _('Home') }}</a></li>
+              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.list_support_threads') }}">{{ _('Support') }}</a></li>
+              <li class="breadcrumb-item active">{{ _('Thread') }} #{{ thread.id }}</li>
             </ol>
           </div>
         </div>
@@ -43,30 +43,30 @@
               <h3 class="card-title">
                 {{ thread.user.name if thread.user else thread.user_id }}
                 {% if thread.status == "open" %}
-                  <span class="badge badge-success ml-2" id="threadStatusBadge">Open</span>
+                  <span class="badge badge-success ml-2" id="threadStatusBadge">{{ _('Open') }}</span>
                 {% else %}
-                  <span class="badge badge-secondary ml-2" id="threadStatusBadge">Finished</span>
+                  <span class="badge badge-secondary ml-2" id="threadStatusBadge">{{ _('Finished') }}</span>
                 {% endif %}
               </h3>
               <div class="card-tools">
                 <button type="button" id="finishBtn" class="btn btn-sm btn-outline-danger"
                         {% if thread.status != "open" %}style="display:none;"{% endif %}>
-                  <i class="fas fa-times-circle"></i> Finish conversation
+                  <i class="fas fa-times-circle"></i> {{ _('Finish conversation') }}
                 </button>
               </div>
             </div>
             {% if thread.origin_page or thread.ip_address or thread.user_agent %}
             <div class="card-body py-2 bg-light border-bottom">
               <small class="text-muted">
-                {% if thread.origin_page %}<div><i class="fas fa-location-arrow mr-1"></i> Started from: {{ thread.origin_page }}</div>{% endif %}
-                {% if thread.ip_address %}<div><i class="fas fa-network-wired mr-1"></i> IP: {{ thread.ip_address }}</div>{% endif %}
-                {% if thread.user_agent %}<div><i class="fas fa-desktop mr-1"></i> Browser: {{ thread.user_agent }}</div>{% endif %}
+                {% if thread.origin_page %}<div><i class="fas fa-location-arrow mr-1"></i> {{ _('Started from:') }} {{ thread.origin_page }}</div>{% endif %}
+                {% if thread.ip_address %}<div><i class="fas fa-network-wired mr-1"></i> {{ _('IP:') }} {{ thread.ip_address }}</div>{% endif %}
+                {% if thread.user_agent %}<div><i class="fas fa-desktop mr-1"></i> {{ _('Browser:') }} {{ thread.user_agent }}</div>{% endif %}
               </small>
             </div>
             {% endif %}
             <div class="card-body">
               <div class="direct-chat-messages" id="chatMessages" style="height: 60vh;"
-                   data-user-name="{{ thread.user.name if thread.user else 'User' }}">
+                   data-user-name="{{ thread.user.name if thread.user else _('User') }}">
                 {% for message in thread.messages %}
                   {% if message.sender == "system" %}
                   <div class="support-system-msg" data-id="{{ message.id }}">
@@ -75,7 +75,7 @@
                   {% elif message.sender == "user" %}
                   <div class="direct-chat-msg" data-id="{{ message.id }}">
                     <div class="direct-chat-infos clearfix">
-                      <span class="direct-chat-name float-left">{{ thread.user.name if thread.user else 'User' }}</span>
+                      <span class="direct-chat-name float-left">{{ thread.user.name if thread.user else _('User') }}</span>
                       <span class="direct-chat-timestamp float-right" data-ts="{{ message.created_at.isoformat() if message.created_at else '' }}"></span>
                     </div>
                     <div class="direct-chat-text">{{ message.body }}</div>
@@ -83,7 +83,7 @@
                   {% else %}
                   <div class="direct-chat-msg right" data-id="{{ message.id }}">
                     <div class="direct-chat-infos clearfix">
-                      <span class="direct-chat-name float-right">{{ "Assistant" if message.sender == "assistant" else "Support" }}</span>
+                      <span class="direct-chat-name float-right">{{ _("Assistant") if message.sender == "assistant" else _("Support") }}</span>
                       <span class="direct-chat-timestamp float-left" data-ts="{{ message.created_at.isoformat() if message.created_at else '' }}"></span>
                     </div>
                     <div class="direct-chat-text">{{ message.body }}</div>
@@ -95,9 +95,9 @@
             <div class="card-footer">
               <form id="replyForm">
                 <div class="input-group">
-                  <input type="text" id="replyBody" name="body" placeholder="Type your reply ..." class="form-control" autocomplete="off" required>
+                  <input type="text" id="replyBody" name="body" placeholder="{{ _('Type your reply ...') }}" class="form-control" autocomplete="off" required>
                   <span class="input-group-append">
-                    <button type="submit" class="btn btn-primary">Send <i class="fas fa-paper-plane"></i></button>
+                    <button type="submit" class="btn btn-primary">{{ _('Send') }} <i class="fas fa-paper-plane"></i></button>
                   </span>
                 </div>
                 <div id="replyError" class="text-danger mt-2" style="display:none;"></div>
@@ -121,7 +121,7 @@
       var input = document.getElementById('replyBody');
       var errorBox = document.getElementById('replyError');
       var messages = document.getElementById('chatMessages');
-      var userName = messages.getAttribute('data-user-name') || 'User';
+      var userName = messages.getAttribute('data-user-name') || '{{ _("User") }}';
 
       function pad(n) { return (n < 10 ? '0' : '') + n; }
       function formatStamp(iso) {
@@ -153,7 +153,7 @@
           return;
         }
         var isUser = msg.sender === 'user';
-        var name = isUser ? userName : (msg.sender === 'assistant' ? 'Assistant' : 'Support');
+        var name = isUser ? userName : (msg.sender === 'assistant' ? '{{ _("Assistant") }}' : '{{ _("Support") }}');
         var side = isUser ? '' : ' right';
         var nameFloat = isUser ? 'float-left' : 'float-right';
         var tsFloat = isUser ? 'float-right' : 'float-left';
@@ -171,7 +171,7 @@
       var finishBtn = document.getElementById('finishBtn');
       if (finishBtn) {
         finishBtn.addEventListener('click', function () {
-          if (!window.confirm('Finish this conversation?')) { return; }
+          if (!window.confirm('{{ _("Finish this conversation?") }}')) { return; }
           finishBtn.disabled = true;
           fetch('/api/support/threads/' + THREAD_ID + '/finish', {
             method: 'POST', credentials: 'same-origin'
@@ -193,7 +193,7 @@
           credentials: 'same-origin',
           body: JSON.stringify({ body: body })
         }).then(function (resp) {
-          if (!resp.ok) { throw new Error('Failed to send reply'); }
+          if (!resp.ok) { throw new Error('{{ _("Failed to send reply") }}'); }
           return resp.json();
         }).then(function (data) {
           (data.messages || []).forEach(appendMessage);
