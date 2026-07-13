@@ -1,0 +1,743 @@
+# Translations template for PROJECT.
+# Copyright (C) 2026 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-07-12 20:22-0300\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: apps/authentication/forms.py:15 apps/authentication/forms.py:75
+msgid "Identifier"
+msgstr ""
+
+#: apps/authentication/forms.py:18 apps/authentication/forms.py:42
+#: apps/authentication/forms.py:81
+#: apps/templates/pages/confirm_reset_password.html:42
+#: apps/templates/pages/login.html:65 apps/templates/pages/register.html:69
+msgid "Password"
+msgstr ""
+
+#: apps/authentication/forms.py:25 apps/templates/pages/register.html:50
+msgid "Username"
+msgstr ""
+
+#: apps/authentication/forms.py:35
+msgid ""
+"Invalid character. Use letters, numbers, dot (.), underscore (_) or "
+"hyphen (-)."
+msgstr ""
+
+#: apps/authentication/forms.py:39 apps/authentication/forms.py:64
+#: apps/templates/pages/email_required.html:49
+#: apps/templates/pages/register.html:61
+msgid "Email"
+msgstr ""
+
+#: apps/authentication/forms.py:48
+msgid "I agree to the terms"
+msgstr ""
+
+#: apps/authentication/forms.py:50
+msgid "You must agree to the terms."
+msgstr ""
+
+#: apps/authentication/forms.py:54
+msgid "Group Name"
+msgstr ""
+
+#: apps/authentication/forms.py:57
+msgid "Description"
+msgstr ""
+
+#: apps/authentication/forms.py:58
+msgid "Organization"
+msgstr ""
+
+#: apps/authentication/forms.py:59
+msgid "Expiration"
+msgstr ""
+
+#: apps/authentication/forms.py:60
+msgid "Accesstoken"
+msgstr ""
+
+#: apps/authentication/forms.py:70
+msgid "Confirmation Token"
+msgstr ""
+
+#: apps/authentication/forms.py:86
+msgid "Passwords must match"
+msgstr ""
+
+#: apps/authentication/forms.py:90
+#: apps/templates/pages/confirm_reset_password.html:50
+msgid "Password confirm"
+msgstr ""
+
+#: apps/templates/includes/navigation.html:10
+#: apps/templates/pages/error.html:32
+#: apps/templates/pages/finished_labs.html:39
+#: apps/templates/pages/gallery.html:35
+#: apps/templates/pages/lab_categories_edit.html:47
+#: apps/templates/pages/lab_categories_list.html:47
+#: apps/templates/pages/labs_view.html:37
+#: apps/templates/pages/waiting_approval.html:3
+#: apps/templates/pages/waiting_approval.html:50
+msgid "Home"
+msgstr ""
+
+#: apps/templates/includes/navigation.html:13
+msgid "Contact"
+msgstr ""
+
+#: apps/templates/includes/navigation.html:20
+#: apps/templates/includes/sidebar.html:27
+msgid "Search"
+msgstr ""
+
+#: apps/templates/includes/navigation.html:40
+msgid "Support cases"
+msgstr ""
+
+#: apps/templates/includes/navigation.html:49
+msgid "Case"
+msgstr ""
+
+#: apps/templates/includes/navigation.html:55
+msgid "New reply"
+msgstr ""
+
+#: apps/templates/includes/navigation.html:65
+msgid "No support cases yet"
+msgstr ""
+
+#: apps/templates/includes/navigation.html:68
+msgid "See All Messages"
+msgstr ""
+
+#: apps/templates/includes/navigation.html:80
+msgid "No Notifications"
+msgstr ""
+
+#: apps/templates/includes/navigation.html:99
+msgid "See All Notifications"
+msgstr ""
+
+#: apps/templates/includes/navigation.html:104
+msgid "Language"
+msgstr ""
+
+#: apps/templates/includes/navigation.html:119
+msgid "Reload profile"
+msgstr ""
+
+#: apps/templates/includes/navigation.html:124
+msgid "Sign-out"
+msgstr ""
+
+#: apps/templates/includes/sidebar.html:45
+msgid "Dashboard"
+msgstr ""
+
+#: apps/templates/includes/sidebar.html:53
+msgid "Groups"
+msgstr ""
+
+#: apps/templates/includes/sidebar.html:60
+#: apps/templates/pages/labs_view.html:38
+msgid "Labs"
+msgstr ""
+
+#: apps/templates/includes/sidebar.html:68
+#: apps/templates/pages/labs_view.html:3 apps/templates/pages/labs_view.html:33
+#: apps/templates/pages/labs_view.html:39
+msgid "View Labs"
+msgstr ""
+
+#: apps/templates/includes/sidebar.html:75
+msgid "Create Lab"
+msgstr ""
+
+#: apps/templates/includes/sidebar.html:83
+msgid "Create ContainerLab"
+msgstr ""
+
+#: apps/templates/includes/sidebar.html:91
+msgid "Lab Answers"
+msgstr ""
+
+#: apps/templates/includes/sidebar.html:97
+msgid "Answer Sheet"
+msgstr ""
+
+#: apps/templates/includes/sidebar.html:104
+#: apps/templates/pages/finished_labs.html:3
+#: apps/templates/pages/finished_labs.html:35
+#: apps/templates/pages/finished_labs.html:40
+#: apps/templates/pages/finished_labs.html:53
+msgid "Finished Labs"
+msgstr ""
+
+#: apps/templates/includes/sidebar.html:113
+msgid "Running Labs"
+msgstr ""
+
+#: apps/templates/includes/sidebar.html:119
+msgid "MANAGEMENT"
+msgstr ""
+
+#: apps/templates/includes/sidebar.html:125
+msgid "Users"
+msgstr ""
+
+#: apps/templates/includes/sidebar.html:134
+msgid "Support"
+msgstr ""
+
+#: apps/templates/includes/sidebar.html:146
+#: apps/templates/pages/lab_categories_edit.html:48
+#: apps/templates/pages/lab_categories_list.html:3
+#: apps/templates/pages/lab_categories_list.html:29
+#: apps/templates/pages/lab_categories_list.html:48
+#: apps/templates/pages/lab_categories_list.html:61
+msgid "Lab Categories"
+msgstr ""
+
+#: apps/templates/includes/sidebar.html:166
+msgid "New"
+msgstr ""
+
+#: apps/templates/includes/sidebar.html:173
+msgid "Pods"
+msgstr ""
+
+#: apps/templates/includes/sidebar.html:179
+msgid "Deployments"
+msgstr ""
+
+#: apps/templates/includes/sidebar.html:185
+msgid "Services"
+msgstr ""
+
+#: apps/templates/includes/sidebar.html:191
+msgid "MORE INFO"
+msgstr ""
+
+#: apps/templates/includes/sidebar.html:196
+msgid "Documentation"
+msgstr ""
+
+#: apps/templates/includes/sidebar.html:204
+msgid "Extra tools"
+msgstr ""
+
+#: apps/templates/pages/confirm.html:3
+#: apps/templates/pages/confirm_reset_password.html:3
+#: apps/templates/pages/login.html:3 apps/templates/pages/register.html:94
+#: apps/templates/pages/reset_password.html:3
+msgid "Login"
+msgstr ""
+
+#: apps/templates/pages/confirm.html:40
+#, python-format
+msgid ""
+"Insert the token sent to your email (check your spam/junk folder!). The "
+"token will expire in %(minutes)s minutes."
+msgstr ""
+
+#: apps/templates/pages/confirm.html:49
+#: apps/templates/pages/confirm_email.html:49
+msgid "Token"
+msgstr ""
+
+#: apps/templates/pages/confirm.html:58
+#: apps/templates/pages/confirm_email.html:58
+msgid "Verify code"
+msgstr ""
+
+#: apps/templates/pages/confirm.html:61
+#: apps/templates/pages/confirm_email.html:61
+msgid "Resend code"
+msgstr ""
+
+#: apps/templates/pages/confirm_email.html:3
+#: apps/templates/pages/email_required.html:3
+msgid "Confirm your e-mail"
+msgstr ""
+
+#: apps/templates/pages/confirm_email.html:40
+#, python-format
+msgid ""
+"Insert the token sent to your email (check your spam/junk folder!). The "
+"token will expire in %(minutes)s minutes"
+msgstr ""
+
+#: apps/templates/pages/confirm_email.html:68
+#: apps/templates/pages/email_required.html:62
+msgid "Logout"
+msgstr ""
+
+#: apps/templates/pages/confirm_reset_password.html:59
+#: apps/templates/pages/reset_password.html:58
+msgid "Submit"
+msgstr ""
+
+#: apps/templates/pages/email_required.html:39
+msgid "We need a valid e-mail address for your account before you can continue."
+msgstr ""
+
+#: apps/templates/pages/email_required.html:57
+msgid "Continue"
+msgstr ""
+
+#: apps/templates/pages/error.html:3 apps/templates/pages/error.html:28
+#: apps/templates/pages/error.html:33
+msgid "Error"
+msgstr ""
+
+#: apps/templates/pages/error.html:45
+msgid "Oops!"
+msgstr ""
+
+#: apps/templates/pages/error.html:45
+msgid "Error."
+msgstr ""
+
+#: apps/templates/pages/error.html:47
+msgid "Failed to run task."
+msgstr ""
+
+#: apps/templates/pages/finished_labs.html:60
+msgid "Filter by group:"
+msgstr ""
+
+#: apps/templates/pages/finished_labs.html:64
+msgid "My own labs"
+msgstr ""
+
+#: apps/templates/pages/finished_labs.html:65
+msgid "All labs"
+msgstr ""
+
+#: apps/templates/pages/finished_labs.html:89
+msgid "User"
+msgstr ""
+
+#: apps/templates/pages/finished_labs.html:90
+msgid "Lab title"
+msgstr ""
+
+#: apps/templates/pages/finished_labs.html:91
+msgid "Created At (UTC)"
+msgstr ""
+
+#: apps/templates/pages/finished_labs.html:92
+msgid "Finished At (UTC)"
+msgstr ""
+
+#: apps/templates/pages/finished_labs.html:93
+msgid "Finish reason"
+msgstr ""
+
+#: apps/templates/pages/finished_labs.html:166
+msgid "No finished labs"
+msgstr ""
+
+#: apps/templates/pages/finished_labs.html:184
+#: apps/templates/pages/lab_categories_list.html:180
+msgid "Success"
+msgstr ""
+
+#: apps/templates/pages/finished_labs.html:192
+#: apps/templates/pages/lab_categories_list.html:188
+msgid "Failure"
+msgstr ""
+
+#: apps/templates/pages/finished_labs.html:200
+msgid "Deleting"
+msgstr ""
+
+#: apps/templates/pages/finished_labs.html:200
+msgid "row(s)..."
+msgstr ""
+
+#: apps/templates/pages/finished_labs.html:234
+msgid "No lab selected!"
+msgstr ""
+
+#: apps/templates/pages/gallery.html:3 apps/templates/pages/gallery.html:31
+#: apps/templates/pages/gallery.html:36
+msgid "Gallery"
+msgstr ""
+
+#: apps/templates/pages/lab_categories_edit.html:3
+#: apps/templates/pages/lab_categories_edit.html:29
+msgid "Edit Lab Category"
+msgstr ""
+
+#: apps/templates/pages/lab_categories_edit.html:33
+msgid "Lab Category updated successfully!"
+msgstr ""
+
+#: apps/templates/pages/lab_categories_edit.html:40
+msgid "Fail to update Lab Category!"
+msgstr ""
+
+#: apps/templates/pages/lab_categories_edit.html:49
+msgid "New Lab Category"
+msgstr ""
+
+#: apps/templates/pages/lab_categories_edit.html:61
+msgid "Lab Category"
+msgstr ""
+
+#: apps/templates/pages/lab_categories_edit.html:69
+msgid "Category Name"
+msgstr ""
+
+#: apps/templates/pages/lab_categories_edit.html:74
+#: apps/templates/pages/lab_categories_list.html:76
+msgid "Color"
+msgstr ""
+
+#: apps/templates/pages/lab_categories_edit.html:88
+#: apps/templates/pages/lab_categories_list.html:124
+#: apps/templates/pages/labs_view.html:195
+#: apps/templates/pages/labs_view.html:218
+msgid "Cancel"
+msgstr ""
+
+#: apps/templates/pages/lab_categories_list.html:33
+msgid "List Lab Categories"
+msgstr ""
+
+#: apps/templates/pages/lab_categories_list.html:40
+msgid "Ops! A failure happened.."
+msgstr ""
+
+#: apps/templates/pages/lab_categories_list.html:65
+msgid "Create New Lab Category"
+msgstr ""
+
+#: apps/templates/pages/lab_categories_list.html:75
+msgid "Category"
+msgstr ""
+
+#: apps/templates/pages/lab_categories_list.html:77
+msgid "Actions"
+msgstr ""
+
+#: apps/templates/pages/lab_categories_list.html:88
+msgid "Edit"
+msgstr ""
+
+#: apps/templates/pages/lab_categories_list.html:92
+msgid "Delete lab category"
+msgstr ""
+
+#: apps/templates/pages/lab_categories_list.html:93
+#: apps/templates/pages/labs_view.html:170
+msgid "Delete"
+msgstr ""
+
+#: apps/templates/pages/lab_categories_list.html:114
+msgid "Confirm delete Lab Category"
+msgstr ""
+
+#: apps/templates/pages/lab_categories_list.html:121
+msgid "Are you sure you want to delete Lab Category"
+msgstr ""
+
+#: apps/templates/pages/lab_categories_list.html:125
+msgid "Delete Lab Category"
+msgstr ""
+
+#: apps/templates/pages/lab_categories_list.html:165
+msgid "No lab category"
+msgstr ""
+
+#: apps/templates/pages/labs_view.html:47
+msgid "Filter by Group:"
+msgstr ""
+
+#: apps/templates/pages/labs_view.html:49
+msgid "All Groups"
+msgstr ""
+
+#: apps/templates/pages/labs_view.html:55
+msgid "Filter"
+msgstr ""
+
+#: apps/templates/pages/labs_view.html:57
+msgid "Clear"
+msgstr ""
+
+#: apps/templates/pages/labs_view.html:61
+msgid "Hide deleted"
+msgstr ""
+
+#: apps/templates/pages/labs_view.html:63
+msgid "Show deleted"
+msgstr ""
+
+#: apps/templates/pages/labs_view.html:71
+msgid "Filter by Category:"
+msgstr ""
+
+#: apps/templates/pages/labs_view.html:81
+msgid "Filter by Status:"
+msgstr ""
+
+#: apps/templates/pages/labs_view.html:83
+msgid "All Labs"
+msgstr ""
+
+#: apps/templates/pages/labs_view.html:86
+#: apps/templates/pages/labs_view.html:135
+#: apps/templates/pages/labs_view.html:140
+msgid "Completed"
+msgstr ""
+
+#: apps/templates/pages/labs_view.html:89
+msgid "Not Completed"
+msgstr ""
+
+#: apps/templates/pages/labs_view.html:117
+msgid "Deleted"
+msgstr ""
+
+#: apps/templates/pages/labs_view.html:120
+#: apps/templates/pages/waiting_approval.html:68
+msgid "Collapse"
+msgstr ""
+
+#: apps/templates/pages/labs_view.html:123
+#: apps/templates/pages/waiting_approval.html:71
+msgid "Remove"
+msgstr ""
+
+#: apps/templates/pages/labs_view.html:150
+msgid "Resume"
+msgstr ""
+
+#: apps/templates/pages/labs_view.html:154
+msgid "Start"
+msgstr ""
+
+#: apps/templates/pages/labs_view.html:156
+msgid "View"
+msgstr ""
+
+#: apps/templates/pages/labs_view.html:161
+msgid "Fork"
+msgstr ""
+
+#: apps/templates/pages/labs_view.html:164
+msgid "Update"
+msgstr ""
+
+#: apps/templates/pages/labs_view.html:167
+msgid "Restore"
+msgstr ""
+
+#: apps/templates/pages/labs_view.html:185
+msgid "Confirm delete lab"
+msgstr ""
+
+#: apps/templates/pages/labs_view.html:192
+msgid "Are you sure you want to delete Lab"
+msgstr ""
+
+#: apps/templates/pages/labs_view.html:196
+msgid "Delete lab"
+msgstr ""
+
+#: apps/templates/pages/labs_view.html:208
+msgid "Confirm restore lab"
+msgstr ""
+
+#: apps/templates/pages/labs_view.html:215
+msgid "Are you sure you want to restore this lab?"
+msgstr ""
+
+#: apps/templates/pages/labs_view.html:219
+msgid "Restore lab"
+msgstr ""
+
+#: apps/templates/pages/login.html:36
+msgid "Federated authentication?"
+msgstr ""
+
+#: apps/templates/pages/login.html:48
+msgid "Local Authentication"
+msgstr ""
+
+#: apps/templates/pages/login.html:57
+msgid "Email or Username"
+msgstr ""
+
+#: apps/templates/pages/login.html:74
+msgid "Create an account"
+msgstr ""
+
+#: apps/templates/pages/login.html:78
+msgid "Sign In"
+msgstr ""
+
+#: apps/templates/pages/login.html:82
+msgid "Forgot Password"
+msgstr ""
+
+#: apps/templates/pages/page-403.html:3
+msgid "Error 403"
+msgstr ""
+
+#: apps/templates/pages/page-403.html:123
+msgid "Access Forbidden"
+msgstr ""
+
+#: apps/templates/pages/page-403.html:125
+msgid ""
+"You don't have permission to access this resource. This might be due to "
+"insufficient privileges or security restrictions on this server."
+msgstr ""
+
+#: apps/templates/pages/page-403.html:128 apps/templates/pages/page-404.html:80
+msgid "Go Back"
+msgstr ""
+
+#: apps/templates/pages/page-404.html:3
+msgid "Error 404"
+msgstr ""
+
+#: apps/templates/pages/page-404.html:74
+msgid "Page Not Found"
+msgstr ""
+
+#: apps/templates/pages/page-404.html:76
+msgid ""
+"The page you are looking for might have been removed, had its name "
+"changed, or is temporarily unavailable. Please check the URL for any "
+"mistakes."
+msgstr ""
+
+#: apps/templates/pages/page-404.html:79 apps/templates/pages/page-500.html:127
+msgid "Return to Home"
+msgstr ""
+
+#: apps/templates/pages/page-500.html:3
+msgid "Error 500"
+msgstr ""
+
+#: apps/templates/pages/page-500.html:122
+msgid "Internal Server Error"
+msgstr ""
+
+#: apps/templates/pages/page-500.html:124
+msgid ""
+"Our servers are currently experiencing technical difficulties. Our team "
+"has been notified and is working to resolve the issue as quickly as "
+"possible."
+msgstr ""
+
+#: apps/templates/pages/page-500.html:128
+msgid "Contact Support"
+msgstr ""
+
+#: apps/templates/pages/register.html:3 apps/templates/pages/register.html:87
+msgid "Register"
+msgstr ""
+
+#: apps/templates/pages/register.html:39
+msgid "Add your credentials"
+msgstr ""
+
+#: apps/templates/pages/register.html:82
+msgid "I agree to the"
+msgstr ""
+
+#: apps/templates/pages/register.html:82
+msgid "terms"
+msgstr ""
+
+#: apps/templates/pages/register.html:94
+msgid "Have an account?"
+msgstr ""
+
+#: apps/templates/pages/register.html:131
+msgid ""
+"Invalid character. Use letters, numbers, dot (.), underscore (_) or "
+"hyphen (-)"
+msgstr ""
+
+#: apps/templates/pages/reset_password.html:40
+msgid "Enter your email or username"
+msgstr ""
+
+#: apps/templates/pages/reset_password.html:49
+msgid "Email or username"
+msgstr ""
+
+#: apps/templates/pages/waiting_approval.html:32
+msgid "Unauthorized user"
+msgstr ""
+
+#: apps/templates/pages/waiting_approval.html:36
+msgid "Success!"
+msgstr ""
+
+#: apps/templates/pages/waiting_approval.html:43
+msgid "Fail to save note!"
+msgstr ""
+
+#: apps/templates/pages/waiting_approval.html:65
+msgid "Waiting for approval"
+msgstr ""
+
+#: apps/templates/pages/waiting_approval.html:78
+#: apps/templates/pages/waiting_approval.html:93
+msgid "You must wait until your user is approved!"
+msgstr ""
+
+#: apps/templates/pages/waiting_approval.html:79
+msgid ""
+"Your note below was already sent to the administrators and can no longer "
+"be changed. Please contact an administrator if you need to update it."
+msgstr ""
+
+#: apps/templates/pages/waiting_approval.html:81
+#: apps/templates/pages/waiting_approval.html:96
+msgid "Note for the administrators"
+msgstr ""
+
+#: apps/templates/pages/waiting_approval.html:87
+msgid "wait!"
+msgstr ""
+
+#: apps/templates/pages/waiting_approval.html:94
+msgid ""
+"To help the administrators identify you, please leave a note below with a"
+" reference (e.g., your institution, course, professor, or who referred "
+"you to HackInSDN). Note that once saved, the note can no longer be "
+"changed."
+msgstr ""
+
+#: apps/templates/pages/waiting_approval.html:97
+msgid "Ex: I'm a student of Prof. X at University Y"
+msgstr ""
+
+#: apps/templates/pages/waiting_approval.html:102
+msgid "Save note"
+msgstr ""
+

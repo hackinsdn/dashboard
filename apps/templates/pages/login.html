@@ -1,6 +1,6 @@
 {% extends "layouts/base-fullscreen.html" %}
 
-{% block title %} Login {% endblock title %}
+{% block title %} {{ _('Login') }} {% endblock title %}
 
 <!-- Element injected in the BODY element -->
 {% block body_class %} login-page {% endblock body_class %}
@@ -33,7 +33,7 @@
     <div class="card">
       <div class="card-body login-card-body">
         <div class="text-center">
-            Federated authentication? <a href="{{ url_for('authentication_blueprint.login_oauth') }}" class="text-center">CILogon</a>
+            {{ _('Federated authentication?') }} <a href="{{ url_for('authentication_blueprint.login_oauth') }}" class="text-center">CILogon</a>
             <br />
             <a rel="noopener noreferrer" href="{{ url_for('authentication_blueprint.login_oauth') }}">
               <img src="{{ url_for('static', filename='assets/img/cilogon.png') }}" alt="CILogon.org">
@@ -45,7 +45,7 @@
             {% if msg %}
               <span class="text-danger">{{ msg | safe }}</span>
             {% else %}
-                Local Authentication
+                {{ _('Local Authentication') }}
             {% endif %}
         </p>
 
@@ -54,7 +54,7 @@
           {{ form.hidden_tag() }}
 
           <div class="input-group mb-3">
-            {{ form.identifier(placeholder="Email or Username", class="form-control") }}
+            {{ form.identifier(placeholder=_("Email or Username"), class="form-control") }}
             <div class="input-group-append">
               <div class="input-group-text">
                 <span class="fas fa-envelope"></span>
@@ -62,7 +62,7 @@
             </div>
           </div>
           <div class="input-group mb-3">
-            {{ form.password(placeholder="Password", class="form-control", type="password") }}
+            {{ form.password(placeholder=_("Password"), class="form-control", type="password") }}
             <div class="input-group-append">
               <div class="input-group-text">
                 <span class="fas fa-lock"></span>
@@ -71,15 +71,15 @@
           </div>
           <div class="row">
             <div class="col-8">
-              <a class="btn btn-secondary" href="{{ url_for('authentication_blueprint.register') }}" role="button">Create an account</a>
+              <a class="btn btn-secondary" href="{{ url_for('authentication_blueprint.register') }}" role="button">{{ _('Create an account') }}</a>
             </div>
             <!-- /.col -->
             <div class="col-4">
-              <button type="submit" name="login" class="btn btn-primary btn-block">Sign In</button>
+              <button type="submit" name="login" class="btn btn-primary btn-block">{{ _('Sign In') }}</button>
             </div>
             <!-- /.col -->
              <div class="col-12 mt-4">
-              <a href="{{ url_for('authentication_blueprint.reset_password') }}"  class="btn btn-default btn-block">Forgot Password</a>
+              <a href="{{ url_for('authentication_blueprint.reset_password') }}"  class="btn btn-default btn-block">{{ _('Forgot Password') }}</a>
              </div>
           </div>
         </form>

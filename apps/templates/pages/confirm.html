@@ -1,6 +1,6 @@
 {% extends "layouts/base-fullscreen.html" %}
 
-{% block title %} Login {% endblock title %}
+{% block title %} {{ _('Login') }} {% endblock title %}
 
 <!-- Element injected in the BODY element -->
 {% block body_class %} login-page {% endblock body_class %}
@@ -37,7 +37,7 @@
             {% if msg %}
               <span class="text-danger">{{ msg | safe }}</span>
             {% else %}
-                Insert the token sent to your email (check your spam/junk folder!). The token will expire in {{ config.EMAIL_TOKEN_EXPIRY_MINUTES }} minutes.
+                {{ _('Insert the token sent to your email (check your spam/junk folder!). The token will expire in %(minutes)s minutes.', minutes=config.EMAIL_TOKEN_EXPIRY_MINUTES) }}
             {% endif %}
         </p>
 
@@ -46,7 +46,7 @@
           {{ form.hidden_tag() }}
 
           <div class="input-group mb-3">
-            {{ form.confirmation_token(placeholder="Token", class="form-control") }}
+            {{ form.confirmation_token(placeholder=_("Token"), class="form-control") }}
             <div class="input-group-append">
               <div class="input-group-text">
                 <span class="fas fa-key"></span>
@@ -55,10 +55,10 @@
           </div>
           <div class="row">
             <div class="col-6">
-                <button type="submit" name="confirm" class="btn btn-primary btn-block">Verify code</button>
+                <button type="submit" name="confirm" class="btn btn-primary btn-block">{{ _('Verify code') }}</button>
             </div>
             <div class="col-6">
-                <a href="{{ url_for('authentication_blueprint.resend_code') }}" class="btn btn-secondary btn-block">Resend code</a>
+                <a href="{{ url_for('authentication_blueprint.resend_code') }}" class="btn btn-secondary btn-block">{{ _('Resend code') }}</a>
             </div>
           </div>
         </form>

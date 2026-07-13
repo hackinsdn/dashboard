@@ -1,6 +1,6 @@
 {% extends "layouts/base-fullscreen.html" %}
 
-{% block title %} Confirm your e-mail {% endblock title %}
+{% block title %} {{ _('Confirm your e-mail') }} {% endblock title %}
 
 <!-- Element injected in the BODY element -->
 {% block body_class %} register-page {% endblock body_class %}
@@ -36,7 +36,7 @@
         <span class="text-danger">{{ msg | safe }}</span>
         {% else %}
         <span>
-          We need a valid e-mail address for your account before you can continue.
+          {{ _('We need a valid e-mail address for your account before you can continue.') }}
         </span>
         {% endif %}
       </p>
@@ -46,7 +46,7 @@
         {{ form.hidden_tag() }}
 
         <div class="input-group mb-3">
-          {{ form.email(placeholder="Email", class="form-control") }}
+          {{ form.email(placeholder=_("Email"), class="form-control") }}
           <div class="input-group-append">
             <div class="input-group-text">
               <span class="fas fa-envelope"></span>
@@ -54,12 +54,12 @@
           </div>
         </div>
 
-        <button type="submit" name="submit_email" class="btn btn-primary btn-block">Continue</button>
+        <button type="submit" name="submit_email" class="btn btn-primary btn-block">{{ _('Continue') }}</button>
       </form>
 
       <br />
       <div class="text-center">
-        <a href="{{ url_for('authentication_blueprint.logout') }}" class="text-center">Logout</a>
+        <a href="{{ url_for('authentication_blueprint.logout') }}" class="text-center">{{ _('Logout') }}</a>
       </div>
 
     </div><!-- /.card-body -->

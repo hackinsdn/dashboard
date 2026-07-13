@@ -1,6 +1,6 @@
 {% extends "layouts/base-fullscreen.html" %}
 
-{% block title %} Register {% endblock title %}
+{% block title %} {{ _('Register') }} {% endblock title %}
 
 <!-- Element injected in the BODY element -->
 {% block body_class %} register-page {% endblock body_class %}
@@ -36,7 +36,7 @@
         <span class="text-danger">{{ msg | safe }}</span>
         {% else %}
         <span>
-          Add your credentials
+          {{ _('Add your credentials') }}
         </span>
         {% endif %}
       </p>
@@ -47,7 +47,7 @@
 
         <div class="input-group mb-3">
           {{ form.username(
-          placeholder="Username",
+          placeholder=_("Username"),
           class="form-control is-valid",
           pattern="[A-Za-z0-9_.-]{3,20}",
           ) }}
@@ -58,7 +58,7 @@
           </div>
         </div>
         <div class="input-group mb-3">
-          {{ form.email(placeholder="Email", class="form-control") }}
+          {{ form.email(placeholder=_("Email"), class="form-control") }}
           <div class="input-group-append">
             <div class="input-group-text">
               <span class="fas fa-envelope"></span>
@@ -66,7 +66,7 @@
           </div>
         </div>
         <div class="input-group mb-3">
-          {{ form.password(placeholder="Password", class="form-control", type="password") }}
+          {{ form.password(placeholder=_("Password"), class="form-control", type="password") }}
           <div class="input-group-append">
             <div class="input-group-text">
               <span class="fas fa-lock"></span>
@@ -79,19 +79,19 @@
             <div class="icheck-primary">
               {{ form.terms() }}
               <label for="agreeTerms">
-                I agree to the <a href="#">terms</a>
+                {{ _('I agree to the') }} <a href="#">{{ _('terms') }}</a>
               </label>
             </div>
           </div>
           <div class="col-4">
-            <button type="submit" name="register" class="btn btn-primary btn-block">Register</button>
+            <button type="submit" name="register" class="btn btn-primary btn-block">{{ _('Register') }}</button>
           </div>
         </div>
       </form>
 
       <br />
       <div class="text-center">
-        Have an account? <a href="{{ url_for('authentication_blueprint.login') }}" class="text-center">Login</a>
+        {{ _('Have an account?') }} <a href="{{ url_for('authentication_blueprint.login') }}" class="text-center">{{ _('Login') }}</a>
         <br />
         <br />
       </div>
@@ -128,7 +128,7 @@
       },
       messages: {
         username: {
-          pattern: "Invalid character. Use letters, numbers, dot (.), underscore (_) or hyphen (-)",
+          pattern: "{{ _('Invalid character. Use letters, numbers, dot (.), underscore (_) or hyphen (-)') }}",
         },
       },
       errorElement: 'span',

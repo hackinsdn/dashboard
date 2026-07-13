@@ -1,6 +1,6 @@
 {% extends "layouts/base.html" %}
 
-{% block title %} Edit Lab Category - {{ category.category }} {% endblock title %}
+{% block title %} {{ _('Edit Lab Category') }} - {{ category.category }} {% endblock title %}
 
 <!-- Element injected in the BODY element -->
 {% block body_class %} sidebar-mini {% endblock body_class %}
@@ -26,27 +26,27 @@
       <div class="container-fluid">
         <div class="row mb-2">
           <div class="col-sm-6">
-            <h1>Edit Lab Category</h1>
+            <h1>{{ _('Edit Lab Category') }}</h1>
             {% if msg_ok %}
             <div class="alert alert-success alert-dismissible">
               <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-              <h5><i class="icon fas fa-check"></i> Lab Category updated successfully!</h5>
+              <h5><i class="icon fas fa-check"></i> {{ _('Lab Category updated successfully!') }}</h5>
               {{ msg_ok }}
             </div>
             {% endif %}
             {% if msg_fail %}
             <div class="alert alert-danger alert-dismissible">
               <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-              <h5><i class="icon fas fa-ban"></i> Fail to update Lab Category!</h5>
+              <h5><i class="icon fas fa-ban"></i> {{ _('Fail to update Lab Category!') }}</h5>
               {{ msg_fail }}
             </div>
             {% endif %}
           </div>
           <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
-              <li class="breadcrumb-item"><a href="/">Home</a></li>
-              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.list_lab_categories') }}">Lab Categories</a></li>
-              <li class="breadcrumb-item active">{{ category.category|default("New Lab Category", true) }}</li>
+              <li class="breadcrumb-item"><a href="/">{{ _('Home') }}</a></li>
+              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.list_lab_categories') }}">{{ _('Lab Categories') }}</a></li>
+              <li class="breadcrumb-item active">{{ category.category|default(_("New Lab Category"), true) }}</li>
             </ol>
           </div>
         </div>
@@ -58,7 +58,7 @@
       <div class="container-fluid">
         <div class="card card-dark">
           <div class="card-header">
-            <h3 class="card-title">Lab Category - {{ category.category|default("New-Lab-Category", true) }}</h3>
+            <h3 class="card-title">{{ _('Lab Category') }} - {{ category.category|default("New-Lab-Category", true) }}</h3>
           </div>
           <!-- /.card-header -->
           <div class="card-body">
@@ -66,12 +66,12 @@
               <div class="row">
                 <div class="col-md-6">
                   <div class="form-group">
-                    <label>Category Name</label>
+                    <label>{{ _('Category Name') }}</label>
                     <input name="category" type="text" class="form-control" value="{{ category.category|default("", true) }}" required/>
                   </div>
                   <!-- /.form-group -->
                   <div class="form-group">
-                    <label>Color</label>
+                    <label>{{ _('Color') }}</label>
                     <select name="color_cls" class="form-control">
                       {% for color in valid_colors %}
                       <option value="{{ color }}" {% if color == category.color_cls|default("primary", true) %}selected{% endif %}>{{ color }}</option>
@@ -85,7 +85,7 @@
 
               <div class="row">
                 <button class="btn btn-primary" type="submit">{{ action_name }}</button>
-                <a href="{{ url_for('home_blueprint.list_lab_categories') }}" class="btn btn-secondary mx-2" role="button" aria-pressed="true">Cancel</a>
+                <a href="{{ url_for('home_blueprint.list_lab_categories') }}" class="btn btn-secondary mx-2" role="button" aria-pressed="true">{{ _('Cancel') }}</a>
               </div>
               <!-- /.row -->
             </form>

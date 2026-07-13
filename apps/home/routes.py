@@ -30,6 +30,17 @@ from sqlalchemy import desc
 def get_info_before_request():
     update_running_labs_stats()
 
+@blueprint.route('/set-locale/<locale>')
+def set_locale(locale):
+    """Persist the user's language choice in the session (and on their profile
+    when authenticated), then return to the page they came from."""
+    if locale in current_app.config["LANGUAGES"]:
+        session["locale"] = locale
+        if current_user.is_authenticated:
+            current_user.locale = locale
+            db.session.commit()
+    return redirect(request.referrer or url_for("home_blueprint.index"))
+
 @blueprint.route('/index')
 @login_required
 @check_user_category(["admin", "teacher", "labcreator", "student"])

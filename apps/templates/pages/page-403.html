@@ -1,6 +1,6 @@
 {% extends "layouts/base-fullscreen.html" %}
 
-{% block title %} Error 403 {% endblock title %}
+{% block title %} {{ _('Error 403') }} {% endblock title %}
 
 <!-- Element injected in the BODY element -->
 {% block body_class %} login-page {% endblock body_class %}
@@ -120,13 +120,12 @@
       <div class="shield">⚠️</div>
     </div>
     <h2 class="display-1 text-primary font-weight-bold">403</h2>
-    <h3 class="h4 text-dark">Access Forbidden</h3>
+    <h3 class="h4 text-dark">{{ _('Access Forbidden') }}</h3>
     <p class="text-muted" style="max-width: 40rem;">
-      You don't have permission to access this resource. This might be due to
-      insufficient privileges or security restrictions on this server.
+      {{ _("You don't have permission to access this resource. This might be due to insufficient privileges or security restrictions on this server.") }}
     </p>
     <div class="d-flex justify-content-center gap-3 flex-wrap mt-3">
-      <a href="{{ url_for('home_blueprint.index') }}" class="btn btn-secondary" onclick="history.back(); return false;">Go Back</a>
+      <a href="{{ url_for('home_blueprint.index') }}" class="btn btn-secondary" onclick="history.back(); return false;">{{ _('Go Back') }}</a>
     </div>
   </div>
 

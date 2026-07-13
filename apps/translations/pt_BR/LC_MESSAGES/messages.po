@@ -1,0 +1,752 @@
+# Portuguese (Brazil) translations for PROJECT.
+# Copyright (C) 2026 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-07-12 20:22-0300\n"
+"PO-Revision-Date: 2026-07-12 19:36-0300\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: pt_BR\n"
+"Language-Team: pt_BR <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: apps/authentication/forms.py:15 apps/authentication/forms.py:75
+msgid "Identifier"
+msgstr "Identificador"
+
+#: apps/authentication/forms.py:18 apps/authentication/forms.py:42
+#: apps/authentication/forms.py:81
+#: apps/templates/pages/confirm_reset_password.html:42
+#: apps/templates/pages/login.html:65 apps/templates/pages/register.html:69
+msgid "Password"
+msgstr "Senha"
+
+#: apps/authentication/forms.py:25 apps/templates/pages/register.html:50
+msgid "Username"
+msgstr "Usuário"
+
+#: apps/authentication/forms.py:35
+msgid ""
+"Invalid character. Use letters, numbers, dot (.), underscore (_) or hyphen "
+"(-)."
+msgstr ""
+"Caractere inválido. Use letras, números, ponto (.), sublinhado (_) ou hífen "
+"(-)."
+
+#: apps/authentication/forms.py:39 apps/authentication/forms.py:64
+#: apps/templates/pages/email_required.html:49
+#: apps/templates/pages/register.html:61
+msgid "Email"
+msgstr "E-mail"
+
+#: apps/authentication/forms.py:48
+msgid "I agree to the terms"
+msgstr "Concordo com os termos"
+
+#: apps/authentication/forms.py:50
+msgid "You must agree to the terms."
+msgstr "Você deve concordar com os termos."
+
+#: apps/authentication/forms.py:54
+msgid "Group Name"
+msgstr "Nome do Grupo"
+
+#: apps/authentication/forms.py:57
+msgid "Description"
+msgstr "Descrição"
+
+#: apps/authentication/forms.py:58
+msgid "Organization"
+msgstr "Organização"
+
+#: apps/authentication/forms.py:59
+msgid "Expiration"
+msgstr "Expiração"
+
+#: apps/authentication/forms.py:60
+msgid "Accesstoken"
+msgstr "Token de Acesso"
+
+#: apps/authentication/forms.py:70
+msgid "Confirmation Token"
+msgstr "Token de Confirmação"
+
+#: apps/authentication/forms.py:86
+msgid "Passwords must match"
+msgstr "As senhas devem coincidir"
+
+#: apps/authentication/forms.py:90
+#: apps/templates/pages/confirm_reset_password.html:50
+msgid "Password confirm"
+msgstr "Confirmação de senha"
+
+#: apps/templates/includes/navigation.html:10 apps/templates/pages/error.html:32
+#: apps/templates/pages/finished_labs.html:39 apps/templates/pages/gallery.html:35
+#: apps/templates/pages/lab_categories_edit.html:47
+#: apps/templates/pages/lab_categories_list.html:47
+#: apps/templates/pages/labs_view.html:37
+#: apps/templates/pages/waiting_approval.html:3
+#: apps/templates/pages/waiting_approval.html:50
+msgid "Home"
+msgstr "Início"
+
+#: apps/templates/includes/navigation.html:13
+msgid "Contact"
+msgstr "Contato"
+
+#: apps/templates/includes/navigation.html:20
+#: apps/templates/includes/sidebar.html:27
+msgid "Search"
+msgstr "Pesquisar"
+
+#: apps/templates/includes/navigation.html:40
+msgid "Support cases"
+msgstr "Casos de suporte"
+
+#: apps/templates/includes/navigation.html:49
+msgid "Case"
+msgstr "Caso"
+
+#: apps/templates/includes/navigation.html:55
+msgid "New reply"
+msgstr "Nova resposta"
+
+#: apps/templates/includes/navigation.html:65
+msgid "No support cases yet"
+msgstr "Nenhum caso de suporte ainda"
+
+#: apps/templates/includes/navigation.html:68
+msgid "See All Messages"
+msgstr "Ver todas as mensagens"
+
+#: apps/templates/includes/navigation.html:80
+msgid "No Notifications"
+msgstr "Sem notificações"
+
+#: apps/templates/includes/navigation.html:99
+msgid "See All Notifications"
+msgstr "Ver todas as notificações"
+
+#: apps/templates/includes/navigation.html:104
+msgid "Language"
+msgstr "Idioma"
+
+#: apps/templates/includes/navigation.html:119
+msgid "Reload profile"
+msgstr "Recarregar perfil"
+
+#: apps/templates/includes/navigation.html:124
+msgid "Sign-out"
+msgstr "Sair"
+
+#: apps/templates/includes/sidebar.html:45
+msgid "Dashboard"
+msgstr "Painel"
+
+#: apps/templates/includes/sidebar.html:53
+msgid "Groups"
+msgstr "Grupos"
+
+#: apps/templates/includes/sidebar.html:60 apps/templates/pages/labs_view.html:38
+msgid "Labs"
+msgstr "Laboratórios"
+
+#: apps/templates/includes/sidebar.html:68 apps/templates/pages/labs_view.html:3
+#: apps/templates/pages/labs_view.html:33 apps/templates/pages/labs_view.html:39
+msgid "View Labs"
+msgstr "Ver Laboratórios"
+
+#: apps/templates/includes/sidebar.html:75
+msgid "Create Lab"
+msgstr "Criar Laboratório"
+
+#: apps/templates/includes/sidebar.html:83
+msgid "Create ContainerLab"
+msgstr "Criar ContainerLab"
+
+#: apps/templates/includes/sidebar.html:91
+msgid "Lab Answers"
+msgstr "Respostas dos Laboratórios"
+
+#: apps/templates/includes/sidebar.html:97
+msgid "Answer Sheet"
+msgstr "Gabarito"
+
+#: apps/templates/includes/sidebar.html:104
+#: apps/templates/pages/finished_labs.html:3
+#: apps/templates/pages/finished_labs.html:35
+#: apps/templates/pages/finished_labs.html:40
+#: apps/templates/pages/finished_labs.html:53
+msgid "Finished Labs"
+msgstr "Laboratórios Concluídos"
+
+#: apps/templates/includes/sidebar.html:113
+msgid "Running Labs"
+msgstr "Laboratórios em Execução"
+
+#: apps/templates/includes/sidebar.html:119
+msgid "MANAGEMENT"
+msgstr "GERENCIAMENTO"
+
+#: apps/templates/includes/sidebar.html:125
+msgid "Users"
+msgstr "Usuários"
+
+#: apps/templates/includes/sidebar.html:134
+msgid "Support"
+msgstr "Suporte"
+
+#: apps/templates/includes/sidebar.html:146
+#: apps/templates/pages/lab_categories_edit.html:48
+#: apps/templates/pages/lab_categories_list.html:3
+#: apps/templates/pages/lab_categories_list.html:29
+#: apps/templates/pages/lab_categories_list.html:48
+#: apps/templates/pages/lab_categories_list.html:61
+msgid "Lab Categories"
+msgstr "Categorias de Laboratório"
+
+#: apps/templates/includes/sidebar.html:166
+msgid "New"
+msgstr "Novo"
+
+#: apps/templates/includes/sidebar.html:173
+msgid "Pods"
+msgstr "Pods"
+
+#: apps/templates/includes/sidebar.html:179
+msgid "Deployments"
+msgstr "Deployments"
+
+#: apps/templates/includes/sidebar.html:185
+msgid "Services"
+msgstr "Serviços"
+
+#: apps/templates/includes/sidebar.html:191
+msgid "MORE INFO"
+msgstr "MAIS INFORMAÇÕES"
+
+#: apps/templates/includes/sidebar.html:196
+msgid "Documentation"
+msgstr "Documentação"
+
+#: apps/templates/includes/sidebar.html:204
+msgid "Extra tools"
+msgstr "Ferramentas extras"
+
+#: apps/templates/pages/confirm.html:3
+#: apps/templates/pages/confirm_reset_password.html:3
+#: apps/templates/pages/login.html:3 apps/templates/pages/register.html:94
+#: apps/templates/pages/reset_password.html:3
+msgid "Login"
+msgstr "Entrar"
+
+#: apps/templates/pages/confirm.html:40
+#, python-format
+msgid ""
+"Insert the token sent to your email (check your spam/junk folder!). The "
+"token will expire in %(minutes)s minutes."
+msgstr ""
+"Insira o token enviado para o seu e-mail (verifique sua caixa de spam/lixo "
+"eletrônico!). O token expira em %(minutes)s minutos."
+
+#: apps/templates/pages/confirm.html:49 apps/templates/pages/confirm_email.html:49
+msgid "Token"
+msgstr "Token"
+
+#: apps/templates/pages/confirm.html:58 apps/templates/pages/confirm_email.html:58
+msgid "Verify code"
+msgstr "Verificar código"
+
+#: apps/templates/pages/confirm.html:61 apps/templates/pages/confirm_email.html:61
+msgid "Resend code"
+msgstr "Reenviar código"
+
+#: apps/templates/pages/confirm_email.html:3
+#: apps/templates/pages/email_required.html:3
+msgid "Confirm your e-mail"
+msgstr "Confirme seu e-mail"
+
+#: apps/templates/pages/confirm_email.html:40
+#, python-format
+msgid ""
+"Insert the token sent to your email (check your spam/junk folder!). The "
+"token will expire in %(minutes)s minutes"
+msgstr ""
+"Insira o token enviado para o seu e-mail (verifique sua caixa de spam/lixo "
+"eletrônico!). O token expira em %(minutes)s minutos"
+
+#: apps/templates/pages/confirm_email.html:68
+#: apps/templates/pages/email_required.html:62
+msgid "Logout"
+msgstr "Sair"
+
+#: apps/templates/pages/confirm_reset_password.html:59
+#: apps/templates/pages/reset_password.html:58
+msgid "Submit"
+msgstr "Enviar"
+
+#: apps/templates/pages/email_required.html:39
+msgid "We need a valid e-mail address for your account before you can continue."
+msgstr "Precisamos de um endereço de e-mail válido para sua conta antes de continuar."
+
+#: apps/templates/pages/email_required.html:57
+msgid "Continue"
+msgstr "Continuar"
+
+#: apps/templates/pages/error.html:3 apps/templates/pages/error.html:28
+#: apps/templates/pages/error.html:33
+msgid "Error"
+msgstr "Erro"
+
+#: apps/templates/pages/error.html:45
+msgid "Oops!"
+msgstr "Ops!"
+
+#: apps/templates/pages/error.html:45
+msgid "Error."
+msgstr "Erro."
+
+#: apps/templates/pages/error.html:47
+msgid "Failed to run task."
+msgstr "Falha ao executar a tarefa."
+
+#: apps/templates/pages/finished_labs.html:60
+msgid "Filter by group:"
+msgstr "Filtrar por grupo:"
+
+#: apps/templates/pages/finished_labs.html:64
+msgid "My own labs"
+msgstr "Meus próprios laboratórios"
+
+#: apps/templates/pages/finished_labs.html:65
+msgid "All labs"
+msgstr "Todos os laboratórios"
+
+#: apps/templates/pages/finished_labs.html:89
+msgid "User"
+msgstr "Usuário"
+
+#: apps/templates/pages/finished_labs.html:90
+msgid "Lab title"
+msgstr "Título do laboratório"
+
+#: apps/templates/pages/finished_labs.html:91
+msgid "Created At (UTC)"
+msgstr "Criado em (UTC)"
+
+#: apps/templates/pages/finished_labs.html:92
+msgid "Finished At (UTC)"
+msgstr "Concluído em (UTC)"
+
+#: apps/templates/pages/finished_labs.html:93
+msgid "Finish reason"
+msgstr "Motivo da conclusão"
+
+#: apps/templates/pages/finished_labs.html:166
+msgid "No finished labs"
+msgstr "Nenhum laboratório concluído"
+
+#: apps/templates/pages/finished_labs.html:184
+#: apps/templates/pages/lab_categories_list.html:180
+msgid "Success"
+msgstr "Sucesso"
+
+#: apps/templates/pages/finished_labs.html:192
+#: apps/templates/pages/lab_categories_list.html:188
+msgid "Failure"
+msgstr "Falha"
+
+#: apps/templates/pages/finished_labs.html:200
+msgid "Deleting"
+msgstr "Excluindo"
+
+#: apps/templates/pages/finished_labs.html:200
+msgid "row(s)..."
+msgstr "linha(s)..."
+
+#: apps/templates/pages/finished_labs.html:234
+msgid "No lab selected!"
+msgstr "Nenhum laboratório selecionado!"
+
+#: apps/templates/pages/gallery.html:3 apps/templates/pages/gallery.html:31
+#: apps/templates/pages/gallery.html:36
+msgid "Gallery"
+msgstr "Galeria"
+
+#: apps/templates/pages/lab_categories_edit.html:3
+#: apps/templates/pages/lab_categories_edit.html:29
+msgid "Edit Lab Category"
+msgstr "Editar Categoria de Laboratório"
+
+#: apps/templates/pages/lab_categories_edit.html:33
+msgid "Lab Category updated successfully!"
+msgstr "Categoria de laboratório atualizada com sucesso!"
+
+#: apps/templates/pages/lab_categories_edit.html:40
+msgid "Fail to update Lab Category!"
+msgstr "Falha ao atualizar a Categoria de Laboratório!"
+
+#: apps/templates/pages/lab_categories_edit.html:49
+msgid "New Lab Category"
+msgstr "Nova Categoria de Laboratório"
+
+#: apps/templates/pages/lab_categories_edit.html:61
+msgid "Lab Category"
+msgstr "Categoria de Laboratório"
+
+#: apps/templates/pages/lab_categories_edit.html:69
+msgid "Category Name"
+msgstr "Nome da Categoria"
+
+#: apps/templates/pages/lab_categories_edit.html:74
+#: apps/templates/pages/lab_categories_list.html:76
+msgid "Color"
+msgstr "Cor"
+
+#: apps/templates/pages/lab_categories_edit.html:88
+#: apps/templates/pages/lab_categories_list.html:124
+#: apps/templates/pages/labs_view.html:195 apps/templates/pages/labs_view.html:218
+msgid "Cancel"
+msgstr "Cancelar"
+
+#: apps/templates/pages/lab_categories_list.html:33
+msgid "List Lab Categories"
+msgstr "Listar Categorias de Laboratório"
+
+#: apps/templates/pages/lab_categories_list.html:40
+msgid "Ops! A failure happened.."
+msgstr "Ops! Ocorreu uma falha.."
+
+#: apps/templates/pages/lab_categories_list.html:65
+msgid "Create New Lab Category"
+msgstr "Criar Nova Categoria de Laboratório"
+
+#: apps/templates/pages/lab_categories_list.html:75
+msgid "Category"
+msgstr "Categoria"
+
+#: apps/templates/pages/lab_categories_list.html:77
+msgid "Actions"
+msgstr "Ações"
+
+#: apps/templates/pages/lab_categories_list.html:88
+msgid "Edit"
+msgstr "Editar"
+
+#: apps/templates/pages/lab_categories_list.html:92
+msgid "Delete lab category"
+msgstr "Excluir categoria de laboratório"
+
+#: apps/templates/pages/lab_categories_list.html:93
+#: apps/templates/pages/labs_view.html:170
+msgid "Delete"
+msgstr "Excluir"
+
+#: apps/templates/pages/lab_categories_list.html:114
+msgid "Confirm delete Lab Category"
+msgstr "Confirmar exclusão da Categoria de Laboratório"
+
+#: apps/templates/pages/lab_categories_list.html:121
+msgid "Are you sure you want to delete Lab Category"
+msgstr "Tem certeza de que deseja excluir a Categoria de Laboratório"
+
+#: apps/templates/pages/lab_categories_list.html:125
+msgid "Delete Lab Category"
+msgstr "Excluir Categoria de Laboratório"
+
+#: apps/templates/pages/lab_categories_list.html:165
+msgid "No lab category"
+msgstr "Nenhuma categoria de laboratório"
+
+#: apps/templates/pages/labs_view.html:47
+msgid "Filter by Group:"
+msgstr "Filtrar por Grupo:"
+
+#: apps/templates/pages/labs_view.html:49
+msgid "All Groups"
+msgstr "Todos os Grupos"
+
+#: apps/templates/pages/labs_view.html:55
+msgid "Filter"
+msgstr "Filtrar"
+
+#: apps/templates/pages/labs_view.html:57
+msgid "Clear"
+msgstr "Limpar"
+
+#: apps/templates/pages/labs_view.html:61
+msgid "Hide deleted"
+msgstr "Ocultar excluídos"
+
+#: apps/templates/pages/labs_view.html:63
+msgid "Show deleted"
+msgstr "Mostrar excluídos"
+
+#: apps/templates/pages/labs_view.html:71
+msgid "Filter by Category:"
+msgstr "Filtrar por Categoria:"
+
+#: apps/templates/pages/labs_view.html:81
+msgid "Filter by Status:"
+msgstr "Filtrar por Status:"
+
+#: apps/templates/pages/labs_view.html:83
+msgid "All Labs"
+msgstr "Todos os Laboratórios"
+
+#: apps/templates/pages/labs_view.html:86 apps/templates/pages/labs_view.html:135
+#: apps/templates/pages/labs_view.html:140
+msgid "Completed"
+msgstr "Concluído"
+
+#: apps/templates/pages/labs_view.html:89
+msgid "Not Completed"
+msgstr "Não Concluído"
+
+#: apps/templates/pages/labs_view.html:117
+msgid "Deleted"
+msgstr "Excluído"
+
+#: apps/templates/pages/labs_view.html:120
+#: apps/templates/pages/waiting_approval.html:68
+msgid "Collapse"
+msgstr "Recolher"
+
+#: apps/templates/pages/labs_view.html:123
+#: apps/templates/pages/waiting_approval.html:71
+msgid "Remove"
+msgstr "Remover"
+
+#: apps/templates/pages/labs_view.html:150
+msgid "Resume"
+msgstr "Retomar"
+
+#: apps/templates/pages/labs_view.html:154
+msgid "Start"
+msgstr "Iniciar"
+
+#: apps/templates/pages/labs_view.html:156
+msgid "View"
+msgstr "Visualizar"
+
+#: apps/templates/pages/labs_view.html:161
+msgid "Fork"
+msgstr "Bifurcar"
+
+#: apps/templates/pages/labs_view.html:164
+msgid "Update"
+msgstr "Atualizar"
+
+#: apps/templates/pages/labs_view.html:167
+msgid "Restore"
+msgstr "Restaurar"
+
+#: apps/templates/pages/labs_view.html:185
+msgid "Confirm delete lab"
+msgstr "Confirmar exclusão do laboratório"
+
+#: apps/templates/pages/labs_view.html:192
+msgid "Are you sure you want to delete Lab"
+msgstr "Tem certeza de que deseja excluir o Laboratório"
+
+#: apps/templates/pages/labs_view.html:196
+msgid "Delete lab"
+msgstr "Excluir laboratório"
+
+#: apps/templates/pages/labs_view.html:208
+msgid "Confirm restore lab"
+msgstr "Confirmar restauração do laboratório"
+
+#: apps/templates/pages/labs_view.html:215
+msgid "Are you sure you want to restore this lab?"
+msgstr "Tem certeza de que deseja restaurar este laboratório?"
+
+#: apps/templates/pages/labs_view.html:219
+msgid "Restore lab"
+msgstr "Restaurar laboratório"
+
+#: apps/templates/pages/login.html:36
+msgid "Federated authentication?"
+msgstr "Autenticação federada?"
+
+#: apps/templates/pages/login.html:48
+msgid "Local Authentication"
+msgstr "Autenticação Local"
+
+#: apps/templates/pages/login.html:57
+msgid "Email or Username"
+msgstr "E-mail ou Usuário"
+
+#: apps/templates/pages/login.html:74
+msgid "Create an account"
+msgstr "Criar uma conta"
+
+#: apps/templates/pages/login.html:78
+msgid "Sign In"
+msgstr "Entrar"
+
+#: apps/templates/pages/login.html:82
+msgid "Forgot Password"
+msgstr "Esqueci a senha"
+
+#: apps/templates/pages/page-403.html:3
+msgid "Error 403"
+msgstr "Erro 403"
+
+#: apps/templates/pages/page-403.html:123
+msgid "Access Forbidden"
+msgstr "Acesso proibido"
+
+#: apps/templates/pages/page-403.html:125
+msgid ""
+"You don't have permission to access this resource. This might be due to "
+"insufficient privileges or security restrictions on this server."
+msgstr ""
+"Você não tem permissão para acessar este recurso. Isso pode ocorrer por "
+"privilégios insuficientes ou restrições de segurança neste servidor."
+
+#: apps/templates/pages/page-403.html:128 apps/templates/pages/page-404.html:80
+msgid "Go Back"
+msgstr "Voltar"
+
+#: apps/templates/pages/page-404.html:3
+msgid "Error 404"
+msgstr "Erro 404"
+
+#: apps/templates/pages/page-404.html:74
+msgid "Page Not Found"
+msgstr "Página não encontrada"
+
+#: apps/templates/pages/page-404.html:76
+msgid ""
+"The page you are looking for might have been removed, had its name changed, "
+"or is temporarily unavailable. Please check the URL for any mistakes."
+msgstr ""
+"A página que você procura pode ter sido removida, ter tido seu nome alterado"
+" ou estar temporariamente indisponível. Verifique se há erros na URL."
+
+#: apps/templates/pages/page-404.html:79 apps/templates/pages/page-500.html:127
+msgid "Return to Home"
+msgstr "Voltar ao início"
+
+#: apps/templates/pages/page-500.html:3
+msgid "Error 500"
+msgstr "Erro 500"
+
+#: apps/templates/pages/page-500.html:122
+msgid "Internal Server Error"
+msgstr "Erro interno do servidor"
+
+#: apps/templates/pages/page-500.html:124
+msgid ""
+"Our servers are currently experiencing technical difficulties. Our team has "
+"been notified and is working to resolve the issue as quickly as possible."
+msgstr ""
+"Nossos servidores estão enfrentando dificuldades técnicas no momento. Nossa "
+"equipe foi notificada e está trabalhando para resolver o problema o mais "
+"rápido possível."
+
+#: apps/templates/pages/page-500.html:128
+msgid "Contact Support"
+msgstr "Contatar o suporte"
+
+#: apps/templates/pages/register.html:3 apps/templates/pages/register.html:87
+msgid "Register"
+msgstr "Registrar"
+
+#: apps/templates/pages/register.html:39
+msgid "Add your credentials"
+msgstr "Insira suas credenciais"
+
+#: apps/templates/pages/register.html:82
+msgid "I agree to the"
+msgstr "Concordo com os"
+
+#: apps/templates/pages/register.html:82
+msgid "terms"
+msgstr "termos"
+
+#: apps/templates/pages/register.html:94
+msgid "Have an account?"
+msgstr "Já tem uma conta?"
+
+#: apps/templates/pages/register.html:131
+msgid ""
+"Invalid character. Use letters, numbers, dot (.), underscore (_) or hyphen "
+"(-)"
+msgstr ""
+"Caractere inválido. Use letras, números, ponto (.), sublinhado (_) ou hífen "
+"(-)"
+
+#: apps/templates/pages/reset_password.html:40
+msgid "Enter your email or username"
+msgstr "Digite seu e-mail ou nome de usuário"
+
+#: apps/templates/pages/reset_password.html:49
+msgid "Email or username"
+msgstr "E-mail ou nome de usuário"
+
+#: apps/templates/pages/waiting_approval.html:32
+msgid "Unauthorized user"
+msgstr "Usuário não autorizado"
+
+#: apps/templates/pages/waiting_approval.html:36
+msgid "Success!"
+msgstr "Sucesso!"
+
+#: apps/templates/pages/waiting_approval.html:43
+msgid "Fail to save note!"
+msgstr "Falha ao salvar a nota!"
+
+#: apps/templates/pages/waiting_approval.html:65
+msgid "Waiting for approval"
+msgstr "Aguardando aprovação"
+
+#: apps/templates/pages/waiting_approval.html:78
+#: apps/templates/pages/waiting_approval.html:93
+msgid "You must wait until your user is approved!"
+msgstr "Você deve aguardar até que seu usuário seja aprovado!"
+
+#: apps/templates/pages/waiting_approval.html:79
+msgid ""
+"Your note below was already sent to the administrators and can no longer be "
+"changed. Please contact an administrator if you need to update it."
+msgstr ""
+"Sua nota abaixo já foi enviada aos administradores e não pode mais ser "
+"alterada. Entre em contato com um administrador se precisar atualizá-la."
+
+#: apps/templates/pages/waiting_approval.html:81
+#: apps/templates/pages/waiting_approval.html:96
+msgid "Note for the administrators"
+msgstr "Nota para os administradores"
+
+#: apps/templates/pages/waiting_approval.html:87
+msgid "wait!"
+msgstr "aguarde!"
+
+#: apps/templates/pages/waiting_approval.html:94
+msgid ""
+"To help the administrators identify you, please leave a note below with a "
+"reference (e.g., your institution, course, professor, or who referred you to"
+" HackInSDN). Note that once saved, the note can no longer be changed."
+msgstr ""
+"Para ajudar os administradores a identificá-lo, deixe uma nota abaixo com "
+"uma referência (ex.: sua instituição, curso, professor ou quem o indicou ao "
+"HackInSDN). Observe que, uma vez salva, a nota não pode mais ser alterada."
+
+#: apps/templates/pages/waiting_approval.html:97
+msgid "Ex: I'm a student of Prof. X at University Y"
+msgstr "Ex.: Sou aluno do Prof. X na Universidade Y"
+
+#: apps/templates/pages/waiting_approval.html:102
+msgid "Save note"
+msgstr "Salvar nota"
+

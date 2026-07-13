@@ -58,6 +58,9 @@ class Users(db.Model, UserMixin, AuditMixin):
     is_deleted = db.Column(db.Boolean, default=False)
     last_login = db.Column(db.DateTime)
     notes = db.Column(db.Text, nullable=True)
+    # Preferred UI language (e.g. "en", "pt_BR"); NULL falls back to the
+    # session choice / browser Accept-Language (see apps.select_locale).
+    locale = db.Column(db.String(5), nullable=True)
 
     member_of_groups: Mapped[List[Groups]] = db.relationship(
         secondary=group_members, back_populates="members"

@@ -8,7 +8,7 @@ import os
 import sys
 import logging
 
-from flask import Flask
+from flask import Flask, request, session, current_app
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -17,6 +17,7 @@ from importlib import import_module
 from authlib.integrations.flask_client import OAuth
 from flask_mail import Mail
 from flask_caching import Cache
+from flask_babel import Babel
 
 from apps.config import app_config
 
@@ -28,6 +29,23 @@ socketio = SocketIO()
 mail = Mail()
 cache = Cache()
 migrate = Migrate()
+babel = Babel()
+
+
+def select_locale():
+    """Locale resolution order: explicit session choice -> authenticated
+    user's stored preference -> browser Accept-Language -> default."""
+    from flask_login import current_user
+
+    languages = current_app.config["LANGUAGES"]
+    lang = session.get("locale")
+    if lang in languages:
+        return lang
+    if getattr(current_user, "is_authenticated", False):
+        user_locale = getattr(current_user, "locale", None)
+        if user_locale in languages:
+            return user_locale
+    return request.accept_languages.best_match(languages) or current_app.config["BABEL_DEFAULT_LOCALE"]
 
 
 def register_extensions(app):
@@ -43,6 +61,7 @@ def register_extensions(app):
     mail.init_app(app)
     cache.init_app(app)
     migrate.init_app(app, db)
+    babel.init_app(app, locale_selector=select_locale)
 
 
 def register_blueprints(app):
@@ -106,5 +125,11 @@ def create_app():
     # configure_database(app)
     configure_oauth(app)
     configure_log(app)
+
+    # Expose the active locale to all templates (e.g. <html lang="...">) and
+    # the list of supported languages for the switcher UI.
+    from flask_babel import get_locale
+    app.jinja_env.globals["get_locale"] = get_locale
+    app.jinja_env.globals["LANGUAGES"] = app.config["LANGUAGES"]
 
     return app

@@ -1,6 +1,6 @@
 {% extends "layouts/base-fullscreen.html" %}
 
-{% block title %} Error 404 {% endblock title %}
+{% block title %} {{ _('Error 404') }} {% endblock title %}
 
 <!-- Element injected in the BODY element -->
 {% block body_class %} login-page {% endblock body_class %}
@@ -71,14 +71,13 @@
             <div class="question-mark">?</div>
         </div>
         <h2 class="display-1 text-primary font-weight-bold">404</h2>
-        <h3 class="h4 text-dark">Page Not Found</h3>
+        <h3 class="h4 text-dark">{{ _('Page Not Found') }}</h3>
         <p class="text-muted" style="max-width: 40rem;">
-            The page you are looking for might have been removed, had its name changed, 
-            or is temporarily unavailable. Please check the URL for any mistakes.
+            {{ _('The page you are looking for might have been removed, had its name changed, or is temporarily unavailable. Please check the URL for any mistakes.') }}
         </p>
         <div class="d-flex justify-content-center flex-wrap mt-3">
-            <a href="{{ url_for('authentication_blueprint.login') }}" class="btn btn-primary m-2">Return to Home</a>
-            <a href="{{ url_for('home_blueprint.index') }}" class="btn btn-secondary m-2" onclick="history.back(); return false;">Go Back</a>
+            <a href="{{ url_for('authentication_blueprint.login') }}" class="btn btn-primary m-2">{{ _('Return to Home') }}</a>
+            <a href="{{ url_for('home_blueprint.index') }}" class="btn btn-secondary m-2" onclick="history.back(); return false;">{{ _('Go Back') }}</a>
         </div>
     </div>
 

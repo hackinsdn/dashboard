@@ -1,6 +1,6 @@
 {% extends "layouts/base.html" %}
 
-{% block title %} Home {% endblock title %}
+{% block title %} {{ _('Home') }} {% endblock title %}
 
 <!-- Element injected in the BODY element -->
 {% block body_class %} sidebar-mini layout-navbar-fixed {% endblock body_class %}
@@ -29,25 +29,25 @@
       <div class="container-fluid">
         <div class="row mb-2">
           <div class="col-sm-6">
-            <h1>Unauthorized user</h1>
+            <h1>{{ _('Unauthorized user') }}</h1>
             {% if msg_ok %}
             <div class="alert alert-success alert-dismissible">
               <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-              <h5><i class="icon fas fa-check"></i> Success!</h5>
+              <h5><i class="icon fas fa-check"></i> {{ _('Success!') }}</h5>
               {{ msg_ok }}
             </div>
             {% endif %}
             {% if msg_fail %}
             <div class="alert alert-danger alert-dismissible">
               <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-              <h5><i class="icon fas fa-ban"></i> Fail to save note!</h5>
+              <h5><i class="icon fas fa-ban"></i> {{ _('Fail to save note!') }}</h5>
               {{ msg_fail }}
             </div>
             {% endif %}
           </div>
           <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
-              <li class="breadcrumb-item"><a href="#">Home</a></li>
+              <li class="breadcrumb-item"><a href="#">{{ _('Home') }}</a></li>
             </ol>
           </div>
         </div>
@@ -62,44 +62,44 @@
             <!-- card begin -->
             <div class="card card-danger">
               <div class="card-header">
-                <h3 class="card-title">Waiting for approval</h3>
+                <h3 class="card-title">{{ _('Waiting for approval') }}</h3>
 
                 <div class="card-tools">
-                  <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
+                  <button type="button" class="btn btn-tool" data-card-widget="collapse" title="{{ _('Collapse') }}">
                     <i class="fas fa-minus"></i>
                   </button>
-                  <button type="button" class="btn btn-tool" data-card-widget="remove" title="Remove">
+                  <button type="button" class="btn btn-tool" data-card-widget="remove" title="{{ _('Remove') }}">
                     <i class="fas fa-times"></i>
                   </button>
                 </div>
               </div>
               {% if current_user.notes %}
               <div class="card-body">
-                <p>You must wait until your user is approved!</p>
-                <p>Your note below was already sent to the administrators and can no longer be changed. Please contact an administrator if you need to update it.</p>
+                <p>{{ _('You must wait until your user is approved!') }}</p>
+                <p>{{ _('Your note below was already sent to the administrators and can no longer be changed. Please contact an administrator if you need to update it.') }}</p>
                 <div class="form-group">
-                  <label for="approval-notes">Note for the administrators</label>
+                  <label for="approval-notes">{{ _('Note for the administrators') }}</label>
                   <textarea id="approval-notes" class="form-control" rows="4" disabled>{{ current_user.notes }}</textarea>
                 </div>
               </div>
               <!-- /.card-body -->
               <div class="card-footer">
-                wait!
+                {{ _('wait!') }}
               </div>
               <!-- /.card-footer-->
               {% else %}
               <form method="post" action="{{ url_for('authentication_blueprint.save_approval_notes') }}">
               <div class="card-body">
-                <p>You must wait until your user is approved!</p>
-                <p>To help the administrators identify you, please leave a note below with a reference (e.g., your institution, course, professor, or who referred you to HackInSDN). Note that once saved, the note can no longer be changed.</p>
+                <p>{{ _('You must wait until your user is approved!') }}</p>
+                <p>{{ _('To help the administrators identify you, please leave a note below with a reference (e.g., your institution, course, professor, or who referred you to HackInSDN). Note that once saved, the note can no longer be changed.') }}</p>
                 <div class="form-group">
-                  <label for="approval-notes">Note for the administrators</label>
-                  <textarea id="approval-notes" name="notes" class="form-control" rows="4" maxlength="1000" placeholder="Ex: I'm a student of Prof. X at University Y"></textarea>
+                  <label for="approval-notes">{{ _('Note for the administrators') }}</label>
+                  <textarea id="approval-notes" name="notes" class="form-control" rows="4" maxlength="1000" placeholder="{{ _('Ex: I\'m a student of Prof. X at University Y') }}"></textarea>
                 </div>
               </div>
               <!-- /.card-body -->
               <div class="card-footer">
-                <button type="submit" class="btn btn-primary">Save note</button>
+                <button type="submit" class="btn btn-primary">{{ _('Save note') }}</button>
               </div>
               <!-- /.card-footer-->
               </form>

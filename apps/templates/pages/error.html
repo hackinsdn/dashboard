@@ -1,6 +1,6 @@
 {% extends "layouts/base.html" %}
 
-{% block title %} {{ title|default("Error", true) }} {% endblock title %}
+{% block title %} {{ title|default(_("Error"), true) }} {% endblock title %}
 
 <!-- Element injected in the BODY element -->
 {% block body_class %} sidebar-mini {% endblock body_class %}
@@ -25,12 +25,12 @@
       <div class="container-fluid">
         <div class="row mb-2">
           <div class="col-sm-6">
-            <h1>{{ title|default("Error", true) }}</h1>
+            <h1>{{ title|default(_("Error"), true) }}</h1>
           </div>
           <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
-              <li class="breadcrumb-item"><a href="#">Home</a></li>
-              <li class="breadcrumb-item active">{{ title|default("Error", true) }}</li>
+              <li class="breadcrumb-item"><a href="#">{{ _('Home') }}</a></li>
+              <li class="breadcrumb-item active">{{ title|default(_("Error"), true) }}</li>
             </ol>
           </div>
         </div>
@@ -42,9 +42,9 @@
       <div class="error-page">
         <h2 class="headline text-danger"><i class="fas fa-exclamation-triangle text-danger"></i></h2>
         <div class="error-content">
-          <h3> Oops! {{ title|default("Error.", true) }}</h3>
+          <h3> {{ _('Oops!') }} {{ title|default(_("Error."), true) }}</h3>
           <p>
-            {{ msg|default("Failed to run task.", true) }}
+            {{ msg|default(_("Failed to run task."), true) }}
           </p>
         </div>
         {% if additional_actions %}
