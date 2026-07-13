@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-07-13 06:25-0300\n"
+"POT-Creation-Date: 2026-07-13 06:33-0300\n"
 "PO-Revision-Date: 2026-07-12 19:36-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -93,8 +93,8 @@ msgstr ""
 #: apps/templates/pages/finished_labs.html:39
 #: apps/templates/pages/gallery.html:35
 #: apps/templates/pages/groups_edit.html:54
-#: apps/templates/pages/groups_list.html:47
-#: apps/templates/pages/k8s_dep_list.html:37
+#: apps/templates/pages/groups_list.html:47 apps/templates/pages/index.html:3
+#: apps/templates/pages/index.html:37 apps/templates/pages/k8s_dep_list.html:37
 #: apps/templates/pages/k8s_pod_list.html:37
 #: apps/templates/pages/k8s_srv_list.html:37
 #: apps/templates/pages/lab_categories_edit.html:47
@@ -160,7 +160,7 @@ msgstr ""
 msgid "Sign-out"
 msgstr ""
 
-#: apps/templates/includes/sidebar.html:45
+#: apps/templates/includes/sidebar.html:45 apps/templates/pages/index.html:38
 msgid "Dashboard"
 msgstr ""
 
@@ -205,6 +205,7 @@ msgstr ""
 #: apps/templates/pages/finished_labs.html:35
 #: apps/templates/pages/finished_labs.html:40
 #: apps/templates/pages/finished_labs.html:53
+#: apps/templates/pages/index.html:56
 msgid "Finished Labs"
 msgstr ""
 
@@ -216,7 +217,7 @@ msgstr ""
 msgid "MANAGEMENT"
 msgstr ""
 
-#: apps/templates/includes/sidebar.html:125
+#: apps/templates/includes/sidebar.html:125 apps/templates/pages/index.html:89
 msgid "Users"
 msgstr ""
 
@@ -244,7 +245,7 @@ msgstr ""
 msgid "New"
 msgstr ""
 
-#: apps/templates/includes/sidebar.html:173
+#: apps/templates/includes/sidebar.html:173 apps/templates/pages/index.html:175
 #: apps/templates/pages/k8s_pod_list.html:39
 msgid "Pods"
 msgstr ""
@@ -318,6 +319,7 @@ msgid "Logout"
 msgstr ""
 
 #: apps/templates/pages/confirm_reset_password.html:59
+#: apps/templates/pages/index.html:362
 #: apps/templates/pages/reset_password.html:58
 msgid "Submit"
 msgstr ""
@@ -389,6 +391,7 @@ msgstr ""
 
 #: apps/templates/pages/finished_labs.html:184
 #: apps/templates/pages/groups_list.html:214
+#: apps/templates/pages/index.html:815
 #: apps/templates/pages/k8s_dep_list.html:238
 #: apps/templates/pages/k8s_pod_list.html:244
 #: apps/templates/pages/k8s_srv_list.html:232
@@ -526,6 +529,7 @@ msgstr ""
 #: apps/templates/pages/groups_edit.html:205
 #: apps/templates/pages/groups_list.html:127
 #: apps/templates/pages/groups_list.html:155
+#: apps/templates/pages/index.html:361
 #: apps/templates/pages/k8s_dep_list.html:134
 #: apps/templates/pages/k8s_dep_list.html:157
 #: apps/templates/pages/k8s_pod_list.html:138
@@ -604,6 +608,138 @@ msgstr ""
 
 #: apps/templates/pages/groups_list.html:199
 msgid "No group"
+msgstr ""
+
+#: apps/templates/pages/index.html:33
+msgid "HackInSDN Dashboard"
+msgstr ""
+
+#: apps/templates/pages/index.html:71
+msgid "Registered Labs"
+msgstr ""
+
+#: apps/templates/pages/index.html:102
+msgid "Likes"
+msgstr ""
+
+#: apps/templates/pages/index.html:145
+msgid "Available CPUs"
+msgstr ""
+
+#: apps/templates/pages/index.html:155
+msgid "Available Memory"
+msgstr ""
+
+#: apps/templates/pages/index.html:165
+msgid "Storage capacity"
+msgstr ""
+
+#: apps/templates/pages/index.html:185
+msgid "Nodes"
+msgstr ""
+
+#: apps/templates/pages/index.html:205
+msgid "Lab Usage Report"
+msgstr ""
+
+#: apps/templates/pages/index.html:212
+msgid "Completed Labs in the past 6 months"
+msgstr ""
+
+#: apps/templates/pages/index.html:224
+msgid "User evaluation"
+msgstr ""
+
+#: apps/templates/pages/index.html:228
+msgid "Completed Labs"
+msgstr ""
+
+#: apps/templates/pages/index.html:237
+msgid "Answered questions"
+msgstr ""
+
+#: apps/templates/pages/index.html:246
+msgid "Solved Challenges"
+msgstr ""
+
+#: apps/templates/pages/index.html:255
+msgid "Send Inquiries"
+msgstr ""
+
+#: apps/templates/pages/index.html:276
+msgid "LAST MONTH LAB COMPLETION"
+msgstr ""
+
+#: apps/templates/pages/index.html:287
+msgid "LAST MONTH ANSWRED QUESTIONS"
+msgstr ""
+
+#: apps/templates/pages/index.html:298
+msgid "LAST MONTH SOLVED CHALLENGES"
+msgstr ""
+
+#: apps/templates/pages/index.html:316
+msgid "Users Feedback"
+msgstr ""
+
+#: apps/templates/pages/index.html:318
+msgid "View Feedback"
+msgstr ""
+
+#: apps/templates/pages/index.html:318
+msgid "Add Feedback"
+msgstr ""
+
+#: apps/templates/pages/index.html:319
+msgid "See All"
+msgstr ""
+
+#: apps/templates/pages/index.html:331
+msgid "Please rate your overall experience on our website!"
+msgstr ""
+
+#: apps/templates/pages/index.html:338
+msgid "Enjoying the platform?"
+msgstr ""
+
+#: apps/templates/pages/index.html:344
+msgid "Rating:"
+msgstr ""
+
+#: apps/templates/pages/index.html:356
+msgid "Please leave a comment (Optional):"
+msgstr ""
+
+#: apps/templates/pages/index.html:357
+msgid "Leave your comment..."
+msgstr ""
+
+#: apps/templates/pages/index.html:382
+msgid "Recently Added Labs"
+msgstr ""
+
+#: apps/templates/pages/index.html:401
+msgid "No short description provided. Click to see more details"
+msgstr ""
+
+#: apps/templates/pages/index.html:411
+msgid "View All Labs"
+msgstr ""
+
+#: apps/templates/pages/index.html:423
+msgid "Lab categories and usage"
+msgstr ""
+
+#: apps/templates/pages/index.html:662
+msgid "Lab Instances"
+msgstr ""
+
+#: apps/templates/pages/index.html:791
+msgid "Please select a rating before submitting."
+msgstr ""
+
+#: apps/templates/pages/index.html:818
+msgid "Rating submitted successfully!"
 msgstr ""
 
 #: apps/templates/pages/k8s_dep_list.html:3

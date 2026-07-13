@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-07-13 06:25-0300\n"
+"POT-Creation-Date: 2026-07-13 06:33-0300\n"
 "PO-Revision-Date: 2026-07-12 19:36-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -93,8 +93,8 @@ msgstr "Confirmação de senha"
 #: apps/templates/includes/navigation.html:10 apps/templates/pages/error.html:32
 #: apps/templates/pages/finished_labs.html:39 apps/templates/pages/gallery.html:35
 #: apps/templates/pages/groups_edit.html:54
-#: apps/templates/pages/groups_list.html:47
-#: apps/templates/pages/k8s_dep_list.html:37
+#: apps/templates/pages/groups_list.html:47 apps/templates/pages/index.html:3
+#: apps/templates/pages/index.html:37 apps/templates/pages/k8s_dep_list.html:37
 #: apps/templates/pages/k8s_pod_list.html:37
 #: apps/templates/pages/k8s_srv_list.html:37
 #: apps/templates/pages/lab_categories_edit.html:47
@@ -160,7 +160,7 @@ msgstr "Recarregar perfil"
 msgid "Sign-out"
 msgstr "Sair"
 
-#: apps/templates/includes/sidebar.html:45
+#: apps/templates/includes/sidebar.html:45 apps/templates/pages/index.html:38
 msgid "Dashboard"
 msgstr "Painel"
 
@@ -180,11 +180,11 @@ msgstr "Laboratórios"
 #: apps/templates/includes/sidebar.html:68 apps/templates/pages/labs_view.html:3
 #: apps/templates/pages/labs_view.html:33 apps/templates/pages/labs_view.html:39
 msgid "View Labs"
-msgstr "Ver Laboratórios"
+msgstr "Ver Labs"
 
 #: apps/templates/includes/sidebar.html:75
 msgid "Create Lab"
-msgstr "Criar Laboratório"
+msgstr "Criar Lab"
 
 #: apps/templates/includes/sidebar.html:83
 msgid "Create ContainerLab"
@@ -192,7 +192,7 @@ msgstr "Criar ContainerLab"
 
 #: apps/templates/includes/sidebar.html:91
 msgid "Lab Answers"
-msgstr "Respostas dos Laboratórios"
+msgstr "Respostas dos Labs"
 
 #: apps/templates/includes/sidebar.html:97
 msgid "Answer Sheet"
@@ -202,19 +202,19 @@ msgstr "Gabarito"
 #: apps/templates/pages/finished_labs.html:3
 #: apps/templates/pages/finished_labs.html:35
 #: apps/templates/pages/finished_labs.html:40
-#: apps/templates/pages/finished_labs.html:53
+#: apps/templates/pages/finished_labs.html:53 apps/templates/pages/index.html:56
 msgid "Finished Labs"
-msgstr "Laboratórios Concluídos"
+msgstr "Labs Concluídos"
 
 #: apps/templates/includes/sidebar.html:113
 msgid "Running Labs"
-msgstr "Laboratórios em Execução"
+msgstr "Labs em Execução"
 
 #: apps/templates/includes/sidebar.html:119
 msgid "MANAGEMENT"
 msgstr "GERENCIAMENTO"
 
-#: apps/templates/includes/sidebar.html:125
+#: apps/templates/includes/sidebar.html:125 apps/templates/pages/index.html:89
 msgid "Users"
 msgstr "Usuários"
 
@@ -236,13 +236,13 @@ msgstr "Suporte"
 #: apps/templates/pages/lab_categories_list.html:48
 #: apps/templates/pages/lab_categories_list.html:61
 msgid "Lab Categories"
-msgstr "Categorias de Laboratório"
+msgstr "Categorias de Labs"
 
 #: apps/templates/includes/sidebar.html:166
 msgid "New"
 msgstr "Novo"
 
-#: apps/templates/includes/sidebar.html:173
+#: apps/templates/includes/sidebar.html:173 apps/templates/pages/index.html:175
 #: apps/templates/pages/k8s_pod_list.html:39
 msgid "Pods"
 msgstr "Pods"
@@ -317,7 +317,7 @@ msgid "Logout"
 msgstr "Sair"
 
 #: apps/templates/pages/confirm_reset_password.html:59
-#: apps/templates/pages/reset_password.html:58
+#: apps/templates/pages/index.html:362 apps/templates/pages/reset_password.html:58
 msgid "Submit"
 msgstr "Enviar"
 
@@ -387,7 +387,7 @@ msgid "No finished labs"
 msgstr "Nenhum laboratório concluído"
 
 #: apps/templates/pages/finished_labs.html:184
-#: apps/templates/pages/groups_list.html:214
+#: apps/templates/pages/groups_list.html:214 apps/templates/pages/index.html:815
 #: apps/templates/pages/k8s_dep_list.html:238
 #: apps/templates/pages/k8s_pod_list.html:244
 #: apps/templates/pages/k8s_srv_list.html:232
@@ -541,7 +541,7 @@ msgstr ""
 
 #: apps/templates/pages/groups_edit.html:205
 #: apps/templates/pages/groups_list.html:127
-#: apps/templates/pages/groups_list.html:155
+#: apps/templates/pages/groups_list.html:155 apps/templates/pages/index.html:361
 #: apps/templates/pages/k8s_dep_list.html:134
 #: apps/templates/pages/k8s_dep_list.html:157
 #: apps/templates/pages/k8s_pod_list.html:138
@@ -620,6 +620,138 @@ msgstr "Entrar no grupo"
 #: apps/templates/pages/groups_list.html:199
 msgid "No group"
 msgstr "Nenhum grupo"
+
+#: apps/templates/pages/index.html:33
+msgid "HackInSDN Dashboard"
+msgstr "Painel HackInSDN"
+
+#: apps/templates/pages/index.html:71
+msgid "Registered Labs"
+msgstr "Labs Registrados"
+
+#: apps/templates/pages/index.html:102
+msgid "Likes"
+msgstr "Curtidas"
+
+#: apps/templates/pages/index.html:145
+msgid "Available CPUs"
+msgstr "CPUs Disponíveis"
+
+#: apps/templates/pages/index.html:155
+msgid "Available Memory"
+msgstr "Memória Disponível"
+
+#: apps/templates/pages/index.html:165
+msgid "Storage capacity"
+msgstr "Capacidade de Armazenamento"
+
+#: apps/templates/pages/index.html:185
+msgid "Nodes"
+msgstr "Nós"
+
+#: apps/templates/pages/index.html:205
+msgid "Lab Usage Report"
+msgstr "Relatório de Uso de Labs"
+
+#: apps/templates/pages/index.html:212
+msgid "Completed Labs in the past 6 months"
+msgstr "Labs Concluídos nos últimos 6 meses"
+
+#: apps/templates/pages/index.html:224
+msgid "User evaluation"
+msgstr "Avaliação do usuário"
+
+#: apps/templates/pages/index.html:228
+msgid "Completed Labs"
+msgstr "Labs Concluídos"
+
+#: apps/templates/pages/index.html:237
+msgid "Answered questions"
+msgstr "Perguntas respondidas"
+
+#: apps/templates/pages/index.html:246
+msgid "Solved Challenges"
+msgstr "Desafios resolvidos"
+
+#: apps/templates/pages/index.html:255
+msgid "Send Inquiries"
+msgstr "Enviar Solicitações"
+
+#: apps/templates/pages/index.html:276
+msgid "LAST MONTH LAB COMPLETION"
+msgstr "CONCLUSÃO DE LABS NO ÚLTIMO MÊS"
+
+#: apps/templates/pages/index.html:287
+msgid "LAST MONTH ANSWRED QUESTIONS"
+msgstr "PERGUNTAS RESPONDIDAS NO ÚLTIMO MÊS"
+
+#: apps/templates/pages/index.html:298
+msgid "LAST MONTH SOLVED CHALLENGES"
+msgstr "DESAFIOS RESOLVIDOS NO ÚLTIMO MÊS"
+
+#: apps/templates/pages/index.html:316
+msgid "Users Feedback"
+msgstr "Feedback dos Usuários"
+
+#: apps/templates/pages/index.html:318
+msgid "View Feedback"
+msgstr "Ver Feedback"
+
+#: apps/templates/pages/index.html:318
+msgid "Add Feedback"
+msgstr "Adicionar Feedback"
+
+#: apps/templates/pages/index.html:319
+msgid "See All"
+msgstr "Ver Tudo"
+
+#: apps/templates/pages/index.html:331
+msgid "Please rate your overall experience on our website!"
+msgstr "Por favor, avalie sua experiência geral em nosso site!"
+
+#: apps/templates/pages/index.html:338
+msgid "Enjoying the platform?"
+msgstr "Está gostando da plataforma?"
+
+#: apps/templates/pages/index.html:344
+msgid "Rating:"
+msgstr "Avaliação:"
+
+#: apps/templates/pages/index.html:356
+msgid "Please leave a comment (Optional):"
+msgstr "Deixe um comentário (Opcional):"
+
+#: apps/templates/pages/index.html:357
+msgid "Leave your comment..."
+msgstr "Deixe seu comentário..."
+
+#: apps/templates/pages/index.html:382
+msgid "Recently Added Labs"
+msgstr "Labs Adicionados Recentemente"
+
+#: apps/templates/pages/index.html:401
+msgid "No short description provided. Click to see more details"
+msgstr "Nenhuma descrição breve fornecida. Clique para ver mais detalhes"
+
+#: apps/templates/pages/index.html:411
+msgid "View All Labs"
+msgstr "Ver Todos os Labs"
+
+#: apps/templates/pages/index.html:423
+msgid "Lab categories and usage"
+msgstr "Categorias e uso de Labs"
+
+#: apps/templates/pages/index.html:662
+msgid "Lab Instances"
+msgstr "Instâncias de Lab"
+
+#: apps/templates/pages/index.html:791
+msgid "Please select a rating before submitting."
+msgstr "Selecione uma avaliação antes de enviar."
+
+#: apps/templates/pages/index.html:818
+msgid "Rating submitted successfully!"
+msgstr "Avaliação enviada com sucesso!"
 
 #: apps/templates/pages/k8s_dep_list.html:3
 #: apps/templates/pages/k8s_dep_list.html:33
