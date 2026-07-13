@@ -1,6 +1,6 @@
 {% extends "layouts/base.html" %}
 
-{% block title %} Profile - {{ user.name }} {% endblock title %}
+{% block title %} {{ _('Profile') }} - {{ user.name }} {% endblock title %}
 
 <!-- Element injected in the BODY element -->
 {% block body_class %} sidebar-mini {% endblock body_class %}
@@ -26,26 +26,26 @@
       <div class="container-fluid">
         <div class="row mb-2">
           <div class="col-sm-6">
-            <h1>View/Update User</h1>
+            <h1>{{ _('View/Update User') }}</h1>
             {% if msg_ok %}
             <div class="alert alert-success alert-dismissible">
               <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-              <h5><i class="icon fas fa-check"></i> User updated successfully!</h5>
+              <h5><i class="icon fas fa-check"></i> {{ _('User updated successfully!') }}</h5>
               {{ msg_ok }}
             </div>
             {% endif %}
             {% if msg_fail %}
             <div class="alert alert-danger alert-dismissible">
               <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-              <h5><i class="icon fas fa-ban"></i> Fail to update user!</h5>
+              <h5><i class="icon fas fa-ban"></i> {{ _('Fail to update user!') }}</h5>
               {{ msg_fail }}
             </div>
             {% endif %}
           </div>
           <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
-              <li class="breadcrumb-item"><a href="/">Home</a></li>
-              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.view_users') }}">Users</a></li>
+              <li class="breadcrumb-item"><a href="/">{{ _('Home') }}</a></li>
+              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.view_users') }}">{{ _('Users') }}</a></li>
               <li class="breadcrumb-item active">{{ user.name }}</li>
             </ol>
           </div>
@@ -58,43 +58,43 @@
       <div class="container-fluid">
         <div class="card card-default">
           <div class="card-header">
-            <h3 class="card-title">User - {{ user.uid }}</h3>
+            <h3 class="card-title">{{ _('User') }} - {{ user.uid }}</h3>
           </div>
           <!-- /.card-header -->
           <div class="card-body">
           <form id="userForm" method="post">
-            <h5>User information</h5>
+            <h5>{{ _('User information') }}</h5>
             <div class="row">
               <div class="col-md-6">
                 <div class="form-group">
-                  <label>Username</label>
+                  <label>{{ _('Username') }}</label>
                   <input name="username" type="text" class="form-control is-valid" value="{{ user.username }}" {{ 'disabled' if user.id != current_user.id and current_user.category != 'admin' else '' }}/>
                 </div>
                 <!-- /.form-group -->
                 <div class="form-group">
-                  <label>E-mail</label>
+                  <label>{{ _('E-mail') }}</label>
                   <input name="email" type="text" class="form-control" value="{{ user.email|default('', true) }}" {{ 'disabled' if user.id != current_user.id and current_user.category != 'admin' else '' }}/>
                 </div>
                 <!-- /.form-group -->
                 <div class="form-group">
-                  <label>First Name</label>
+                  <label>{{ _('First Name') }}</label>
                   <input name="given_name" type="text" class="form-control" value="{{ user.given_name|default('', true) }}" {{ 'disabled' if user.id != current_user.id and current_user.category != 'admin' else '' }}/>
                 </div>
                 <!-- /.form-group -->
                 <div class="form-group">
-                  <label>Last Name</label>
+                  <label>{{ _('Last Name') }}</label>
                   <input name="family_name" type="text" class="form-control" value="{{ user.family_name|default('', true) }}" {{ 'disabled' if user.id != current_user.id and current_user.category != 'admin' else '' }}/>
                 </div>
                 <!-- /.form-group -->
                 {% if current_user.id == user.id or current_user.category == 'admin' %}
                 <div class="form-group">
-                  <label>Password</label>
-                  <input name="password" type="password" class="form-control" placeholder="Password">
+                  <label>{{ _('Password') }}</label>
+                  <input name="password" type="password" class="form-control" placeholder="{{ _('Password') }}">
                 </div>
                 {% endif %}
                 <!-- /.form-group -->
                 <div class="form-group">
-                  <label>User category</label>
+                  <label>{{ _('User category') }}</label>
                   {% if current_user.category == "admin" %}
                   <select name="user_category" class="form-control">
                     <option {{ 'selected' if user.category == 'user' else '' }}>user</option>
@@ -111,19 +111,19 @@
               <div class="col-md-6">
                 <!-- /.form-group -->
                 <div class="form-group">
-                  <label>Issuer</label>
+                  <label>{{ _('Issuer') }}</label>
                   <input type="text" class="form-control" value="{{ user.issuer|default('LOCAL', true) }}" disabled/>
                 </div>
                 <!-- /.form-group -->
                 {% if current_user.category == 'admin' %}
                 <div class="form-group">
-                  <label>Approval notes (user-provided reference)</label>
+                  <label>{{ _('Approval notes (user-provided reference)') }}</label>
                   <textarea name="notes" class="form-control" rows="3" maxlength="1000">{{ user.notes or '' }}</textarea>
                 </div>
                 {% endif %}
                 <!-- /.form-group -->
                 <div class="form-group">
-                  <label>Member of groups:</label>
+                  <label>{{ _('Member of groups:') }}</label>
                   <select name="member_of_groups" multiple class="form-control" disabled>
                     {% for group in user.member_of_groups %}
 		    <option>{{ group.groupname }}</option>
@@ -131,7 +131,7 @@
                   </select>
                 </div>
                 <div class="form-group">
-                  <label>Assistant of groups:</label>
+                  <label>{{ _('Assistant of groups:') }}</label>
                   <select name="assistant_of_groups" multiple class="form-control" disabled>
                     {% for group in user.assistant_of_groups %}
 		    <option>{{ group.groupname }}</option>
@@ -139,7 +139,7 @@
                   </select>
                 </div>
                 <div class="form-group">
-                  <label>Owner of groups:</label>
+                  <label>{{ _('Owner of groups:') }}</label>
                   <select name="owner_of_groups" multiple class="form-control" disabled>
                     {% for group in user.owner_of_groups %}
 		    <option>{{ group.groupname }}</option>
@@ -150,8 +150,8 @@
             </div> <!-- /.row -->
 
             <div class="row">
-              <button class="btn btn-primary" type="submit">Save</button>
-              <a href="{{ url_for(return_path|default('home_blueprint.index', true)) }}" class="btn btn-secondary mx-2" role="button" aria-pressed="true">Cancel</a>
+              <button class="btn btn-primary" type="submit">{{ _('Save') }}</button>
+              <a href="{{ url_for(return_path|default('home_blueprint.index', true)) }}" class="btn btn-secondary mx-2" role="button" aria-pressed="true">{{ _('Cancel') }}</a>
             </div>
             <!-- /.row -->
           </form>
@@ -195,7 +195,7 @@
         },
         messages: {
           username: {
-            pattern: "Invalid character. Allowed letters, numbers, dot (.), underscore (_) or hyphen (-)",
+            pattern: "{{ _('Invalid character. Allowed letters, numbers, dot (.), underscore (_) or hyphen (-)') }}",
           },
         },
         errorElement: 'span',

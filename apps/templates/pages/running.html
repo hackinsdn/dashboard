@@ -1,6 +1,6 @@
 {% extends "layouts/base.html" %}
 
-{% block title %} Running Labs {% endblock title %}
+{% block title %} {{ _('Running Labs') }} {% endblock title %}
 
 <!-- Element injected in the BODY element -->
 {% block body_class %} sidebar-mini layout-navbar-fixed {% endblock body_class %}
@@ -32,12 +32,12 @@
       <div class="container-fluid">
         <div class="row mb-2">
           <div class="col-sm-6">
-            <h1>Running Labs</h1>
+            <h1>{{ _('Running Labs') }}</h1>
           </div>
           <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
-              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.index') }}">Home</a></li>
-              <li class="breadcrumb-item active">Running Labs</li>
+              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.index') }}">{{ _('Home') }}</a></li>
+              <li class="breadcrumb-item active">{{ _('Running Labs') }}</li>
             </ol>
           </div>
         </div>
@@ -50,13 +50,13 @@
         <div class="col-md-12">
           <div class="card">
             <div class="card-header">
-              <h3 class="card-title">Running labs</h3>
+              <h3 class="card-title">{{ _('Running Labs') }}</h3>
               <div class="float-right">
                 <button type="button" class="btn btn-default btn-sm checkbox-toggle"><i class="far fa-square"></i></button>
                 <button type="button" class="btn btn-default btn-sm" data-toggle="modal" data-target="#modal-default">
                   <i class="far fa-trash-alt"></i>
                 </button>
-                <button type="button" title="Clear table filters" class="btn btn-default btn-sm clear-table-state"><i class="far fa-recycle"></i></button>
+                <button type="button" title="{{ _('Clear table filters') }}" class="btn btn-default btn-sm clear-table-state"><i class="far fa-recycle"></i></button>
               </div>
               <div class="row">
                 <!-- left column -->
@@ -64,12 +64,12 @@
                   <form>
                     <div class="form-group row">
                       <div class="col-md-4">
-                        <label>Filter by group:</label>
+                        <label>{{ _('Filter by group:') }}</label>
                       </div>
                       <div class="col-md-8">
                         <select name="filter_group" class="form-control" onchange="this.form.submit()">
-                          <option value="">My own labs</option>
-                          <option value="all" {{ 'selected' if filter_group == 'all' else '' }}>All labs</option>
+                          <option value="">{{ _('My own labs') }}</option>
+                          <option value="all" {{ 'selected' if filter_group == 'all' else '' }}>{{ _('All labs') }}</option>
                           {% for group_id in groups %}
                           <option value="{{ group_id }}" {{ 'selected' if filter_group == group_id else '' }}>{{ groups[group_id].groupname }}</option>
                           {% endfor %}
@@ -93,10 +93,10 @@
                 <thead>
                   <tr>
                     <th></th>
-                    <th>User</th>
-                    <th>Lab title</th>
-                    <th>Created (UTC)</th>
-                    <th>Actions</th>
+                    <th>{{ _('User') }}</th>
+                    <th>{{ _('Lab title') }}</th>
+                    <th>{{ _('Created (UTC)') }}</th>
+                    <th>{{ _('Actions') }}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -112,7 +112,7 @@
                   <td>{{ lab['title'] }}</td>
                   <td>{{ lab['created'] }}</td>
                   <td>
-                    <a class="btn btn-default" href="{{ url_for('home_blueprint.view_lab_instance', lab_id=lab['lab_instance_id']) }}"><i class="fas fa-eye"></i> View</a>
+                    <a class="btn btn-default" href="{{ url_for('home_blueprint.view_lab_instance', lab_id=lab['lab_instance_id']) }}"><i class="fas fa-eye"></i> {{ _('View') }}</a>
                   </td>
                 </tr>
                 {% endfor %}
@@ -130,7 +130,7 @@
                 <button type="button" class="btn btn-default btn-sm" data-toggle="modal" data-target="#modal-default">
                   <i class="far fa-trash-alt"></i>
                 </button>
-                <button type="button" title="Clear table filters" class="btn btn-default btn-sm clear-table-state"><i class="far fa-recycle"></i></button>
+                <button type="button" title="{{ _('Clear table filters') }}" class="btn btn-default btn-sm clear-table-state"><i class="far fa-recycle"></i></button>
               </div>
             </div>
           </div>
@@ -144,18 +144,18 @@
         <div class="modal-dialog">
           <div class="modal-content">
             <div class="modal-header">
-              <h4 class="modal-title">Confirm Lab removal</h4>
+              <h4 class="modal-title">{{ _('Confirm Lab removal') }}</h4>
               <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                 <span aria-hidden="true">&times;</span>
               </button>
             </div>
             <div class="modal-body">
-              <p>Are you sure you want to remove the selected Labs?</p>
+              <p>{{ _('Are you sure you want to remove the selected Labs?') }}</p>
               <ul id="modal-default-items"></ul>
             </div>
             <div class="modal-footer justify-content-between">
-              <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-              <button type="button" class="btn btn-danger" id="delete-labs">Delete Labs</button>
+              <button type="button" class="btn btn-default" data-dismiss="modal">{{ _('Cancel') }}</button>
+              <button type="button" class="btn btn-danger" id="delete-labs">{{ _('Delete Labs') }}</button>
             </div>
           </div>
           <!-- /.modal-content -->
@@ -217,7 +217,7 @@
         responsive: false,
         autoWidth: false,
         language: {
-          emptyTable: 'No running labs',
+          emptyTable: '{{ _("No running labs") }}',
         },
         columns: [
           {
@@ -240,7 +240,7 @@
       if ( sessionStorage.getItem('msgSuccess') ) {
         $(document).Toasts('create', {
           class: 'bg-success',
-          title: 'Sucess',
+          title: '{{ _("Success") }}',
           body: sessionStorage.getItem('msgSuccess')
         });
         sessionStorage.removeItem('msgSuccess');
@@ -248,7 +248,7 @@
       if ( sessionStorage.getItem('msgFail') ) {
         $(document).Toasts('create', {
           class: 'bg-danger',
-          title: 'Failure',
+          title: '{{ _("Failure") }}',
           body: sessionStorage.getItem('msgFail')
         });
         sessionStorage.removeItem('msgFail');
@@ -256,7 +256,7 @@
       //Enable check and uncheck all functionality
       $('#delete-labs').click(function () {
         var rows = $('#tableLabs tr').filter(':has(:checkbox:checked)');
-        $("#delete-labs").html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Deleting ' + table.rows(rows).data().length + ' row(s)...');
+        $("#delete-labs").html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> {{ _("Deleting") }} ' + table.rows(rows).data().length + ' {{ _("row(s)...") }}');
         $("#delete-labs").prop('disabled', true);
         var items = [];
         table.rows(rows).each( function ( index ) {
@@ -290,7 +290,7 @@
         items.empty();
         $("#delete-labs").prop('disabled', false);
         if (data.length === 0) {
-          items.append("<li>No lab selected!</li>");
+          items.append("<li>{{ _('No lab selected!') }}</li>");
           $("#delete-labs").prop('disabled', true);
           return;
         }
