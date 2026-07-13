@@ -1,6 +1,6 @@
 {% extends "layouts/base.html" %}
 
-{% block title %} Lab Completed {% endblock title %}
+{% block title %} {{ _('Lab Completed') }} {% endblock title %}
 
 {% block body_class %} sidebar-mini layout-navbar-fixed {% endblock body_class %}
 
@@ -55,13 +55,13 @@
       <div class="container-fluid">
         <div class="row mb-2">
           <div class="col-sm-6">
-            <h1>Lab Completed</h1>
+            <h1>{{ _('Lab Completed') }}</h1>
           </div>
           <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
-              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.index') }}">Home</a></li>
-              <li class="breadcrumb-item"><a href="#">Labs</a></li>
-              <li class="breadcrumb-item active">Lab Completed</li>
+              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.index') }}">{{ _('Home') }}</a></li>
+              <li class="breadcrumb-item"><a href="#">{{ _('Labs') }}</a></li>
+              <li class="breadcrumb-item active">{{ _('Lab Completed') }}</li>
             </ol>
           </div>
         </div>
@@ -77,27 +77,27 @@
               <div class="card-body text-center py-5">
                 <div id="confetti-container"></div>
                 <i class="fas fa-check-circle success-icon"></i>
-                <h2 class="mb-4">Congratulations!</h2>
+                <h2 class="mb-4">{{ _('Congratulations!') }}</h2>
                 <p class="success-message">
-                  <strong>You have successfully completed the laboratory!</strong>
+                  <strong>{{ _('You have successfully completed the laboratory!') }}</strong>
                 </p>
                 <p class="success-message">
-                  Your answers have been successfully saved in the system.
+                  {{ _('Your answers have been successfully saved in the system.') }}
                 </p>
                 <p class="text-muted">
-                  You can execute this laboratory again as many times as you want.
+                  {{ _('You can execute this laboratory again as many times as you want.') }}
                 </p>
 
                 {% if lti_grade_status == "sent" %}
                 <div class="alert alert-info" role="alert">
                   <i class="fas fa-graduation-cap"></i>
-                  Your answers and grade were sent to your course gradebook.
+                  {{ _('Your answers and grade were sent to your course gradebook.') }}
                 </div>
                 {% endif %}
 
                 <div class="success-actions">
                   <a href="{{ url_for('home_blueprint.view_labs', lab_id=lab_id) }}" type="button" class="btn btn-primary btn-lg mr-2" id="retry-lab">
-                    <i class="fas fa-redo"></i> Execute Again
+                    <i class="fas fa-redo"></i> {{ _('Execute Again') }}
                   </a>
                   <!-- Future feature: View Answers -->
                   <!-- <button type="button" class="btn btn-outline-secondary btn-lg" id="view-answers">
@@ -107,7 +107,7 @@
 
                 <div class="mt-4">
                   <a href="{{ url_for('home_blueprint.index') }}" class="text-muted">
-                    <i class="fas fa-arrow-left mr-1"></i> Back to Home
+                    <i class="fas fa-arrow-left mr-1"></i> {{ _('Back to Home') }}
                   </a>
                 </div>
               </div>
@@ -120,7 +120,7 @@
                   </div> -->
                   <div class="col-md-4 text-center">
                     <h4 id="completion-date">12/05/2023</h4>
-                    <small class="text-muted">Completion Date</small>
+                    <small class="text-muted">{{ _('Completion Date') }}</small>
                   </div>
                 </div>
               </div>

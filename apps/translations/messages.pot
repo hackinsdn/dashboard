@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-07-13 11:07-0300\n"
+"POT-Creation-Date: 2026-07-13 11:51-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -92,6 +92,9 @@ msgstr ""
 
 #: apps/templates/includes/navigation.html:10
 #: apps/templates/pages/edit_user.html:47 apps/templates/pages/error.html:32
+#: apps/templates/pages/feedback_view.html:3
+#: apps/templates/pages/feedback_view.html:35
+#: apps/templates/pages/finished_lab_infos.html:62
 #: apps/templates/pages/finished_labs.html:39
 #: apps/templates/pages/gallery.html:35
 #: apps/templates/pages/groups_edit.html:54
@@ -103,6 +106,7 @@ msgstr ""
 #: apps/templates/pages/lab_answers_sheet.html:47
 #: apps/templates/pages/lab_categories_edit.html:47
 #: apps/templates/pages/lab_categories_list.html:47
+#: apps/templates/pages/lab_instance_view.html:88
 #: apps/templates/pages/labs_view.html:37
 #: apps/templates/pages/my_support_thread_view.html:27
 #: apps/templates/pages/my_support_threads.html:25
@@ -182,6 +186,7 @@ msgid "Groups"
 msgstr ""
 
 #: apps/templates/includes/sidebar.html:60
+#: apps/templates/pages/finished_lab_infos.html:63
 #: apps/templates/pages/lab_answers_list.html:48
 #: apps/templates/pages/lab_answers_sheet.html:48
 #: apps/templates/pages/labs_view.html:38 apps/templates/pages/run_lab.html:44
@@ -223,9 +228,10 @@ msgstr ""
 msgid "Finished Labs"
 msgstr ""
 
-#: apps/templates/includes/sidebar.html:113 apps/templates/pages/running.html:3
-#: apps/templates/pages/running.html:35 apps/templates/pages/running.html:40
-#: apps/templates/pages/running.html:53
+#: apps/templates/includes/sidebar.html:113
+#: apps/templates/pages/lab_instance_view.html:89
+#: apps/templates/pages/running.html:3 apps/templates/pages/running.html:35
+#: apps/templates/pages/running.html:40 apps/templates/pages/running.html:53
 msgid "Running Labs"
 msgstr ""
 
@@ -276,6 +282,7 @@ msgstr ""
 
 #: apps/templates/includes/sidebar.html:185
 #: apps/templates/pages/k8s_srv_list.html:39
+#: apps/templates/pages/lab_instance_view.html:129
 msgid "Services"
 msgstr ""
 
@@ -428,6 +435,7 @@ msgstr ""
 #: apps/templates/pages/lab_answers_list.html:163
 #: apps/templates/pages/lab_categories_edit.html:88
 #: apps/templates/pages/lab_categories_list.html:124
+#: apps/templates/pages/lab_instance_view.html:216
 #: apps/templates/pages/labs_view.html:195
 #: apps/templates/pages/labs_view.html:218
 #: apps/templates/pages/running.html:157 apps/templates/pages/users.html:137
@@ -464,6 +472,65 @@ msgstr ""
 
 #: apps/templates/pages/error.html:47
 msgid "Failed to run task."
+msgstr ""
+
+#: apps/templates/pages/feedback_view.html:31
+#: apps/templates/pages/feedback_view.html:36
+msgid "Feedbacks"
+msgstr ""
+
+#: apps/templates/pages/feedback_view.html:50
+msgid "User Feedbacks"
+msgstr ""
+
+#: apps/templates/pages/feedback_view.html:76
+msgid "Unhide"
+msgstr ""
+
+#: apps/templates/pages/feedback_view.html:82
+msgid "Hide"
+msgstr ""
+
+#: apps/templates/pages/feedback_view.html:94
+msgid "No feedbacks available yet."
+msgstr ""
+
+#: apps/templates/pages/finished_lab_infos.html:3
+#: apps/templates/pages/finished_lab_infos.html:58
+#: apps/templates/pages/finished_lab_infos.html:64
+msgid "Lab Completed"
+msgstr ""
+
+#: apps/templates/pages/finished_lab_infos.html:80
+msgid "Congratulations!"
+msgstr ""
+
+#: apps/templates/pages/finished_lab_infos.html:82
+msgid "You have successfully completed the laboratory!"
+msgstr ""
+
+#: apps/templates/pages/finished_lab_infos.html:85
+msgid "Your answers have been successfully saved in the system."
+msgstr ""
+
+#: apps/templates/pages/finished_lab_infos.html:88
+msgid "You can execute this laboratory again as many times as you want."
+msgstr ""
+
+#: apps/templates/pages/finished_lab_infos.html:94
+msgid "Your answers and grade were sent to your course gradebook."
+msgstr ""
+
+#: apps/templates/pages/finished_lab_infos.html:100
+msgid "Execute Again"
+msgstr ""
+
+#: apps/templates/pages/finished_lab_infos.html:110
+msgid "Back to Home"
+msgstr ""
+
+#: apps/templates/pages/finished_lab_infos.html:123
+msgid "Completion Date"
 msgstr ""
 
 #: apps/templates/pages/finished_labs.html:60
@@ -511,6 +578,8 @@ msgstr ""
 #: apps/templates/pages/lab_answers_list.html:273
 #: apps/templates/pages/lab_answers_sheet.html:164
 #: apps/templates/pages/lab_categories_list.html:180
+#: apps/templates/pages/lab_instance_view.html:436
+#: apps/templates/pages/lab_instance_view.html:537
 #: apps/templates/pages/running.html:243 apps/templates/pages/users.html:250
 msgid "Success"
 msgstr ""
@@ -891,6 +960,7 @@ msgstr ""
 #: apps/templates/pages/k8s_dep_list.html:71
 #: apps/templates/pages/k8s_pod_list.html:72
 #: apps/templates/pages/k8s_srv_list.html:68
+#: apps/templates/pages/lab_instance_view.html:127
 msgid "Age"
 msgstr ""
 
@@ -1015,10 +1085,12 @@ msgid "Status"
 msgstr ""
 
 #: apps/templates/pages/k8s_pod_list.html:73
+#: apps/templates/pages/lab_instance_view.html:126
 msgid "IP"
 msgstr ""
 
 #: apps/templates/pages/k8s_pod_list.html:74
+#: apps/templates/pages/lab_instance_view.html:125
 msgid "Node"
 msgstr ""
 
@@ -1314,6 +1386,142 @@ msgstr ""
 msgid "No lab category"
 msgstr ""
 
+#: apps/templates/pages/lab_instance_view.html:3
+#: apps/templates/pages/lab_instance_view.html:84
+msgid "View Lab Instance"
+msgstr ""
+
+#: apps/templates/pages/lab_instance_view.html:90
+msgid "View Lab"
+msgstr ""
+
+#: apps/templates/pages/lab_instance_view.html:103
+#, python-format
+msgid "Lab title: %(title)s / Lab owner: %(owner)s"
+msgstr ""
+
+#: apps/templates/pages/lab_instance_view.html:105
+#: apps/templates/pages/lab_instance_view.html:321
+#: apps/templates/pages/lab_instance_view.html:543
+msgid "Expires at:"
+msgstr ""
+
+#: apps/templates/pages/lab_instance_view.html:105
+msgid "Never"
+msgstr ""
+
+#: apps/templates/pages/lab_instance_view.html:106
+#: apps/templates/pages/labs_view.html:120
+#: apps/templates/pages/waiting_approval.html:68
+msgid "Collapse"
+msgstr ""
+
+#: apps/templates/pages/lab_instance_view.html:109
+#: apps/templates/pages/labs_view.html:123
+#: apps/templates/pages/waiting_approval.html:71
+msgid "Remove"
+msgstr ""
+
+#: apps/templates/pages/lab_instance_view.html:112
+msgid "Pin header to top"
+msgstr ""
+
+#: apps/templates/pages/lab_instance_view.html:123
+msgid "Pod Name"
+msgstr ""
+
+#: apps/templates/pages/lab_instance_view.html:124
+msgid "Info"
+msgstr ""
+
+#: apps/templates/pages/lab_instance_view.html:128
+msgid "Terminals"
+msgstr ""
+
+#: apps/templates/pages/lab_instance_view.html:178
+msgid "Save &amp; Finish Lab"
+msgstr ""
+
+#: apps/templates/pages/lab_instance_view.html:183
+msgid "Extend Lab"
+msgstr ""
+
+#: apps/templates/pages/lab_instance_view.html:186
+msgid "Select a time to extend the lab expiration"
+msgstr ""
+
+#: apps/templates/pages/lab_instance_view.html:188
+msgid "+ 1 day"
+msgstr ""
+
+#: apps/templates/pages/lab_instance_view.html:189
+msgid "+ 1 week"
+msgstr ""
+
+#: apps/templates/pages/lab_instance_view.html:190
+msgid "+ 1 month"
+msgstr ""
+
+#: apps/templates/pages/lab_instance_view.html:207
+msgid "Confirm Finish Lab"
+msgstr ""
+
+#: apps/templates/pages/lab_instance_view.html:213
+msgid ""
+"Are you sure you want to Finish this Lab? (Make sure to save any data you"
+" want! After finishing the lab, resources will be deleted.)"
+msgstr ""
+
+#: apps/templates/pages/lab_instance_view.html:217
+#: apps/templates/pages/lab_instance_view.html:239
+msgid "Finish Lab"
+msgstr ""
+
+#: apps/templates/pages/lab_instance_view.html:230
+msgid "Lab Guide"
+msgstr ""
+
+#: apps/templates/pages/lab_instance_view.html:242
+msgid "Save Answers"
+msgstr ""
+
+#: apps/templates/pages/lab_instance_view.html:323
+msgid "Expired!"
+msgstr ""
+
+#: apps/templates/pages/lab_instance_view.html:333
+#: apps/templates/pages/lab_instance_view.html:338
+msgid "Copy to clipboard"
+msgstr ""
+
+#: apps/templates/pages/lab_instance_view.html:338
+msgid "Copy"
+msgstr ""
+
+#: apps/templates/pages/lab_instance_view.html:347
+msgid "Copied!"
+msgstr ""
+
+#: apps/templates/pages/lab_instance_view.html:358
+msgid "Finishing..."
+msgstr ""
+
+#: apps/templates/pages/lab_instance_view.html:445
+msgid "Failure to save Lab Answers"
+msgstr ""
+
+#: apps/templates/pages/lab_instance_view.html:513
+msgid "Failed to load Lab Answers"
+msgstr ""
+
+#: apps/templates/pages/lab_instance_view.html:540
+msgid "Lab duration/expiration extended successfully"
+msgstr ""
+
+#: apps/templates/pages/lab_instance_view.html:548
+msgid "Failure to extend Lab"
+msgstr ""
+
 #: apps/templates/pages/labs_view.html:57
 msgid "Clear"
 msgstr ""
@@ -1346,16 +1554,6 @@ msgstr ""
 
 #: apps/templates/pages/labs_view.html:117
 msgid "Deleted"
-msgstr ""
-
-#: apps/templates/pages/labs_view.html:120
-#: apps/templates/pages/waiting_approval.html:68
-msgid "Collapse"
-msgstr ""
-
-#: apps/templates/pages/labs_view.html:123
-#: apps/templates/pages/waiting_approval.html:71
-msgid "Remove"
 msgstr ""
 
 #: apps/templates/pages/labs_view.html:150
