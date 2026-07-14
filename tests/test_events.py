@@ -113,12 +113,42 @@ class TestHelpers:
         stream = MagicMock()
         stream.is_open.side_effect = [True, True, False]
         stream.read_stdout.return_value = "hello"
+        stream.returncode = 0
 
         events.read_and_forward_k8s_stream_output("sid1", stream)
 
         assert captured_emits[0][0][0] == "pty-output"
         assert captured_emits[0][0][1] == {"output": "hello"}
+        # server-disconnected must carry a returncode payload; without it the
+        # browser client crashes reading `data.returncode` on undefined.
         assert captured_emits[-1][0][0] == "server-disconnected"
+        assert captured_emits[-1][0][1] == {"returncode": 0}
+
+    def test_k8s_stream_forwards_nonzero_returncode(self, captured_emits):
+        stream = MagicMock()
+        stream.is_open.side_effect = [False]
+        stream.returncode = 137
+
+        events.read_and_forward_k8s_stream_output("sid1", stream)
+
+        assert captured_emits[-1][0][0] == "server-disconnected"
+        assert captured_emits[-1][0][1] == {"returncode": 137}
+
+    def test_k8s_stream_returncode_error_falls_back_to_none(self, captured_emits):
+        # A dedicated fake (not MagicMock) so the raising `returncode` property
+        # lives on this class only and can't leak onto the shared MagicMock type.
+        class _RaisingStream:
+            def is_open(self):
+                return False
+
+            @property
+            def returncode(self):
+                raise RuntimeError("no status")
+
+        events.read_and_forward_k8s_stream_output("sid1", _RaisingStream())
+
+        assert captured_emits[-1][0][0] == "server-disconnected"
+        assert captured_emits[-1][0][1] == {"returncode": None}
 
     def test_read_and_forward_pty_output(self, captured_emits, monkeypatch):
         fd, pid = 5, 4321
