@@ -1,6 +1,6 @@
 {% extends "layouts/base.html" %}
 
-{% block title %} LTI Management {% endblock title %}
+{% block title %} {{ _('LTI Management') }} {% endblock title %}
 
 <!-- Element injected in the BODY element -->
 {% block body_class %} sidebar-mini layout-navbar-fixed {% endblock body_class %}
@@ -28,11 +28,11 @@
       <div class="container-fluid">
         <div class="row mb-2">
           <div class="col-sm-6">
-            <h1>LTI Management</h1>
+            <h1>{{ _('LTI Management') }}</h1>
           </div>
           <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
-              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.index') }}">Home</a></li>
+              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.index') }}">{{ _('Home') }}</a></li>
               <li class="breadcrumb-item active">LTI</li>
             </ol>
           </div>
@@ -48,22 +48,20 @@
         <div class="col-md-12">
           <div class="card">
             <div class="card-header">
-              <h3 class="card-title"><i class="fas fa-plug mr-1"></i> Platform Registrations</h3>
+              <h3 class="card-title"><i class="fas fa-plug mr-1"></i> {{ _('Platform Registrations') }}</h3>
             </div>
             <div class="card-body">
               <p class="text-muted">
-                LTI 1.3 platform registrations (created by dynamic registration).
-                Rotate a registration's signing key or show its public key (PEM) to
-                paste into the LMS when it cannot fetch <code>/lti/jwks/</code>.
+                {{ _('LTI 1.3 platform registrations (created by dynamic registration). Rotate a registration\'s signing key or show its public key (PEM) to paste into the LMS when it cannot fetch <code>/lti/jwks/</code>.')|safe }}
               </p>
               <table id="tableRegistrations" class="table table-striped display">
                 <thead>
                   <tr>
-                    <th>Issuer</th>
-                    <th>Client ID</th>
-                    <th>Deployment IDs</th>
-                    <th>Default</th>
-                    <th>Actions</th>
+                    <th>{{ _('Issuer') }}</th>
+                    <th>{{ _('Client ID') }}</th>
+                    <th>{{ _('Deployment IDs') }}</th>
+                    <th>{{ _('Default') }}</th>
+                    <th>{{ _('Actions') }}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -72,15 +70,15 @@
                   <td>{{ reg.issuer }}</td>
                   <td>{{ reg.client_id }}</td>
                   <td>{{ reg.deployment_ids | join(', ') }}</td>
-                  <td>{% if reg.is_default %}<span class="badge badge-success">default</span>{% endif %}</td>
+                  <td>{% if reg.is_default %}<span class="badge badge-success">{{ _('default') }}</span>{% endif %}</td>
                   <td>
                     <button type="button" class="btn btn-outline-dark btn-sm btn-show-key"
                             data-issuer="{{ reg.issuer }}" data-client-id="{{ reg.client_id }}">
-                      <i class="fas fa-key"></i> Public Key
+                      <i class="fas fa-key"></i> {{ _('Public Key') }}
                     </button>
                     <button type="button" class="btn btn-outline-warning btn-sm btn-rotate-key"
                             data-issuer="{{ reg.issuer }}" data-client-id="{{ reg.client_id }}">
-                      <i class="fas fa-sync-alt"></i> Rotate Key
+                      <i class="fas fa-sync-alt"></i> {{ _('Rotate Key') }}
                     </button>
                   </td>
                 </tr>
@@ -97,27 +95,26 @@
         <div class="col-md-12">
           <div class="card">
             <div class="card-header">
-              <h3 class="card-title"><i class="fas fa-ticket-alt mr-1"></i> Registration Tokens</h3>
+              <h3 class="card-title"><i class="fas fa-ticket-alt mr-1"></i> {{ _('Registration Tokens') }}</h3>
               <div class="float-right">
                 <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#modal-mint-token">
-                  <i class="fas fa-plus"></i> Mint Token
+                  <i class="fas fa-plus"></i> {{ _('Mint Token') }}
                 </button>
               </div>
             </div>
             <div class="card-body">
               <p class="text-muted">
-                One-time credentials for the dynamic registration endpoint. The token
-                itself is shown only once, at mint time; only its hash is stored.
+                {{ _('One-time credentials for the dynamic registration endpoint. The token itself is shown only once, at mint time; only its hash is stored.') }}
               </p>
               <table id="tableTokens" class="table table-striped display">
                 <thead>
                   <tr>
-                    <th>ID</th>
-                    <th>Label</th>
-                    <th>Created</th>
-                    <th>Expires</th>
-                    <th>Used</th>
-                    <th>Status</th>
+                    <th>{{ _('ID') }}</th>
+                    <th>{{ _('Label') }}</th>
+                    <th>{{ _('Created') }}</th>
+                    <th>{{ _('Expires') }}</th>
+                    <th>{{ _('Used') }}</th>
+                    <th>{{ _('Status') }}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -130,11 +127,11 @@
                   <td>{{ token.used_at.strftime('%Y-%m-%d %H:%M') if token.used_at else '-' }}</td>
                   <td>
                     {% if token.used_at %}
-                      <span class="badge badge-secondary">used</span>
+                      <span class="badge badge-secondary">{{ _('used') }}</span>
                     {% elif token.is_expired %}
-                      <span class="badge badge-danger">expired</span>
+                      <span class="badge badge-danger">{{ _('expired') }}</span>
                     {% else %}
-                      <span class="badge badge-success">valid</span>
+                      <span class="badge badge-success">{{ _('valid') }}</span>
                     {% endif %}
                   </td>
                 </tr>
@@ -151,24 +148,22 @@
         <div class="col-md-12">
           <div class="card">
             <div class="card-header">
-              <h3 class="card-title"><i class="fas fa-archive mr-1"></i> Retired Keys</h3>
+              <h3 class="card-title"><i class="fas fa-archive mr-1"></i> {{ _('Retired Keys') }}</h3>
               <div class="float-right">
                 <button type="button" class="btn btn-danger btn-sm" data-toggle="modal" data-target="#modal-purge-keys">
-                  <i class="far fa-trash-alt"></i> Purge Retired Keys
+                  <i class="far fa-trash-alt"></i> {{ _('Purge Retired Keys') }}
                 </button>
               </div>
             </div>
             <div class="card-body">
               <p class="text-muted">
-                Rotated keys stay published in <code>/lti/jwks/</code> during a grace
-                period so platforms validating cached tokens keep finding the old key.
-                Purge them once the grace period has passed.
+                {{ _('Rotated keys stay published in <code>/lti/jwks/</code> during a grace period so platforms validating cached tokens keep finding the old key. Purge them once the grace period has passed.')|safe }}
               </p>
               <table id="tableRetired" class="table table-striped display">
                 <thead>
                   <tr>
-                    <th>Key File</th>
-                    <th>Retired At (UTC)</th>
+                    <th>{{ _('Key File') }}</th>
+                    <th>{{ _('Retired At (UTC)') }}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -190,33 +185,33 @@
         <div class="modal-dialog">
           <div class="modal-content">
             <div class="modal-header">
-              <h4 class="modal-title">Mint Registration Token</h4>
+              <h4 class="modal-title">{{ _('Mint Registration Token') }}</h4>
               <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                 <span aria-hidden="true">&times;</span>
               </button>
             </div>
             <div class="modal-body">
               <div class="form-group">
-                <label for="mint-label">Label (who this token is for)</label>
-                <input type="text" class="form-control" id="mint-label" placeholder="e.g. Prof. Smith / Moodle prod">
+                <label for="mint-label">{{ _('Label (who this token is for)') }}</label>
+                <input type="text" class="form-control" id="mint-label" placeholder="{{ _('e.g. Prof. Smith / Moodle prod') }}">
               </div>
               <div class="form-group">
-                <label for="mint-ttl">Validity (hours)</label>
+                <label for="mint-ttl">{{ _('Validity (hours)') }}</label>
                 <input type="number" class="form-control" id="mint-ttl" value="24" min="1">
               </div>
               <div id="mint-result" class="d-none">
-                <label>Registration URL (shown once — hand it to the LMS admin):</label>
+                <label>{{ _('Registration URL (shown once — hand it to the LMS admin):') }}</label>
                 <div class="input-group">
                   <input type="text" class="form-control" id="mint-url" readonly>
                   <div class="input-group-append">
-                    <button type="button" class="btn btn-default" id="mint-copy" title="Copy URL"><i class="far fa-copy"></i></button>
+                    <button type="button" class="btn btn-default" id="mint-copy" title="{{ _('Copy URL') }}"><i class="far fa-copy"></i></button>
                   </div>
                 </div>
               </div>
             </div>
             <div class="modal-footer justify-content-between">
-              <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-              <button type="button" class="btn btn-primary" id="mint-submit">Mint Token</button>
+              <button type="button" class="btn btn-default" data-dismiss="modal">{{ _('Close') }}</button>
+              <button type="button" class="btn btn-primary" id="mint-submit">{{ _('Mint Token') }}</button>
             </div>
           </div>
         </div>
@@ -227,25 +222,24 @@
         <div class="modal-dialog">
           <div class="modal-content">
             <div class="modal-header">
-              <h4 class="modal-title">Rotate Signing Key</h4>
+              <h4 class="modal-title">{{ _('Rotate Signing Key') }}</h4>
               <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                 <span aria-hidden="true">&times;</span>
               </button>
             </div>
             <div class="modal-body">
-              <p>Rotate the signing key for this registration?</p>
+              <p>{{ _('Rotate the signing key for this registration?') }}</p>
               <ul>
-                <li><strong>Issuer:</strong> <span id="rotate-issuer"></span></li>
-                <li><strong>Client ID:</strong> <span id="rotate-client-id"></span></li>
+                <li><strong>{{ _('Issuer:') }}</strong> <span id="rotate-issuer"></span></li>
+                <li><strong>{{ _('Client ID:') }}</strong> <span id="rotate-client-id"></span></li>
               </ul>
               <p class="text-muted">
-                The new key is published immediately; the old key is retired but stays
-                published in <code>/lti/jwks/</code> until you purge it after the grace period.
+                {{ _('The new key is published immediately; the old key is retired but stays published in <code>/lti/jwks/</code> until you purge it after the grace period.')|safe }}
               </p>
             </div>
             <div class="modal-footer justify-content-between">
-              <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-              <button type="button" class="btn btn-warning" id="rotate-confirm">Rotate Key</button>
+              <button type="button" class="btn btn-default" data-dismiss="modal">{{ _('Cancel') }}</button>
+              <button type="button" class="btn btn-warning" id="rotate-confirm">{{ _('Rotate Key') }}</button>
             </div>
           </div>
         </div>
@@ -256,21 +250,21 @@
         <div class="modal-dialog">
           <div class="modal-content">
             <div class="modal-header">
-              <h4 class="modal-title">Purge Retired Keys</h4>
+              <h4 class="modal-title">{{ _('Purge Retired Keys') }}</h4>
               <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                 <span aria-hidden="true">&times;</span>
               </button>
             </div>
             <div class="modal-body">
-              <p>Delete retired key files older than the grace period.</p>
+              <p>{{ _('Delete retired key files older than the grace period.') }}</p>
               <div class="form-group">
-                <label for="purge-days">Grace period (days)</label>
+                <label for="purge-days">{{ _('Grace period (days)') }}</label>
                 <input type="number" class="form-control" id="purge-days" value="30" min="0">
               </div>
             </div>
             <div class="modal-footer justify-content-between">
-              <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-              <button type="button" class="btn btn-danger" id="purge-confirm">Purge</button>
+              <button type="button" class="btn btn-default" data-dismiss="modal">{{ _('Cancel') }}</button>
+              <button type="button" class="btn btn-danger" id="purge-confirm">{{ _('Purge') }}</button>
             </div>
           </div>
         </div>
@@ -281,18 +275,18 @@
         <div class="modal-dialog modal-lg">
           <div class="modal-content">
             <div class="modal-header">
-              <h4 class="modal-title">Registration Public Key</h4>
+              <h4 class="modal-title">{{ _('Registration Public Key') }}</h4>
               <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                 <span aria-hidden="true">&times;</span>
               </button>
             </div>
             <div class="modal-body">
-              <p class="text-muted">Paste this into the LMS as the tool's RSA key when it cannot fetch <code>/lti/jwks/</code>.</p>
+              <p class="text-muted">{{ _('Paste this into the LMS as the tool\'s RSA key when it cannot fetch <code>/lti/jwks/</code>.')|safe }}</p>
               <pre id="show-key-pem" style="white-space: pre-wrap; word-break: break-all;"></pre>
             </div>
             <div class="modal-footer justify-content-between">
-              <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-              <button type="button" class="btn btn-primary" id="show-key-copy"><i class="far fa-copy"></i> Copy</button>
+              <button type="button" class="btn btn-default" data-dismiss="modal">{{ _('Close') }}</button>
+              <button type="button" class="btn btn-primary" id="show-key-copy"><i class="far fa-copy"></i> {{ _('Copy') }}</button>
             </div>
           </div>
         </div>
@@ -323,19 +317,19 @@
   <script>
     $(function () {
       $("#tableRegistrations").DataTable({ responsive: true, autoWidth: false,
-        language: { emptyTable: 'No platform registrations yet' } });
+        language: { emptyTable: '{{ _("No platform registrations yet") }}' } });
       $("#tableTokens").DataTable({ responsive: true, autoWidth: false, order: [[0, 'desc']],
-        language: { emptyTable: 'No registration tokens minted yet' } });
+        language: { emptyTable: '{{ _("No registration tokens minted yet") }}' } });
       $("#tableRetired").DataTable({ responsive: true, autoWidth: false,
-        language: { emptyTable: 'No retired keys' } });
+        language: { emptyTable: '{{ _("No retired keys") }}' } });
 
       function toast(cls, title, body) {
         $(document).Toasts('create', { class: cls, title: title, body: body, autohide: true, delay: 5000 });
       }
       function showFail(xhr) {
-        var msg = 'Request failed';
+        var msg = '{{ _("Request failed") }}';
         try { msg = JSON.parse(xhr.responseText).error || msg; } catch (e) {}
-        toast('bg-danger', 'Failure', msg);
+        toast('bg-danger', '{{ _("Failure") }}', msg);
       }
       function copyText(text) {
         if (navigator.clipboard) { navigator.clipboard.writeText(text); }
@@ -343,7 +337,7 @@
 
       // pop success toasts persisted across a reload
       if (sessionStorage.getItem('msgSuccess')) {
-        toast('bg-success', 'Success', sessionStorage.getItem('msgSuccess'));
+        toast('bg-success', '{{ _("Success") }}', sessionStorage.getItem('msgSuccess'));
         sessionStorage.removeItem('msgSuccess');
       }
 
@@ -355,7 +349,7 @@
       });
       $('#mint-submit').click(function () {
         var label = $('#mint-label').val().trim();
-        if (!label) { toast('bg-warning', 'Missing label', 'Please enter a label'); return; }
+        if (!label) { toast('bg-warning', '{{ _("Missing label") }}', '{{ _("Please enter a label") }}'); return; }
         $('#mint-submit').prop('disabled', true);
         $.ajax({
           url: '{{ url_for("lti_blueprint.manage_mint_token") }}',
@@ -375,7 +369,7 @@
       $('.btn-show-key').click(function () {
         var issuer = $(this).data('issuer');
         var clientId = $(this).data('client-id');
-        $('#show-key-pem').text('Loading...');
+        $('#show-key-pem').text('{{ _("Loading...") }}');
         $('#modal-show-key').modal('show');
         $.ajax({
           url: '{{ url_for("lti_blueprint.manage_public_key") }}',

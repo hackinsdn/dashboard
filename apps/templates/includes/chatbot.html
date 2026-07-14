@@ -74,35 +74,35 @@
   .hisdn-chat-actions button:hover { color: #dc3545; text-decoration: underline; }
 </style>
 
-<button id="hisdn-chat-fab" type="button" title="Support chat" aria-label="Open support chat">
+<button id="hisdn-chat-fab" type="button" title="{{ _('Support chat') }}" aria-label="{{ _('Open support chat') }}">
   <i class="fas fa-comments"></i>
 </button>
 
-<div id="hisdn-chat-panel" role="dialog" aria-label="Support chat">
+<div id="hisdn-chat-panel" role="dialog" aria-label="{{ _('Support chat') }}">
   <div class="hisdn-chat-header">
-    <span class="title"><i class="fas fa-comments mr-1"></i> Support</span>
-    <button id="hisdn-chat-min" type="button" title="Minimize" aria-label="Minimize chat">
+    <span class="title"><i class="fas fa-comments mr-1"></i> {{ _('Support') }}</span>
+    <button id="hisdn-chat-min" type="button" title="{{ _('Minimize') }}" aria-label="{{ _('Minimize chat') }}">
       <i class="fas fa-minus"></i>
     </button>
   </div>
   <div class="hisdn-chat-body" id="hisdn-chat-body">
-    <div class="hisdn-chat-empty" id="hisdn-chat-empty">Send a message and our team will get back to you.</div>
+    <div class="hisdn-chat-empty" id="hisdn-chat-empty">{{ _('Send a message and our team will get back to you.') }}</div>
   </div>
   <div class="hisdn-chat-footer">
     <div class="hisdn-chat-actions">
-      <a href="{{ url_for('home_blueprint.list_my_support_threads') }}" title="See all your support cases">
-        <i class="fas fa-list-ul"></i> See all cases
+      <a href="{{ url_for('home_blueprint.list_my_support_threads') }}" title="{{ _('See all your support cases') }}">
+        <i class="fas fa-list-ul"></i> {{ _('See all cases') }}
       </a>
-      <button id="hisdn-chat-finish" type="button" title="Finish this conversation">
-        <i class="fas fa-times-circle"></i> Finish conversation
+      <button id="hisdn-chat-finish" type="button" title="{{ _('Finish this conversation') }}">
+        <i class="fas fa-times-circle"></i> {{ _('Finish conversation') }}
       </button>
-      <button id="hisdn-chat-newconv" type="button" title="Start a new conversation" style="display:none;">
-        <i class="fas fa-plus-circle"></i> Start new conversation
+      <button id="hisdn-chat-newconv" type="button" title="{{ _('Start a new conversation') }}" style="display:none;">
+        <i class="fas fa-plus-circle"></i> {{ _('Start new conversation') }}
       </button>
     </div>
     <form class="hisdn-chat-inputrow" id="hisdn-chat-form" autocomplete="off">
-      <textarea id="hisdn-chat-input" rows="1" placeholder="Type your message ... (Shift+Enter for a new line)" aria-label="Message" required></textarea>
-      <button type="submit" id="hisdn-chat-send" title="Send"><i class="fas fa-paper-plane"></i></button>
+      <textarea id="hisdn-chat-input" rows="1" placeholder="{{ _('Type your message ... (Shift+Enter for a new line)') }}" aria-label="{{ _('Message') }}" required></textarea>
+      <button type="submit" id="hisdn-chat-send" title="{{ _('Send') }}"><i class="fas fa-paper-plane"></i></button>
     </form>
   </div>
 </div>
@@ -180,7 +180,7 @@
     locked = true;
     input.disabled = true;
     sendBtn.disabled = true;
-    input.placeholder = 'This conversation has been finished.';
+    input.placeholder = '{{ _("This conversation has been finished.") }}';
     finishBtn.style.display = 'none';
     newConvBtn.style.display = '';
   }
