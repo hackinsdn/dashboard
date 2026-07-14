@@ -17,7 +17,7 @@ gunicorn==26.0.0
 gevent==26.5.0
 eventlet==0.41.0
 Flask-Minify==0.50
-flask_socketio==5.5.1
+flask_socketio==5.6.1
 kubernetes==34.1.0
 markdown2==2.5.4
 flask_mail==0.10.0

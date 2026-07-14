@@ -185,6 +185,40 @@ class TestPtyConnect:
         assert events.xterm_clients["sid1"] is sentinel  # not overwritten
 
 
+# --- Socket.IO connect dispatch (session-management regression) ----------
+class TestSocketIOConnectDispatch:
+    """Regression for the xterm /pty connect crash.
+
+    Under Flask >= 3.1.3, ``RequestContext.session`` became a read-only
+    property. flask_socketio <= 5.5.1 assigned ``ctx.session = session_obj``
+    while managing the per-client session in ``_handle_event``, which raised
+    ``AttributeError: property 'session' of 'RequestContext' object has no
+    setter`` on *every* connect to the ``/pty`` namespace (see requirements.txt
+    pin flask_socketio>=5.6.1).
+
+    Unlike the other tests here, this one drives a real Socket.IO test client so
+    the connect flows through flask_socketio's own ``_handle_event`` - the exact
+    crash site. Calling ``pty_connect`` directly would not exercise it.
+    """
+
+    def test_pty_connect_through_real_dispatch(self, logged_in, monkeypatch):
+        fake_stream = MagicMock()
+        monkeypatch.setattr(events, "k8s", types.SimpleNamespace(
+            get_pod_exec_stream=MagicMock(return_value=fake_stream)))
+        monkeypatch.setattr(events.socketio, "start_background_task", MagicMock())
+
+        client = events.socketio.test_client(
+            flask_app, namespace="/pty", query_string="host=pod/mypod/mycont")
+        try:
+            # Before the fix, constructing/connecting the client raised
+            # AttributeError inside _handle_event; a successful connect proves
+            # the session-management path works under Flask >= 3.1.3.
+            assert client.is_connected("/pty") is True
+            assert events.xterm_clients  # handler ran and registered the session
+        finally:
+            client.disconnect(namespace="/pty")
+
+
 # --- pty_input ----------------------------------------------------------
 class TestPtyInput:
     def test_not_connected_returns_false(self, logged_in):
