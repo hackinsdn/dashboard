@@ -44,7 +44,7 @@
           <div class="row mb-3">
             <div class="col-12">
               <form method="get" action="{{ url_for('home_blueprint.view_labs') }}" class="form-inline">
-                <label class="mr-2"><i class="fas fa-users"></i> {{ _('Filter by Group:') }}</label>
+                <h5 class="mr-2"><i class="fas fa-users"></i> {{ _('Filter by Group:') }}</h5>
                 <select name="filter_group" class="form-control mr-2">
                   <option value="">{{ _('All Groups') }}</option>
                   <option disabled>--</option>
