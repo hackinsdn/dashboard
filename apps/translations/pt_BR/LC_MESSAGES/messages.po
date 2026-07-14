@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-07-13 11:51-0300\n"
+"POT-Creation-Date: 2026-07-14 02:59-0300\n"
 "PO-Revision-Date: 2026-07-12 19:36-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -25,8 +25,9 @@ msgstr "Identificador"
 #: apps/authentication/forms.py:18 apps/authentication/forms.py:42
 #: apps/authentication/forms.py:81
 #: apps/templates/pages/confirm_reset_password.html:42
-#: apps/templates/pages/edit_user.html:91 apps/templates/pages/edit_user.html:92
-#: apps/templates/pages/login.html:65 apps/templates/pages/register.html:69
+#: apps/templates/pages/edit_user.html:91
+#: apps/templates/pages/edit_user.html:92 apps/templates/pages/login.html:65
+#: apps/templates/pages/register.html:69
 msgid "Password"
 msgstr "Senha"
 
@@ -37,11 +38,11 @@ msgstr "Usuário"
 
 #: apps/authentication/forms.py:35
 msgid ""
-"Invalid character. Use letters, numbers, dot (.), underscore (_) or hyphen "
-"(-)."
+"Invalid character. Use letters, numbers, dot (.), underscore (_) or "
+"hyphen (-)."
 msgstr ""
-"Caractere inválido. Use letras, números, ponto (.), sublinhado (_) ou hífen "
-"(-)."
+"Caractere inválido. Use letras, números, ponto (.), sublinhado (_) ou "
+"hífen (-)."
 
 #: apps/authentication/forms.py:39 apps/authentication/forms.py:64
 #: apps/templates/pages/email_required.html:49
@@ -97,7 +98,8 @@ msgstr "Confirmação de senha"
 #: apps/templates/pages/feedback_view.html:3
 #: apps/templates/pages/feedback_view.html:35
 #: apps/templates/pages/finished_lab_infos.html:62
-#: apps/templates/pages/finished_labs.html:39 apps/templates/pages/gallery.html:35
+#: apps/templates/pages/finished_labs.html:39
+#: apps/templates/pages/gallery.html:35
 #: apps/templates/pages/groups_edit.html:54
 #: apps/templates/pages/groups_list.html:47 apps/templates/pages/index.html:3
 #: apps/templates/pages/index.html:37 apps/templates/pages/k8s_dep_list.html:37
@@ -115,7 +117,8 @@ msgstr "Confirmação de senha"
 #: apps/templates/pages/run_lab_status.html:34
 #: apps/templates/pages/running.html:39
 #: apps/templates/pages/support_thread_view.html:29
-#: apps/templates/pages/support_threads.html:29 apps/templates/pages/users.html:37
+#: apps/templates/pages/support_threads.html:29
+#: apps/templates/pages/users.html:37
 #: apps/templates/pages/waiting_approval.html:3
 #: apps/templates/pages/waiting_approval.html:50
 msgid "Home"
@@ -193,8 +196,9 @@ msgstr "Grupos"
 msgid "Labs"
 msgstr "Laboratórios"
 
-#: apps/templates/includes/sidebar.html:68 apps/templates/pages/labs_view.html:3
-#: apps/templates/pages/labs_view.html:33 apps/templates/pages/labs_view.html:39
+#: apps/templates/includes/sidebar.html:68
+#: apps/templates/pages/labs_view.html:3 apps/templates/pages/labs_view.html:33
+#: apps/templates/pages/labs_view.html:39
 msgid "View Labs"
 msgstr "Ver Labs"
 
@@ -222,7 +226,8 @@ msgstr "Gabarito"
 #: apps/templates/pages/finished_labs.html:3
 #: apps/templates/pages/finished_labs.html:35
 #: apps/templates/pages/finished_labs.html:40
-#: apps/templates/pages/finished_labs.html:53 apps/templates/pages/index.html:56
+#: apps/templates/pages/finished_labs.html:53
+#: apps/templates/pages/index.html:56
 msgid "Finished Labs"
 msgstr "Labs Concluídos"
 
@@ -237,9 +242,10 @@ msgstr "Labs em Execução"
 msgid "MANAGEMENT"
 msgstr "GERENCIAMENTO"
 
-#: apps/templates/includes/sidebar.html:125 apps/templates/pages/edit_user.html:48
-#: apps/templates/pages/index.html:89 apps/templates/pages/users.html:3
-#: apps/templates/pages/users.html:33 apps/templates/pages/users.html:38
+#: apps/templates/includes/sidebar.html:125
+#: apps/templates/pages/edit_user.html:48 apps/templates/pages/index.html:89
+#: apps/templates/pages/users.html:3 apps/templates/pages/users.html:33
+#: apps/templates/pages/users.html:38
 msgid "Users"
 msgstr "Usuários"
 
@@ -308,18 +314,21 @@ msgid ""
 "Insert the token sent to your email (check your spam/junk folder!). The "
 "token will expire in %(minutes)s minutes."
 msgstr ""
-"Insira o token enviado para o seu e-mail (verifique sua caixa de spam/lixo "
-"eletrônico!). O token expira em %(minutes)s minutos."
+"Insira o token enviado para o seu e-mail (verifique sua caixa de "
+"spam/lixo eletrônico!). O token expira em %(minutes)s minutos."
 
-#: apps/templates/pages/confirm.html:49 apps/templates/pages/confirm_email.html:49
+#: apps/templates/pages/confirm.html:49
+#: apps/templates/pages/confirm_email.html:49
 msgid "Token"
 msgstr "Token"
 
-#: apps/templates/pages/confirm.html:58 apps/templates/pages/confirm_email.html:58
+#: apps/templates/pages/confirm.html:58
+#: apps/templates/pages/confirm_email.html:58
 msgid "Verify code"
 msgstr "Verificar código"
 
-#: apps/templates/pages/confirm.html:61 apps/templates/pages/confirm_email.html:61
+#: apps/templates/pages/confirm.html:61
+#: apps/templates/pages/confirm_email.html:61
 msgid "Resend code"
 msgstr "Reenviar código"
 
@@ -334,8 +343,8 @@ msgid ""
 "Insert the token sent to your email (check your spam/junk folder!). The "
 "token will expire in %(minutes)s minutes"
 msgstr ""
-"Insira o token enviado para o seu e-mail (verifique sua caixa de spam/lixo "
-"eletrônico!). O token expira em %(minutes)s minutos"
+"Insira o token enviado para o seu e-mail (verifique sua caixa de "
+"spam/lixo eletrônico!). O token expira em %(minutes)s minutos"
 
 #: apps/templates/pages/confirm_email.html:68
 #: apps/templates/pages/email_required.html:62
@@ -343,7 +352,8 @@ msgid "Logout"
 msgstr "Sair"
 
 #: apps/templates/pages/confirm_reset_password.html:59
-#: apps/templates/pages/index.html:362 apps/templates/pages/reset_password.html:58
+#: apps/templates/pages/index.html:362
+#: apps/templates/pages/reset_password.html:58
 msgid "Submit"
 msgstr "Enviar"
 
@@ -421,7 +431,8 @@ msgstr "Salvar"
 #: apps/templates/pages/edit_user.html:154
 #: apps/templates/pages/groups_edit.html:205
 #: apps/templates/pages/groups_list.html:127
-#: apps/templates/pages/groups_list.html:155 apps/templates/pages/index.html:361
+#: apps/templates/pages/groups_list.html:155
+#: apps/templates/pages/index.html:361
 #: apps/templates/pages/k8s_dep_list.html:134
 #: apps/templates/pages/k8s_dep_list.html:157
 #: apps/templates/pages/k8s_pod_list.html:138
@@ -432,7 +443,8 @@ msgstr "Salvar"
 #: apps/templates/pages/lab_categories_edit.html:88
 #: apps/templates/pages/lab_categories_list.html:124
 #: apps/templates/pages/lab_instance_view.html:216
-#: apps/templates/pages/labs_view.html:195 apps/templates/pages/labs_view.html:218
+#: apps/templates/pages/labs_view.html:195
+#: apps/templates/pages/labs_view.html:218
 #: apps/templates/pages/running.html:157 apps/templates/pages/users.html:137
 #: apps/templates/pages/users.html:160
 msgid "Cancel"
@@ -443,12 +455,14 @@ msgid ""
 "Invalid character. Allowed letters, numbers, dot (.), underscore (_) or "
 "hyphen (-)"
 msgstr ""
-"Caractere inválido. São permitidos letras, números, ponto (.), sublinhado "
-"(_) ou hífen (-)"
+"Caractere inválido. São permitidos letras, números, ponto (.), sublinhado"
+" (_) ou hífen (-)"
 
 #: apps/templates/pages/email_required.html:39
 msgid "We need a valid e-mail address for your account before you can continue."
-msgstr "Precisamos de um endereço de e-mail válido para sua conta antes de continuar."
+msgstr ""
+"Precisamos de um endereço de e-mail válido para sua conta antes de "
+"continuar."
 
 #: apps/templates/pages/email_required.html:57
 msgid "Continue"
@@ -530,20 +544,23 @@ msgstr "Voltar ao início"
 msgid "Completion Date"
 msgstr "Data de Conclusão"
 
-#: apps/templates/pages/finished_labs.html:60 apps/templates/pages/running.html:67
+#: apps/templates/pages/finished_labs.html:60
+#: apps/templates/pages/running.html:67
 msgid "Filter by group:"
 msgstr "Filtrar por grupo:"
 
-#: apps/templates/pages/finished_labs.html:64 apps/templates/pages/running.html:71
+#: apps/templates/pages/finished_labs.html:64
+#: apps/templates/pages/running.html:71
 msgid "My own labs"
 msgstr "Meus próprios laboratórios"
 
-#: apps/templates/pages/finished_labs.html:65 apps/templates/pages/running.html:72
+#: apps/templates/pages/finished_labs.html:65
+#: apps/templates/pages/running.html:72
 msgid "All labs"
 msgstr "Todos os laboratórios"
 
-#: apps/templates/pages/finished_labs.html:90 apps/templates/pages/run_lab.html:67
-#: apps/templates/pages/running.html:97
+#: apps/templates/pages/finished_labs.html:90
+#: apps/templates/pages/run_lab.html:67 apps/templates/pages/running.html:97
 msgid "Lab title"
 msgstr "Título do laboratório"
 
@@ -564,7 +581,8 @@ msgid "No finished labs"
 msgstr "Nenhum laboratório concluído"
 
 #: apps/templates/pages/finished_labs.html:184
-#: apps/templates/pages/groups_list.html:214 apps/templates/pages/index.html:815
+#: apps/templates/pages/groups_list.html:214
+#: apps/templates/pages/index.html:815
 #: apps/templates/pages/k8s_dep_list.html:238
 #: apps/templates/pages/k8s_pod_list.html:244
 #: apps/templates/pages/k8s_srv_list.html:232
@@ -648,13 +666,13 @@ msgstr "Token de Acesso"
 
 #: apps/templates/pages/groups_edit.html:96
 msgid ""
-"Access token is a method of allowing <i>self enrolment/auto join</i> to a "
-"group. Users will be asked to supply the access token to be authorized as a "
-"member of the group."
+"Access token is a method of allowing <i>self enrolment/auto join</i> to a"
+" group. Users will be asked to supply the access token to be authorized "
+"as a member of the group."
 msgstr ""
 "O token de acesso é um método que permite a <i>auto-inscrição/entrada "
-"automática</i> em um grupo. Os usuários deverão fornecer o token de acesso "
-"para serem autorizados como membros do grupo."
+"automática</i> em um grupo. Os usuários deverão fornecer o token de "
+"acesso para serem autorizados como membros do grupo."
 
 #: apps/templates/pages/groups_edit.html:98
 msgid "Generate Random Token"
@@ -667,12 +685,13 @@ msgstr "Data de Expiração"
 #: apps/templates/pages/groups_edit.html:104
 msgid ""
 "The date after which this group and its resources will no longer be "
-"available. Can be used, for instance, to setup a due date for running a lab "
-"(for an exam, contest, CTF, etc). Default: never expires."
+"available. Can be used, for instance, to setup a due date for running a "
+"lab (for an exam, contest, CTF, etc). Default: never expires."
 msgstr ""
-"A data após a qual este grupo e seus recursos deixarão de estar disponíveis."
-" Pode ser usada, por exemplo, para definir um prazo para a execução de um "
-"laboratório (para uma prova, competição, CTF, etc). Padrão: nunca expira."
+"A data após a qual este grupo e seus recursos deixarão de estar "
+"disponíveis. Pode ser usada, por exemplo, para definir um prazo para a "
+"execução de um laboratório (para uma prova, competição, CTF, etc). "
+"Padrão: nunca expira."
 
 #: apps/templates/pages/groups_edit.html:114
 msgid "Pre-Approved Users"
@@ -683,8 +702,8 @@ msgid ""
 "Please provide a list of users (e-mail addresses, one per line) to be "
 "automatically approved when they first login."
 msgstr ""
-"Forneça uma lista de usuários (endereços de e-mail, um por linha) a serem "
-"aprovados automaticamente no primeiro login."
+"Forneça uma lista de usuários (endereços de e-mail, um por linha) a serem"
+" aprovados automaticamente no primeiro login."
 
 #: apps/templates/pages/groups_edit.html:130
 msgid "Members"
@@ -692,9 +711,9 @@ msgstr "Membros"
 
 #: apps/templates/pages/groups_edit.html:134
 msgid ""
-"Select the users (left) which will be <i>members</i> of the group (right). "
-"Group members cannot change any attribute of the group (only used for Labs "
-"access control)."
+"Select the users (left) which will be <i>members</i> of the group "
+"(right). Group members cannot change any attribute of the group (only "
+"used for Labs access control)."
 msgstr ""
 "Selecione os usuários (à esquerda) que serão <i>membros</i> do grupo (à "
 "direita). Os membros do grupo não podem alterar nenhum atributo do grupo "
@@ -707,12 +726,13 @@ msgstr "Assistentes"
 #: apps/templates/pages/groups_edit.html:156
 msgid ""
 "Select the users (left) which will be <i>assistants</i> of the group "
-"(right). Group assistants are only allowed to modify the list of members and"
-" access group resources (labs and lab instances)."
+"(right). Group assistants are only allowed to modify the list of members "
+"and access group resources (labs and lab instances)."
 msgstr ""
-"Selecione os usuários (à esquerda) que serão <i>assistentes</i> do grupo (à "
-"direita). Os assistentes do grupo só podem modificar a lista de membros e "
-"acessar os recursos do grupo (laboratórios e instâncias de laboratório)."
+"Selecione os usuários (à esquerda) que serão <i>assistentes</i> do grupo "
+"(à direita). Os assistentes do grupo só podem modificar a lista de "
+"membros e acessar os recursos do grupo (laboratórios e instâncias de "
+"laboratório)."
 
 #: apps/templates/pages/groups_edit.html:174
 msgid "Owners"
@@ -720,13 +740,13 @@ msgstr "Proprietários"
 
 #: apps/templates/pages/groups_edit.html:178
 msgid ""
-"Select the users (left) which will be <i>owners</i> of the group (right). "
-"Group owner are allowed to modify any attribute of the group, as well as "
-"remove it."
+"Select the users (left) which will be <i>owners</i> of the group (right)."
+" Group owner are allowed to modify any attribute of the group, as well as"
+" remove it."
 msgstr ""
-"Selecione os usuários (à esquerda) que serão <i>proprietários</i> do grupo "
-"(à direita). Os proprietários do grupo podem modificar qualquer atributo do "
-"grupo, bem como removê-lo."
+"Selecione os usuários (à esquerda) que serão <i>proprietários</i> do "
+"grupo (à direita). Os proprietários do grupo podem modificar qualquer "
+"atributo do grupo, bem como removê-lo."
 
 #: apps/templates/pages/groups_list.html:33
 msgid "List Groups"
@@ -749,7 +769,8 @@ msgstr "Criar Novo Grupo"
 #: apps/templates/pages/lab_categories_list.html:77
 #: apps/templates/pages/my_support_threads.html:47
 #: apps/templates/pages/running.html:99
-#: apps/templates/pages/support_threads.html:63 apps/templates/pages/users.html:76
+#: apps/templates/pages/support_threads.html:63
+#: apps/templates/pages/users.html:76
 msgid "Actions"
 msgstr "Ações"
 
@@ -872,8 +893,10 @@ msgid "Users Feedback"
 msgstr "Feedback dos Usuários"
 
 #: apps/templates/pages/index.html:318
-msgid "View Feedback"
-msgstr "Ver Feedback"
+#: apps/templates/pages/lab_categories_list.html:88
+#: apps/templates/pages/users.html:95
+msgid "Edit"
+msgstr "Editar"
 
 #: apps/templates/pages/index.html:318
 msgid "Add Feedback"
@@ -948,8 +971,8 @@ msgstr "Excluir Deployments selecionados"
 #: apps/templates/pages/k8s_dep_list.html:58
 #: apps/templates/pages/k8s_dep_list.html:108
 #: apps/templates/pages/k8s_pod_list.html:58
-#: apps/templates/pages/k8s_pod_list.html:112 apps/templates/pages/users.html:57
-#: apps/templates/pages/users.html:110
+#: apps/templates/pages/k8s_pod_list.html:112
+#: apps/templates/pages/users.html:57 apps/templates/pages/users.html:110
 msgid "Approve selected users"
 msgstr "Aprovar usuários selecionados"
 
@@ -986,44 +1009,49 @@ msgid "Deployment information in YAML format:"
 msgstr "Informações do Deployment em formato YAML:"
 
 #: apps/templates/pages/k8s_dep_list.html:104
-#: apps/templates/pages/k8s_pod_list.html:108 apps/templates/pages/users.html:53
-#: apps/templates/pages/users.html:106
+#: apps/templates/pages/k8s_pod_list.html:108
+#: apps/templates/pages/users.html:53 apps/templates/pages/users.html:106
 msgid "Select all users"
 msgstr "Selecionar todos os usuários"
 
 #: apps/templates/pages/k8s_dep_list.html:105
-#: apps/templates/pages/k8s_pod_list.html:109 apps/templates/pages/users.html:54
-#: apps/templates/pages/users.html:107
+#: apps/templates/pages/k8s_pod_list.html:109
+#: apps/templates/pages/users.html:54 apps/templates/pages/users.html:107
 msgid "Delete selected users"
 msgstr "Excluir usuários selecionados"
 
 #: apps/templates/pages/k8s_dep_list.html:124
 #: apps/templates/pages/k8s_pod_list.html:128
-#: apps/templates/pages/k8s_srv_list.html:118 apps/templates/pages/users.html:127
+#: apps/templates/pages/k8s_srv_list.html:118
+#: apps/templates/pages/users.html:127
 msgid "Confirm User removal"
 msgstr "Confirmar remoção de Usuário"
 
 #: apps/templates/pages/k8s_dep_list.html:130
 #: apps/templates/pages/k8s_pod_list.html:134
-#: apps/templates/pages/k8s_srv_list.html:124 apps/templates/pages/users.html:133
+#: apps/templates/pages/k8s_srv_list.html:124
+#: apps/templates/pages/users.html:133
 msgid "Are you sure you want to remove the selected Users?"
 msgstr "Tem certeza de que deseja remover os Usuários selecionados?"
 
 #: apps/templates/pages/k8s_dep_list.html:135
 #: apps/templates/pages/k8s_pod_list.html:139
-#: apps/templates/pages/k8s_srv_list.html:129 apps/templates/pages/users.html:138
+#: apps/templates/pages/k8s_srv_list.html:129
+#: apps/templates/pages/users.html:138
 msgid "Delete Users"
 msgstr "Excluir Usuários"
 
 #: apps/templates/pages/k8s_dep_list.html:147
 #: apps/templates/pages/k8s_pod_list.html:151
-#: apps/templates/pages/k8s_srv_list.html:141 apps/templates/pages/users.html:150
+#: apps/templates/pages/k8s_srv_list.html:141
+#: apps/templates/pages/users.html:150
 msgid "Confirm Approve Users"
 msgstr "Confirmar Aprovação de Usuários"
 
 #: apps/templates/pages/k8s_dep_list.html:153
 #: apps/templates/pages/k8s_pod_list.html:157
-#: apps/templates/pages/k8s_srv_list.html:147 apps/templates/pages/users.html:156
+#: apps/templates/pages/k8s_srv_list.html:147
+#: apps/templates/pages/users.html:156
 msgid ""
 "Are you sure you want to approve the selected Users? Approved users have "
 "access to run Labs."
@@ -1033,7 +1061,8 @@ msgstr ""
 
 #: apps/templates/pages/k8s_dep_list.html:158
 #: apps/templates/pages/k8s_pod_list.html:162
-#: apps/templates/pages/k8s_srv_list.html:152 apps/templates/pages/users.html:161
+#: apps/templates/pages/k8s_srv_list.html:152
+#: apps/templates/pages/users.html:161
 msgid "Approve Users"
 msgstr "Aprovar Usuários"
 
@@ -1053,7 +1082,8 @@ msgstr "Nenhum Deployment em execução"
 
 #: apps/templates/pages/k8s_dep_list.html:283
 #: apps/templates/pages/k8s_pod_list.html:289
-#: apps/templates/pages/k8s_srv_list.html:277 apps/templates/pages/users.html:295
+#: apps/templates/pages/k8s_srv_list.html:277
+#: apps/templates/pages/users.html:295
 msgid "Approving"
 msgstr "Aprovando"
 
@@ -1063,8 +1093,8 @@ msgstr "Nenhum Deployment selecionado!"
 
 #: apps/templates/pages/k8s_dep_list.html:327
 #: apps/templates/pages/k8s_pod_list.html:333
-#: apps/templates/pages/k8s_srv_list.html:321 apps/templates/pages/users.html:324
-#: apps/templates/pages/users.html:338
+#: apps/templates/pages/k8s_srv_list.html:321
+#: apps/templates/pages/users.html:324 apps/templates/pages/users.html:338
 msgid "No user selected!"
 msgstr "Nenhum usuário selecionado!"
 
@@ -1238,9 +1268,9 @@ msgstr "Mostrar Resposta do Lab"
 
 #: apps/templates/pages/lab_answers_list.html:160
 msgid ""
-"**Manual grades are the ones assigned by the teacher after manual reviewing "
-"the answer. When calculating the score, manual grades have precedence of "
-"automatic grades from Answer Sheet."
+"**Manual grades are the ones assigned by the teacher after manual "
+"reviewing the answer. When calculating the score, manual grades have "
+"precedence of automatic grades from Answer Sheet."
 msgstr ""
 "**As notas manuais são aquelas atribuídas pelo professor após a revisão "
 "manual da resposta. Ao calcular a pontuação, as notas manuais têm "
@@ -1294,26 +1324,26 @@ msgstr "Falha no gabarito"
 #, python-brace-format, python-format
 msgid ""
 "The lab answer sheet can be used to automatically validate the answers "
-"provided by the users by using regular expression matching. Please choose "
-"the Lab below and, for each question, provide the expected regex which the "
-"answer should match to be considered correct (the calculation is done in "
-"Python using <code>re</code> library, pretty much like this: "
+"provided by the users by using regular expression matching. Please choose"
+" the Lab below and, for each question, provide the expected regex which "
+"the answer should match to be considered correct (the calculation is done"
+" in Python using <code>re</code> library, pretty much like this: "
 "<code>re.match(fr\"^{expected_answer}$\", answer)</code>). Only the "
 "registered questions in the answer sheet will be used actually used for "
 "validating the score (for example: if your Lab has 5 questions and the "
-"answer sheet only contains 3 expected answers, then people who provide the 3"
-" correct ones will be considered 100%% correct."
+"answer sheet only contains 3 expected answers, then people who provide "
+"the 3 correct ones will be considered 100%% correct."
 msgstr ""
-"O gabarito do lab pode ser usado para validar automaticamente as respostas "
-"fornecidas pelos usuários por meio de correspondência com expressões "
-"regulares. Escolha o Lab abaixo e, para cada pergunta, forneça a regex "
-"esperada que a resposta deve corresponder para ser considerada correta (o "
-"cálculo é feito em Python usando a biblioteca <code>re</code>, mais ou menos"
-" assim: <code>re.match(fr\"^{expected_answer}$\", answer)</code>). Apenas as"
-" perguntas registradas no gabarito serão de fato usadas para validar a "
-"pontuação (por exemplo: se o seu Lab tem 5 perguntas e o gabarito contém "
-"apenas 3 respostas esperadas, então quem fornecer as 3 corretas será "
-"considerado 100%% correto."
+"O gabarito do lab pode ser usado para validar automaticamente as "
+"respostas fornecidas pelos usuários por meio de correspondência com "
+"expressões regulares. Escolha o Lab abaixo e, para cada pergunta, forneça"
+" a regex esperada que a resposta deve corresponder para ser considerada "
+"correta (o cálculo é feito em Python usando a biblioteca <code>re</code>,"
+" mais ou menos assim: <code>re.match(fr\"^{expected_answer}$\", "
+"answer)</code>). Apenas as perguntas registradas no gabarito serão de "
+"fato usadas para validar a pontuação (por exemplo: se o seu Lab tem 5 "
+"perguntas e o gabarito contém apenas 3 respostas esperadas, então quem "
+"fornecer as 3 corretas será considerado 100%% correto."
 
 #: apps/templates/pages/lab_answers_sheet.html:71
 msgid "Choose the Lab:"
@@ -1377,11 +1407,6 @@ msgstr "Criar Nova Categoria de Laboratório"
 #: apps/templates/pages/users.html:72
 msgid "Category"
 msgstr "Categoria"
-
-#: apps/templates/pages/lab_categories_list.html:88
-#: apps/templates/pages/users.html:95
-msgid "Edit"
-msgstr "Editar"
 
 #: apps/templates/pages/lab_categories_list.html:92
 msgid "Delete lab category"
@@ -1485,11 +1510,12 @@ msgstr "Confirmar Finalização do Lab"
 
 #: apps/templates/pages/lab_instance_view.html:213
 msgid ""
-"Are you sure you want to Finish this Lab? (Make sure to save any data you "
-"want! After finishing the lab, resources will be deleted.)"
+"Are you sure you want to Finish this Lab? (Make sure to save any data you"
+" want! After finishing the lab, resources will be deleted.)"
 msgstr ""
-"Tem certeza de que deseja Finalizar este Lab? (Certifique-se de salvar todos"
-" os dados que desejar! Após finalizar o lab, os recursos serão excluídos.)"
+"Tem certeza de que deseja Finalizar este Lab? (Certifique-se de salvar "
+"todos os dados que desejar! Após finalizar o lab, os recursos serão "
+"excluídos.)"
 
 #: apps/templates/pages/lab_instance_view.html:217
 #: apps/templates/pages/lab_instance_view.html:239
@@ -1561,7 +1587,8 @@ msgstr "Filtrar por Categoria:"
 msgid "Filter by Status:"
 msgstr "Filtrar por Status:"
 
-#: apps/templates/pages/labs_view.html:86 apps/templates/pages/labs_view.html:135
+#: apps/templates/pages/labs_view.html:86
+#: apps/templates/pages/labs_view.html:135
 #: apps/templates/pages/labs_view.html:140
 msgid "Completed"
 msgstr "Concluído"
@@ -1703,11 +1730,11 @@ msgstr ""
 
 #: apps/templates/pages/my_support_thread_view.html:81
 msgid ""
-"This conversation is finished. Start a new one from the chat button at the "
-"bottom-right."
+"This conversation is finished. Start a new one from the chat button at "
+"the bottom-right."
 msgstr ""
-"Esta conversa foi finalizada. Inicie uma nova pelo botão de chat no canto "
-"inferior direito."
+"Esta conversa foi finalizada. Inicie uma nova pelo botão de chat no canto"
+" inferior direito."
 
 #: apps/templates/pages/my_support_threads.html:21
 msgid "My Support Cases"
@@ -1760,11 +1787,13 @@ msgstr "Página não encontrada"
 
 #: apps/templates/pages/page-404.html:76
 msgid ""
-"The page you are looking for might have been removed, had its name changed, "
-"or is temporarily unavailable. Please check the URL for any mistakes."
+"The page you are looking for might have been removed, had its name "
+"changed, or is temporarily unavailable. Please check the URL for any "
+"mistakes."
 msgstr ""
-"A página que você procura pode ter sido removida, ter tido seu nome alterado"
-" ou estar temporariamente indisponível. Verifique se há erros na URL."
+"A página que você procura pode ter sido removida, ter tido seu nome "
+"alterado ou estar temporariamente indisponível. Verifique se há erros na "
+"URL."
 
 #: apps/templates/pages/page-404.html:79 apps/templates/pages/page-500.html:127
 msgid "Return to Home"
@@ -1780,12 +1809,13 @@ msgstr "Erro interno do servidor"
 
 #: apps/templates/pages/page-500.html:124
 msgid ""
-"Our servers are currently experiencing technical difficulties. Our team has "
-"been notified and is working to resolve the issue as quickly as possible."
+"Our servers are currently experiencing technical difficulties. Our team "
+"has been notified and is working to resolve the issue as quickly as "
+"possible."
 msgstr ""
-"Nossos servidores estão enfrentando dificuldades técnicas no momento. Nossa "
-"equipe foi notificada e está trabalhando para resolver o problema o mais "
-"rápido possível."
+"Nossos servidores estão enfrentando dificuldades técnicas no momento. "
+"Nossa equipe foi notificada e está trabalhando para resolver o problema o"
+" mais rápido possível."
 
 #: apps/templates/pages/page-500.html:128
 msgid "Contact Support"
@@ -1813,11 +1843,11 @@ msgstr "Já tem uma conta?"
 
 #: apps/templates/pages/register.html:131
 msgid ""
-"Invalid character. Use letters, numbers, dot (.), underscore (_) or hyphen "
-"(-)"
+"Invalid character. Use letters, numbers, dot (.), underscore (_) or "
+"hyphen (-)"
 msgstr ""
-"Caractere inválido. Use letras, números, ponto (.), sublinhado (_) ou hífen "
-"(-)"
+"Caractere inválido. Use letras, números, ponto (.), sublinhado (_) ou "
+"hífen (-)"
 
 #: apps/templates/pages/reset_password.html:40
 msgid "Enter your email or username"
@@ -1863,7 +1893,9 @@ msgstr "Executar"
 #: apps/templates/pages/run_lab.html:140
 #, python-format
 msgid "Visit %(link_start)sLab documentation%(link_end)s for more information."
-msgstr "Visite a %(link_start)sdocumentação do Lab%(link_end)s para mais informações."
+msgstr ""
+"Visite a %(link_start)sdocumentação do Lab%(link_end)s para mais "
+"informações."
 
 #: apps/templates/pages/run_lab.html:178
 msgid "Starting lab..."
@@ -1904,13 +1936,13 @@ msgstr "Comece a usar os recursos do Lab e o guia do Lab!"
 
 #: apps/templates/pages/run_lab_status.html:117
 msgid ""
-"We could not confirm all resources became ready within 5 minutes. Your Lab "
-"may still be provisioning in the background — open the Lab page below to "
-"check it."
+"We could not confirm all resources became ready within 5 minutes. Your "
+"Lab may still be provisioning in the background — open the Lab page below"
+" to check it."
 msgstr ""
 "Não conseguimos confirmar que todos os recursos ficaram prontos em 5 "
-"minutos. Seu Lab pode ainda estar sendo provisionado em segundo plano — abra"
-" a página do Lab abaixo para verificar."
+"minutos. Seu Lab pode ainda estar sendo provisionado em segundo plano — "
+"abra a página do Lab abaixo para verificar."
 
 #: apps/templates/pages/run_lab_status.html:118
 msgid "Taking more than expected, but still waiting for resources."
@@ -1918,11 +1950,11 @@ msgstr "Está demorando mais que o esperado, mas ainda aguardando os recursos."
 
 #: apps/templates/pages/run_lab_status.html:119
 msgid ""
-"Almost there — provisioning can take a few minutes on busy clusters. Please "
-"bear with us a little longer."
+"Almost there — provisioning can take a few minutes on busy clusters. "
+"Please bear with us a little longer."
 msgstr ""
-"Quase lá — o provisionamento pode levar alguns minutos em clusters ocupados."
-" Aguarde mais um pouco, por favor."
+"Quase lá — o provisionamento pode levar alguns minutos em clusters "
+"ocupados. Aguarde mais um pouco, por favor."
 
 #: apps/templates/pages/run_lab_status.html:120
 msgid "Still waiting for all resources to be provisioned."
@@ -1930,7 +1962,9 @@ msgstr "Ainda aguardando o provisionamento de todos os recursos."
 
 #: apps/templates/pages/run_lab_status.html:121
 msgid "This is taking a little longer than usual — thank you for your patience!"
-msgstr "Isto está demorando um pouco mais que o normal — obrigado pela sua paciência!"
+msgstr ""
+"Isto está demorando um pouco mais que o normal — obrigado pela sua "
+"paciência!"
 
 #: apps/templates/pages/run_lab_status.html:138
 msgid "Check the running Lab"
@@ -2101,8 +2135,8 @@ msgstr "Você deve aguardar até que seu usuário seja aprovado!"
 
 #: apps/templates/pages/waiting_approval.html:79
 msgid ""
-"Your note below was already sent to the administrators and can no longer be "
-"changed. Please contact an administrator if you need to update it."
+"Your note below was already sent to the administrators and can no longer "
+"be changed. Please contact an administrator if you need to update it."
 msgstr ""
 "Sua nota abaixo já foi enviada aos administradores e não pode mais ser "
 "alterada. Entre em contato com um administrador se precisar atualizá-la."
@@ -2118,13 +2152,15 @@ msgstr "aguarde!"
 
 #: apps/templates/pages/waiting_approval.html:94
 msgid ""
-"To help the administrators identify you, please leave a note below with a "
-"reference (e.g., your institution, course, professor, or who referred you to"
-" HackInSDN). Note that once saved, the note can no longer be changed."
+"To help the administrators identify you, please leave a note below with a"
+" reference (e.g., your institution, course, professor, or who referred "
+"you to HackInSDN). Note that once saved, the note can no longer be "
+"changed."
 msgstr ""
-"Para ajudar os administradores a identificá-lo, deixe uma nota abaixo com "
-"uma referência (ex.: sua instituição, curso, professor ou quem o indicou ao "
-"HackInSDN). Observe que, uma vez salva, a nota não pode mais ser alterada."
+"Para ajudar os administradores a identificá-lo, deixe uma nota abaixo com"
+" uma referência (ex.: sua instituição, curso, professor ou quem o indicou"
+" ao HackInSDN). Observe que, uma vez salva, a nota não pode mais ser "
+"alterada."
 
 #: apps/templates/pages/waiting_approval.html:97
 msgid "Ex: I'm a student of Prof. X at University Y"
@@ -2141,42 +2177,46 @@ msgstr "Salvar nota"
 #~ msgstr "Pontuação da resposta do lab (%):"
 
 #~ msgid ""
-#~ "The lab answer sheet can be used "
-#~ "to automatically validate the answers "
+#~ "The lab answer sheet can be used"
+#~ " to automatically validate the answers "
 #~ "provided by the users by using "
 #~ "regular expression matching. Please choose "
-#~ "the Lab below and, for each question,"
-#~ " provide the expected regex which the"
-#~ " answer should match to be considered"
-#~ " correct (the calculation is done in "
-#~ "Python using <code>re</code> library, pretty "
-#~ "much like this: "
+#~ "the Lab below and, for each "
+#~ "question, provide the expected regex "
+#~ "which the answer should match to "
+#~ "be considered correct (the calculation "
+#~ "is done in Python using <code>re</code>"
+#~ " library, pretty much like this: "
 #~ "<code>re.match(fr\"^{expected_answer}$\", answer)</code>). "
 #~ "Only the registered questions in the "
 #~ "answer sheet will be used actually "
 #~ "used for validating the score (for "
-#~ "example: if your Lab has 5 questions"
-#~ " and the answer sheet only contains "
-#~ "3 expected answers, then people who "
-#~ "provide the 3 correct ones will be"
-#~ " considered 100% correct."
+#~ "example: if your Lab has 5 "
+#~ "questions and the answer sheet only "
+#~ "contains 3 expected answers, then people"
+#~ " who provide the 3 correct ones "
+#~ "will be considered 100% correct."
 #~ msgstr ""
-#~ "O gabarito do lab pode ser usado "
-#~ "para validar automaticamente as respostas "
-#~ "fornecidas pelos usuários por meio de "
-#~ "correspondência com expressões regulares. Escolha"
-#~ " o Lab abaixo e, para cada "
-#~ "pergunta, forneça a regex esperada que "
-#~ "a resposta deve corresponder para ser "
-#~ "considerada correta (o cálculo é feito "
-#~ "em Python usando a biblioteca "
-#~ "<code>re</code>, mais ou menos assim: "
-#~ "<code>re.match(fr\"^{expected_answer}$\", answer)</code>). "
-#~ "Apenas as perguntas registradas no gabarito"
-#~ " serão de fato usadas para validar "
-#~ "a pontuação (por exemplo: se o seu"
-#~ " Lab tem 5 perguntas e o gabarito"
-#~ " contém apenas 3 respostas esperadas, "
-#~ "então quem fornecer as 3 corretas "
-#~ "será considerado 100% correto."
+#~ "O gabarito do lab pode ser usado"
+#~ " para validar automaticamente as respostas"
+#~ " fornecidas pelos usuários por meio "
+#~ "de correspondência com expressões regulares."
+#~ " Escolha o Lab abaixo e, para "
+#~ "cada pergunta, forneça a regex esperada"
+#~ " que a resposta deve corresponder "
+#~ "para ser considerada correta (o cálculo"
+#~ " é feito em Python usando a "
+#~ "biblioteca <code>re</code>, mais ou menos "
+#~ "assim: <code>re.match(fr\"^{expected_answer}$\", "
+#~ "answer)</code>). Apenas as perguntas "
+#~ "registradas no gabarito serão de fato"
+#~ " usadas para validar a pontuação (por"
+#~ " exemplo: se o seu Lab tem 5"
+#~ " perguntas e o gabarito contém apenas"
+#~ " 3 respostas esperadas, então quem "
+#~ "fornecer as 3 corretas será considerado"
+#~ " 100% correto."
+
+#~ msgid "View Feedback"
+#~ msgstr "Ver Feedback"
 

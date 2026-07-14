@@ -315,7 +315,7 @@
             <div class="card-header d-flex justify-content-between align-items-center">
               <h3 class="card-title mb-0">{{ _('Users Feedback') }}</h3>
               <div class="ml-auto">
-                <a href="#" id="view-add-feedback" class="btn btn-sm btn-outline-primary mr-2" data-toggle="modal" data-target="#modal-feedback">{{ _("View Feedback") if user_feedback else _("Add Feedback") }}</a>
+                <a href="#" id="view-add-feedback" class="btn btn-sm btn-outline-primary mr-2" data-toggle="modal" data-target="#modal-feedback">{{ _("Edit") if user_feedback else _("Add Feedback") }}</a>
                 <a href="{{ url_for('home_blueprint.feedback_view') }}" class="btn btn-sm btn-outline-secondary">{{ _('See All') }}</a>
               </div>
             </div>

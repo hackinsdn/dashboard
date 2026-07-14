@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-07-13 11:51-0300\n"
+"POT-Creation-Date: 2026-07-14 02:59-0300\n"
 "PO-Revision-Date: 2026-07-12 19:36-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -864,7 +864,9 @@ msgid "Users Feedback"
 msgstr ""
 
 #: apps/templates/pages/index.html:318
-msgid "View Feedback"
+#: apps/templates/pages/lab_categories_list.html:88
+#: apps/templates/pages/users.html:95
+msgid "Edit"
 msgstr ""
 
 #: apps/templates/pages/index.html:318
@@ -1360,11 +1362,6 @@ msgstr ""
 #: apps/templates/pages/lab_categories_list.html:75
 #: apps/templates/pages/users.html:72
 msgid "Category"
-msgstr ""
-
-#: apps/templates/pages/lab_categories_list.html:88
-#: apps/templates/pages/users.html:95
-msgid "Edit"
 msgstr ""
 
 #: apps/templates/pages/lab_categories_list.html:92
@@ -2123,5 +2120,8 @@ msgstr ""
 #~ "contains 3 expected answers, then people"
 #~ " who provide the 3 correct ones "
 #~ "will be considered 100% correct."
+#~ msgstr ""
+
+#~ msgid "View Feedback"
 #~ msgstr ""
 
