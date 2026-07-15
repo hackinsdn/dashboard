@@ -1,6 +1,6 @@
 {% extends "layouts/base.html" %}
 
-{% block title %} Create/Update Lab {% endblock title %}
+{% block title %} {{ _('Create/Update Lab') }} {% endblock title %}
 
 <!-- Element injected in the BODY element -->
 {% block body_class %} sidebar-mini {% endblock body_class %}
@@ -51,34 +51,34 @@
       <div class="container-fluid">
         <div class="row mb-2">
           <div class="col-sm-6">
-            <h1>Create/Update Lab</h1>
+            <h1>{{ _('Create/Update Lab') }}</h1>
             {% if msg_ok %}
             <div class="alert alert-success alert-dismissible">
               <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-              <h5><i class="icon fas fa-check"></i> Lab created/updated successfully!</h5>
+              <h5><i class="icon fas fa-check"></i> {{ _('Lab created/updated successfully!') }}</h5>
               {{ msg_ok }}
             </div>
             {% endif %}
             {% if msg_fail %}
             <div class="alert alert-danger alert-dismissible">
               <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-              <h5><i class="icon fas fa-ban"></i> Fail to create/update lab!</h5>
+              <h5><i class="icon fas fa-ban"></i> {{ _('Fail to create/update lab!') }}</h5>
               {{ msg_fail }}
             </div>
             {% endif %}
             {% if forked_from %}
             <div class="alert alert-info alert-dismissible">
               <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-              <h5><i class="icon fas fa-code-branch"></i> Forking Lab</h5>
-              You are forking "{{ forked_from }}". Nothing is saved until you press Submit.
+              <h5><i class="icon fas fa-code-branch"></i> {{ _('Forking Lab') }}</h5>
+              {{ _('You are forking "%(name)s". Nothing is saved until you press Submit.', name=forked_from) }}
             </div>
             {% endif %}
           </div>
           <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
-              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.index') }}">Home</a></li>
-              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.view_labs') }}">Labs</a></li>
-              <li class="breadcrumb-item active">Create/Update Lab</li>
+              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.index') }}">{{ _('Home') }}</a></li>
+              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.view_labs') }}">{{ _('Labs') }}</a></li>
+              <li class="breadcrumb-item active">{{ _('Create/Update Lab') }}</li>
             </ol>
           </div>
         </div>
@@ -97,34 +97,34 @@
             <!-- general form elements -->
             <div class="card card-dark">
               <div class="card-header">
-                <h3 class="card-title">General information</h3>
+                <h3 class="card-title">{{ _('General information') }}</h3>
               </div>
               <!-- /.card-header -->
               <!-- form start -->
                 <div class="card-body">
                   <div class="form-group">
-                    <label>Lab title</label>
-                    <input name="lab_title" type="text" class="form-control" placeholder="Enter lab title..." value="{{ lab.title|default('', true) }}">
+                    <label>{{ _('Lab title') }}</label>
+                    <input name="lab_title" type="text" class="form-control" placeholder="{{ _('Enter lab title...') }}" value="{{ lab.title|default('', true) }}">
                   </div>
                   <div class="form-group">
-                    <label>Short Description</label>
-                    <input name="lab_description" type="text" class="form-control" placeholder="Max 255 characters" value="{{ lab.description|default('', true) }}">
+                    <label>{{ _('Short Description') }}</label>
+                    <input name="lab_description" type="text" class="form-control" placeholder="{{ _('Max 255 characters') }}" value="{{ lab.description|default('', true) }}">
                   </div>
                   {% if current_user.category == "admin" %}
                   <div class="form-group">
-                    <label>Display order</label>
+                    <label>{{ _('Display order') }}</label>
                     <input name="lab_display_order" type="number" class="form-control" value="{{ lab.display_order|default(1000, true) }}">
-                    <small class="form-text text-muted">Labs are listed by ascending display order, then by title. Default is 1000.</small>
+                    <small class="form-text text-muted">{{ _('Labs are listed by ascending display order, then by title. Default is 1000.') }}</small>
                   </div>
                   {% endif %}
                   <div class="form-group">
-                    <label>Lab categories</label>
-                    <select name="lab_categories" class="form-control select2" multiple="multiple" data-placeholder="Select one or more categories" style="width: 100%;">
+                    <label>{{ _('Lab categories') }}</label>
+                    <select name="lab_categories" class="form-control select2" multiple="multiple" data-placeholder="{{ _('Select one or more categories') }}" style="width: 100%;">
                       {% for cat_id in lab_categories %}
                       <option value="{{ cat_id }}" data-color="{{ lab_categories[cat_id].color_cls }}" {{ 'selected' if lab_categories[cat_id] in lab.categories else "" }}>{{ lab_categories[cat_id].category }}</option>
                       {% endfor %}
                     </select>
-                    <small class="form-text text-muted">Select one or more categories</small>
+                    <small class="form-text text-muted">{{ _('Select one or more categories') }}</small>
                   </div>
                 </div>
                 <!-- /.card-body -->
@@ -138,13 +138,13 @@
           <div class="col-md-6">
             <div class="card card-dark">
               <div class="card-header">
-                <h3 class="card-title">Lab additional information</h3>
+                <h3 class="card-title">{{ _('Lab additional information') }}</h3>
               </div>
               <div class="card-body">
                 <div class="row">
                   <div class="col-md-12">
                     <div class="form-group">
-                      <label>Access Control: Availabe groups (left) &gt;&gt; Allowed groups (right)</label>
+                      <label>{{ _('Access Control: Availabe groups (left) &gt;&gt; Allowed groups (right)')|safe }}</label>
                       <select name="lab_allowed_groups" class="duallistbox" multiple="multiple">
                         {% for group in groups %}
                           {% if group in allowed_groups %}
@@ -178,13 +178,13 @@
             <div class="card card-dark">
               <div class="card-header">
                 <h3 class="card-title">
-                  Lab extended description
+                  {{ _('Lab extended description') }}
                 </h3>
                 <!-- tools box -->
                 <div class="card-tools">
                   {% if lab and lab.id %}
-                  <button type="button" class="btn btn-tool btn-sm lab-field-history-btn" data-field="extended_desc" title="Version history">
-                    <i class="fas fa-history"></i> Versions
+                  <button type="button" class="btn btn-tool btn-sm lab-field-history-btn" data-field="extended_desc" title="{{ _('Version history') }}">
+                    <i class="fas fa-history"></i> {{ _('Versions') }}
                   </button>
                   {% endif %}
                 </div>
@@ -193,12 +193,11 @@
               <!-- /.card-header -->
               <div class="card-body pad">
                 <div class="mb-3">
-                  <textarea name="lab_extended_desc" id="lab-editor" class="textarea" placeholder="Place some text here"
+                  <textarea name="lab_extended_desc" id="lab-editor" class="textarea" placeholder="{{ _('Place some text here') }}"
                             style="width: 100%; height: 400px; font-size: 14px; line-height: 18px; border: 1px solid #dddddd; padding: 10px;">{{ lab.extended_desc_str|default('', true) }}</textarea>
                 </div>
                 <p class="text-sm mb-0">
-                  Editor <a href="https://github.com/summernote/summernote">Documentation and license
-                  information.</a>
+                  {{ _('Editor %(link_start)sDocumentation and license information.%(link_end)s', link_start='<a href="https://github.com/summernote/summernote">'|safe, link_end='</a>'|safe) }}
                 </p>
               </div>
             </div>
@@ -211,40 +210,40 @@
             <div class="card card-dark">
               <div class="card-header">
                 <h3 class="card-title">
-                  Kubernetes Lab Manifest
+                  {{ _('Kubernetes Lab Manifest') }}
                 </h3>
                 {% if lab and lab.id %}
                 <div class="card-tools">
-                  <button type="button" class="btn btn-tool btn-sm lab-field-history-btn" data-field="manifest" title="Version history">
-                    <i class="fas fa-history"></i> Versions
+                  <button type="button" class="btn btn-tool btn-sm lab-field-history-btn" data-field="manifest" title="{{ _('Version history') }}">
+                    <i class="fas fa-history"></i> {{ _('Versions') }}
                   </button>
                 </div>
                 {% endif %}
               </div>
               <!-- /.card-header -->
               <div class="card-body">
-                <p>Add here your Kubernetes Manifest file containing Pods, Deployments and Services. You should customize the item names with variables that will be replaced during resource creation, example: <code>${pod_hash}</code></p>
+                <p>{{ _('Add here your Kubernetes Manifest file containing Pods, Deployments and Services. You should customize the item names with variables that will be replaced during resource creation, example: <code>${pod_hash}</code>')|safe }}</p>
                 <div class="row">
                   <div class="col-md-6">
                     <div class="form-group">
-                      <label>Kubernetes Manifest Template:</label>
+                      <label>{{ _('Kubernetes Manifest Template:') }}</label>
                       <div class="input-group">
                         <select class="form-control select2" id="template-select">
-                          <option value="">Wait! Loading templates...</option>
+                          <option value="">{{ _('Wait! Loading templates...') }}</option>
                         </select>
                         <div class="input-group-append">
-                          <button class="btn btn-outline-secondary" type="button" id="load-template-btn">Load Template</button>
-                          <button class="btn btn-outline-secondary" type="button" id="force-refresh-btn">Force Refresh</button>
+                          <button class="btn btn-outline-secondary" type="button" id="load-template-btn">{{ _('Load Template') }}</button>
+                          <button class="btn btn-outline-secondary" type="button" id="force-refresh-btn">{{ _('Force Refresh') }}</button>
                         </div>
                       </div>
                     </div>
 		              </div> <!-- end of col-md-6 -->
                 </div>
                 <div class="mb-3">
-                  <textarea name="lab_manifest" id="lab-edit-manifest" class="textarea" placeholder="Place some text here" rows="16">{{ lab.manifest|default('', true) }}</textarea>
+                  <textarea name="lab_manifest" id="lab-edit-manifest" class="textarea" placeholder="{{ _('Place some text here') }}" rows="16">{{ lab.manifest|default('', true) }}</textarea>
                 </div>
                 <p class="text-sm mb-0">
-                  Read <a href="#">more information</a> about the Kubernetes manifest.
+                  {{ _('Read %(link_start)smore information%(link_end)s about the Kubernetes manifest.', link_start='<a href="#">'|safe, link_end='</a>'|safe) }}
                 </p>
               </div>
             </div>
@@ -257,50 +256,50 @@
             <div id="lab-guide" class="card card-dark">
               <div class="card-header">
                 <h3 class="card-title">
-                  Lab Guide
+                  {{ _('Lab Guide') }}
                 </h3>
                 {% if lab and lab.id %}
                 <div class="card-tools">
-                  <button type="button" class="btn btn-tool btn-sm lab-field-history-btn" data-field="lab_guide" title="Version history">
-                    <i class="fas fa-history"></i> Versions
+                  <button type="button" class="btn btn-tool btn-sm lab-field-history-btn" data-field="lab_guide" title="{{ _('Version history') }}">
+                    <i class="fas fa-history"></i> {{ _('Versions') }}
                   </button>
                 </div>
                 {% endif %}
               </div>
               <!-- /.card-header -->
               <div class="card-body">
-                <p>Add here the Lab instructions for students/experimenters to run this Lab (step-by-step) using Markdown format (<a href="https://www.markdownguide.org/basic-syntax/" target="_blank">read more about Markdown syntax</a>):</p>
+                <p>{{ _('Add here the Lab instructions for students/experimenters to run this Lab (step-by-step) using Markdown format (%(link_start)sread more about Markdown syntax%(link_end)s):', link_start='<a href="https://www.markdownguide.org/basic-syntax/" target="_blank">'|safe, link_end='</a>'|safe) }}</p>
 		<div class="card card-primary card-outline card-outline-tabs">
                   <div class="card-header p-0 border-bottom-0">
                     <ul class="nav nav-tabs" id="custom-tabs-labguide-tab" role="tablist">
                       <li class="nav-item">
-                        <a class="nav-link active" id="custom-tabs-labguide-editor-tab" data-toggle="pill" href="#custom-tabs-labguide-home" role="tab" aria-controls="custom-tabs-labguide-home" aria-selected="true">Editor</a>
+                        <a class="nav-link active" id="custom-tabs-labguide-editor-tab" data-toggle="pill" href="#custom-tabs-labguide-home" role="tab" aria-controls="custom-tabs-labguide-home" aria-selected="true">{{ _('Editor') }}</a>
                       </li>
                       <li class="nav-item">
-                        <a class="nav-link" id="custom-tabs-labguide-preview-tab" data-toggle="pill" href="#custom-tabs-labguide-preview" role="tab" aria-controls="custom-tabs-labguide-preview" aria-selected="false">Preview</a>
+                        <a class="nav-link" id="custom-tabs-labguide-preview-tab" data-toggle="pill" href="#custom-tabs-labguide-preview" role="tab" aria-controls="custom-tabs-labguide-preview" aria-selected="false">{{ _('Preview') }}</a>
                       </li>
                     </ul>
                   </div>
                   <div class="card-body">
                     <div class="tab-content" id="custom-tabs-labguide-tabContent">
                       <div class="tab-pane fade show active" id="custom-tabs-labguide-home" role="tabpanel" aria-labelledby="custom-tabs-labguide-editor-tab">
-                        <button class="btn btn-outline-secondary" type="button" id="add-text-input-labguide">Add simple question</button>
-                        <button class="btn btn-outline-secondary" type="button" id="add-textarea-input-labguide">Add text area question</button>
-                        <button class="btn btn-outline-secondary" type="button" id="add-select-input-labguide">Add select question</button>
-                        <button class="btn btn-outline-secondary" type="button" id="add-check-input-labguide">Add checkbox question</button>
-                        <button class="btn btn-outline-secondary" type="button" id="upload-file-labguide-btn"><i class="fas fa-paperclip"></i> Paste, drop, or click to add files</button>
+                        <button class="btn btn-outline-secondary" type="button" id="add-text-input-labguide">{{ _('Add simple question') }}</button>
+                        <button class="btn btn-outline-secondary" type="button" id="add-textarea-input-labguide">{{ _('Add text area question') }}</button>
+                        <button class="btn btn-outline-secondary" type="button" id="add-select-input-labguide">{{ _('Add select question') }}</button>
+                        <button class="btn btn-outline-secondary" type="button" id="add-check-input-labguide">{{ _('Add checkbox question') }}</button>
+                        <button class="btn btn-outline-secondary" type="button" id="upload-file-labguide-btn"><i class="fas fa-paperclip"></i> {{ _('Paste, drop, or click to add files') }}</button>
                         <input type="file" id="labguide-file-input" style="display: none;">
                         <div class="mb-3">
-                          <textarea name="lab_guide" id="lab-edit-guide" class="textarea" placeholder="Place some text here" rows="16">{{ lab.lab_guide_md_str|default('', true) }}</textarea>
+                          <textarea name="lab_guide" id="lab-edit-guide" class="textarea" placeholder="{{ _('Place some text here') }}" rows="16">{{ lab.lab_guide_md_str|default('', true) }}</textarea>
                         </div>
                         <div id="lab-uploads-panel" class="mt-3">
-                          <h6><i class="fas fa-paperclip"></i> Attached files</h6>
+                          <h6><i class="fas fa-paperclip"></i> {{ _('Attached files') }}</h6>
                           <ul id="lab-uploads-list" class="list-group list-group-flush">
                             {% for upload in lab_uploads|default([], true) %}
                             <li class="list-group-item d-flex justify-content-between align-items-center" data-filename="{{ upload.filename }}" data-url="{{ upload.url }}">
                               <a href="{{ upload.url }}" target="_blank">{{ upload.original_name }}</a>
                               <button type="button" class="btn btn-sm btn-outline-danger remove-upload-btn" data-filename="{{ upload.filename }}" data-original-name="{{ upload.original_name }}">
-                                <i class="fas fa-trash"></i> Remove
+                                <i class="fas fa-trash"></i> {{ _('Remove') }}
                               </button>
                             </li>
                             {% endfor %}
@@ -310,7 +309,7 @@
                       <div class="tab-pane fade" id="custom-tabs-labguide-preview" role="tabpanel" aria-labelledby="custom-tabs-labguide-preview-tab">
                       </div>
                     </div>
-                    <a href="#lab-guide">back to the top</a>
+                    <a href="#lab-guide">{{ _('back to the top') }}</a>
                   </div>
 		</div>
               </div>
@@ -470,16 +469,16 @@
         <!-- ./row -->
         <div class="row">
           <div class="col-md-12 mb-2">
-            <button type="submit" class="btn btn-primary">Submit</button>
-            <a href="{{ url_for('home_blueprint.view_labs', lab_id=lab.id) if lab.id else url_for('home_blueprint.view_labs') }}" class="btn btn-secondary mx-2" role="button" aria-pressed="true">Cancel</a>
+            <button type="submit" class="btn btn-primary">{{ _('Submit') }}</button>
+            <a href="{{ url_for('home_blueprint.view_labs', lab_id=lab.id) if lab.id else url_for('home_blueprint.view_labs') }}" class="btn btn-secondary mx-2" role="button" aria-pressed="true">{{ _('Cancel') }}</a>
             {% if lab and lab.id and not lab.is_deleted %}
-            <a href="{{ url_for('home_blueprint.fork_lab', lab_id=lab.id) }}" class="btn btn-info" role="button"><i class="fas fa-code-branch"></i> Fork</a>
+            <a href="{{ url_for('home_blueprint.fork_lab', lab_id=lab.id) }}" class="btn btn-info" role="button"><i class="fas fa-code-branch"></i> {{ _('Fork') }}</a>
             {% endif %}
             {% if lab and lab.id %}
               {% if lab.is_deleted %}
-            <button type="button" class="btn btn-success float-right" data-toggle="modal" data-target="#modal-restore-lab"><i class="fas fa-trash-restore"></i> Restore Lab</button>
+            <button type="button" class="btn btn-success float-right" data-toggle="modal" data-target="#modal-restore-lab"><i class="fas fa-trash-restore"></i> {{ _('Restore Lab') }}</button>
               {% elif current_user.category == "admin" or lab.updated_by == current_user.id %}
-            <button type="button" class="btn btn-danger float-right" data-toggle="modal" data-target="#modal-delete-lab"><i class="fas fa-trash"></i> Delete Lab</button>
+            <button type="button" class="btn btn-danger float-right" data-toggle="modal" data-target="#modal-delete-lab"><i class="fas fa-trash"></i> {{ _('Delete Lab') }}</button>
               {% endif %}
             {% endif %}
           </div>
@@ -492,17 +491,17 @@
         <div class="modal-dialog">
           <div class="modal-content">
             <div class="modal-header">
-              <h4 class="modal-title">Confirm restore lab</h4>
+              <h4 class="modal-title">{{ _('Confirm restore lab') }}</h4>
               <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                 <span aria-hidden="true">&times;</span>
               </button>
             </div>
             <div class="modal-body">
-              <p>Are you sure you want to restore this lab?</p>
+              <p>{{ _('Are you sure you want to restore this lab?') }}</p>
             </div>
             <div class="modal-footer justify-content-between">
-              <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-              <button type="button" class="btn btn-success" id="restore-lab">Restore lab</button>
+              <button type="button" class="btn btn-default" data-dismiss="modal">{{ _('Cancel') }}</button>
+              <button type="button" class="btn btn-success" id="restore-lab">{{ _('Restore lab') }}</button>
             </div>
           </div>
           <!-- /.modal-content -->
@@ -515,17 +514,17 @@
         <div class="modal-dialog">
           <div class="modal-content">
             <div class="modal-header">
-              <h4 class="modal-title">Confirm delete lab</h4>
+              <h4 class="modal-title">{{ _('Confirm delete lab') }}</h4>
               <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                 <span aria-hidden="true">&times;</span>
               </button>
             </div>
             <div class="modal-body">
-              <p>Are you sure you want to delete Lab <span class="text-danger">{{ lab.title }}</span>?</p>
+              <p>{{ _('Are you sure you want to delete Lab') }} <span class="text-danger">{{ lab.title }}</span>?</p>
             </div>
             <div class="modal-footer justify-content-between">
-              <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-              <button type="button" class="btn btn-danger" id="delete-lab">Delete lab</button>
+              <button type="button" class="btn btn-default" data-dismiss="modal">{{ _('Cancel') }}</button>
+              <button type="button" class="btn btn-danger" id="delete-lab">{{ _('Delete lab') }}</button>
             </div>
           </div>
           <!-- /.modal-content -->
@@ -541,16 +540,16 @@
         <div class="modal-dialog modal-lg">
           <div class="modal-content">
             <div class="modal-header">
-              <h4 class="modal-title">Version history: <span id="field-history-title"></span></h4>
+              <h4 class="modal-title">{{ _('Version history:') }} <span id="field-history-title"></span></h4>
               <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                 <span aria-hidden="true">&times;</span>
               </button>
             </div>
             <div class="modal-body">
-              <p class="text-muted">Restoring a version loads it back into the editor; it becomes a new version once you save the Lab.</p>
+              <p class="text-muted">{{ _('Restoring a version loads it back into the editor; it becomes a new version once you save the Lab.') }}</p>
               <table class="table table-sm table-striped">
                 <thead>
-                  <tr><th>Version</th><th>Saved at (UTC)</th><th>Author</th><th>Actions</th></tr>
+                  <tr><th>{{ _('Version') }}</th><th>{{ _('Saved at (UTC)') }}</th><th>{{ _('Author') }}</th><th>{{ _('Actions') }}</th></tr>
                 </thead>
                 <tbody id="field-history-items"></tbody>
               </table>
@@ -560,7 +559,7 @@
               </div>
             </div>
             <div class="modal-footer justify-content-between">
-              <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+              <button type="button" class="btn btn-default" data-dismiss="modal">{{ _('Close') }}</button>
             </div>
           </div>
           <!-- /.modal-content -->
@@ -614,7 +613,7 @@
             }
           },
           onImageUploadError: function(msg) {
-            alert('Image upload failed: ' + msg);
+            alert('{{ _("Image upload failed:") }} ' + msg);
           }
         }
       });
@@ -637,12 +636,12 @@
               $('#lab-editor').summernote("insertImage", response.url, response.filename);
               registerUpload(response);
             } else {
-              alert("Failed to upload image: " + response.result);
+              alert("{{ _('Failed to upload image:') }} " + response.result);
             }
           },
           error: function(jqXHR, textStatus, errorThrown) {
             var errorMsg = jqXHR.responseJSON && jqXHR.responseJSON.result ? jqXHR.responseJSON.result : errorThrown;
-            alert("Failed to upload image: " + errorMsg);
+            alert("{{ _('Failed to upload image:') }} " + errorMsg);
           }
         });
       }
@@ -676,7 +675,7 @@
             '<a href="' + upload.url + '" target="_blank">' + upload.original_name + '</a>' +
             '<button type="button" class="btn btn-sm btn-outline-danger remove-upload-btn"' +
             ' data-filename="' + upload.filename + '" data-original-name="' + upload.original_name + '">' +
-            '<i class="fas fa-trash"></i> Remove</button></li>'
+            '<i class="fas fa-trash"></i> {{ _("Remove") }}</button></li>'
           );
         });
       }
@@ -695,7 +694,7 @@
             '<a href="' + response.url + '" target="_blank">' + response.filename + '</a>' +
             '<button type="button" class="btn btn-sm btn-outline-danger remove-upload-btn"' +
             ' data-filename="' + response.saved_filename + '" data-original-name="' + response.filename + '">' +
-            '<i class="fas fa-trash"></i> Remove</button></li>'
+            '<i class="fas fa-trash"></i> {{ _("Remove") }}</button></li>'
           );
         }
       }
@@ -706,12 +705,12 @@
         var origName = btn.data('original-name');
         var content = editorLabGuide.getValue();
         if (content.indexOf(filename) !== -1 || content.indexOf(origName) !== -1) {
-          alert('Warning: this file is still referenced in the Lab Guide. Remove the reference before deleting.');
+          alert('{{ _("Warning: this file is still referenced in the Lab Guide. Remove the reference before deleting.") }}');
           return;
         }
         var extendedDesc = $('#lab-editor').summernote('code');
         if (extendedDesc.indexOf(filename) !== -1 || extendedDesc.indexOf(origName) !== -1) {
-          alert('Warning: this file is still referenced in the Lab extended description. Remove the reference before deleting.');
+          alert('{{ _("Warning: this file is still referenced in the Lab extended description. Remove the reference before deleting.") }}');
           return;
         }
         if (labId) {
@@ -722,12 +721,12 @@
               if (response.status === 'ok') {
                 btn.closest('li').remove();
               } else {
-                alert('Failed to remove file: ' + response.result);
+                alert('{{ _("Failed to remove file:") }} ' + response.result);
               }
             },
             error: function(jqXHR) {
-              var msg = jqXHR.responseJSON && jqXHR.responseJSON.result ? jqXHR.responseJSON.result : 'Unknown error';
-              alert('Failed to remove file: ' + msg);
+              var msg = jqXHR.responseJSON && jqXHR.responseJSON.result ? jqXHR.responseJSON.result : '{{ _("Unknown error") }}';
+              alert('{{ _("Failed to remove file:") }} ' + msg);
             }
           });
         } else {
@@ -844,7 +843,7 @@
       $('.select2').select2();
 
       $('select[name="lab_categories"]').select2({
-        placeholder: 'Select one or more categories',
+        placeholder: '{{ _("Select one or more categories") }}',
         allowClear: false,
         closeOnSelect: false,
         templateResult: function(option) {
@@ -927,10 +926,10 @@
 	  if (shouldAbort) event.preventDefault();
           var messages = [];
           if (duplicates.length > 0) {
-            messages.push('Duplicated question name found: ' + duplicates.join(', '));
+            messages.push('{{ _("Duplicated question name found:") }} ' + duplicates.join(', '));
           }
           if (duplicateIds.length > 0) {
-            messages.push('Duplicated input id found: ' + duplicateIds.join(', '));
+            messages.push('{{ _("Duplicated input id found:") }} ' + duplicateIds.join(', '));
           }
           alert(messages.join('\n'));
           return false;
@@ -941,7 +940,7 @@
         var selectedCategories = $('select[name="lab_categories"]').val();
         if (!selectedCategories || selectedCategories.length === 0) {
           e.preventDefault();
-          alert('Please select at least one lab category.');
+          alert('{{ _("Please select at least one lab category.") }}');
           return false;
         }
         $('#pending-upload-filenames').val(JSON.stringify(pendingFilenames));
@@ -993,7 +992,7 @@
       try {
         const response = await fetch(url);
         if (!response.ok) {
-          throw new Error('Fail to load the list of templates.');
+          throw new Error('{{ _("Fail to load the list of templates.") }}');
         }
         const templates = await response.json();
 
@@ -1017,8 +1016,8 @@
 
       } catch (error) {
         console.error(error);
-        templateSelect.innerHTML = '<option value="">Failed to load</option>';
-        alert('Failed to load templates.');
+        templateSelect.innerHTML = '<option value="">{{ _("Failed to load") }}</option>';
+        alert('{{ _("Failed to load templates.") }}');
       }
     }
 
@@ -1038,7 +1037,7 @@
         const templateName = templateSelect.value;
 
         if (!templateName) {
-          alert('Please select a template to load.');
+          alert('{{ _("Please select a template to load.") }}');
           return;
         }
 
@@ -1050,21 +1049,21 @@
             cmEditor.setSize("100%",600)
           } else {
             const errorData = await response.text();
-            alert(`Failed to load template: ${errorData.error}`);
+            alert(`{{ _("Failed to load template:") }} ${errorData.error}`);
           }
         } catch (error) {
-          alert('Failed to load template: ', error);
+          alert('{{ _("Failed to load template:") }} ', error);
         }
       });
 
       $("#force-refresh-btn").on("click", async function () {
         const data = await loadTemplates(true);
         !data
-        ? alert("Failed to refresh templates (server error).")
+        ? alert("{{ _('Failed to refresh templates (server error).') }}")
         : alert(
             data.status === "ok"
-              ? "Templates refreshed successfully!"
-              : "Failed to refresh templates: " + (data.result || "Unknown error")
+              ? "{{ _('Templates refreshed successfully!') }}"
+              : "{{ _('Failed to refresh templates:') }} " + (data.result || "{{ _('Unknown error') }}")
           );
       });
 
@@ -1081,9 +1080,9 @@
 
       // --- version history of tracked lab fields ---
       var fieldHistoryLabels = {
-        manifest: "Kubernetes Lab Manifest",
-        lab_guide: "Lab Guide",
-        extended_desc: "Lab extended description",
+        manifest: "{{ _('Kubernetes Lab Manifest') }}",
+        lab_guide: "{{ _('Lab Guide') }}",
+        extended_desc: "{{ _('Lab extended description') }}",
       };
       var fieldHistoryField = null;
 
@@ -1107,43 +1106,43 @@
 
       async function loadFieldHistory() {
         var items = $('#field-history-items');
-        items.html('<tr><td colspan="4">Loading...</td></tr>');
+        items.html('<tr><td colspan="4">{{ _("Loading...") }}</td></tr>');
         try {
           const response = await fetch(`/api/labs/${editLabId}/field_versions/${fieldHistoryField}`);
           const data = await response.json();
           if (!response.ok) throw new Error(data.result || "request failed");
           items.empty();
           if (!data.result.length) {
-            items.append('<tr><td colspan="4">No versions recorded yet.</td></tr>');
+            items.append('<tr><td colspan="4">{{ _("No versions recorded yet.") }}</td></tr>');
             return;
           }
           data.result.forEach(function (v, idx) {
             var row = $('<tr>');
-            row.append($('<td>').text('v' + v.version + (idx === 0 ? ' (latest)' : '')));
+            row.append($('<td>').text('v' + v.version + (idx === 0 ? ' {{ _("(latest)") }}' : '')));
             row.append($('<td>').text(v.created_at || '--'));
             row.append($('<td>').text(v.author || '--'));
             var actions = $('<td>');
             actions.append(
-              $('<button type="button" class="btn btn-sm btn-outline-secondary mr-1" title="Diff vs current">Diff</button>')
+              $('<button type="button" class="btn btn-sm btn-outline-secondary mr-1" title="{{ _("Diff vs current") }}">{{ _("Diff") }}</button>')
                 .on('click', function () { showFieldVersion(v.version, true); })
             );
             actions.append(
-              $('<button type="button" class="btn btn-sm btn-outline-primary mr-1" title="View content">View</button>')
+              $('<button type="button" class="btn btn-sm btn-outline-primary mr-1" title="{{ _("View content") }}">{{ _("View") }}</button>')
                 .on('click', function () { showFieldVersion(v.version, false); })
             );
             actions.append(
-              $('<button type="button" class="btn btn-sm btn-outline-success mr-1" title="Restore into editor">Restore</button>')
+              $('<button type="button" class="btn btn-sm btn-outline-success mr-1" title="{{ _("Restore into editor") }}">{{ _("Restore") }}</button>')
                 .on('click', function () { restoreFieldVersionFromApi(v.version); })
             );
             actions.append(
-              $('<button type="button" class="btn btn-sm btn-outline-danger" title="Delete this version">Delete</button>')
+              $('<button type="button" class="btn btn-sm btn-outline-danger" title="{{ _("Delete this version") }}">{{ _("Delete") }}</button>')
                 .on('click', function () { deleteFieldVersionFromApi(v.version); })
             );
             row.append(actions);
             items.append(row);
           });
         } catch (err) {
-          items.html($('<tr><td colspan="4"></td></tr>').find('td').text('Failed to load history: ' + err.message).end());
+          items.html($('<tr><td colspan="4"></td></tr>').find('td').text('{{ _("Failed to load history:") }} ' + err.message).end());
         }
       }
 
@@ -1152,15 +1151,15 @@
         const response = await fetch(url);
         const data = await response.json();
         if (!response.ok) {
-          alert('Failed to load version: ' + (data.result || 'request failed'));
+          alert('{{ _("Failed to load version:") }} ' + (data.result || '{{ _("request failed") }}'));
           return;
         }
-        $('#field-history-detail-title').text((diff ? 'Diff v' + version + ' -> current: ' : 'Content of v' + version + ': ') + fieldHistoryLabels[fieldHistoryField]);
+        $('#field-history-detail-title').text((diff ? '{{ _("Diff v") }}' + version + '{{ _(" -> current:") }} ' : '{{ _("Content of v") }}' + version + ': ') + fieldHistoryLabels[fieldHistoryField]);
         var detail = $('#field-history-detail-content');
         if (diff && data.result) {
           detail.html(renderDiff(data.result));
         } else {
-          detail.text(data.result || (diff ? '(no differences against the saved Lab)' : '(empty)'));
+          detail.text(data.result || (diff ? '{{ _("(no differences against the saved Lab)") }}' : '{{ _("(empty)") }}'));
         }
         $('#field-history-detail').removeClass('d-none');
       }
@@ -1189,7 +1188,7 @@
         const response = await fetch(`/api/labs/${editLabId}/field_versions/${fieldHistoryField}/${version}`);
         const data = await response.json();
         if (!response.ok) {
-          alert('Failed to load version: ' + (data.result || 'request failed'));
+          alert('{{ _("Failed to load version:") }} ' + (data.result || '{{ _("request failed") }}'));
           return;
         }
         restoreFieldVersion(fieldHistoryField, data.result || '');
@@ -1197,7 +1196,7 @@
       }
 
       async function deleteFieldVersionFromApi(version) {
-        if (!confirm('Delete version v' + version + '? This cannot be undone.')) {
+        if (!confirm('{{ _("Delete version v") }}' + version + '{{ _("? This cannot be undone.") }}')) {
           return;
         }
         const response = await fetch(`/api/labs/${editLabId}/field_versions/${fieldHistoryField}/${version}`, {
@@ -1206,7 +1205,7 @@
         });
         const data = await response.json();
         if (!response.ok) {
-          alert('Failed to delete version: ' + (data.result || 'request failed'));
+          alert('{{ _("Failed to delete version:") }} ' + (data.result || '{{ _("request failed") }}'));
           return;
         }
         $('#field-history-detail').addClass('d-none');

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-07-14 16:46-0300\n"
+"POT-Creation-Date: 2026-07-15 05:34-0300\n"
 "PO-Revision-Date: 2026-07-12 19:36-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -31,8 +31,9 @@ msgstr ""
 msgid "Password"
 msgstr ""
 
-#: apps/authentication/forms.py:25 apps/templates/pages/edit_user.html:70
-#: apps/templates/pages/register.html:50 apps/templates/pages/users.html:69
+#: apps/authentication/forms.py:25 apps/templates/pages/clabs_upsert.html:260
+#: apps/templates/pages/edit_user.html:70 apps/templates/pages/register.html:50
+#: apps/templates/pages/users.html:69
 msgid "Username"
 msgstr ""
 
@@ -167,6 +168,7 @@ msgid "This conversation has been finished."
 msgstr ""
 
 #: apps/templates/includes/navigation.html:10
+#: apps/templates/pages/clabs_upsert.html:84
 #: apps/templates/pages/edit_user.html:47 apps/templates/pages/error.html:32
 #: apps/templates/pages/feedback_view.html:3
 #: apps/templates/pages/feedback_view.html:35
@@ -183,6 +185,7 @@ msgstr ""
 #: apps/templates/pages/lab_categories_edit.html:47
 #: apps/templates/pages/lab_categories_list.html:47
 #: apps/templates/pages/lab_instance_view.html:88
+#: apps/templates/pages/labs_edit.html:79
 #: apps/templates/pages/labs_view.html:37
 #: apps/templates/pages/lti_management.html:35
 #: apps/templates/pages/my_support_thread_view.html:27
@@ -263,9 +266,11 @@ msgid "Groups"
 msgstr ""
 
 #: apps/templates/includes/sidebar.html:60
+#: apps/templates/pages/clabs_upsert.html:85
 #: apps/templates/pages/finished_lab_infos.html:63
 #: apps/templates/pages/lab_answers_list.html:48
 #: apps/templates/pages/lab_answers_sheet.html:48
+#: apps/templates/pages/labs_edit.html:80
 #: apps/templates/pages/labs_view.html:38 apps/templates/pages/run_lab.html:44
 msgid "Labs"
 msgstr ""
@@ -281,6 +286,8 @@ msgid "Create Lab"
 msgstr ""
 
 #: apps/templates/includes/sidebar.html:83
+#: apps/templates/pages/clabs_upsert.html:3
+#: apps/templates/pages/clabs_upsert.html:323
 msgid "Create ContainerLab"
 msgstr ""
 
@@ -364,6 +371,315 @@ msgstr ""
 msgid "Extra tools"
 msgstr ""
 
+#: apps/templates/pages/clabs_upsert.html:66
+msgid "Create/Update Container Lab"
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:70
+#: apps/templates/pages/labs_edit.html:58
+msgid "Lab created/updated successfully!"
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:77
+msgid "Fail to insert/update container lab!"
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:86
+msgid "Create/Update CLab"
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:102
+#: apps/templates/pages/labs_edit.html:100
+msgid "General information"
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:108
+#: apps/templates/pages/finished_labs.html:90
+#: apps/templates/pages/labs_edit.html:106 apps/templates/pages/run_lab.html:67
+#: apps/templates/pages/running.html:97
+msgid "Lab title"
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:109
+msgid "Enter container lab title..."
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:112
+#: apps/templates/pages/labs_edit.html:110
+msgid "Short Description"
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:113
+#: apps/templates/pages/clabs_upsert.html:212
+#: apps/templates/pages/labs_edit.html:111
+msgid "Max 255 characters"
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:116
+#: apps/templates/pages/labs_edit.html:121
+msgid "Lab categories"
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:117
+#: apps/templates/pages/clabs_upsert.html:122
+#: apps/templates/pages/clabs_upsert.html:369
+#: apps/templates/pages/labs_edit.html:122
+#: apps/templates/pages/labs_edit.html:127
+#: apps/templates/pages/labs_edit.html:846
+msgid "Select one or more categories"
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:136
+#: apps/templates/pages/labs_edit.html:141
+msgid "Lab additional information"
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:142
+#: apps/templates/pages/labs_edit.html:147
+msgid "Access Control: Availabe groups (left) &gt;&gt; Allowed groups (right)"
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:169
+msgid "ContainerLab extended description"
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:173
+#: apps/templates/pages/lab_instance_view.html:106
+#: apps/templates/pages/labs_view.html:120
+#: apps/templates/pages/waiting_approval.html:68
+msgid "Collapse"
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:176
+#: apps/templates/pages/lab_instance_view.html:109
+#: apps/templates/pages/labs_edit.html:302
+#: apps/templates/pages/labs_edit.html:678
+#: apps/templates/pages/labs_edit.html:697
+#: apps/templates/pages/labs_view.html:123
+#: apps/templates/pages/waiting_approval.html:71
+msgid "Remove"
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:185
+#: apps/templates/pages/clabs_upsert.html:248
+#: apps/templates/pages/clabs_upsert.html:312
+#: apps/templates/pages/labs_edit.html:196
+#: apps/templates/pages/labs_edit.html:243
+#: apps/templates/pages/labs_edit.html:293
+msgid "Place some text here"
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:189
+#: apps/templates/pages/labs_edit.html:200
+#, python-format
+msgid "Editor %(link_start)sDocumentation and license information.%(link_end)s"
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:202
+msgid "ContainerLab Resources"
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:208
+msgid ""
+"You can specify the GIT repository containing all information necessary "
+"to create the container lab below (will be read when you hit the save "
+"button -- you can always come back here and save again to reload!)."
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:211
+#, python-format
+msgid "GIT repo URL (%(dev_start)sUnder development%(dev_end)s):"
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:218
+msgid "Or you can upload here your ContainerLab topology and additional files."
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:222
+msgid "Upload Area"
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:223
+msgid "Upload actions"
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:225
+msgid "Add File"
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:229
+msgid "Add Directory"
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:235
+msgid "Drag & drop files here, or click to select"
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:236
+msgid "Accepted: multiple files"
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:247
+msgid "ContainerLab manifest"
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:253
+msgid "Image Secrets"
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:254
+msgid ""
+"In this section you can define <b>imagePullSecrets</b> to use a K8s "
+"Secret to pull an image from a private container image registry or "
+"repository. The name of the secret must match the name defined on your "
+"Clab topology."
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:258
+msgid "Secret Name"
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:259
+msgid "Server"
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:261
+msgid "Password/Token"
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:285
+msgid "Add secret"
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:302
+#: apps/templates/pages/lab_instance_view.html:230
+#: apps/templates/pages/labs_edit.html:259
+#: apps/templates/pages/labs_edit.html:1084
+msgid "Lab Guide"
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:307
+#: apps/templates/pages/labs_edit.html:271
+#, python-format
+msgid ""
+"Add here the Lab instructions for students/experimenters to run this Lab "
+"(step-by-step) using Markdown format (%(link_start)sread more about "
+"Markdown syntax%(link_end)s):"
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:308
+msgid "Add text question"
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:309
+#: apps/templates/pages/labs_edit.html:288
+msgid "Add select question"
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:310
+#: apps/templates/pages/labs_edit.html:289
+msgid "Add checkbox question"
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:323
+msgid "Update ContainerLab"
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:326
+#: apps/templates/pages/edit_user.html:154
+#: apps/templates/pages/groups_edit.html:205
+#: apps/templates/pages/groups_list.html:127
+#: apps/templates/pages/groups_list.html:155
+#: apps/templates/pages/index.html:361
+#: apps/templates/pages/k8s_dep_list.html:134
+#: apps/templates/pages/k8s_dep_list.html:157
+#: apps/templates/pages/k8s_pod_list.html:138
+#: apps/templates/pages/k8s_pod_list.html:161
+#: apps/templates/pages/k8s_srv_list.html:128
+#: apps/templates/pages/k8s_srv_list.html:151
+#: apps/templates/pages/lab_answers_list.html:163
+#: apps/templates/pages/lab_categories_edit.html:88
+#: apps/templates/pages/lab_categories_list.html:124
+#: apps/templates/pages/lab_instance_view.html:216
+#: apps/templates/pages/labs_edit.html:473
+#: apps/templates/pages/labs_edit.html:503
+#: apps/templates/pages/labs_edit.html:526
+#: apps/templates/pages/labs_view.html:195
+#: apps/templates/pages/labs_view.html:218
+#: apps/templates/pages/lti_management.html:241
+#: apps/templates/pages/lti_management.html:266
+#: apps/templates/pages/running.html:157 apps/templates/pages/users.html:137
+#: apps/templates/pages/users.html:160
+msgid "Cancel"
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:403
+#: apps/templates/pages/labs_edit.html:616
+msgid "Image upload failed:"
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:403
+msgid "(Maximum size: 350KB)"
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:437
+#: apps/templates/pages/clabs_upsert.html:693
+#: apps/templates/pages/clabs_upsert.html:735
+#: apps/templates/pages/finished_labs.html:192
+#: apps/templates/pages/groups_list.html:222
+#: apps/templates/pages/k8s_dep_list.html:246
+#: apps/templates/pages/k8s_pod_list.html:252
+#: apps/templates/pages/k8s_srv_list.html:240
+#: apps/templates/pages/lab_answers_list.html:281
+#: apps/templates/pages/lab_answers_sheet.html:172
+#: apps/templates/pages/lab_categories_list.html:188
+#: apps/templates/pages/lti_management.html:332
+#: apps/templates/pages/running.html:251 apps/templates/pages/users.html:258
+msgid "Failure"
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:437
+msgid "Failed to load editor. You can still upload files/folders and submit."
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:484
+msgid "No files selected"
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:536
+msgid "YAML error"
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:660
+msgid "Heads up"
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:660
+msgid ""
+"Folder drops may not be fully supported in this browser. Use the \"Add "
+"Directory\" button below."
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:693
+msgid "Provide YAML and/or files"
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:720
+msgid "Failed"
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:722
+msgid "CLab created (mock)."
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:730
+msgid "CLab created."
+msgstr ""
+
+#: apps/templates/pages/clabs_upsert.html:735
+msgid "Failed to create ContainerLab:"
+msgstr ""
+
 #: apps/templates/pages/confirm.html:3
 #: apps/templates/pages/confirm_reset_password.html:3
 #: apps/templates/pages/login.html:3 apps/templates/pages/register.html:94
@@ -411,7 +727,7 @@ msgid "Logout"
 msgstr ""
 
 #: apps/templates/pages/confirm_reset_password.html:59
-#: apps/templates/pages/index.html:362
+#: apps/templates/pages/index.html:362 apps/templates/pages/labs_edit.html:472
 #: apps/templates/pages/reset_password.html:58
 msgid "Submit"
 msgstr ""
@@ -487,30 +803,6 @@ msgstr ""
 
 #: apps/templates/pages/edit_user.html:153
 msgid "Save"
-msgstr ""
-
-#: apps/templates/pages/edit_user.html:154
-#: apps/templates/pages/groups_edit.html:205
-#: apps/templates/pages/groups_list.html:127
-#: apps/templates/pages/groups_list.html:155
-#: apps/templates/pages/index.html:361
-#: apps/templates/pages/k8s_dep_list.html:134
-#: apps/templates/pages/k8s_dep_list.html:157
-#: apps/templates/pages/k8s_pod_list.html:138
-#: apps/templates/pages/k8s_pod_list.html:161
-#: apps/templates/pages/k8s_srv_list.html:128
-#: apps/templates/pages/k8s_srv_list.html:151
-#: apps/templates/pages/lab_answers_list.html:163
-#: apps/templates/pages/lab_categories_edit.html:88
-#: apps/templates/pages/lab_categories_list.html:124
-#: apps/templates/pages/lab_instance_view.html:216
-#: apps/templates/pages/labs_view.html:195
-#: apps/templates/pages/labs_view.html:218
-#: apps/templates/pages/lti_management.html:241
-#: apps/templates/pages/lti_management.html:266
-#: apps/templates/pages/running.html:157 apps/templates/pages/users.html:137
-#: apps/templates/pages/users.html:160
-msgid "Cancel"
 msgstr ""
 
 #: apps/templates/pages/edit_user.html:198
@@ -618,11 +910,6 @@ msgstr ""
 msgid "All labs"
 msgstr ""
 
-#: apps/templates/pages/finished_labs.html:90
-#: apps/templates/pages/run_lab.html:67 apps/templates/pages/running.html:97
-msgid "Lab title"
-msgstr ""
-
 #: apps/templates/pages/finished_labs.html:91
 msgid "Created At (UTC)"
 msgstr ""
@@ -653,19 +940,6 @@ msgstr ""
 #: apps/templates/pages/lti_management.html:340
 #: apps/templates/pages/running.html:243 apps/templates/pages/users.html:250
 msgid "Success"
-msgstr ""
-
-#: apps/templates/pages/finished_labs.html:192
-#: apps/templates/pages/groups_list.html:222
-#: apps/templates/pages/k8s_dep_list.html:246
-#: apps/templates/pages/k8s_pod_list.html:252
-#: apps/templates/pages/k8s_srv_list.html:240
-#: apps/templates/pages/lab_answers_list.html:281
-#: apps/templates/pages/lab_answers_sheet.html:172
-#: apps/templates/pages/lab_categories_list.html:188
-#: apps/templates/pages/lti_management.html:332
-#: apps/templates/pages/running.html:251 apps/templates/pages/users.html:258
-msgid "Failure"
 msgstr ""
 
 #: apps/templates/pages/finished_labs.html:200
@@ -809,6 +1083,7 @@ msgstr ""
 #: apps/templates/pages/k8s_srv_list.html:70
 #: apps/templates/pages/lab_answers_list.html:115
 #: apps/templates/pages/lab_categories_list.html:77
+#: apps/templates/pages/labs_edit.html:552
 #: apps/templates/pages/lti_management.html:64
 #: apps/templates/pages/my_support_threads.html:47
 #: apps/templates/pages/running.html:99
@@ -836,6 +1111,7 @@ msgstr ""
 
 #: apps/templates/pages/groups_list.html:96
 #: apps/templates/pages/lab_categories_list.html:93
+#: apps/templates/pages/labs_edit.html:1138
 #: apps/templates/pages/labs_view.html:170
 msgid "Delete"
 msgstr ""
@@ -1114,6 +1390,7 @@ msgstr ""
 #: apps/templates/pages/k8s_dep_list.html:179
 #: apps/templates/pages/k8s_pod_list.html:183
 #: apps/templates/pages/k8s_srv_list.html:173
+#: apps/templates/pages/labs_edit.html:562
 #: apps/templates/pages/lti_management.html:213
 #: apps/templates/pages/lti_management.html:288
 msgid "Close"
@@ -1483,18 +1760,6 @@ msgstr ""
 msgid "Never"
 msgstr ""
 
-#: apps/templates/pages/lab_instance_view.html:106
-#: apps/templates/pages/labs_view.html:120
-#: apps/templates/pages/waiting_approval.html:68
-msgid "Collapse"
-msgstr ""
-
-#: apps/templates/pages/lab_instance_view.html:109
-#: apps/templates/pages/labs_view.html:123
-#: apps/templates/pages/waiting_approval.html:71
-msgid "Remove"
-msgstr ""
-
 #: apps/templates/pages/lab_instance_view.html:112
 msgid "Pin header to top"
 msgstr ""
@@ -1550,10 +1815,6 @@ msgstr ""
 msgid "Finish Lab"
 msgstr ""
 
-#: apps/templates/pages/lab_instance_view.html:230
-msgid "Lab Guide"
-msgstr ""
-
 #: apps/templates/pages/lab_instance_view.html:242
 msgid "Save Answers"
 msgstr ""
@@ -1594,6 +1855,349 @@ msgstr ""
 
 #: apps/templates/pages/lab_instance_view.html:548
 msgid "Failure to extend Lab"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:3 apps/templates/pages/labs_edit.html:54
+#: apps/templates/pages/labs_edit.html:81
+msgid "Create/Update Lab"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:65
+msgid "Fail to create/update lab!"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:72
+msgid "Forking Lab"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:73
+#, python-format
+msgid "You are forking \"%(name)s\". Nothing is saved until you press Submit."
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:107
+msgid "Enter lab title..."
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:115
+msgid "Display order"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:117
+msgid ""
+"Labs are listed by ascending display order, then by title. Default is "
+"1000."
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:181
+#: apps/templates/pages/labs_edit.html:1085
+msgid "Lab extended description"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:186
+#: apps/templates/pages/labs_edit.html:217
+#: apps/templates/pages/labs_edit.html:263
+msgid "Version history"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:187
+#: apps/templates/pages/labs_edit.html:218
+#: apps/templates/pages/labs_edit.html:264
+msgid "Versions"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:213
+#: apps/templates/pages/labs_edit.html:1083
+msgid "Kubernetes Lab Manifest"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:225
+#, python-brace-format
+msgid ""
+"Add here your Kubernetes Manifest file containing Pods, Deployments and "
+"Services. You should customize the item names with variables that will be"
+" replaced during resource creation, example: <code>${pod_hash}</code>"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:229
+msgid "Kubernetes Manifest Template:"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:232
+msgid "Wait! Loading templates..."
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:235
+msgid "Load Template"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:236
+msgid "Force Refresh"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:246
+#, python-format
+msgid ""
+"Read %(link_start)smore information%(link_end)s about the Kubernetes "
+"manifest."
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:276
+msgid "Editor"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:279
+msgid "Preview"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:286
+msgid "Add simple question"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:287
+msgid "Add text area question"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:290
+msgid "Paste, drop, or click to add files"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:296
+msgid "Attached files"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:312
+msgid "back to the top"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:475
+#: apps/templates/pages/labs_view.html:161
+msgid "Fork"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:479
+msgid "Restore Lab"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:481
+msgid "Delete Lab"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:494
+#: apps/templates/pages/labs_view.html:208
+msgid "Confirm restore lab"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:500
+#: apps/templates/pages/labs_view.html:215
+msgid "Are you sure you want to restore this lab?"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:504
+#: apps/templates/pages/labs_view.html:219
+msgid "Restore lab"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:517
+#: apps/templates/pages/labs_view.html:185
+msgid "Confirm delete lab"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:523
+#: apps/templates/pages/labs_view.html:192
+msgid "Are you sure you want to delete Lab"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:527
+#: apps/templates/pages/labs_view.html:196
+msgid "Delete lab"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:543
+msgid "Version history:"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:549
+msgid ""
+"Restoring a version loads it back into the editor; it becomes a new "
+"version once you save the Lab."
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:552
+msgid "Version"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:552
+msgid "Saved at (UTC)"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:552
+msgid "Author"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:639
+#: apps/templates/pages/labs_edit.html:644
+msgid "Failed to upload image:"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:708
+msgid ""
+"Warning: this file is still referenced in the Lab Guide. Remove the "
+"reference before deleting."
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:713
+msgid ""
+"Warning: this file is still referenced in the Lab extended description. "
+"Remove the reference before deleting."
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:724
+#: apps/templates/pages/labs_edit.html:729
+msgid "Failed to remove file:"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:728
+#: apps/templates/pages/labs_edit.html:1066
+msgid "Unknown error"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:929
+msgid "Duplicated question name found:"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:932
+msgid "Duplicated input id found:"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:943
+msgid "Please select at least one lab category."
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:995
+msgid "Fail to load the list of templates."
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:1019
+msgid "Failed to load"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:1020
+msgid "Failed to load templates."
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:1040
+msgid "Please select a template to load."
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:1052
+#: apps/templates/pages/labs_edit.html:1055
+msgid "Failed to load template:"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:1062
+msgid "Failed to refresh templates (server error)."
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:1065
+msgid "Templates refreshed successfully!"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:1066
+msgid "Failed to refresh templates:"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:1109
+#: apps/templates/pages/lti_management.html:372
+#: apps/templates/pages/run_lab_status.html:66
+msgid "Loading..."
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:1116
+msgid "No versions recorded yet."
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:1121
+msgid "(latest)"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:1126
+msgid "Diff vs current"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:1126
+msgid "Diff"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:1130
+msgid "View content"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:1130
+#: apps/templates/pages/labs_view.html:156
+#: apps/templates/pages/my_support_threads.html:69
+#: apps/templates/pages/running.html:115
+msgid "View"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:1134
+msgid "Restore into editor"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:1134
+#: apps/templates/pages/labs_view.html:167
+msgid "Restore"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:1138
+msgid "Delete this version"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:1145
+msgid "Failed to load history:"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:1154
+#: apps/templates/pages/labs_edit.html:1191
+msgid "Failed to load version:"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:1154
+#: apps/templates/pages/labs_edit.html:1191
+#: apps/templates/pages/labs_edit.html:1208
+msgid "request failed"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:1157
+msgid "Diff v"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:1157
+msgid " -> current:"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:1157
+msgid "Content of v"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:1162
+msgid "(no differences against the saved Lab)"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:1162
+msgid "(empty)"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:1199
+msgid "Delete version v"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:1199
+msgid "? This cannot be undone."
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:1208
+msgid "Failed to delete version:"
 msgstr ""
 
 #: apps/templates/pages/labs_view.html:57
@@ -1638,46 +2242,8 @@ msgstr ""
 msgid "Start"
 msgstr ""
 
-#: apps/templates/pages/labs_view.html:156
-#: apps/templates/pages/my_support_threads.html:69
-#: apps/templates/pages/running.html:115
-msgid "View"
-msgstr ""
-
-#: apps/templates/pages/labs_view.html:161
-msgid "Fork"
-msgstr ""
-
 #: apps/templates/pages/labs_view.html:164
 msgid "Update"
-msgstr ""
-
-#: apps/templates/pages/labs_view.html:167
-msgid "Restore"
-msgstr ""
-
-#: apps/templates/pages/labs_view.html:185
-msgid "Confirm delete lab"
-msgstr ""
-
-#: apps/templates/pages/labs_view.html:192
-msgid "Are you sure you want to delete Lab"
-msgstr ""
-
-#: apps/templates/pages/labs_view.html:196
-msgid "Delete lab"
-msgstr ""
-
-#: apps/templates/pages/labs_view.html:208
-msgid "Confirm restore lab"
-msgstr ""
-
-#: apps/templates/pages/labs_view.html:215
-msgid "Are you sure you want to restore this lab?"
-msgstr ""
-
-#: apps/templates/pages/labs_view.html:219
-msgid "Restore lab"
 msgstr ""
 
 #: apps/templates/pages/login.html:36
@@ -1907,11 +2473,6 @@ msgstr ""
 
 #: apps/templates/pages/lti_management.html:352
 msgid "Please enter a label"
-msgstr ""
-
-#: apps/templates/pages/lti_management.html:372
-#: apps/templates/pages/run_lab_status.html:66
-msgid "Loading..."
 msgstr ""
 
 #: apps/templates/pages/my_support_thread_view.html:3

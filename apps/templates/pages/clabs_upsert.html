@@ -1,6 +1,6 @@
 {% extends "layouts/base.html" %}
 
-{% block title %} Create ContainerLab {% endblock title %}
+{% block title %} {{ _('Create ContainerLab') }} {% endblock title %}
 
 {% block body_class %} sidebar-mini {% endblock body_class %}
 
@@ -63,27 +63,27 @@
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col-sm-6">
-                    <h1>Create/Update Container Lab</h1>
+                    <h1>{{ _('Create/Update Container Lab') }}</h1>
                     {% if msg_ok %}
                     <div class="alert alert-success alert-dismissible">
                       <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-                      <h5><i class="icon fas fa-check"></i> Lab created/updated successfully!</h5>
+                      <h5><i class="icon fas fa-check"></i> {{ _('Lab created/updated successfully!') }}</h5>
                       {{ msg_ok }}
                     </div>
                     {% endif %}
                     {% if msg_fail %}
                     <div class="alert alert-danger alert-dismissible">
                       <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-                      <h5><i class="icon fas fa-ban"></i> Fail to insert/update container lab!</h5>
+                      <h5><i class="icon fas fa-ban"></i> {{ _('Fail to insert/update container lab!') }}</h5>
                       {{ msg_fail }}
                     </div>
                     {% endif %}
                 </div>
                 <div class="col-sm-6">
                     <ol class="breadcrumb float-sm-right">
-                        <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.index') }}">Home</a></li>
-                        <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.view_labs') }}">Labs</a></li>
-                        <li class="breadcrumb-item active">Create/Update CLab</li>
+                        <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.index') }}">{{ _('Home') }}</a></li>
+                        <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.view_labs') }}">{{ _('Labs') }}</a></li>
+                        <li class="breadcrumb-item active">{{ _('Create/Update CLab') }}</li>
                     </ol>
                 </div>
             </div>
@@ -99,27 +99,27 @@
             <!-- general form elements -->
             <div class="card card-dark">
               <div class="card-header">
-                <h3 class="card-title">General information</h3>
+                <h3 class="card-title">{{ _('General information') }}</h3>
               </div>
               <!-- /.card-header -->
               <!-- form start -->
                 <div class="card-body">
                   <div class="form-group">
-                    <label>Lab title</label>
-                    <input name="clab_title" type="text" class="form-control" placeholder="Enter container lab title..." value="{{ clab.title|default('', true) }}">
+                    <label>{{ _('Lab title') }}</label>
+                    <input name="clab_title" type="text" class="form-control" placeholder="{{ _('Enter container lab title...') }}" value="{{ clab.title|default('', true) }}">
                   </div>
                   <div class="form-group">
-                    <label>Short Description</label>
-                    <input name="clab_desc" type="text" class="form-control" placeholder="Max 255 characters" value="{{ clab.description|default('', true) }}">
+                    <label>{{ _('Short Description') }}</label>
+                    <input name="clab_desc" type="text" class="form-control" placeholder="{{ _('Max 255 characters') }}" value="{{ clab.description|default('', true) }}">
                   </div>
                   <div class="form-group">
-                    <label>Lab categories</label>
-                    <select name="clab_categories" class="form-control select2" multiple="multiple" data-placeholder="Select one or more categories" style="width: 100%;">
+                    <label>{{ _('Lab categories') }}</label>
+                    <select name="clab_categories" class="form-control select2" multiple="multiple" data-placeholder="{{ _('Select one or more categories') }}" style="width: 100%;">
                       {% for cat_id in lab_categories %}
                       <option value="{{ cat_id }}" data-color="{{ lab_categories[cat_id].color_cls }}" {{ 'selected' if lab_categories[cat_id] in clab.categories else "" }}>{{ lab_categories[cat_id].category }}</option>
                       {% endfor %}
                     </select>
-                    <small class="form-text text-muted">Select one or more categories</small>
+                    <small class="form-text text-muted">{{ _('Select one or more categories') }}</small>
                   </div>
                 </div>
                 <!-- /.card-body -->
@@ -133,13 +133,13 @@
           <div class="col-md-6">
             <div class="card card-dark">
               <div class="card-header">
-                <h3 class="card-title">Lab additional information</h3>
+                <h3 class="card-title">{{ _('Lab additional information') }}</h3>
               </div>
               <div class="card-body">
                 <div class="row">
                   <div class="col-md-12">
                     <div class="form-group">
-                      <label>Access Control: Availabe groups (left) &gt;&gt; Allowed groups (right)</label>
+                      <label>{{ _('Access Control: Availabe groups (left) &gt;&gt; Allowed groups (right)')|safe }}</label>
                       <select name="clab_allowed_groups" class="duallistbox" multiple="multiple">
                         {% for group in groups %}
                           {% if group in clab.allowed_groups %}
@@ -166,14 +166,14 @@
             <div class="card card-dark">
               <div class="card-header">
                 <h3 class="card-title">
-                  ContainerLab extended description
+                  {{ _('ContainerLab extended description') }}
                 </h3>
                 <!-- tools box -->
                 <div class="card-tools">
-                  <button type="button" class="btn btn-tool btn-sm" data-card-widget="collapse" title="Collapse">
+                  <button type="button" class="btn btn-tool btn-sm" data-card-widget="collapse" title="{{ _('Collapse') }}">
                     <i class="fas fa-minus"></i>
                   </button>
-                  <button type="button" class="btn btn-tool btn-sm" data-card-widget="remove" title="Remove">
+                  <button type="button" class="btn btn-tool btn-sm" data-card-widget="remove" title="{{ _('Remove') }}">
                     <i class="fas fa-times"></i>
                   </button>
                 </div>
@@ -182,12 +182,11 @@
               <!-- /.card-header -->
               <div class="card-body pad">
                 <div class="mb-3">
-                  <textarea name="clab_extended_desc" id="lab-editor" class="textarea" placeholder="Place some text here"
+                  <textarea name="clab_extended_desc" id="lab-editor" class="textarea" placeholder="{{ _('Place some text here') }}"
                             style="width: 100%; height: 400px; font-size: 14px; line-height: 18px; border: 1px solid #dddddd; padding: 10px;">{{ clab.extended_desc_str|default('', true) }}</textarea>
                 </div>
                 <p class="text-sm mb-0">
-                  Editor <a href="https://github.com/summernote/summernote">Documentation and license
-                  information.</a>
+                  {{ _('Editor %(link_start)sDocumentation and license information.%(link_end)s', link_start='<a href="https://github.com/summernote/summernote">'|safe, link_end='</a>'|safe) }}
                 </p>
               </div>
             </div>
@@ -200,41 +199,41 @@
             <div class="card card-dark">
               <div class="card-header">
                 <h3 class="card-title">
-                  ContainerLab Resources
+                  {{ _('ContainerLab Resources') }}
                 </h3>
               </div>
               <!-- /.card-header -->
               <div class="card-body">
                 <div class="row">
-                  <p>You can specify the GIT repository containing all information necessary to create the container lab below (will be read when you hit the save button -- you can always come back here and save again to reload!).</p>
+                  <p>{{ _('You can specify the GIT repository containing all information necessary to create the container lab below (will be read when you hit the save button -- you can always come back here and save again to reload!).') }}</p>
                   <div class="col-md-12">
                     <div class="form-group">
-                      <label>GIT repo URL (<span class="text-danger">Under development</span>):</label>
-                      <input name="clab_giturl" type="text" class="form-control" placeholder="Max 255 characters" value="{{ clab.giturl|default('', true) }}" disabled>
+                      <label>{{ _('GIT repo URL (%(dev_start)sUnder development%(dev_end)s):', dev_start='<span class="text-danger">'|safe, dev_end='</span>'|safe) }}</label>
+                      <input name="clab_giturl" type="text" class="form-control" placeholder="{{ _('Max 255 characters') }}" value="{{ clab.giturl|default('', true) }}" disabled>
                     </div>
 		  </div> <!-- end of col-md-6 -->
                 </div>
                 <!-- .row -->
                 <div class="row">
-                  <p>Or you can upload here your ContainerLab topology and additional files.</p>
+                  <p>{{ _('Or you can upload here your ContainerLab topology and additional files.') }}</p>
                   <div class="col-md-12">
                     <div class="form-group">
                         <div class="d-flex align-items-center justify-content-between mb-1">
-                            <label>Upload Area</label>
-                            <div class="btn-group btn-group-sm" role="group" aria-label="Upload actions">
+                            <label>{{ _('Upload Area') }}</label>
+                            <div class="btn-group btn-group-sm" role="group" aria-label="{{ _('Upload actions') }}">
                                 <button id="btnAddFile" type="button" class="btn btn-outline-dark mx-2 rounded">
-                                    <i class="icon far fa-file mr-1"></i> Add File
+                                    <i class="icon far fa-file mr-1"></i> {{ _('Add File') }}
                                 </button>
                                 <button id="btnAddDirectory" type="button"
                                     class="btn btn-outline-dark mx-2 rounded">
-                                    <i class="icon far fa-folder mr-1"></i> Add Directory
+                                    <i class="icon far fa-folder mr-1"></i> {{ _('Add Directory') }}
                                 </button>
                             </div>
                         </div>
                         <div id="dropzone" class="dropzone">
                             <i class="fas fa-cloud-upload-alt"></i>
-                            <div>Drag & drop files here, or click to select</div>
-                            <small>Accepted: multiple files</small>
+                            <div>{{ _('Drag & drop files here, or click to select') }}</div>
+                            <small>{{ _('Accepted: multiple files') }}</small>
                         </div>
                         <input id="clab_files" name="clab_files" type="file" multiple class="d-none">
                         <input id="clab_folders" name="clab_folders" type="file" webkitdirectory class="d-none">
@@ -245,21 +244,21 @@
                 <!-- ./row -->
 		<div class="row {{ 'd-none' if not clab.manifest }}">
                   <div class="col-md-12">
-                    <label>ContainerLab manifest</label>
-                    <textarea name="clab_yaml" id="clab_yaml" class="textarea" placeholder="Place some text here" rows="16">{{ clab.manifest|default('', true) }}</textarea>
+                    <label>{{ _('ContainerLab manifest') }}</label>
+                    <textarea name="clab_yaml" id="clab_yaml" class="textarea" placeholder="{{ _('Place some text here') }}" rows="16">{{ clab.manifest|default('', true) }}</textarea>
                   </div>
 		</div>
 		<div class="row">
                   <div class="col-md-12">
-                    <p><b>Image Secrets</b></p>
-                    <p>In this section you can define <b>imagePullSecrets</b> to use a K8s Secret to pull an image from a private container image registry or repository. The name of the secret must match the name defined on your Clab topology.</p>
+                    <p><b>{{ _('Image Secrets') }}</b></p>
+                    <p>{{ _('In this section you can define <b>imagePullSecrets</b> to use a K8s Secret to pull an image from a private container image registry or repository. The name of the secret must match the name defined on your Clab topology.')|safe }}</p>
                     <table id="tableSecrets" class="table table-striped display">
                       <thead>
                         <tr>
-                          <th>Secret Name</th>
-                          <th>Server</th>
-                          <th>Username</th>
-                          <th>Password/Token</th>
+                          <th>{{ _('Secret Name') }}</th>
+                          <th>{{ _('Server') }}</th>
+                          <th>{{ _('Username') }}</th>
+                          <th>{{ _('Password/Token') }}</th>
                         </tr>
                       </thead>
                       <tbody id="table-body-secrets">
@@ -283,7 +282,7 @@
                       </tbody>
 	              <tfoot>
                         <tr><td colspan='4'>
-                          <button type="button" class="btn btn-secondary add-more-secret"><i class="fa fa-plus"></i> Add secret</button>
+                          <button type="button" class="btn btn-secondary add-more-secret"><i class="fa fa-plus"></i> {{ _('Add secret') }}</button>
                         </td></tr>
                       </tfoot>
                     </table>
@@ -300,17 +299,17 @@
             <div class="card card-dark">
               <div class="card-header">
                 <h3 class="card-title">
-                  Lab Guide
+                  {{ _('Lab Guide') }}
                 </h3>
               </div>
               <!-- /.card-header -->
               <div class="card-body">
-                <p>Add here the Lab instructions for students/experimenters to run this Lab (step-by-step) using Markdown format (<a href="https://www.markdownguide.org/basic-syntax/" target="_blank">read more about Markdown syntax</a>):</p>
-                <button class="btn btn-outline-secondary" type="button" id="add-text-input-labguide">Add text question</button>
-                <button class="btn btn-outline-secondary" type="button" id="add-select-input-labguide">Add select question</button>
-                <button class="btn btn-outline-secondary" type="button" id="add-check-input-labguide">Add checkbox question</button>
+                <p>{{ _('Add here the Lab instructions for students/experimenters to run this Lab (step-by-step) using Markdown format (%(link_start)sread more about Markdown syntax%(link_end)s):', link_start='<a href="https://www.markdownguide.org/basic-syntax/" target="_blank">'|safe, link_end='</a>'|safe) }}</p>
+                <button class="btn btn-outline-secondary" type="button" id="add-text-input-labguide">{{ _('Add text question') }}</button>
+                <button class="btn btn-outline-secondary" type="button" id="add-select-input-labguide">{{ _('Add select question') }}</button>
+                <button class="btn btn-outline-secondary" type="button" id="add-check-input-labguide">{{ _('Add checkbox question') }}</button>
                 <div class="mb-3">
-                  <textarea name="clab_guide" id="lab-edit-guide" class="textarea" placeholder="Place some text here" rows="16">{{ clab.lab_guide_md_str|default('', true) }}</textarea>
+                  <textarea name="clab_guide" id="lab-edit-guide" class="textarea" placeholder="{{ _('Place some text here') }}" rows="16">{{ clab.lab_guide_md_str|default('', true) }}</textarea>
                 </div>
               </div>
             </div>
@@ -321,10 +320,10 @@
         <div class="row">
           <div class="col-md-12 mb-2">
             <button id="btnSubmit" type="button" class="btn btn-primary">
-              <span class="btn-text">{{ "Create ContainerLab" if not clab.id else "Update ContainerLab" }}</span>
+              <span class="btn-text">{{ _("Create ContainerLab") if not clab.id else _("Update ContainerLab") }}</span>
               <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
             </button>
-            <a href="{{ url_for('home_blueprint.view_labs', lab_id=clab.id) if clab.id else url_for('home_blueprint.view_labs') }}" class="btn btn-secondary mx-2" role="button" aria-pressed="true">Cancel</a>
+            <a href="{{ url_for('home_blueprint.view_labs', lab_id=clab.id) if clab.id else url_for('home_blueprint.view_labs') }}" class="btn btn-secondary mx-2" role="button" aria-pressed="true">{{ _('Cancel') }}</a>
           </div>
         </div>
       </div><!-- /.container-fluid -->
@@ -367,7 +366,7 @@
         });
         // ------- Bootstrap Select2 --------
         $('select[name="clab_categories"]').select2({
-          placeholder: 'Select one or more categories',
+          placeholder: '{{ _("Select one or more categories") }}',
           allowClear: false,
           closeOnSelect: false,
           templateResult: function(option) {
@@ -401,7 +400,7 @@
           maximumImageFileSize: 358400,
           callbacks: {
             onImageUploadError: function(msg) {
-              alert('Image upload failed: ' + msg + ' (Maximum size: 350KB)');
+              alert('{{ _("Image upload failed:") }} ' + msg + ' {{ _("(Maximum size: 350KB)") }}');
             }
           }
         });
@@ -435,7 +434,7 @@
         var cm = null;
         if (typeof CodeMirror === 'undefined') {
             console.error('CodeMirror failed to load');
-            showToast('bg-danger', 'Failure', 'Failed to load editor. You can still upload files/folders and submit.');
+            showToast('bg-danger', '{{ _("Failure") }}', '{{ _("Failed to load editor. You can still upload files/folders and submit.") }}');
         } else {
             cm = CodeMirror.fromTextArea(document.getElementById('clab_yaml'), {
                 mode: 'yaml',
@@ -482,7 +481,7 @@
         function renderFilesList() {
             filesList.innerHTML = '';
             if (!store.files.length) {
-                filesList.innerHTML = '<small>No files selected</small>';
+                filesList.innerHTML = '<small>{{ _("No files selected") }}</small>';
                 return;
             }
             var ul = document.createElement('ul');
@@ -534,7 +533,7 @@
             cm.addLineClass(line, 'background', 'cm-error-line');
             var marker = document.createElement('div');
             marker.className = 'error-gutter-marker';
-            marker.title = message || 'YAML error';
+            marker.title = message || '{{ _("YAML error") }}';
             marker.innerHTML = '●';
             cm.setGutterMarker(line, 'error-gutter', marker);
             markedLines.push(line);
@@ -658,7 +657,7 @@
                     }).catch(function (err) {
                         console.warn('Error reading dropped folder:', err);
                         if (dt.files && dt.files.length) addFiles(dt.files);
-                        showToast('bg-info', 'Heads up', 'Folder drops may not be fully supported in this browser. Use "Upload folders" abaixo.');
+                        showToast('bg-info', '{{ _("Heads up") }}', '{{ _("Folder drops may not be fully supported in this browser. Use the \"Add Directory\" button below.") }}');
                     });
                 } else if (dt.files && dt.files.length) {
                     addFiles(dt.files);
@@ -691,7 +690,7 @@
             var hasYaml = (fd.get('clab_yaml') || '').trim().length > 0;
             var filesLen = fileInput.files.length;
             if (!hasYaml && filesLen === 0) {
-                showToast('bg-danger', 'Failure', 'Provide YAML and/or files');
+                showToast('bg-danger', '{{ _("Failure") }}', '{{ _("Provide YAML and/or files") }}');
                 btn.disabled = false;
                 btnText.classList.remove('d-none');
                 spinner.classList.add('d-none');
@@ -718,9 +717,9 @@
                     var j = await resp.json();
                     if (!resp.ok) {
                         console.error('Server error:', j);
-                        throw (j && j.result) || 'Failed';
+                        throw (j && j.result) || '{{ _("Failed") }}';
                     }
-                    resultText = j.result || 'CLab created (mock).';
+                    resultText = j.result || '{{ _("CLab created (mock).") }}';
                     sessionStorage.setItem('msgSuccess', resultText);
                     window.location = '{{ url_for("home_blueprint.view_labs") }}/' + j.clab_id;
                 } catch (innerErr) {
@@ -728,12 +727,12 @@
                         throw innerErr;
                     } else {
                         resultText = await resp.text();
-                        sessionStorage.setItem('msgSuccess', resultText || 'CLab created.');
+                        sessionStorage.setItem('msgSuccess', resultText || '{{ _("CLab created.") }}');
                         window.location = '{{ url_for("home_blueprint.view_labs") }}';
                     }
                 }
             } catch (err) {
-                showToast('bg-danger', 'Failure', `Failed to create ContainerLab: ${err.name}: ${err.message}`);
+                showToast('bg-danger', '{{ _("Failure") }}', `{{ _("Failed to create ContainerLab:") }} ${err.name}: ${err.message}`);
             } finally {
                 btn.disabled = false;
                 btnText.classList.remove('d-none');
