@@ -17,6 +17,12 @@
     return xhr.responseJSON ? xhr.responseJSON.result : xhr.responseText;
   }
 
+  // translated UI strings come from the server-rendered window.i18n catalog
+  // (see layouts/base.html); fall back to the English key when absent
+  function t(key) {
+    return (window.i18n && window.i18n[key]) || key;
+  }
+
   var LabsActions = {
     /*
      * opts:
@@ -63,7 +69,7 @@
       if (sessionStorage.getItem("msgSuccess")) {
         $(document).Toasts("create", {
           class: "bg-success",
-          title: "Success",
+          title: t("Success"),
           body: sessionStorage.getItem("msgSuccess"),
         });
         sessionStorage.removeItem("msgSuccess");
@@ -71,7 +77,7 @@
       if (sessionStorage.getItem("msgFail")) {
         $(document).Toasts("create", {
           class: "bg-danger",
-          title: "Failure",
+          title: t("Failure"),
           body: sessionStorage.getItem("msgFail"),
         });
         sessionStorage.removeItem("msgFail");

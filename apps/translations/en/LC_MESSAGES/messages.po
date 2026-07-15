@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-07-15 06:02-0300\n"
+"POT-Creation-Date: 2026-07-15 11:37-0300\n"
 "PO-Revision-Date: 2026-07-12 19:36-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -965,6 +965,40 @@ msgstr ""
 msgid "Extra tools"
 msgstr ""
 
+#: apps/templates/layouts/base.html:41
+#: apps/templates/pages/finished_labs.html:184
+#: apps/templates/pages/groups_list.html:214
+#: apps/templates/pages/index.html:815
+#: apps/templates/pages/k8s_dep_list.html:238
+#: apps/templates/pages/k8s_pod_list.html:244
+#: apps/templates/pages/k8s_srv_list.html:232
+#: apps/templates/pages/lab_answers_list.html:273
+#: apps/templates/pages/lab_answers_sheet.html:164
+#: apps/templates/pages/lab_categories_list.html:180
+#: apps/templates/pages/lab_instance_view.html:436
+#: apps/templates/pages/lab_instance_view.html:537
+#: apps/templates/pages/lti_management.html:340
+#: apps/templates/pages/running.html:243 apps/templates/pages/users.html:250
+msgid "Success"
+msgstr ""
+
+#: apps/templates/layouts/base.html:42
+#: apps/templates/pages/clabs_upsert.html:437
+#: apps/templates/pages/clabs_upsert.html:693
+#: apps/templates/pages/clabs_upsert.html:735
+#: apps/templates/pages/finished_labs.html:192
+#: apps/templates/pages/groups_list.html:222
+#: apps/templates/pages/k8s_dep_list.html:246
+#: apps/templates/pages/k8s_pod_list.html:252
+#: apps/templates/pages/k8s_srv_list.html:240
+#: apps/templates/pages/lab_answers_list.html:281
+#: apps/templates/pages/lab_answers_sheet.html:172
+#: apps/templates/pages/lab_categories_list.html:188
+#: apps/templates/pages/lti_management.html:332
+#: apps/templates/pages/running.html:251 apps/templates/pages/users.html:258
+msgid "Failure"
+msgstr ""
+
 #: apps/templates/pages/clabs_upsert.html:66
 msgid "Create/Update Container Lab"
 msgstr ""
@@ -1214,22 +1248,6 @@ msgstr ""
 
 #: apps/templates/pages/clabs_upsert.html:403
 msgid "(Maximum size: 350KB)"
-msgstr ""
-
-#: apps/templates/pages/clabs_upsert.html:437
-#: apps/templates/pages/clabs_upsert.html:693
-#: apps/templates/pages/clabs_upsert.html:735
-#: apps/templates/pages/finished_labs.html:192
-#: apps/templates/pages/groups_list.html:222
-#: apps/templates/pages/k8s_dep_list.html:246
-#: apps/templates/pages/k8s_pod_list.html:252
-#: apps/templates/pages/k8s_srv_list.html:240
-#: apps/templates/pages/lab_answers_list.html:281
-#: apps/templates/pages/lab_answers_sheet.html:172
-#: apps/templates/pages/lab_categories_list.html:188
-#: apps/templates/pages/lti_management.html:332
-#: apps/templates/pages/running.html:251 apps/templates/pages/users.html:258
-msgid "Failure"
 msgstr ""
 
 #: apps/templates/pages/clabs_upsert.html:437
@@ -1518,22 +1536,6 @@ msgstr ""
 
 #: apps/templates/pages/finished_labs.html:166
 msgid "No finished labs"
-msgstr ""
-
-#: apps/templates/pages/finished_labs.html:184
-#: apps/templates/pages/groups_list.html:214
-#: apps/templates/pages/index.html:815
-#: apps/templates/pages/k8s_dep_list.html:238
-#: apps/templates/pages/k8s_pod_list.html:244
-#: apps/templates/pages/k8s_srv_list.html:232
-#: apps/templates/pages/lab_answers_list.html:273
-#: apps/templates/pages/lab_answers_sheet.html:164
-#: apps/templates/pages/lab_categories_list.html:180
-#: apps/templates/pages/lab_instance_view.html:436
-#: apps/templates/pages/lab_instance_view.html:537
-#: apps/templates/pages/lti_management.html:340
-#: apps/templates/pages/running.html:243 apps/templates/pages/users.html:250
-msgid "Success"
 msgstr ""
 
 #: apps/templates/pages/finished_labs.html:200

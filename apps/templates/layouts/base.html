@@ -33,6 +33,16 @@
 </div>
 <!-- ./wrapper -->
 
+<!-- Server-rendered i18n catalog for static JS files (which cannot use
+     Jinja's gettext). Static scripts read it via window.i18n["key"] with an
+     English fallback; add new keys here as static JS needs them. -->
+<script>
+window.i18n = {{ {
+  "Success": _("Success"),
+  "Failure": _("Failure"),
+} | tojson }};
+</script>
+
 <!-- Specific Page JS goes HERE  -->
 {% block javascripts %}{% endblock javascripts %}
 
