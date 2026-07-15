@@ -18,6 +18,7 @@ from apps.controllers import lab_versions
 from apps.home.models import Labs, LabInstances, LabCategories, LabAnswers, LabAnswerSheet, HomeLogging, UserLikes, UserFeedbacks, LabMetadata, SupportThreads, SupportMessages
 from apps.authentication.models import Users, Groups
 from flask import render_template, request, current_app, redirect, url_for, session, send_from_directory, jsonify
+from flask_babel import gettext as _
 from flask_login import login_required, current_user
 from jinja2 import TemplateNotFound
 from apps.audit_mixin import get_remote_addr, check_user_category
@@ -119,7 +120,7 @@ def running_labs():
         filter_group = int(filter_group)
         group = db.session.get(Groups, filter_group)
         if not group or group.is_deleted:
-            return render_template("pages/error.html", title="Error getting running labs", msg="Group not found")
+            return render_template("pages/error.html", title=_("Error getting running labs"), msg=_("Group not found"))
         filter_members = group.members_dict
 
     registered_labs = {}
@@ -197,7 +198,7 @@ def run_lab(lab_id):
     msg_error = ""
     lab = db.session.get(Labs, lab_id)
     if not lab:
-        return render_template("pages/error.html", title="Error Running Labs", msg="Lab not found")
+        return render_template("pages/error.html", title=_("Error Running Labs"), msg=_("Lab not found"))
 
     already_running = LabInstances.query.filter_by(lab_id=lab_id, user_id=current_user.id, is_deleted=False).first()
 
@@ -219,7 +220,7 @@ def run_lab(lab_id):
 
     lab_expiration = request.form.get("lab_expiration")
     if not lab_expiration or lab_expiration not in lab_expirations:
-        return render_template("pages/run_lab.html", lab=lab, msg_fail="Invalid lab duration/expiration, please choose one of the values provided.")
+        return render_template("pages/run_lab.html", lab=lab, msg_fail=_("Invalid lab duration/expiration, please choose one of the values provided."))
 
     expiration_ts = parse_lab_expiration(lab_expiration)
 
@@ -261,7 +262,7 @@ def run_lab(lab_id):
         create_lab_log_error = HomeLogging(ipaddr=get_remote_addr(), action="create_lab", success=False, lab_id=lab.id, user_id=current_user.id)
         db.session.add(create_lab_log_error)
         db.session.commit()
-        return render_template("pages/error.html", title="Error Running Labs", msg=msg)
+        return render_template("pages/error.html", title=_("Error Running Labs"), msg=msg)
 
 @blueprint.route('/lab_status/<lab_id>', methods=["GET"])
 @login_required
@@ -271,10 +272,10 @@ def check_lab_status(lab_id):
     msg_error = ""
     lab = db.session.get(LabInstances, lab_id)
     if not lab:
-        return render_template("pages/error.html", title="Error checking lab status", msg="Lab not found")
+        return render_template("pages/error.html", title=_("Error checking lab status"), msg=_("Lab not found"))
 
     if lab.user_id != current_user.id:
-        return render_template("pages/error.html", title="Error checking lab status", msg="You are not authorized to run this lab")
+        return render_template("pages/error.html", title=_("Error checking lab status"), msg=_("You are not authorized to run this lab"))
 
     return render_template("pages/run_lab_status.html", resources=lab.k8s_resources, lab_instance_id=lab_id, lab_requested_ts=epoch_from_datetime(lab.created_at))
 
@@ -284,9 +285,9 @@ def check_lab_status(lab_id):
 def xterm(lab_id, kind, pod, container):
     lab = db.session.get(LabInstances, lab_id)
     if not lab:
-        return render_template("pages/error.html", title="Error checking lab status", msg="Lab not found")
+        return render_template("pages/error.html", title=_("Error checking lab status"), msg=_("Lab not found"))
     if (current_user.category in ["student", "labcreator"] and (lab.user_id != current_user.id)):
-        return render_template("pages/error.html", title="Error checking lab status", msg="You are not authorized to run this lab")
+        return render_template("pages/error.html", title=_("Error checking lab status"), msg=_("You are not authorized to run this lab"))
 
     return render_template('pages/xterm.html', host=f"{kind}/{pod}/{container}", container=container), 200
 
@@ -306,17 +307,17 @@ def edit_user(user_id=None):
         return render_template("pages/edit_user.html", user=current_user)
 
     if current_user.id != user_id and current_user.category not in ["admin"]:
-        return render_template("pages/error.html", title="Unauthorized access", msg="You dont have access for this page")
+        return render_template("pages/error.html", title=_("Unauthorized access"), msg=_("You dont have access for this page"))
 
     user = db.session.get(Users, user_id)
     if not user or user.is_deleted:
-        return render_template("pages/error.html", title="Invalid user", msg="User not found or deactivated on the database")
+        return render_template("pages/error.html", title=_("Invalid user"), msg=_("User not found or deactivated on the database"))
 
     if request.method == "GET":
         return render_template("pages/edit_user.html", user=user, return_path=return_path)
 
     if not re.match(r"^[a-zA-Z0-9_.-]{3,30}$", request.form["username"]):
-        return render_template("pages/edit_user.html", msg_fail="Invalid username. Max size: 30. Allowed characters: a-z, A-Z, 0-9, _, . or -", user=user, return_path=return_path)
+        return render_template("pages/edit_user.html", msg_fail=_("Invalid username. Max size: 30. Allowed characters: a-z, A-Z, 0-9, _, . or -"), user=user, return_path=return_path)
 
     has_changed = False
     if current_user.category == "admin":
@@ -334,7 +335,7 @@ def edit_user(user_id=None):
             user.set_password(request.form["password"])
 
     if not has_changed:
-        return render_template("pages/edit_user.html", msg_fail="No changes applied.", user=user, return_path=return_path)
+        return render_template("pages/edit_user.html", msg_fail=_("No changes applied."), user=user, return_path=return_path)
 
     try:
         edit_user_log = HomeLogging(ipaddr=get_remote_addr(), action="edit_user", success=True, user_id=user.id )
@@ -363,13 +364,13 @@ def view_lab_instance(lab_id):
 
     lab_instance = db.session.get(LabInstances, lab_id)
     if not lab_instance:
-        return render_template("pages/error.html", title="Error accessing Lab Instance", msg="Lab not found")
+        return render_template("pages/error.html", title=_("Error accessing Lab Instance"), msg=_("Lab not found"))
     if lab_instance.is_deleted:
-        return render_template("pages/error.html", title="Error accessing Lab Instance", msg="Lab finished")
+        return render_template("pages/error.html", title=_("Error accessing Lab Instance"), msg=_("Lab finished"))
 
     lab = db.session.get(Labs, lab_instance.lab_id)
     if not lab:
-        return render_template("pages/error.html", title="Error accessing Lab Instance", msg="Lab instance belongs to an unknown Lab.")
+        return render_template("pages/error.html", title=_("Error accessing Lab Instance"), msg=_("Lab instance belongs to an unknown Lab."))
 
     if lab_instance.user_id != current_user.id and current_user.category != "admin":
         privileged_group_ids = current_user.privileged_group_ids
@@ -377,7 +378,7 @@ def view_lab_instance(lab_id):
             if group.id in privileged_group_ids:
                 break
         else:
-            return render_template("pages/error.html", title="Error accessing Lab Instance", msg="Not authorized to access this Lab")
+            return render_template("pages/error.html", title=_("Error accessing Lab Instance"), msg=_("Not authorized to access this Lab"))
 
     owner = current_user
     if lab_instance.user_id != current_user.id:
@@ -395,8 +396,8 @@ def view_lab_instance(lab_id):
         current_app.logger.error(f"Failed to get resources for lab_id={lab.id} lab_instance_id={lab_instance.id} exception={exc} err={err}")
         return render_template(
             "pages/error.html",
-            title="Failed to get Lab Resources",
-            msg="No resource found for Lab Instance. Try again later and if the error persists, please contact the administrator.",
+            title=_("Failed to get Lab Resources"),
+            msg=_("No resource found for Lab Instance. Try again later and if the error persists, please contact the administrator."),
             additional_actions=[
                 {"href": url_for("home_blueprint.view_lab_instance", lab_id=lab_instance.id), "btn-class": "btn-secondary", "icon": "fa-redo", "text": "Try again"},
                 {"href": url_for("home_blueprint.cancel_restart_lab_instance", lab_id=lab_instance.id), "btn-class": "btn-warning", "icon": "fa-redo", "text": "Cancel and Restart Lab"},
@@ -405,7 +406,7 @@ def view_lab_instance(lab_id):
 
     #if not running_labs or (lab_instance.lab_id, owner.uid) not in running_labs:
     #if not lab_resources:
-    #    return render_template("pages/error.html", title="Lab instance is not running", msg="No resource found for Lab Instance")
+    #    return render_template("pages/error.html", title=_("Lab instance is not running"), msg=_("No resource found for Lab Instance"))
 
     lab_dict = {
         "title": lab.title,
@@ -448,17 +449,17 @@ def view_lab_instance(lab_id):
 def cancel_restart_lab_instance(lab_id):
     lab_instance = db.session.get(LabInstances, lab_id)
     if not lab_instance or lab_instance.is_deleted:
-        return render_template("pages/error.html", title="Error accessing Lab Instance", msg="Lab not found")
+        return render_template("pages/error.html", title=_("Error accessing Lab Instance"), msg=_("Lab not found"))
 
     if lab_instance.user_id != current_user.id and current_user.category != "admin":
-        return render_template("pages/error.html", title="Error accessing Lab Instance", msg="Not authorized to access this Lab")
+        return render_template("pages/error.html", title=_("Error accessing Lab Instance"), msg=_("Not authorized to access this Lab"))
 
     try:
         results = k8s.delete_resources_by_name(lab_instance.k8s_resources)
         assert sum(results) == len(lab_instance.k8s_resources), f"results={results} resources={lab_instance.k8s_resources}"
     except Exception as exc:
         current_app.logger.error(f"Failed to delete resources lab_instance_id={lab_instance.id}: {exc}")
-        return render_template("pages/error.html", title="Error removing Lab Instance", msg="Error removing Lab instance, please contact the administrator")
+        return render_template("pages/error.html", title=_("Error removing Lab Instance"), msg=_("Error removing Lab instance, please contact the administrator"))
 
     lab_instance.is_deleted = True
     db.session.commit()
@@ -477,19 +478,19 @@ def edit_lab(lab_id):
         lab = db.session.get(Labs, lab_id)
         # admins may open a soft-deleted lab in order to restore it
         if not lab or (lab.is_deleted and current_user.category != "admin"):
-            return render_template("pages/labs_edit.html", lab=None, segment="/labs/edit", msg_fail="Lab not found")
+            return render_template("pages/labs_edit.html", lab=None, segment="/labs/edit", msg_fail=_("Lab not found"))
         if current_user.category == "labcreator" and lab.updated_by != current_user.id:
             return render_template(
                 "pages/error.html",
-                title="Unauthorized access",
-                msg="You don't have permission to edit this Lab."
+                title=_("Unauthorized access"),
+                msg=_("You don't have permission to edit this Lab.")
             )
     else:
         lab = Labs()
 
     lab_categories = {cat.id: cat for cat in LabCategories.query.filter_by(is_deleted=False).all()}
     if not lab_categories:
-        return render_template("pages/labs_edit.html", segment="/labs/edit", msg_fail="No Lab Categories found. Please create a Lab Category first.", lab=lab)
+        return render_template("pages/labs_edit.html", segment="/labs/edit", msg_fail=_("No Lab Categories found. Please create a Lab Category first."), lab=lab)
 
     groups = Groups.query.filter_by(is_deleted=False).all()
 
@@ -544,7 +545,7 @@ def edit_lab(lab_id):
         try:
             lab.display_order = int(display_order_raw) if display_order_raw else 1000
         except ValueError:
-            return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, msg_fail="Invalid display order: must be an integer number.", segment="/labs/edit", groups=groups, allowed_groups=lab.allowed_groups, lab_uploads=lab_uploads)
+            return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, msg_fail=_("Invalid display order: must be an integer number."), segment="/labs/edit", groups=groups, allowed_groups=lab.allowed_groups, lab_uploads=lab_uploads)
 
     if not lab.categories or invalid_lab_category:
         return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, msg_fail=invalid_lab_category+"Please select at least one category", segment="/labs/edit", groups=groups, allowed_groups=lab.allowed_groups, lab_uploads=lab_uploads)
@@ -614,17 +615,17 @@ def edit_lab(lab_id):
 def fork_lab(lab_id):
     source = db.session.get(Labs, lab_id)
     if not source or source.is_deleted:
-        return render_template("pages/labs_edit.html", lab=None, segment="/labs/edit", msg_fail="Lab not found")
+        return render_template("pages/labs_edit.html", lab=None, segment="/labs/edit", msg_fail=_("Lab not found"))
     if current_user.category == "labcreator" and source.updated_by != current_user.id:
         # labcreators may fork any lab they can view (same predicate as
         # view_labs): shared with one of their groups or their own
         source_group_ids = {group.id for group in source.allowed_groups}
         if not source_group_ids.intersection(current_user.all_group_ids):
-            return render_template("pages/labs_edit.html", lab=None, segment="/labs/edit", msg_fail="Lab not found")
+            return render_template("pages/labs_edit.html", lab=None, segment="/labs/edit", msg_fail=_("Lab not found"))
 
     lab_categories = {cat.id: cat for cat in LabCategories.query.filter_by(is_deleted=False).all()}
     if not lab_categories:
-        return render_template("pages/labs_edit.html", segment="/labs/edit", msg_fail="No Lab Categories found. Please create a Lab Category first.", lab=None)
+        return render_template("pages/labs_edit.html", segment="/labs/edit", msg_fail=_("No Lab Categories found. Please create a Lab Category first."), lab=None)
 
     groups = Groups.query.filter_by(is_deleted=False).all()
 
@@ -721,7 +722,7 @@ def list_support_threads():
 def view_support_thread(thread_id):
     thread = db.session.get(SupportThreads, thread_id)
     if thread is None:
-        return render_template("pages/error.html", title="Not found", msg="Support thread not found")
+        return render_template("pages/error.html", title=_("Not found"), msg=_("Support thread not found"))
     # Opening a thread marks its user messages as read.
     if support.mark_thread_read(thread):
         db.session.commit()
@@ -744,7 +745,7 @@ def list_my_support_threads():
 def view_my_support_thread(thread_id):
     thread = db.session.get(SupportThreads, thread_id)
     if thread is None or thread.user_id != current_user.id:
-        return render_template("pages/error.html", title="Not found", msg="Support thread not found")
+        return render_template("pages/error.html", title=_("Not found"), msg=_("Support thread not found"))
     # Opening the thread marks staff replies as seen by the user.
     support.mark_thread_seen_by_user(thread)
     db.session.commit()
@@ -782,12 +783,12 @@ def edit_lab_category(category_id):
         action_name = "Update"
         category = db.session.get(LabCategories, int(category_id))
         if not category or category.is_deleted:
-            return render_template("pages/error.html", title="Not found", msg="Lab Category not found")
+            return render_template("pages/error.html", title=_("Not found"), msg=_("Lab Category not found"))
         if current_user.category == "teacher" and category.updated_by != current_user.id:
             return render_template(
                 "pages/error.html",
-                title="Unauthorized access",
-                msg="You don't have permission to edit this Lab Category (only its creator or an admin can)."
+                title=_("Unauthorized access"),
+                msg=_("You don't have permission to edit this Lab Category (only its creator or an admin can).")
             )
 
     if request.method == "GET":
@@ -796,9 +797,9 @@ def edit_lab_category(category_id):
     new_category_name = request.form.get("category", "").strip()
     new_color = request.form.get("color_cls")
     if not new_category_name:
-        return render_template("pages/lab_categories_edit.html", msg_fail="Category name is required.", category=category, action_name=action_name, valid_colors=valid_colors)
+        return render_template("pages/lab_categories_edit.html", msg_fail=_("Category name is required."), category=category, action_name=action_name, valid_colors=valid_colors)
     if new_color not in valid_colors:
-        return render_template("pages/lab_categories_edit.html", msg_fail="Invalid color selected.", category=category, action_name=action_name, valid_colors=valid_colors)
+        return render_template("pages/lab_categories_edit.html", msg_fail=_("Invalid color selected."), category=category, action_name=action_name, valid_colors=valid_colors)
 
     category.category = new_category_name
     category.color_cls = new_color
@@ -809,12 +810,12 @@ def edit_lab_category(category_id):
         db.session.commit()
     except Exception as exc:
         current_app.logger.error(f"Failed to save lab category: {exc}")
-        return render_template("pages/lab_categories_edit.html", msg_fail="Failed to save Lab Category.", category=category, action_name=action_name, valid_colors=valid_colors)
+        return render_template("pages/lab_categories_edit.html", msg_fail=_("Failed to save Lab Category."), category=category, action_name=action_name, valid_colors=valid_colors)
 
     if category_id == "new":
         session["msg_ok"] = "Lab Category created successfully"
         return redirect(url_for('home_blueprint.list_lab_categories'))
-    return render_template("pages/lab_categories_edit.html", msg_ok="Lab Category updated successfully", category=category, action_name=action_name, valid_colors=valid_colors)
+    return render_template("pages/lab_categories_edit.html", msg_ok=_("Lab Category updated successfully"), category=category, action_name=action_name, valid_colors=valid_colors)
 
 
 @blueprint.route('/labs/view', methods=["GET"])
@@ -825,7 +826,7 @@ def view_labs(lab_id=None):
 
     lab_categories = {cat.id: cat for cat in LabCategories.query.filter_by(is_deleted=False).all()}
     if not lab_categories:
-        return render_template("pages/error.html", title="No Lab Categories", msg="No lab categories found. Please create a Lab Category first.")
+        return render_template("pages/error.html", title=_("No Lab Categories"), msg=_("No lab categories found. Please create a Lab Category first."))
 
     filter_group_id = request.args.get("filter_group", "")
     filter_group_id = int(filter_group_id) if filter_group_id.isdigit() else 0
@@ -899,26 +900,26 @@ def edit_group(group_id):
         if current_user.category not in ["admin", "teacher"]:
             return render_template(
                 "pages/error.html",
-                title="Unauthorized access",
-                msg="You don't have permission to edit this group."
+                title=_("Unauthorized access"),
+                msg=_("You don't have permission to edit this group.")
             )
     else:
         action_name = "Update"
         group = db.session.get(Groups, int(group_id))
         if not group or group.is_deleted:
-            return render_template("pages/groups_edit.html", segment="/groups/edit", msg_fail="Group not found")
+            return render_template("pages/groups_edit.html", segment="/groups/edit", msg_fail=_("Group not found"))
         if (current_user.category == "teacher" and current_user not in group.owners) or (current_user.category == "student" and current_user not in group.assistants):
             return render_template(
                 "pages/error.html",
-                title="Unauthorized access",
-                msg="You don't have permission to edit this group."
+                title=_("Unauthorized access"),
+                msg=_("You don't have permission to edit this group.")
             )
 
     if current_user.category != "admin" and "SYSTEM" in [group.organization, request.form.get("organization")]:
         return render_template(
             "pages/error.html",
-            title="Unauthorized access",
-            msg="Only admins can create/change System groups."
+            title=_("Unauthorized access"),
+            msg=_("Only admins can create/change System groups.")
         )
 
     users = {}
@@ -1038,7 +1039,7 @@ def edit_group(group_id):
     if not has_changes:
         return render_template(
             "pages/groups_edit.html",
-            msg_fail="No changes were made to the group.",
+            msg_fail=_("No changes were made to the group."),
             group=group,
             action_name=action_name,
             users=users_info,
@@ -1054,7 +1055,7 @@ def edit_group(group_id):
         current_app.logger.error(f"Failed to update group: {exc}")
         return render_template(
             "pages/groups_edit.html",
-            msg_fail="Failed to update group.",
+            msg_fail=_("Failed to update group."),
             group=group,
             action_name=action_name,
             users=users_info,
@@ -1067,7 +1068,7 @@ def edit_group(group_id):
 
     return render_template(
         "pages/groups_edit.html",
-        msg_ok="Group updated successfully",
+        msg_ok=_("Group updated successfully"),
         group=group,
         action_name=action_name,
         users=users_info,
@@ -1100,24 +1101,24 @@ def list_lab_answers():
                 continue
 
     if filter_lab_id and filter_lab_id not in labs:
-        return render_template("pages/lab_answers_list.html", segment="/lab_answers/list", lab_answers=[], labs=labs, groups=groups, filter_lab=filter_lab_id, filter_group=filter_group_id, msg_fail="Invalid Lab provided for filtering.")
+        return render_template("pages/lab_answers_list.html", segment="/lab_answers/list", lab_answers=[], labs=labs, groups=groups, filter_lab=filter_lab_id, filter_group=filter_group_id, msg_fail=_("Invalid Lab provided for filtering."))
 
     filtered_members = {}
     if filter_group_id:
         if filter_group_id not in groups:
-            return render_template("pages/lab_answers_list.html", segment="/lab_answers/list", lab_answers=[], labs=labs, groups=groups, filter_lab=filter_lab_id, filter_group=filter_group_id, msg_fail="Invalid Group provided for filtering.")
+            return render_template("pages/lab_answers_list.html", segment="/lab_answers/list", lab_answers=[], labs=labs, groups=groups, filter_lab=filter_lab_id, filter_group=filter_group_id, msg_fail=_("Invalid Group provided for filtering."))
         filtered_group = groups[filter_group_id]
         filtered_members = filtered_group.members_dict
 
     answer_sheet = {}
     if check_answer_sheet:
         if not filter_lab_id:
-            return render_template("pages/lab_answers_list.html", lab_answers=[], labs=labs, groups=groups, filter_lab=filter_lab_id, filter_group=filter_group_id, msg_fail="To check with the Answer Sheet you must provide a Lab (Filter by Lab).")
+            return render_template("pages/lab_answers_list.html", lab_answers=[], labs=labs, groups=groups, filter_lab=filter_lab_id, filter_group=filter_group_id, msg_fail=_("To check with the Answer Sheet you must provide a Lab (Filter by Lab)."))
         lab_answer_sheet = LabAnswerSheet.query.filter_by(lab_id=filter_lab_id).first()
         if lab_answer_sheet:
             answer_sheet = lab_answer_sheet.answers_dict
         else:
-            return render_template("pages/lab_answers_list.html", lab_answers=[], labs=labs, groups=groups, filter_lab=filter_lab_id, filter_group=filter_group_id, msg_fail="No Lab Answer Sheet available. Please create the Answer Sheet first.")
+            return render_template("pages/lab_answers_list.html", lab_answers=[], labs=labs, groups=groups, filter_lab=filter_lab_id, filter_group=filter_group_id, msg_fail=_("No Lab Answer Sheet available. Please create the Answer Sheet first."))
 
     users = {user.id: user for user in Users.query.filter_by(is_deleted=False).all()}
     lab_query = LabAnswers.query
@@ -1159,7 +1160,7 @@ def add_answer_sheet():
         return render_template("pages/lab_answers_sheet.html", labs=labs)
 
     if lab_id not in labs:
-        return render_template("pages/lab_answers_sheet.html", labs=labs, lab_id=lab_id, msg_fail="Invalid Lab provided. Please choose the Lab.")
+        return render_template("pages/lab_answers_sheet.html", labs=labs, lab_id=lab_id, msg_fail=_("Invalid Lab provided. Please choose the Lab."))
 
     answers = {}
     lab_answer_sheet = LabAnswerSheet.query.filter_by(lab_id=lab_id).first()
@@ -1187,13 +1188,13 @@ def add_answer_sheet():
         current_app.logger.error(f"Failed to update lab answer sheet: {exc}")
         return render_template(
             "pages/lab_answers_sheet.html",
-            msg_fail="Failed to update lab answers sheet.",
+            msg_fail=_("Failed to update lab answers sheet."),
             labs=labs,
             lab_id=lab_id,
             answers=answers,
         )
 
-    return render_template("pages/lab_answers_sheet.html", labs=labs, lab_id=lab_id, answers=answers, msg_ok="Lab answer sheet saved!")
+    return render_template("pages/lab_answers_sheet.html", labs=labs, lab_id=lab_id, answers=answers, msg_ok=_("Lab answer sheet saved!"))
 
 @blueprint.route('/feedback/hide', methods=["POST"])
 @login_required
@@ -1227,7 +1228,7 @@ def view_finished_labs():
         filter_group = int(filter_group)
         group = db.session.get(Groups, filter_group)
         if not group or group.is_deleted:
-            return render_template("pages/error.html", title="Error getting finished labs", msg="Group not found")
+            return render_template("pages/error.html", title=_("Error getting finished labs"), msg=_("Group not found"))
         filter_members = group.members_dict
 
     registered_labs = {}
@@ -1356,15 +1357,15 @@ def serve_upload(filename):
 @check_user_category(["admin", "teacher", "labcreator"])
 def upload_lab_file():
     if 'file' not in request.files:
-        return jsonify({"status": "fail", "result": "No file part in the request"}), 400
+        return jsonify({"status": "fail", "result": _("No file part in the request")}), 400
 
     file = request.files['file']
     if file.filename == '':
-        return jsonify({"status": "fail", "result": "No file selected"}), 400
+        return jsonify({"status": "fail", "result": _("No file selected")}), 400
 
     # Validate extension
     allowed_exts = current_app.config['LAB_UPLOAD_ALLOWED_EXTENSIONS']
-    _, ext = os.path.splitext(file.filename)
+    _basename, ext = os.path.splitext(file.filename)
     if not ext or ext[1:].lower() not in allowed_exts:
         # Also check for double extensions like .tar.gz if they exist in allowed_exts
         is_allowed = False
@@ -1375,7 +1376,7 @@ def upload_lab_file():
                 ext = '.' + allowed_ext
                 break
         if not is_allowed:
-            return jsonify({"status": "fail", "result": f"File extension not allowed. Allowed: {', '.join(allowed_exts)}"}), 400
+            return jsonify({"status": "fail", "result": _("File extension not allowed. Allowed: %(exts)s", exts=", ".join(allowed_exts))}), 400
 
     # Validate size
     file.seek(0, os.SEEK_END)
@@ -1384,7 +1385,7 @@ def upload_lab_file():
 
     max_size = current_app.config['LAB_UPLOAD_MAX_SIZE']
     if size > max_size:
-        return jsonify({"status": "fail", "result": f"File exceeds maximum allowed size ({max_size // (1024*1024)}MB)"}), 400
+        return jsonify({"status": "fail", "result": _("File exceeds maximum allowed size (%(size)sMB)", size=max_size // (1024*1024))}), 400
 
     # Save directory
     upload_dir = current_app.config['UPLOAD_DIR']
@@ -1398,7 +1399,7 @@ def upload_lab_file():
         file_url = url_for('home_blueprint.serve_upload', filename=new_filename)
     except Exception as exc:
         current_app.logger.error(f"Failed to save uploaded file: {exc}")
-        return jsonify({"status": "fail", "result": "Failed to save file on server"}), 500
+        return jsonify({"status": "fail", "result": _("Failed to save file on server")}), 500
 
     # If a lab_id was provided, persist the file reference to LabMetadata
     uploads = []
@@ -1440,9 +1441,9 @@ def upload_lab_file():
 def get_lab_uploads(lab_id):
     lab = db.session.get(Labs, lab_id)
     if not lab:
-        return jsonify({"status": "fail", "result": "Lab not found"}), 404
+        return jsonify({"status": "fail", "result": _("Lab not found")}), 404
     if current_user.category == "labcreator" and lab.updated_by != current_user.id:
-        return jsonify({"status": "fail", "result": "Unauthorized"}), 403
+        return jsonify({"status": "fail", "result": _("Unauthorized")}), 403
     uploads = lab.lab_metadata.md.get("uploads", []) if lab.lab_metadata else []
     return jsonify({"status": "ok", "uploads": uploads}), 200
 
@@ -1453,20 +1454,20 @@ def get_lab_uploads(lab_id):
 def delete_lab_upload(lab_id, filename):
     lab = db.session.get(Labs, lab_id)
     if not lab:
-        return jsonify({"status": "fail", "result": "Lab not found"}), 404
+        return jsonify({"status": "fail", "result": _("Lab not found")}), 404
     if current_user.category == "labcreator" and lab.updated_by != current_user.id:
-        return jsonify({"status": "fail", "result": "Unauthorized"}), 403
+        return jsonify({"status": "fail", "result": _("Unauthorized")}), 403
 
     lab_md = lab.lab_metadata
     if not lab_md:
-        return jsonify({"status": "fail", "result": "No uploads found"}), 404
+        return jsonify({"status": "fail", "result": _("No uploads found")}), 404
 
     md = lab_md.md
     uploads = md.get("uploads", [])
     original_count = len(uploads)
     uploads = [u for u in uploads if u.get("filename") != filename]
     if len(uploads) == original_count:
-        return jsonify({"status": "fail", "result": "File not found in uploads list"}), 404
+        return jsonify({"status": "fail", "result": _("File not found in uploads list")}), 404
 
     md["uploads"] = uploads
     lab_md.md = md
@@ -1494,6 +1495,6 @@ def delete_lab_upload(lab_id, filename):
         db.session.commit()
     except Exception as exc:
         current_app.logger.error(f"Failed to update uploads metadata after delete: {exc}")
-        return jsonify({"status": "fail", "result": "Failed to update metadata"}), 500
+        return jsonify({"status": "fail", "result": _("Failed to update metadata")}), 500
 
     return jsonify({"status": "ok"}), 200

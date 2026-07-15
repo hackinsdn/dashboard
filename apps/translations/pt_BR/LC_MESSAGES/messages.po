@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-07-15 05:34-0300\n"
+"POT-Creation-Date: 2026-07-15 06:02-0300\n"
 "PO-Revision-Date: 2026-07-12 19:36-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -17,6 +17,262 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
+
+#: apps/api/routes.py:30
+msgid "invalid auth token"
+msgstr "token de autenticação inválido"
+
+#: apps/api/routes.py:33
+msgid "Token not authorized"
+msgstr "Token não autorizado"
+
+#: apps/api/routes.py:45 apps/api/routes.py:72 apps/api/routes.py:166
+#: apps/api/routes.py:190 apps/api/routes.py:580
+msgid "Lab instance not found"
+msgstr "Instância do Lab não encontrada"
+
+#: apps/api/routes.py:48 apps/api/routes.py:75 apps/api/routes.py:169
+#: apps/api/routes.py:193 apps/api/routes.py:367 apps/api/routes.py:583
+msgid "Unauthorized access to this lab"
+msgstr "Acesso não autorizado a este lab"
+
+#: apps/api/routes.py:54 apps/api/routes.py:110
+msgid "Failed to obtain resource statuses"
+msgstr "Falha ao obter o status dos recursos"
+
+#: apps/api/routes.py:81
+msgid "Failed to delete resources"
+msgstr "Falha ao excluir os recursos"
+
+#: apps/api/routes.py:92
+msgid "Resources removed successfully!"
+msgstr "Recursos removidos com sucesso!"
+
+#: apps/api/routes.py:130 apps/api/routes.py:186 apps/api/routes.py:245
+#: apps/api/routes.py:408
+msgid "invalid content"
+msgstr "conteúdo inválido"
+
+#: apps/api/routes.py:145
+msgid "Invalid users to approve:"
+msgstr "Usuários inválidos para aprovação:"
+
+#: apps/api/routes.py:154
+msgid "Failed to save updated data"
+msgstr "Falha ao salvar os dados atualizados"
+
+#: apps/api/routes.py:156
+msgid "all users approved"
+msgstr "todos os usuários aprovados"
+
+#: apps/api/routes.py:218 apps/api/routes.py:258
+msgid "Answers saved successfully"
+msgstr "Respostas salvas com sucesso"
+
+#: apps/api/routes.py:224
+msgid "User not authorized"
+msgstr "Usuário não autorizado"
+
+#: apps/api/routes.py:228
+msgid "Lab answers not found"
+msgstr "Respostas do lab não encontradas"
+
+#: apps/api/routes.py:241
+msgid "Not authorized to save answers"
+msgstr "Não autorizado a salvar respostas"
+
+#: apps/api/routes.py:251
+#, python-format
+msgid "Invalid grade for question %(q)s"
+msgstr "Nota inválida para a pergunta %(q)s"
+
+#: apps/api/routes.py:264 apps/api/routes.py:299 apps/api/routes.py:336
+#: apps/api/routes.py:359 apps/api/routes.py:387 apps/api/routes.py:440
+#: apps/api/routes.py:490 apps/clabs/routes.py:34 apps/home/routes.py:310
+#: apps/home/routes.py:485 apps/home/routes.py:790 apps/home/routes.py:903
+#: apps/home/routes.py:914 apps/home/routes.py:921
+msgid "Unauthorized access"
+msgstr "Acesso não autorizado"
+
+#: apps/api/routes.py:268
+msgid "User not found"
+msgstr "Usuário não encontrado"
+
+#: apps/api/routes.py:272
+msgid "Failed to delete user: user has labs running"
+msgstr "Falha ao excluir o usuário: o usuário tem labs em execução"
+
+#: apps/api/routes.py:290
+msgid "Failed to delete user"
+msgstr "Falha ao excluir o usuário"
+
+#: apps/api/routes.py:292
+msgid "User deleted successfully"
+msgstr "Usuário excluído com sucesso"
+
+#: apps/api/routes.py:303 apps/api/routes.py:412 apps/home/routes.py:123
+#: apps/home/routes.py:910 apps/home/routes.py:1231
+msgid "Group not found"
+msgstr "Grupo não encontrado"
+
+#: apps/api/routes.py:306 apps/api/routes.py:415
+msgid "Only admins can change System groups"
+msgstr "Somente administradores podem alterar grupos de Sistema"
+
+#: apps/api/routes.py:309
+msgid "Unauthorized access to this group"
+msgstr "Acesso não autorizado a este grupo"
+
+#: apps/api/routes.py:327
+msgid "Failed to delete group"
+msgstr "Falha ao excluir o grupo"
+
+#: apps/api/routes.py:329
+msgid "Group deleted successfully"
+msgstr "Grupo excluído com sucesso"
+
+#: apps/api/routes.py:340 apps/home/routes.py:786
+msgid "Lab Category not found"
+msgstr "Categoria de Lab não encontrada"
+
+#: apps/api/routes.py:343
+#, python-format
+msgid "Cannot delete: Lab Category is still in use by %(n)s lab(s)"
+msgstr "Não é possível excluir: a Categoria de Lab ainda é usada por %(n)s lab(s)"
+
+#: apps/api/routes.py:350
+msgid "Failed to delete lab category"
+msgstr "Falha ao excluir a categoria de lab"
+
+#: apps/api/routes.py:352
+msgid "Lab Category deleted successfully"
+msgstr "Categoria de Lab excluída com sucesso"
+
+#: apps/api/routes.py:363 apps/api/routes.py:391 apps/api/routes.py:780
+#: apps/home/routes.py:201 apps/home/routes.py:275 apps/home/routes.py:288
+#: apps/home/routes.py:367 apps/home/routes.py:452 apps/home/routes.py:481
+#: apps/home/routes.py:618 apps/home/routes.py:624 apps/home/routes.py:1444
+#: apps/home/routes.py:1457
+msgid "Lab not found"
+msgstr "Lab não encontrado"
+
+#: apps/api/routes.py:371
+#, python-format
+msgid "Cannot delete: Lab has %(n)s running instance(s)"
+msgstr "Não é possível excluir: o Lab tem %(n)s instância(s) em execução"
+
+#: apps/api/routes.py:378
+msgid "Failed to delete lab"
+msgstr "Falha ao excluir o lab"
+
+#: apps/api/routes.py:380
+msgid "Lab deleted successfully"
+msgstr "Lab excluído com sucesso"
+
+#: apps/api/routes.py:398
+msgid "Failed to restore lab"
+msgstr "Falha ao restaurar o lab"
+
+#: apps/api/routes.py:400
+msgid "Lab restored successfully"
+msgstr "Lab restaurado com sucesso"
+
+#: apps/api/routes.py:418
+msgid "Invalid group access token"
+msgstr "Token de acesso ao grupo inválido"
+
+#: apps/api/routes.py:421
+msgid "Already member of group"
+msgstr "Já é membro do grupo"
+
+#: apps/api/routes.py:429
+msgid "Failed to join group"
+msgstr "Falha ao entrar no grupo"
+
+#: apps/api/routes.py:434
+msgid ""
+"Joint group successfully! Click on 'Reload profile' to update your "
+"authorization."
+msgstr ""
+"Entrou no grupo com sucesso! Clique em 'Recarregar perfil' para atualizar "
+"sua autorização."
+
+#: apps/api/routes.py:444 apps/api/routes.py:451
+msgid "Invalid or Unauthorized access to lab"
+msgstr "Acesso inválido ou não autorizado ao lab"
+
+#: apps/api/routes.py:455
+msgid "Invalid or Unauthorized access to lab answer"
+msgstr "Acesso inválido ou não autorizado à resposta do lab"
+
+#: apps/api/routes.py:459 apps/home/routes.py:1121
+msgid "No Lab Answer Sheet available. Please create the Answer Sheet first."
+msgstr "Nenhum Gabarito de Lab disponível. Crie o Gabarito primeiro."
+
+#: apps/api/routes.py:506
+msgid "Stars/Rating mandatory"
+msgstr "Estrelas/Avaliação obrigatória"
+
+#: apps/api/routes.py:521
+msgid "Failed to save user feedback"
+msgstr "Falha ao salvar o feedback do usuário"
+
+#: apps/api/routes.py:537
+msgid "Feedback given successfully"
+msgstr "Feedback enviado com sucesso"
+
+#: apps/api/routes.py:555
+msgid "Failed to add user like"
+msgstr "Falha ao adicionar a curtida do usuário"
+
+#: apps/api/routes.py:568
+msgid "Failed to delete user like"
+msgstr "Falha ao remover a curtida do usuário"
+
+#: apps/api/routes.py:587
+msgid "Invalid content"
+msgstr "Conteúdo inválido"
+
+#: apps/api/routes.py:591
+msgid "Invalid extend hours"
+msgstr "Horas de extensão inválidas"
+
+#: apps/api/routes.py:604
+msgid "Failed updating lab duration, please contact the administrator."
+msgstr "Falha ao atualizar a duração do lab, entre em contato com o administrador."
+
+#: apps/api/routes.py:632
+msgid "Failed to list templates"
+msgstr "Falha ao listar os modelos"
+
+#: apps/api/routes.py:669 apps/api/routes.py:766
+msgid "message body is required"
+msgstr "o corpo da mensagem é obrigatório"
+
+#: apps/api/routes.py:676 apps/api/routes.py:714 apps/api/routes.py:745
+#: apps/api/routes.py:761
+msgid "Thread not found"
+msgstr "Conversa não encontrada"
+
+#: apps/api/routes.py:717 apps/api/routes.py:741 apps/api/routes.py:757
+#: apps/api/routes.py:777 apps/api/routes.py:782 apps/home/routes.py:1446
+#: apps/home/routes.py:1459 apps/templates/pages/users.html:51
+msgid "Unauthorized"
+msgstr "Não autorizados"
+
+#: apps/api/routes.py:794 apps/api/routes.py:815 apps/api/routes.py:834
+#, python-format
+msgid "Unknown field, tracked fields: %(fields)s"
+msgstr "Campo desconhecido, campos rastreados: %(fields)s"
+
+#: apps/api/routes.py:819 apps/api/routes.py:837
+msgid "Version not found"
+msgstr "Versão não encontrada"
+
+#: apps/api/routes.py:839
+#, python-format
+msgid "Version v%(v)s deleted"
+msgstr "Versão v%(v)s excluída"
 
 #: apps/authentication/forms.py:15 apps/authentication/forms.py:75
 msgid "Identifier"
@@ -92,6 +348,365 @@ msgstr "As senhas devem coincidir"
 #: apps/templates/pages/confirm_reset_password.html:50
 msgid "Password confirm"
 msgstr "Confirmação de senha"
+
+#: apps/authentication/routes.py:78
+msgid "Wrong user or password"
+msgstr "Usuário ou senha incorretos"
+
+#: apps/authentication/routes.py:138 apps/authentication/routes.py:287
+msgid "Failed to validate form."
+msgstr "Falha ao validar o formulário."
+
+#: apps/authentication/routes.py:151
+msgid "Username already registered"
+msgstr "Nome de usuário já registrado"
+
+#: apps/authentication/routes.py:159 apps/authentication/routes.py:298
+msgid "Email already registered"
+msgstr "E-mail já registrado"
+
+#: apps/authentication/routes.py:198 apps/authentication/routes.py:270
+#: apps/authentication/routes.py:342 apps/authentication/routes.py:419
+#: apps/authentication/routes.py:461
+msgid "Failed to send confirmation e-mail. Please try again later"
+msgstr "Falha ao enviar o e-mail de confirmação. Tente novamente mais tarde"
+
+#: apps/authentication/routes.py:221
+msgid "Token expired, please <a href=/register>click here</a> to register again"
+msgstr "Token expirado, <a href=/register>clique aqui</a> para se registrar novamente"
+
+#: apps/authentication/routes.py:224 apps/authentication/routes.py:369
+msgid "Invalid token"
+msgstr "Token inválido"
+
+#: apps/authentication/routes.py:248
+msgid "Failed to send confirmation e-mail. No user found"
+msgstr "Falha ao enviar o e-mail de confirmação. Nenhum usuário encontrado"
+
+#: apps/authentication/routes.py:366
+msgid ""
+"Token expired, please <a href=/email/required>click here</a> to request a "
+"new code"
+msgstr ""
+"Token expirado, <a href=/email/required>clique aqui</a> para solicitar um "
+"novo código"
+
+#: apps/authentication/routes.py:432
+msgid ""
+"If the user provided is valid, you will receive an e-mail with password "
+"reset link."
+msgstr ""
+"Se o usuário informado for válido, você receberá um e-mail com o link de "
+"redefinição de senha."
+
+#: apps/authentication/routes.py:472
+#, python-format
+msgid ""
+"Invalid or expired token! You need to request a new <a "
+"href='%(url)s'>Password Reset</a>"
+msgstr ""
+"Token inválido ou expirado! Você precisa solicitar uma nova <a "
+"href='%(url)s'>Redefinição de Senha</a>"
+
+#: apps/authentication/routes.py:485
+#, python-format
+msgid ""
+"Invalid password reset request! You need to request a new <a "
+"href='%(url)s'>Password Reset</a>"
+msgstr ""
+"Solicitação de redefinição de senha inválida! Você precisa solicitar uma "
+"nova <a href='%(url)s'>Redefinição de Senha</a>"
+
+#: apps/authentication/routes.py:492
+#, python-format
+msgid ""
+"Password changed successfully! Now you can <a href='%(url)s'>click to "
+"Login</a>"
+msgstr ""
+"Senha alterada com sucesso! Agora você pode <a href='%(url)s'>clicar para "
+"Entrar</a>"
+
+#: apps/authentication/routes.py:514
+msgid ""
+"Your note was already saved and can no longer be changed. Please contact an "
+"administrator if you need to update it."
+msgstr ""
+"Sua nota já foi salva e não pode mais ser alterada. Entre em contato com um "
+"administrador se precisar atualizá-la."
+
+#: apps/authentication/routes.py:518
+msgid "Note is too long, maximum 1000 characters"
+msgstr "A nota é muito longa, máximo de 1000 caracteres"
+
+#: apps/authentication/routes.py:527
+msgid "Note saved successfully!"
+msgstr "Nota salva com sucesso!"
+
+#: apps/clabs/routes.py:28
+msgid "ContainerLab not found"
+msgstr "ContainerLab não encontrado"
+
+#: apps/clabs/routes.py:35 apps/home/routes.py:486
+msgid "You don't have permission to edit this Lab."
+msgstr "Você não tem permissão para editar este Lab."
+
+#: apps/clabs/routes.py:42 apps/home/routes.py:493 apps/home/routes.py:628
+msgid "No Lab Categories found. Please create a Lab Category first."
+msgstr "Nenhuma Categoria de Lab encontrada. Crie uma Categoria de Lab primeiro."
+
+#: apps/clabs/routes.py:79
+msgid "Please select at least one category"
+msgstr "Selecione pelo menos uma categoria"
+
+#: apps/clabs/routes.py:86
+msgid "Provide GIT URL or files"
+msgstr "Forneça a URL do GIT ou arquivos"
+
+#: apps/clabs/routes.py:141
+#, python-format
+msgid "Too many files: %(n)s (max %(max)s)"
+msgstr "Arquivos demais: %(n)s (máximo %(max)s)"
+
+#: apps/home/routes.py:123
+msgid "Error getting running labs"
+msgstr "Erro ao obter os labs em execução"
+
+#: apps/home/routes.py:201 apps/home/routes.py:265
+msgid "Error Running Labs"
+msgstr "Erro ao Executar Labs"
+
+#: apps/home/routes.py:223
+msgid "Invalid lab duration/expiration, please choose one of the values provided."
+msgstr "Duração/expiração do lab inválida, escolha um dos valores fornecidos."
+
+#: apps/home/routes.py:275 apps/home/routes.py:278 apps/home/routes.py:288
+#: apps/home/routes.py:290
+msgid "Error checking lab status"
+msgstr "Erro ao verificar o status do lab"
+
+#: apps/home/routes.py:278 apps/home/routes.py:290
+msgid "You are not authorized to run this lab"
+msgstr "Você não está autorizado a executar este lab"
+
+#: apps/home/routes.py:310
+msgid "You dont have access for this page"
+msgstr "Você não tem acesso a esta página"
+
+#: apps/home/routes.py:314
+msgid "Invalid user"
+msgstr "Usuário inválido"
+
+#: apps/home/routes.py:314
+msgid "User not found or deactivated on the database"
+msgstr "Usuário não encontrado ou desativado no banco de dados"
+
+#: apps/home/routes.py:320
+msgid "Invalid username. Max size: 30. Allowed characters: a-z, A-Z, 0-9, _, . or -"
+msgstr ""
+"Nome de usuário inválido. Tamanho máximo: 30. Caracteres permitidos: a-z, "
+"A-Z, 0-9, _, . ou -"
+
+#: apps/home/routes.py:338
+msgid "No changes applied."
+msgstr "Nenhuma alteração aplicada."
+
+#: apps/home/routes.py:367 apps/home/routes.py:369 apps/home/routes.py:373
+#: apps/home/routes.py:381 apps/home/routes.py:452 apps/home/routes.py:455
+msgid "Error accessing Lab Instance"
+msgstr "Erro ao acessar a Instância do Lab"
+
+#: apps/home/routes.py:369
+msgid "Lab finished"
+msgstr "Lab finalizado"
+
+#: apps/home/routes.py:373
+msgid "Lab instance belongs to an unknown Lab."
+msgstr "A instância do lab pertence a um Lab desconhecido."
+
+#: apps/home/routes.py:381 apps/home/routes.py:455
+msgid "Not authorized to access this Lab"
+msgstr "Não autorizado a acessar este Lab"
+
+#: apps/home/routes.py:399
+msgid "Failed to get Lab Resources"
+msgstr "Falha ao obter os Recursos do Lab"
+
+#: apps/home/routes.py:400
+msgid ""
+"No resource found for Lab Instance. Try again later and if the error "
+"persists, please contact the administrator."
+msgstr ""
+"Nenhum recurso encontrado para a Instância do Lab. Tente novamente mais "
+"tarde e, se o erro persistir, entre em contato com o administrador."
+
+#: apps/home/routes.py:462
+msgid "Error removing Lab Instance"
+msgstr "Erro ao remover a Instância do Lab"
+
+#: apps/home/routes.py:462
+msgid "Error removing Lab instance, please contact the administrator"
+msgstr "Erro ao remover a instância do Lab, entre em contato com o administrador"
+
+#: apps/home/routes.py:548
+msgid "Invalid display order: must be an integer number."
+msgstr "Ordem de exibição inválida: deve ser um número inteiro."
+
+#: apps/home/routes.py:725 apps/home/routes.py:748 apps/home/routes.py:786
+msgid "Not found"
+msgstr "Não encontrado"
+
+#: apps/home/routes.py:725 apps/home/routes.py:748
+msgid "Support thread not found"
+msgstr "Conversa de suporte não encontrada"
+
+#: apps/home/routes.py:791
+msgid ""
+"You don't have permission to edit this Lab Category (only its creator or an "
+"admin can)."
+msgstr ""
+"Você não tem permissão para editar esta Categoria de Lab (somente o criador "
+"ou um administrador podem)."
+
+#: apps/home/routes.py:800
+msgid "Category name is required."
+msgstr "O nome da categoria é obrigatório."
+
+#: apps/home/routes.py:802
+msgid "Invalid color selected."
+msgstr "Cor selecionada inválida."
+
+#: apps/home/routes.py:813
+msgid "Failed to save Lab Category."
+msgstr "Falha ao salvar a Categoria de Lab."
+
+#: apps/home/routes.py:818
+msgid "Lab Category updated successfully"
+msgstr "Categoria de Lab atualizada com sucesso"
+
+#: apps/home/routes.py:829
+msgid "No Lab Categories"
+msgstr "Nenhuma Categoria de Lab"
+
+#: apps/home/routes.py:829
+msgid "No lab categories found. Please create a Lab Category first."
+msgstr "Nenhuma categoria de lab encontrada. Crie uma Categoria de Lab primeiro."
+
+#: apps/home/routes.py:904 apps/home/routes.py:915
+msgid "You don't have permission to edit this group."
+msgstr "Você não tem permissão para editar este grupo."
+
+#: apps/home/routes.py:922
+msgid "Only admins can create/change System groups."
+msgstr "Somente administradores podem criar/alterar grupos de Sistema."
+
+#: apps/home/routes.py:1042
+msgid "No changes were made to the group."
+msgstr "Nenhuma alteração foi feita no grupo."
+
+#: apps/home/routes.py:1058
+msgid "Failed to update group."
+msgstr "Falha ao atualizar o grupo."
+
+#: apps/home/routes.py:1071
+msgid "Group updated successfully"
+msgstr "Grupo atualizado com sucesso"
+
+#: apps/home/routes.py:1104
+msgid "Invalid Lab provided for filtering."
+msgstr "Lab inválido fornecido para filtragem."
+
+#: apps/home/routes.py:1109
+msgid "Invalid Group provided for filtering."
+msgstr "Grupo inválido fornecido para filtragem."
+
+#: apps/home/routes.py:1116
+msgid "To check with the Answer Sheet you must provide a Lab (Filter by Lab)."
+msgstr "Para verificar com o Gabarito você deve fornecer um Lab (Filtrar por Lab)."
+
+#: apps/home/routes.py:1163
+msgid "Invalid Lab provided. Please choose the Lab."
+msgstr "Lab inválido fornecido. Escolha o Lab."
+
+#: apps/home/routes.py:1191
+msgid "Failed to update lab answers sheet."
+msgstr "Falha ao atualizar o gabarito do lab."
+
+#: apps/home/routes.py:1197
+msgid "Lab answer sheet saved!"
+msgstr "Gabarito do lab salvo!"
+
+#: apps/home/routes.py:1231
+msgid "Error getting finished labs"
+msgstr "Erro ao obter os labs concluídos"
+
+#: apps/home/routes.py:1360
+msgid "No file part in the request"
+msgstr "Nenhum arquivo na requisição"
+
+#: apps/home/routes.py:1364
+msgid "No file selected"
+msgstr "Nenhum arquivo selecionado"
+
+#: apps/home/routes.py:1379
+#, python-format
+msgid "File extension not allowed. Allowed: %(exts)s"
+msgstr "Extensão de arquivo não permitida. Permitidas: %(exts)s"
+
+#: apps/home/routes.py:1388
+#, python-format
+msgid "File exceeds maximum allowed size (%(size)sMB)"
+msgstr "O arquivo excede o tamanho máximo permitido (%(size)sMB)"
+
+#: apps/home/routes.py:1402
+msgid "Failed to save file on server"
+msgstr "Falha ao salvar o arquivo no servidor"
+
+#: apps/home/routes.py:1463
+msgid "No uploads found"
+msgstr "Nenhum arquivo enviado encontrado"
+
+#: apps/home/routes.py:1470
+msgid "File not found in uploads list"
+msgstr "Arquivo não encontrado na lista de enviados"
+
+#: apps/home/routes.py:1498
+msgid "Failed to update metadata"
+msgstr "Falha ao atualizar os metadados"
+
+#: apps/lti/routes.py:607
+msgid "A label is required (who the token is for)"
+msgstr "Um rótulo é obrigatório (para quem é o token)"
+
+#: apps/lti/routes.py:611
+msgid "TTL must be a whole number of hours"
+msgstr "O TTL deve ser um número inteiro de horas"
+
+#: apps/lti/routes.py:613
+msgid "TTL must be a positive number of hours"
+msgstr "O TTL deve ser um número positivo de horas"
+
+#: apps/lti/routes.py:650
+#, python-format
+msgid ""
+"Rotated key for %(client)s @ %(issuer)s. The old key is retired but stays "
+"published in /lti/jwks/ until you purge it after the grace period."
+msgstr ""
+"Chave rotacionada para %(client)s @ %(issuer)s. A chave antiga foi "
+"aposentada, mas permanece publicada em /lti/jwks/ até que você a expurgue "
+"após o período de carência."
+
+#: apps/lti/routes.py:664
+msgid "Grace period must be a whole number of days"
+msgstr "O período de carência deve ser um número inteiro de dias"
+
+#: apps/lti/routes.py:666
+msgid "Grace period cannot be negative"
+msgstr "O período de carência não pode ser negativo"
+
+#: apps/lti/routes.py:673
+#, python-format
+msgid "Removed %(n)s retired key file(s)"
+msgstr "%(n)s arquivo(s) de chave aposentada removido(s)"
 
 #: apps/templates/includes/chatbot.html:77 apps/templates/includes/chatbot.html:81
 msgid "Support chat"
@@ -1083,6 +1698,17 @@ msgstr ""
 "Selecione os usuários (à esquerda) que serão <i>proprietários</i> do grupo "
 "(à direita). Os proprietários do grupo podem modificar qualquer atributo do "
 "grupo, bem como removê-lo."
+
+#: apps/templates/pages/groups_edit.html:204
+#: apps/templates/pages/lab_categories_edit.html:87
+msgid "Create"
+msgstr "Criar"
+
+#: apps/templates/pages/groups_edit.html:204
+#: apps/templates/pages/lab_categories_edit.html:87
+#: apps/templates/pages/labs_view.html:164
+msgid "Update"
+msgstr "Atualizar"
 
 #: apps/templates/pages/groups_list.html:33
 msgid "List Groups"
@@ -2269,10 +2895,6 @@ msgstr "Retomar"
 msgid "Start"
 msgstr "Iniciar"
 
-#: apps/templates/pages/labs_view.html:164
-msgid "Update"
-msgstr "Atualizar"
-
 #: apps/templates/pages/login.html:36
 msgid "Federated authentication?"
 msgstr "Autenticação federada?"
@@ -2912,10 +3534,6 @@ msgstr "Usuários atuais"
 #: apps/templates/pages/users.html:51
 msgid "All"
 msgstr "Todos"
-
-#: apps/templates/pages/users.html:51
-msgid "Unauthorized"
-msgstr "Não autorizados"
 
 #: apps/templates/pages/users.html:51
 msgid "users"

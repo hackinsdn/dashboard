@@ -11,6 +11,7 @@ import click
 import requests
 from flask import current_app as app
 from flask import jsonify, redirect, render_template, request, session, url_for
+from flask_babel import gettext as _
 from flask_login import current_user, login_required, login_user
 from pylti1p3.contrib.flask import (
     FlaskCacheDataStorage,
@@ -529,7 +530,7 @@ def _find_registration(issuer, client_id):
 
 def get_registration_public_key(issuer, client_id=None):
     """Return a registration's public key PEM (raises LtiError if missing)."""
-    _, registration = _find_registration(issuer, client_id)
+    _row, registration = _find_registration(issuer, client_id)
     public_key_file = registration.get("public_key_file")
     if not public_key_file:
         raise LtiError("Registration has no public key file recorded")
@@ -603,13 +604,13 @@ def manage():
 def manage_mint_token():
     label = (request.form.get("label") or "").strip()
     if not label:
-        return jsonify({"error": "A label is required (who the token is for)"}), 400
+        return jsonify({"error": _("A label is required (who the token is for)")}), 400
     try:
         ttl_hours = int(request.form.get("ttl_hours") or 24)
     except ValueError:
-        return jsonify({"error": "TTL must be a whole number of hours"}), 400
+        return jsonify({"error": _("TTL must be a whole number of hours")}), 400
     if ttl_hours <= 0:
-        return jsonify({"error": "TTL must be a positive number of hours"}), 400
+        return jsonify({"error": _("TTL must be a positive number of hours")}), 400
     url = mint_registration_token(label, ttl_hours)
     app.logger.info(
         f"LTI registration token minted by {current_user.username} "
@@ -638,17 +639,17 @@ def manage_rotate_key():
     issuer = request.form.get("issuer", "")
     client_id = request.form.get("client_id") or None
     try:
-        issuer, client_id, _ = rotate_registration_key(issuer, client_id)
+        issuer, client_id, _new_key = rotate_registration_key(issuer, client_id)
     except LtiError as exc:
         return jsonify({"error": str(exc)}), 404
     app.logger.info(
         f"LTI key rotated by {current_user.username} issuer={issuer} client_id={client_id}"
     )
     return jsonify({
-        "result": (
-            f"Rotated key for {client_id} @ {issuer}. The old key is retired "
+        "result": _(
+            "Rotated key for %(client)s @ %(issuer)s. The old key is retired "
             "but stays published in /lti/jwks/ until you purge it after the "
-            "grace period."
+            "grace period.", client=client_id, issuer=issuer
         ),
     })
 
@@ -660,16 +661,16 @@ def manage_purge_retired_keys():
     try:
         older_than_days = int(request.form.get("older_than_days") or 30)
     except ValueError:
-        return jsonify({"error": "Grace period must be a whole number of days"}), 400
+        return jsonify({"error": _("Grace period must be a whole number of days")}), 400
     if older_than_days < 0:
-        return jsonify({"error": "Grace period cannot be negative"}), 400
+        return jsonify({"error": _("Grace period cannot be negative")}), 400
     removed = purge_retired_keys_op(older_than_days)
     app.logger.info(
         f"LTI retired keys purged by {current_user.username} "
         f"older_than_days={older_than_days} removed={len(removed)}"
     )
     return jsonify({
-        "result": f"Removed {len(removed)} retired key file(s)",
+        "result": _("Removed %(n)s retired key file(s)", n=len(removed)),
         "removed": removed,
     })
 

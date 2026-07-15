@@ -12,6 +12,7 @@ from apps.home.models import Labs, LabInstances, LabAnswers, LabAnswerSheet, Use
 from apps.authentication.models import Users, Groups, DeletedGroupUsers, group_members, group_owners
 from apps.audit_mixin import check_user_category, get_remote_addr
 from flask import request, current_app
+from flask_babel import gettext as _
 from flask_login import login_required, current_user
 from datetime import timedelta, datetime
 from apps.utils import datetime_from_ts, parse_lab_expiration, check_pre_approved, secure_filename
@@ -26,10 +27,10 @@ def get_pods(lab_id):
     try:
         token = request.headers.get('Authorization').split()[1]
     except:
-        return {"error": "invalid auth token"}, 400
+        return {"error": _("invalid auth token")}, 400
 
     if not k8s.validate_token(token):
-        return {"error": "Token not authorized"}, 404
+        return {"error": _("Token not authorized")}, 404
 
     return k8s.get_pods_by_lab_id(lab_id), 200
 
@@ -41,16 +42,16 @@ def get_lab_status(lab_id):
 
     lab = db.session.get(LabInstances, lab_id)
     if not lab:
-        return {"status": "fail", "result": "Lab instance not found"}, 404
+        return {"status": "fail", "result": _("Lab instance not found")}, 404
     
     if lab.user_id != current_user.id:
-        return {"status": "fail", "result": "Unauthorized access to this lab"}, 401
+        return {"status": "fail", "result": _("Unauthorized access to this lab")}, 401
 
     try:
         resources = k8s.get_resources_by_name(lab.k8s_resources)
     except Exception as exc:
         current_app.logger.error(f"Failed to obtain resource: {exc}")
-        return {"status": "fail", "result": "Failed to obtain resource statuses"}, 400
+        return {"status": "fail", "result": _("Failed to obtain resource statuses")}, 400
 
     statuses = []
     for resource in resources:
@@ -68,16 +69,16 @@ def delete_lab(lab_id):
 
     lab = db.session.get(LabInstances, lab_id)
     if not lab:
-        return {"status": "fail", "result": "Lab instance not found"}, 404
+        return {"status": "fail", "result": _("Lab instance not found")}, 404
 
     if current_user.category != "admin" and lab.user_id != current_user.id:
-        return {"status": "fail", "result": "Unauthorized access to this lab"}, 401
+        return {"status": "fail", "result": _("Unauthorized access to this lab")}, 401
 
     try:
         results = k8s.delete_resources_by_name(lab.k8s_resources)
     except Exception as exc:
         current_app.logger.error(f"Failed to delete resources: {exc}")
-        return {"status": "fail", "result": "Failed to delete resources"}, 400
+        return {"status": "fail", "result": _("Failed to delete resources")}, 400
 
     who = "owner" if lab.user_id == current_user.id else "admin"
     lab.is_deleted = True
@@ -88,7 +89,7 @@ def delete_lab(lab_id):
     cache.set(f"running_labs-{current_user.id}", running_labs)
 
     if sum(results) == len(lab.k8s_resources):
-        return {"status": "ok", "result": "Resources removed successfully!"}, 200
+        return {"status": "ok", "result": _("Resources removed successfully!")}, 200
 
     msg = "Some resources failed to be removed: "
     for idx, resource in enumerate(lab.k8s_resources):
@@ -106,7 +107,7 @@ def get_nodes():
         k8s_nodes = k8s.get_nodes()
     except Exception as exc:
         current_app.logger.error(f"Failed to obtain nodes: {exc}")
-        return {"status": "fail", "result": "Failed to obtain resource statuses"}, 400
+        return {"status": "fail", "result": _("Failed to obtain resource statuses")}, 400
 
     nodes = {}
     for node in k8s_nodes:
@@ -126,7 +127,7 @@ def bulk_approve_users():
 
     content = request.get_json(silent=True)
     if not content:
-        return {"status": "fail", "result": "invalid content"}, 400
+        return {"status": "fail", "result": _("invalid content")}, 400
 
     users = []
     errors = []
@@ -141,7 +142,7 @@ def bulk_approve_users():
         users.append(user)
 
     if errors:
-        return {"status": "fail", "result": "Invalid users to approve: " + "<br/>".join(errors)}, 400
+        return {"status": "fail", "result": _("Invalid users to approve:") + " " + "<br/>".join(errors)}, 400
 
     for user in users:
         user.category = "student"
@@ -150,9 +151,9 @@ def bulk_approve_users():
         db.session.commit()
     except Exception as exc:
         current_app.logger.error(f"Failed to approve users: {exc}")
-        return {"status": "fail", "result": "Failed to save updated data"}, 400
+        return {"status": "fail", "result": _("Failed to save updated data")}, 400
 
-    return {"status": "ok", "result": "all users approved"}, 200
+    return {"status": "ok", "result": _("all users approved")}, 200
 
 @blueprint.route('/lab_answers/<lab_inst_id>', methods=["GET"])
 @login_required
@@ -162,10 +163,10 @@ def get_lab_answers(lab_inst_id):
 
     lab_inst = db.session.get(LabInstances, lab_inst_id)
     if not lab_inst:
-        return {"status": "fail", "result": "Lab instance not found"}, 404
+        return {"status": "fail", "result": _("Lab instance not found")}, 404
 
     if lab_inst.user_id != current_user.id:
-        return {"status": "fail", "result": "Unauthorized access to this lab"}, 401
+        return {"status": "fail", "result": _("Unauthorized access to this lab")}, 401
 
     answers = {}
     lab_answers = LabAnswers.query.filter_by(lab_id=lab_inst.lab_id, user_id=current_user.id).first()
@@ -182,14 +183,14 @@ def save_lab_answers(lab_inst_id):
 
     content = request.get_json(silent=True)
     if not isinstance(content, dict) or not content:
-        return {"status": "fail", "result": "invalid content"}, 400
+        return {"status": "fail", "result": _("invalid content")}, 400
 
     lab_inst = db.session.get(LabInstances, lab_inst_id)
     if not lab_inst:
-        return {"status": "fail", "result": "Lab instance not found"}, 404
+        return {"status": "fail", "result": _("Lab instance not found")}, 404
 
     if lab_inst.user_id != current_user.id:
-        return {"status": "fail", "result": "Unauthorized access to this lab"}, 401
+        return {"status": "fail", "result": _("Unauthorized access to this lab")}, 401
 
     lab_answers = LabAnswers.query.filter_by(lab_id=lab_inst.lab_id, user_id=current_user.id).first()
     if not lab_answers:
@@ -214,17 +215,17 @@ def save_lab_answers(lab_inst_id):
     lab_answers.answers = json.dumps(merged)
     db.session.commit()
 
-    return {"status": "ok", "result": "Answers saved successfully"}, 200
+    return {"status": "ok", "result": _("Answers saved successfully")}, 200
 
 @blueprint.route('/lab_answers/grades_comments/<int:answer_id>', methods=["POST"])
 @login_required
 def save_grades_comments(answer_id):
     if current_user.category not in ["admin", "teacher"]:
-        return {"status": "fail", "result": "User not authorized"}, 401
+        return {"status": "fail", "result": _("User not authorized")}, 401
 
     lab_answers = db.session.get(LabAnswers, answer_id)
     if not lab_answers:
-        return {"status": "fail", "result": "Lab answers not found"}, 404
+        return {"status": "fail", "result": _("Lab answers not found")}, 404
 
     # Check for authorization: is this user a teacher who is owner of this group?
     query = db.session.query(LabAnswers).filter(
@@ -237,38 +238,38 @@ def save_grades_comments(answer_id):
     ).filter(group_owners.c.user_id == current_user.id).first()
 
     if current_user.category != "admin" and not query:
-        return {"status": "fail", "result": "Not authorized to save answers"}, 401
+        return {"status": "fail", "result": _("Not authorized to save answers")}, 401
 
     data = request.get_json(silent=True)
     if not data:
-        return {"status": "fail", "result": "invalid content"}, 400
+        return {"status": "fail", "result": _("invalid content")}, 400
 
     for k, v in data.get('grades', {}).items():
         if not v:
             continue
         if not isinstance(v, (int, float)) or v < 0 or v > 100:
-            return {"status": "fail", "result": f"Invalid grade for question {k}"}, 400
+            return {"status": "fail", "result": _("Invalid grade for question %(q)s", q=k)}, 400
 
     lab_answers.comments = json.dumps(data.get('comments', {}))
     lab_answers.grades = json.dumps(data.get('grades', {}))
 
     db.session.commit()
     
-    return {"status": "ok", "result": "Answers saved successfully"}, 200
+    return {"status": "ok", "result": _("Answers saved successfully")}, 200
 
 @blueprint.route('/users/<int:user_id>', methods=["DELETE"])
 @login_required
 def delete_user(user_id):
     if current_user.category != "admin":
-        return {"status": "fail", "result": "Unauthorized access"}, 401
+        return {"status": "fail", "result": _("Unauthorized access")}, 401
 
     user = db.session.get(Users, user_id)
     if not user or user.is_deleted:
-        return {"status": "fail", "result": "User not found"}, 404
+        return {"status": "fail", "result": _("User not found")}, 404
 
     labs = LabInstances.query.filter_by(user_id=user_id, is_deleted=False)
     if labs.count() > 0:
-        return {"status": "fail", "result": "Failed to delete user: user has labs running"}, 400
+        return {"status": "fail", "result": _("Failed to delete user: user has labs running")}, 400
 
     user.is_deleted = True
     deleted = DeletedGroupUsers()
@@ -286,26 +287,26 @@ def delete_user(user_id):
         db.session.commit()
     except Exception as exc:
         current_app.logger.error(f"Failed to delete user {user_id}: {exc}")
-        return {"status": "fail", "result": "Failed to delete user"}, 400
+        return {"status": "fail", "result": _("Failed to delete user")}, 400
 
-    return {"status": "ok", "result": "User deleted successfully"}, 200
+    return {"status": "ok", "result": _("User deleted successfully")}, 200
 
 
 @blueprint.route('/groups/<int:group_id>', methods=["DELETE"])
 @login_required
 def delete_group(group_id):
     if current_user.category not in ["admin", "teacher"]:
-        return {"status": "fail", "result": "Unauthorized access"}, 401
+        return {"status": "fail", "result": _("Unauthorized access")}, 401
 
     group = db.session.get(Groups, group_id)
     if not group or group.is_deleted:
-        return {"status": "fail", "result": "Group not found"}, 404
+        return {"status": "fail", "result": _("Group not found")}, 404
 
     if group.organization == "SYSTEM" and current_user.category != "admin":
-        return {"status": "fail", "result": "Only admins can change System groups"}, 404
+        return {"status": "fail", "result": _("Only admins can change System groups")}, 404
 
     if current_user.category == "teacher" and not group.is_owner(current_user.id):
-        return {"status": "fail", "result": "Unauthorized access to this group"}, 401
+        return {"status": "fail", "result": _("Unauthorized access to this group")}, 401
 
     group.is_deleted = True
     deleted = DeletedGroupUsers()
@@ -323,80 +324,80 @@ def delete_group(group_id):
         db.session.commit()
     except Exception as exc:
         current_app.logger.error(f"Failed to delete group {group_id}: {exc}")
-        return {"status": "fail", "result": "Failed to delete group"}, 400
+        return {"status": "fail", "result": _("Failed to delete group")}, 400
 
-    return {"status": "ok", "result": "Group deleted successfully"}, 200
+    return {"status": "ok", "result": _("Group deleted successfully")}, 200
 
 
 @blueprint.route('/lab_categories/<int:category_id>', methods=["DELETE"])
 @login_required
 def delete_lab_category(category_id):
     if current_user.category != "admin":
-        return {"status": "fail", "result": "Unauthorized access"}, 401
+        return {"status": "fail", "result": _("Unauthorized access")}, 401
 
     category = db.session.get(LabCategories, category_id)
     if not category or category.is_deleted:
-        return {"status": "fail", "result": "Lab Category not found"}, 404
+        return {"status": "fail", "result": _("Lab Category not found")}, 404
 
     if len(category.labs) > 0:
-        return {"status": "fail", "result": f"Cannot delete: Lab Category is still in use by {len(category.labs)} lab(s)"}, 400
+        return {"status": "fail", "result": _("Cannot delete: Lab Category is still in use by %(n)s lab(s)", n=len(category.labs))}, 400
 
     category.is_deleted = True
     try:
         db.session.commit()
     except Exception as exc:
         current_app.logger.error(f"Failed to delete lab category {category_id}: {exc}")
-        return {"status": "fail", "result": "Failed to delete lab category"}, 400
+        return {"status": "fail", "result": _("Failed to delete lab category")}, 400
 
-    return {"status": "ok", "result": "Lab Category deleted successfully"}, 200
+    return {"status": "ok", "result": _("Lab Category deleted successfully")}, 200
 
 
 @blueprint.route('/labs/<lab_id>', methods=["DELETE"])
 @login_required
 def delete_lab_catalog(lab_id):
     if current_user.category not in ["admin", "teacher", "labcreator"]:
-        return {"status": "fail", "result": "Unauthorized access"}, 401
+        return {"status": "fail", "result": _("Unauthorized access")}, 401
 
     lab = db.session.get(Labs, lab_id)
     if not lab or lab.is_deleted:
-        return {"status": "fail", "result": "Lab not found"}, 404
+        return {"status": "fail", "result": _("Lab not found")}, 404
 
     # non-admins (teacher/labcreator) may only delete labs they own
     if current_user.category != "admin" and lab.updated_by != current_user.id:
-        return {"status": "fail", "result": "Unauthorized access to this lab"}, 401
+        return {"status": "fail", "result": _("Unauthorized access to this lab")}, 401
 
     active = LabInstances.query.filter_by(lab_id=lab_id, is_deleted=False).count()
     if active > 0:
-        return {"status": "fail", "result": f"Cannot delete: Lab has {active} running instance(s)"}, 400
+        return {"status": "fail", "result": _("Cannot delete: Lab has %(n)s running instance(s)", n=active)}, 400
 
     lab.is_deleted = True
     try:
         db.session.commit()
     except Exception as exc:
         current_app.logger.error(f"Failed to delete lab {lab_id}: {exc}")
-        return {"status": "fail", "result": "Failed to delete lab"}, 400
+        return {"status": "fail", "result": _("Failed to delete lab")}, 400
 
-    return {"status": "ok", "result": "Lab deleted successfully"}, 200
+    return {"status": "ok", "result": _("Lab deleted successfully")}, 200
 
 
 @blueprint.route('/labs/<lab_id>/restore', methods=["POST"])
 @login_required
 def restore_lab_catalog(lab_id):
     if current_user.category != "admin":
-        return {"status": "fail", "result": "Unauthorized access"}, 401
+        return {"status": "fail", "result": _("Unauthorized access")}, 401
 
     lab = db.session.get(Labs, lab_id)
     if not lab or not lab.is_deleted:
-        return {"status": "fail", "result": "Lab not found"}, 404
+        return {"status": "fail", "result": _("Lab not found")}, 404
 
     lab.is_deleted = False
     try:
         db.session.commit()
     except Exception as exc:
         current_app.logger.error(f"Failed to restore lab {lab_id}: {exc}")
-        return {"status": "fail", "result": "Failed to restore lab"}, 400
+        return {"status": "fail", "result": _("Failed to restore lab")}, 400
 
-    return {"status": "ok", "result": "Lab restored successfully"}, 200
+    return {"status": "ok", "result": _("Lab restored successfully")}, 200
 
 
 @blueprint.route('/groups/join/<int:group_id>', methods=["POST"])
@@ -404,20 +405,20 @@ def restore_lab_catalog(lab_id):
 def join_group(group_id):
     content = request.get_json(silent=True)
     if not content or not content.get("accessToken"):
-        return {"status": "fail", "result": "invalid content"}, 400
+        return {"status": "fail", "result": _("invalid content")}, 400
 
     group = db.session.get(Groups, group_id)
     if not group or group.is_deleted:
-        return {"status": "fail", "result": "Group not found"}, 404
+        return {"status": "fail", "result": _("Group not found")}, 404
 
     if group.organization == "SYSTEM" and current_user.category != "admin":
-        return {"status": "fail", "result": "Only admins can change System groups"}, 404
+        return {"status": "fail", "result": _("Only admins can change System groups")}, 404
 
     if not group.accesstoken or group.accesstoken != content.get("accessToken"):
-        return {"status": "fail", "result": "Invalid group access token"}, 400
+        return {"status": "fail", "result": _("Invalid group access token")}, 400
 
     if group.is_member(current_user.id):
-        return {"status": "ok", "result": "Already member of group"}, 200
+        return {"status": "ok", "result": _("Already member of group")}, 200
 
     group.members.append(current_user)
 
@@ -425,37 +426,37 @@ def join_group(group_id):
         db.session.commit()
     except Exception as exc:
         current_app.logger.error(f"Failed to join group {group_id}: {exc}")
-        return {"status": "fail", "result": "Failed to join group"}, 400
+        return {"status": "fail", "result": _("Failed to join group")}, 400
 
     if check_pre_approved(current_user):
         db.session.commit()
 
-    return {"status": "ok", "result": "Joint group successfully! Click on 'Reload profile' to update your authorization."}, 200
+    return {"status": "ok", "result": _("Joint group successfully! Click on 'Reload profile' to update your authorization.")}, 200
 
 @blueprint.route('/lab_answers/check/<lab_id>/<int:answer_id>')
 @login_required
 def check_lab_answer(lab_id, answer_id):
     if current_user.category not in ["admin", "teacher"]:
-        return {"status": "fail", "result": "Unauthorized access"}, 401
+        return {"status": "fail", "result": _("Unauthorized access")}, 401
 
     lab = db.session.get(Labs, lab_id)
     if not lab:
-        return {"status": "fail", "result": "Invalid or Unauthorized access to lab"}, 401
+        return {"status": "fail", "result": _("Invalid or Unauthorized access to lab")}, 401
 
     mygroups = current_user.privileged_group_ids
     for group in lab.allowed_groups:
         if group.id in mygroups:
             break
     else:
-        return {"status": "fail", "result": "Invalid or Unauthorized access to lab"}, 401
+        return {"status": "fail", "result": _("Invalid or Unauthorized access to lab")}, 401
 
     lab_answer = db.session.get(LabAnswers, answer_id)
     if not lab_answer:
-        return {"status": "fail", "result": "Invalid or Unauthorized access to lab answer"}, 401
+        return {"status": "fail", "result": _("Invalid or Unauthorized access to lab answer")}, 401
 
     lab_answer_sheet = LabAnswerSheet.query.filter_by(lab_id=lab_id).first()
     if not lab_answer_sheet:
-        return {"status": "fail", "result": "No Lab Answer Sheet available. Please create the Answer Sheet first."}, 400
+        return {"status": "fail", "result": _("No Lab Answer Sheet available. Please create the Answer Sheet first.")}, 400
 
     questions = set()
     answer_sheet = lab_answer_sheet.answers_dict
@@ -486,7 +487,7 @@ def check_lab_answer(lab_id, answer_id):
 @login_required
 def feedback():
     if current_user.category == "user":
-        return {"status": "fail", "result": "Unauthorized access"}, 401
+        return {"status": "fail", "result": _("Unauthorized access")}, 401
 
     user_feedbacks = cache.get("user_feedbacks")
     if user_feedbacks is None:
@@ -502,7 +503,7 @@ def feedback():
     comment = data.get("comment", "")
 
     if not stars:
-        return {"status": "fail", "result": "Stars/Rating mandatory"}, 400
+        return {"status": "fail", "result": _("Stars/Rating mandatory")}, 400
 
     user_feedback = UserFeedbacks.query.filter_by(user_id=current_user.id).first()
     is_new = False
@@ -517,7 +518,7 @@ def feedback():
         db.session.commit()
     except Exception as exc:
         current_app.logger.error(f"Failed to save user feedback for {current_user.id}: {exc}")
-        return {"status": "fail", "result": "Failed to save user feedback"}, 400
+        return {"status": "fail", "result": _("Failed to save user feedback")}, 400
 
     if is_new:
         user_feedbacks.insert(0, user_feedback.as_dict())
@@ -533,7 +534,7 @@ def feedback():
 
     return {
         "status": "ok",
-        "result": "Feedback given successfully",
+        "result": _("Feedback given successfully"),
         "recent_feedbacks": user_feedbacks,
     }, 200
 
@@ -551,7 +552,7 @@ def add_user_like():
         db.session.commit()
     except Exception as exc:
         current_app.logger.error(f"Failed to add user like: {exc}")
-        return {"status": "fail", "result": "Failed to add user like"}, 400
+        return {"status": "fail", "result": _("Failed to add user like")}, 400
     cache.set("user_likes", counter+1)
     return {"status": "ok", "result": counter+1}, 200
 
@@ -564,7 +565,7 @@ def del_user_like():
         db.session.commit()
     except Exception as exc:
         current_app.logger.error(f"Failed to delete user like: {exc}")
-        return {"status": "fail", "result": "Failed to delete user like"}, 400
+        return {"status": "fail", "result": _("Failed to delete user like")}, 400
     counter = cache.get("user_likes") or UserLikes.query.count()
     counter = max(counter-1, 0)
     cache.set("user_likes", counter)
@@ -576,18 +577,18 @@ def extend_lab(lab_id):
 
     lab_instance = db.session.get(LabInstances, lab_id)
     if not lab_instance:
-        return {"status": "fail", "result": "Lab instance not found"}, 404
+        return {"status": "fail", "result": _("Lab instance not found")}, 404
 
     if current_user.category != "admin" and lab_instance.user_id != current_user.id:
-        return {"status": "fail", "result": "Unauthorized access to this lab"}, 401
+        return {"status": "fail", "result": _("Unauthorized access to this lab")}, 401
 
     content = request.get_json(silent=True)
     if not content or 'extend_hours' not in content:
-        return {"status": "fail", "result": "Invalid content"}, 400
+        return {"status": "fail", "result": _("Invalid content")}, 400
 
     extend_hours = content['extend_hours']
     if not isinstance(extend_hours, int) or extend_hours <= 0 or extend_hours > 720:
-        return {"status": "fail", "result": "Invalid extend hours"}, 400
+        return {"status": "fail", "result": _("Invalid extend hours")}, 400
 
     # Logic to extend the lab instance scheduling
     try:
@@ -600,7 +601,7 @@ def extend_lab(lab_id):
             "Failed to extend lab duration/expiration "
             f"{lab_id=} {current_user.id=} {extend_hours=}: {exc}"
         )
-        return {"status": "fail", "result": f"Failed updating lab duration, please contact the administrator."}, 400
+        return {"status": "fail", "result": _("Failed updating lab duration, please contact the administrator.")}, 400
 
     current_app.logger.error(
         "Lab duration/expiration extended successfully: "
@@ -628,7 +629,7 @@ def list_kubernetes_templates():
         ]
         return {"status": "ok", "result": template_files}, 200
     except Exception as e:
-        return {"status": "fail", "result": "Failed to list templates"}, 400
+        return {"status": "fail", "result": _("Failed to list templates")}, 400
 
 
 @blueprint.route('/templates/<template_name>', methods=['GET'])
@@ -665,14 +666,14 @@ def post_support_message():
     data = request.get_json(silent=True) or {}
     body = (data.get("body") or "").strip()
     if not body:
-        return {"error": "message body is required"}, 400
+        return {"error": _("message body is required")}, 400
 
     # If the widget is posting into a specific conversation, it must still be open.
     thread_id = data.get("thread_id")
     if thread_id is not None:
         thread = db.session.get(SupportThreads, thread_id)
         if thread is None or thread.user_id != current_user.id:
-            return {"status": "fail", "result": "Thread not found"}, 404
+            return {"status": "fail", "result": _("Thread not found")}, 404
         if thread.status == "finished":
             reason = next(
                 (m.body for m in reversed(thread.messages) if m.sender == "system"),
@@ -710,10 +711,10 @@ def get_support_thread_by_id(thread_id):
     """Return a single thread + messages (admin, or the thread's owner)."""
     thread = db.session.get(SupportThreads, thread_id)
     if thread is None:
-        return {"status": "fail", "result": "Thread not found"}, 404
+        return {"status": "fail", "result": _("Thread not found")}, 404
     is_owner = thread.user_id == current_user.id
     if current_user.category != "admin" and not is_owner:
-        return {"status": "fail", "result": "Unauthorized"}, 403
+        return {"status": "fail", "result": _("Unauthorized")}, 403
     if is_owner:
         support.mark_thread_seen_by_user(thread)
         db.session.commit()
@@ -737,11 +738,11 @@ def finish_support_thread():
 def finish_support_thread_admin(thread_id):
     """Finish any thread (admin only)."""
     if current_user.category != "admin":
-        return {"status": "fail", "result": "Unauthorized"}, 403
+        return {"status": "fail", "result": _("Unauthorized")}, 403
 
     thread = db.session.get(SupportThreads, thread_id)
     if thread is None:
-        return {"status": "fail", "result": "Thread not found"}, 404
+        return {"status": "fail", "result": _("Thread not found")}, 404
 
     support.finish_thread(thread, by="support")
     db.session.commit()
@@ -753,16 +754,16 @@ def finish_support_thread_admin(thread_id):
 def post_support_reply(thread_id):
     """Staff reply to a thread (admin only)."""
     if current_user.category != "admin":
-        return {"status": "fail", "result": "Unauthorized"}, 403
+        return {"status": "fail", "result": _("Unauthorized")}, 403
 
     thread = db.session.get(SupportThreads, thread_id)
     if thread is None:
-        return {"status": "fail", "result": "Thread not found"}, 404
+        return {"status": "fail", "result": _("Thread not found")}, 404
 
     data = request.get_json(silent=True) or {}
     body = (data.get("body") or "").strip()
     if not body:
-        return {"error": "message body is required"}, 400
+        return {"error": _("message body is required")}, 400
 
     message = support.add_message(thread, "support", body, is_read=True)
     support.mark_thread_read(thread)
@@ -773,12 +774,12 @@ def post_support_reply(thread_id):
 def _get_lab_for_versions(lab_id):
     """Access rules mirror edit_lab: admin/teacher, labcreator only for own labs."""
     if current_user.category not in ("admin", "teacher", "labcreator"):
-        return None, ({"status": "fail", "result": "Unauthorized"}, 403)
+        return None, ({"status": "fail", "result": _("Unauthorized")}, 403)
     lab = db.session.get(Labs, lab_id)
     if not lab or (lab.is_deleted and current_user.category != "admin"):
-        return None, ({"status": "fail", "result": "Lab not found"}, 404)
+        return None, ({"status": "fail", "result": _("Lab not found")}, 404)
     if current_user.category == "labcreator" and lab.updated_by != current_user.id:
-        return None, ({"status": "fail", "result": "Unauthorized"}, 403)
+        return None, ({"status": "fail", "result": _("Unauthorized")}, 403)
     return lab, None
 
 
@@ -790,7 +791,7 @@ def list_lab_field_versions(lab_id, field):
     if error:
         return error
     if field not in lab_versions.TRACKED_FIELDS:
-        return {"status": "fail", "result": f"Unknown field, tracked fields: {', '.join(lab_versions.TRACKED_FIELDS)}"}, 400
+        return {"status": "fail", "result": _("Unknown field, tracked fields: %(fields)s", fields=", ".join(lab_versions.TRACKED_FIELDS))}, 400
 
     versions = []
     for v in lab_versions.list_versions(lab, field):
@@ -811,11 +812,11 @@ def get_lab_field_version(lab_id, field, version):
     if error:
         return error
     if field not in lab_versions.TRACKED_FIELDS:
-        return {"status": "fail", "result": f"Unknown field, tracked fields: {', '.join(lab_versions.TRACKED_FIELDS)}"}, 400
+        return {"status": "fail", "result": _("Unknown field, tracked fields: %(fields)s", fields=", ".join(lab_versions.TRACKED_FIELDS))}, 400
 
     row = lab_versions.get_version(lab, field, version)
     if not row:
-        return {"status": "fail", "result": "Version not found"}, 404
+        return {"status": "fail", "result": _("Version not found")}, 404
 
     if request.args.get("diff"):
         return {"status": "ok", "result": lab_versions.diff_against_current(lab, row)}, 200
@@ -830,9 +831,9 @@ def delete_lab_field_version(lab_id, field, version):
     if error:
         return error
     if field not in lab_versions.TRACKED_FIELDS:
-        return {"status": "fail", "result": f"Unknown field, tracked fields: {', '.join(lab_versions.TRACKED_FIELDS)}"}, 400
+        return {"status": "fail", "result": _("Unknown field, tracked fields: %(fields)s", fields=", ".join(lab_versions.TRACKED_FIELDS))}, 400
 
     if not lab_versions.delete_version(lab, field, version):
-        return {"status": "fail", "result": "Version not found"}, 404
+        return {"status": "fail", "result": _("Version not found")}, 404
     db.session.commit()
-    return {"status": "ok", "result": f"Version v{version} deleted"}, 200
+    return {"status": "ok", "result": _("Version v%(v)s deleted", v=version)}, 200
