@@ -79,7 +79,15 @@ def read_and_forward_k8s_stream_output(session_id, client_stream):
                 socketio.emit("pty-output", {"output": data}, namespace="/pty", to=session_id)
         else:
             break
-    socketio.emit("server-disconnected", namespace="/pty", to=session_id)
+    # Forward the process exit code so the client can auto-close on a clean
+    # exit (0) and show it otherwise. WSClient.returncode parses the error
+    # channel, which can raise/return None if no status was received; fall
+    # back to None so the client just reports a plain disconnect.
+    try:
+        returncode = client_stream.returncode
+    except Exception:
+        returncode = None
+    socketio.emit("server-disconnected", {"returncode": returncode}, namespace="/pty", to=session_id)
 
 
 @socketio.on("pty-input", namespace="/pty")
