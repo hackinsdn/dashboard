@@ -43,7 +43,7 @@ upgrades, and a big jump in automated test coverage.
 | [#266](https://github.com/hackinsdn/dashboard/pull/266) | Version control for editable Lab fields (manifest, lab guide, extended description) |
 | [#267](https://github.com/hackinsdn/dashboard/pull/267) | LTI 1.3 integration (optional module `lti`) |
 | [#270](https://github.com/hackinsdn/dashboard/pull/270) | Resolve service pods via Discovery API endpoint slices |
-| _(pending)_ | Bulk delete of running Lab instances and of users (`DELETE /api/labs`, `DELETE /api/users/bulk`) |
+| [#290](https://github.com/hackinsdn/dashboard/pull/290) | Bulk delete of running Lab instances and of users (`DELETE /api/labs`, `DELETE /api/users/bulk`) |
 
 ## Fixes
 
