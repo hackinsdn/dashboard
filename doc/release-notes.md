@@ -1,4 +1,4 @@
-# Release Notes — v2.0.13
+# Release Notes — v2.0.14
 
 This release delivers a large batch of new features across lab management, an
 LTI 1.3 integration, a support-chat system, full internationalization, plus
@@ -61,6 +61,7 @@ numerous fixes, dependency upgrades, and a big jump in automated test coverage.
 | [#286](https://github.com/hackinsdn/dashboard/pull/286) | Password-reset e-mails showed a literal `{url_for(...)}` instead of the reset link (missing f-prefix) |
 | [#288](https://github.com/hackinsdn/dashboard/pull/288) | Restore xterm terminal sessions: every `/pty` Socket.IO connect crashed under Flask 3.1.3 (bumps `flask_socketio` to 5.6.1) |
 | [#289](https://github.com/hackinsdn/dashboard/pull/289) | Stop the browser-console crash when an xterm terminal disconnects, and report the process exit code on the Kubernetes exec path |
+| [#291](https://github.com/hackinsdn/dashboard/pull/291) | Fix two silent template bugs: the map GeoJSON script 404'd because `MAP_GEOJSON_JS` was nested inside another `{{ }}`, and the xterm page lost analytics after the `ANALYTICS_*` config keys were replaced by `GTAG` |
 
 ## Dependencies & Security
 
