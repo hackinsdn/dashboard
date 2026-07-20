@@ -97,6 +97,68 @@ def delete_lab(lab_id):
         msg += f"{resource['kind']}/{resource['name']}={status}; "
     return {"status": "ok", "result": msg}, 200
 
+@blueprint.route('/labs', methods=["DELETE"])
+@login_required
+def delete_labs():
+    if current_user.category == "user":
+        return {}, 404
+
+    content = request.get_json(silent=True)
+    if not content or not isinstance(content, list):
+        return {"status": "fail", "result": _("invalid content")}, 400
+
+    labs = []
+    errors = []
+    for lab_id in content:
+        lab = db.session.get(LabInstances, lab_id) if isinstance(lab_id, str) else None
+        if not lab or lab.is_deleted:
+            errors.append(f"Lab instance not found {lab_id=}")
+            continue
+        if current_user.category != "admin" and lab.user_id != current_user.id:
+            errors.append(f"Unauthorized access to this lab {lab_id=}")
+            continue
+        labs.append(lab)
+
+    if errors:
+        return {"status": "fail", "result": _("Invalid labs to delete:") + " " + "<br/>".join(errors)}, 400
+
+    failed = []
+    partial = []
+    for lab in labs:
+        try:
+            results = k8s.delete_resources_by_name(lab.k8s_resources)
+        except Exception as exc:
+            current_app.logger.error(f"Failed to delete resources of lab {lab.id}: {exc}")
+            failed.append(lab.id)
+            continue
+
+        who = "owner" if lab.user_id == current_user.id else "admin"
+        lab.is_deleted = True
+        lab.finish_reason = "Finished by the " + who
+
+        if sum(results) != len(lab.k8s_resources):
+            for idx, resource in enumerate(lab.k8s_resources):
+                if not results[idx]:
+                    partial.append(f"{lab.id}: {resource['kind']}/{resource['name']}")
+
+    try:
+        db.session.commit()
+    except Exception as exc:
+        current_app.logger.error(f"Failed to delete labs: {exc}")
+        return {"status": "fail", "result": _("Failed to save updated data")}, 400
+
+    for user_id in {lab.user_id for lab in labs}:
+        running_labs = LabInstances.query.filter_by(is_deleted=False, user_id=user_id).count()
+        cache.set(f"running_labs-{user_id}", running_labs)
+
+    if failed:
+        return {"status": "fail", "result": _("Failed to delete resources") + ": " + "; ".join(failed)}, 400
+
+    if partial:
+        return {"status": "ok", "result": "Some resources failed to be removed: " + "; ".join(partial)}, 200
+
+    return {"status": "ok", "result": _("Resources removed successfully!")}, 200
+
 @blueprint.route('/nodes', methods=["GET"])
 @login_required
 def get_nodes():
@@ -271,6 +333,22 @@ def delete_user(user_id):
     if labs.count() > 0:
         return {"status": "fail", "result": _("Failed to delete user: user has labs running")}, 400
 
+    _soft_delete_user(user)
+
+    try:
+        db.session.commit()
+    except Exception as exc:
+        current_app.logger.error(f"Failed to delete user {user_id}: {exc}")
+        return {"status": "fail", "result": _("Failed to delete user")}, 400
+
+    return {"status": "ok", "result": _("User deleted successfully")}, 200
+
+
+def _soft_delete_user(user):
+    """Mark a user as deleted, snapshotting and clearing its group memberships.
+
+    Does not commit - the caller is responsible for that.
+    """
     user.is_deleted = True
     deleted = DeletedGroupUsers()
     deleted.object_id = user.id
@@ -283,13 +361,45 @@ def delete_user(user_id):
     user.assistant_of_groups.clear()
     user.owner_of_groups.clear()
 
+
+@blueprint.route('/users/bulk', methods=["DELETE"])
+@login_required
+def delete_users():
+    if current_user.category != "admin":
+        return {"status": "fail", "result": _("Unauthorized access")}, 401
+
+    content = request.get_json(silent=True)
+    if not content or not isinstance(content, list):
+        return {"status": "fail", "result": _("invalid content")}, 400
+
+    users = []
+    errors = []
+    for user_id in content:
+        if not isinstance(user_id, str) or not user_id.isdigit():
+            errors.append(f"Invalid user provided {user_id=}")
+            continue
+        user = db.session.get(Users, int(user_id))
+        if not user or user.is_deleted:
+            errors.append(f"User not found {user_id=}")
+            continue
+        if LabInstances.query.filter_by(user_id=user.id, is_deleted=False).count() > 0:
+            errors.append(f"User has labs running {user_id=}")
+            continue
+        users.append(user)
+
+    if errors:
+        return {"status": "fail", "result": _("Invalid users to delete:") + " " + "<br/>".join(errors)}, 400
+
+    for user in users:
+        _soft_delete_user(user)
+
     try:
         db.session.commit()
     except Exception as exc:
-        current_app.logger.error(f"Failed to delete user {user_id}: {exc}")
-        return {"status": "fail", "result": _("Failed to delete user")}, 400
+        current_app.logger.error(f"Failed to delete users: {exc}")
+        return {"status": "fail", "result": _("Failed to delete users")}, 400
 
-    return {"status": "ok", "result": _("User deleted successfully")}, 200
+    return {"status": "ok", "result": _("Users deleted successfully")}, 200
 
 
 @blueprint.route('/groups/<int:group_id>', methods=["DELETE"])

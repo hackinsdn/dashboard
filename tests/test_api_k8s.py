@@ -212,6 +212,88 @@ class TestDeleteLab:
         logout(client)
 
 
+# --- delete_labs (bulk) -------------------------------------------------
+class TestDeleteLabsBulk:
+    @pytest.fixture
+    def bulk_ids(self, ids):
+        """Two fresh running instances owned by akstudent, plus one by akother."""
+        mine = [LabInstances(user_id=ids["student_id"], lab_id=ids["lab_id"], is_deleted=False) for _ in range(2)]
+        theirs = LabInstances(user_id=ids["other_id"], lab_id=ids["lab_id"], is_deleted=False)
+        for inst in mine + [theirs]:
+            inst.k8s_resources = []
+        db.session.add_all(mine + [theirs])
+        db.session.commit()
+        return {"mine": [i.id for i in mine], "theirs": theirs.id}
+
+    def test_unapproved_user_is_rejected(self, client, bulk_ids):
+        logout(client)
+        login(client, "akpending", "pend123")
+        resp = client.delete("/api/labs", json=bulk_ids["mine"])
+        assert resp.status_code == 404
+        logout(client)
+
+    def test_invalid_payload_is_rejected(self, client, bulk_ids):
+        login(client, "akstudent", "stud123")
+        resp = client.delete("/api/labs", json={"nope": 1})
+        assert resp.status_code == 400
+
+    def test_missing_instance_aborts_whole_batch(self, client, bulk_ids):
+        resp = client.delete("/api/labs", json=[bulk_ids["mine"][0], "does-not-exist"])
+        assert resp.status_code == 400
+        # nothing was deleted
+        assert db.session.get(LabInstances, bulk_ids["mine"][0]).is_deleted is False
+
+    def test_non_owner_is_rejected(self, client, bulk_ids):
+        resp = client.delete("/api/labs", json=[bulk_ids["theirs"]])
+        assert resp.status_code == 400
+        assert db.session.get(LabInstances, bulk_ids["theirs"]).is_deleted is False
+        logout(client)
+
+    def test_owner_can_delete_many(self, client, bulk_ids, monkeypatch):
+        monkeypatch.setattr("apps.api.routes.k8s.delete_resources_by_name", lambda res: [])
+        login(client, "akstudent", "stud123")
+        resp = client.delete("/api/labs", json=bulk_ids["mine"])
+        assert resp.status_code == 200
+        for inst_id in bulk_ids["mine"]:
+            assert db.session.get(LabInstances, inst_id).is_deleted is True
+        logout(client)
+
+    def test_admin_can_delete_other_users_labs(self, client, bulk_ids, monkeypatch):
+        monkeypatch.setattr("apps.api.routes.k8s.delete_resources_by_name", lambda res: [])
+        login(client, "akadmin", "admin123")
+        resp = client.delete("/api/labs", json=[bulk_ids["theirs"]])
+        assert resp.status_code == 200
+        inst = db.session.get(LabInstances, bulk_ids["theirs"])
+        assert inst.is_deleted is True
+        assert inst.finish_reason == "Finished by the admin"
+        logout(client)
+
+    def test_k8s_failure_reports_error(self, client, bulk_ids, monkeypatch):
+        def boom(res):
+            raise RuntimeError("k8s down")
+
+        monkeypatch.setattr("apps.api.routes.k8s.delete_resources_by_name", boom)
+        login(client, "akstudent", "stud123")
+        resp = client.delete("/api/labs", json=bulk_ids["mine"])
+        assert resp.status_code == 400
+        for inst_id in bulk_ids["mine"]:
+            assert db.session.get(LabInstances, inst_id).is_deleted is False
+        logout(client)
+
+    def test_partial_resource_removal_is_reported(self, client, bulk_ids, monkeypatch):
+        inst_id = bulk_ids["mine"][0]
+        inst = db.session.get(LabInstances, inst_id)
+        inst.k8s_resources = [{"kind": "pod", "name": "p1"}, {"kind": "pod", "name": "p2"}]
+        db.session.commit()
+        monkeypatch.setattr("apps.api.routes.k8s.delete_resources_by_name", lambda res: [True, False])
+        login(client, "akstudent", "stud123")
+        resp = client.delete("/api/labs", json=[inst_id])
+        assert resp.status_code == 200
+        assert "pod/p2" in resp.get_json()["result"]
+        assert db.session.get(LabInstances, inst_id).is_deleted is True
+        logout(client)
+
+
 # --- get_nodes ----------------------------------------------------------
 class TestGetNodes:
     def test_unapproved_user_is_rejected(self, client, ids):
