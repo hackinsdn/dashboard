@@ -295,6 +295,70 @@ class TestDeleteApi:
         logout(client)
 
 
+# --- admin-only bulk soft-delete API -------------------------------------
+class TestBulkDeleteApi:
+    @pytest.fixture(scope="class")
+    def bulk_ids(self, ids):
+        """Two fresh deletable users, plus one that still has a running lab."""
+        targets = [
+            Users(username=f"usbulk{n}", password="bulk123", email=f"usbulk{n}@test.local", category="student")
+            for n in range(2)
+        ]
+        busy = Users(username="usbulkbusy", password="bulk123", email="usbulkbusy@test.local", category="student")
+        db.session.add_all(targets + [busy])
+        db.session.commit()
+
+        lab = Labs(title="Bulk Blocker Lab", description="lab used to block bulk user delete")
+        db.session.add(lab)
+        db.session.commit()
+        db.session.add(LabInstances(user_id=busy.id, lab_id=lab.id, is_deleted=False))
+        db.session.commit()
+
+        return {"targets": [str(u.id) for u in targets], "busy": str(busy.id)}
+
+    def test_student_cannot_bulk_delete(self, client, bulk_ids):
+        logout(client)
+        login(client, "usstudent", "stud123")
+        resp = client.delete("/api/users/bulk", json=bulk_ids["targets"])
+        assert resp.status_code == 401
+        logout(client)
+
+    def test_teacher_cannot_bulk_delete(self, client, bulk_ids):
+        login(client, "usteacher", "teach123")
+        resp = client.delete("/api/users/bulk", json=bulk_ids["targets"])
+        assert resp.status_code == 401
+        logout(client)
+
+    def test_invalid_payload_is_rejected(self, client, bulk_ids):
+        login(client, "usadmin", "admin123")
+        resp = client.delete("/api/users/bulk", json={"nope": 1})
+        assert resp.status_code == 400
+
+    def test_unknown_user_aborts_whole_batch(self, client, bulk_ids):
+        resp = client.delete("/api/users/bulk", json=[bulk_ids["targets"][0], "999999"])
+        assert resp.status_code == 400
+        assert db.session.get(Users, int(bulk_ids["targets"][0])).is_deleted is False
+
+    def test_running_lab_aborts_whole_batch(self, client, bulk_ids):
+        resp = client.delete("/api/users/bulk", json=bulk_ids["targets"] + [bulk_ids["busy"]])
+        assert resp.status_code == 400
+        assert b"labs running" in resp.data
+        for user_id in bulk_ids["targets"]:
+            assert db.session.get(Users, int(user_id)).is_deleted is False
+
+    def test_admin_can_bulk_delete(self, client, bulk_ids):
+        resp = client.delete("/api/users/bulk", json=bulk_ids["targets"])
+        assert resp.status_code == 200
+        for user_id in bulk_ids["targets"]:
+            assert db.session.get(Users, int(user_id)).is_deleted is True
+
+    def test_already_deleted_user_is_rejected(self, client, bulk_ids):
+        client.delete("/api/users/bulk", json=bulk_ids["targets"])
+        resp = client.delete("/api/users/bulk", json=bulk_ids["targets"])
+        assert resp.status_code == 400
+        logout(client)
+
+
 # --- approval notes -------------------------------------------------------
 class TestApprovalNotes:
     def test_pending_user_sees_note_form_on_waiting_page(self, client, ids):
