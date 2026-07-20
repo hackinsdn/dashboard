@@ -472,7 +472,7 @@
   <!-- Leaflet -->
   <script src="{{ url_for('static', filename='assets/plugins/leaflet/leaflet.js') }}"></script>
   {% if config.MAP_GEOJSON_JS %}
-  <script src="{{ url_for('static', filename='assets/plugins/leaflet/geojson/{{ config.MAP_GEOJSON_JS }}') }}"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/leaflet/geojson/' ~ config.MAP_GEOJSON_JS) }}"></script>
   {% endif %}
   <!-- ChartJS -->
   <script src="{{ url_for('static', filename='assets/plugins/chart.js/Chart.min.js') }}"></script>
