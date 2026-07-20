@@ -1,6 +1,6 @@
 {% extends "layouts/base.html" %}
 
-{% block title %} Kubernetes Pods {% endblock title %}
+{% block title %} {{ _('Kubernetes Pods') }} {% endblock title %}
 
 <!-- Element injected in the BODY element -->
 {% block body_class %} sidebar-mini layout-navbar-fixed {% endblock body_class %}
@@ -30,13 +30,13 @@
       <div class="container-fluid">
         <div class="row mb-2">
           <div class="col-sm-6">
-            <h1>Kubernetes Pods</h1>
+            <h1>{{ _('Kubernetes Pods') }}</h1>
           </div>
           <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
-              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.index') }}">Home</a></li>
+              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.index') }}">{{ _('Home') }}</a></li>
               <li class="breadcrumb-item">Kubernetes</li>
-              <li class="breadcrumb-item active">Pods</li>
+              <li class="breadcrumb-item active">{{ _('Pods') }}</li>
             </ol>
           </div>
         </div>
@@ -49,13 +49,13 @@
         <div class="col-md-12">
           <div class="card">
             <div class="card-header">
-              <h3 class="card-title">Kubernetes Pods</h3>
+              <h3 class="card-title">{{ _('Kubernetes Pods') }}</h3>
               <div class="float-right">
-                <button type="button" title="Select all Pods" class="btn btn-default btn-sm checkbox-toggle"><i class="far fa-square"></i></button>
-                <button type="button" title="Delete selected Pods" class="btn btn-default btn-sm" data-toggle="modal" data-target="#modal-delete-pods">
+                <button type="button" title="{{ _('Select all Pods') }}" class="btn btn-default btn-sm checkbox-toggle"><i class="far fa-square"></i></button>
+                <button type="button" title="{{ _('Delete selected Pods') }}" class="btn btn-default btn-sm" data-toggle="modal" data-target="#modal-delete-pods">
                   <i class="far fa-trash-alt"></i>
                 </button>
-                <button type="button" title="Approve selected users" class="btn btn-default btn-sm" data-toggle="modal" data-target="#modal-approve-users">
+                <button type="button" title="{{ _('Approve selected users') }}" class="btn btn-default btn-sm" data-toggle="modal" data-target="#modal-approve-users">
                   <i class="fas fa-user-check"></i>
                 </button>
               </div>
@@ -66,13 +66,13 @@
                 <thead>
                   <tr>
                     <th></th>
-                    <th>Name</th>
-                    <th>Ready</th>
-                    <th>Status</th>
-                    <th>Age</th>
-                    <th>IP</th>
-                    <th>Node</th>
-                    <th>Actions</th>
+                    <th>{{ _('Name') }}</th>
+                    <th>{{ _('Ready') }}</th>
+                    <th>{{ _('Status') }}</th>
+                    <th>{{ _('Age') }}</th>
+                    <th>{{ _('IP') }}</th>
+                    <th>{{ _('Node') }}</th>
+                    <th>{{ _('Actions') }}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -91,7 +91,7 @@
                   <td>{{ item['pod_ip'] }}</td>
                   <td>{{ item['node_name'] }}</td>
                   <td>
-                    <button type="button" title="Show pod yaml" class="btn btn-outline-dark button-show-pod" data-toggle="modal" data-target="#modal-show-pod-yaml" data-podyaml="<p>Pod information in YAML format:</p> <pre>{{ item['more'] }}</pre>">
+                    <button type="button" title="{{ _('Show pod yaml') }}" class="btn btn-outline-dark button-show-pod" data-toggle="modal" data-target="#modal-show-pod-yaml" data-podyaml="<p>{{ _('Pod information in YAML format:') }}</p> <pre>{{ item['more'] }}</pre>">
                       <i class="fas fa-eye"></i> YAML
                     </button>
                   </td>
@@ -105,11 +105,11 @@
             <div class="card-footer p-0">
               <div class="mailbox-controls">
                 <!-- Check all button -->
-                <button type="button" title="Select all users" class="btn btn-default btn-sm checkbox-toggle"><i class="far fa-square"></i></button>
-                <button type="button" title="Delete selected users" class="btn btn-default btn-sm" data-toggle="modal" data-target="#modal-delete-pods">
+                <button type="button" title="{{ _('Select all users') }}" class="btn btn-default btn-sm checkbox-toggle"><i class="far fa-square"></i></button>
+                <button type="button" title="{{ _('Delete selected users') }}" class="btn btn-default btn-sm" data-toggle="modal" data-target="#modal-delete-pods">
                   <i class="far fa-trash-alt"></i>
                 </button>
-                <button type="button" title="Approve selected users" class="btn btn-default btn-sm" data-toggle="modal" data-target="#modal-approve-users">
+                <button type="button" title="{{ _('Approve selected users') }}" class="btn btn-default btn-sm" data-toggle="modal" data-target="#modal-approve-users">
                   <i class="fas fa-user-check"></i>
                 </button>
               </div>
@@ -125,18 +125,18 @@
         <div class="modal-dialog">
           <div class="modal-content">
             <div class="modal-header">
-              <h4 class="modal-title">Confirm User removal</h4>
+              <h4 class="modal-title">{{ _('Confirm User removal') }}</h4>
               <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                 <span aria-hidden="true">&times;</span>
               </button>
             </div>
             <div class="modal-body">
-              <p>Are you sure you want to remove the selected Users?</p>
+              <p>{{ _('Are you sure you want to remove the selected Users?') }}</p>
               <ul id="modal-delete-items"></ul>
             </div>
             <div class="modal-footer justify-content-between">
-              <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-              <button type="button" class="btn btn-danger" id="delete-users">Delete Users</button>
+              <button type="button" class="btn btn-default" data-dismiss="modal">{{ _('Cancel') }}</button>
+              <button type="button" class="btn btn-danger" id="delete-users">{{ _('Delete Users') }}</button>
             </div>
           </div>
           <!-- /.modal-content -->
@@ -148,18 +148,18 @@
         <div class="modal-dialog">
           <div class="modal-content">
             <div class="modal-header">
-              <h4 class="modal-title">Confirm Approve Users</h4>
+              <h4 class="modal-title">{{ _('Confirm Approve Users') }}</h4>
               <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                 <span aria-hidden="true">&times;</span>
               </button>
             </div>
             <div class="modal-body">
-              <p>Are you sure you want to approve the selected Users? Approved users have access to run Labs.</p>
+              <p>{{ _('Are you sure you want to approve the selected Users? Approved users have access to run Labs.') }}</p>
               <ul id="modal-approve-users-items"></ul>
             </div>
             <div class="modal-footer justify-content-between">
-              <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-              <button type="button" class="btn btn-danger" id="approve-users">Approve Users</button>
+              <button type="button" class="btn btn-default" data-dismiss="modal">{{ _('Cancel') }}</button>
+              <button type="button" class="btn btn-danger" id="approve-users">{{ _('Approve Users') }}</button>
             </div>
           </div>
           <!-- /.modal-content -->
@@ -171,7 +171,7 @@
         <div class="modal-dialog modal-lg">
           <div class="modal-content">
             <div class="modal-header">
-              <h4 class="modal-title">Show Pod YAML</h4>
+              <h4 class="modal-title">{{ _('Show Pod YAML') }}</h4>
               <button type="button" class="close button-clear-answer" data-dismiss="modal" aria-label="Close">
                 <span aria-hidden="true">&times;</span>
               </button>
@@ -180,7 +180,7 @@
               <div id="podyaml"></div>
             </div>
             <div class="modal-footer justify-content-between">
-              <button type="button" class="btn btn-default button-clear-answer" data-dismiss="modal">Close</button>
+              <button type="button" class="btn btn-default button-clear-answer" data-dismiss="modal">{{ _('Close') }}</button>
             </div>
           </div>
           <!-- /.modal-content -->
@@ -218,7 +218,7 @@
         responsive: true,
         autoWidth: false,
         language: {
-          emptyTable: 'No Pod running',
+          emptyTable: '{{ _("No Pod running") }}',
         },
         columns: [
           {
@@ -241,7 +241,7 @@
       if ( sessionStorage.getItem('msgSuccess') ) {
         $(document).Toasts('create', {
           class: 'bg-success',
-          title: 'Sucess',
+          title: '{{ _("Success") }}',
           body: sessionStorage.getItem('msgSuccess')
         });
         sessionStorage.removeItem('msgSuccess');
@@ -249,7 +249,7 @@
       if ( sessionStorage.getItem('msgFail') ) {
         $(document).Toasts('create', {
           class: 'bg-danger',
-          title: 'Failure',
+          title: '{{ _("Failure") }}',
           body: sessionStorage.getItem('msgFail')
         });
         sessionStorage.removeItem('msgFail');
@@ -257,7 +257,7 @@
       //Enable check and uncheck all functionality
       $('#delete-users').click(function () {
         var rows = $('#tableUsers tr').filter(':has(:checkbox:checked)');
-        $("#delete-users").html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Deleting ' + table.rows(rows).data().length + ' row(s)...');
+        $("#delete-users").html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> {{ _("Deleting") }} ' + table.rows(rows).data().length + ' {{ _("row(s)...") }}');
         $("#delete-users").prop('disabled', true);
         var items = [];
         table.rows(rows).each( function ( index ) {
@@ -286,7 +286,7 @@
       });
       $('#approve-users').click(function () {
         var rows = $('#tableUsers tr').filter(':has(:checkbox:checked)');
-        $("#approve-users").html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Aproving ' + table.rows(rows).data().length + ' row(s)...');
+        $("#approve-users").html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> {{ _("Approving") }} ' + table.rows(rows).data().length + ' {{ _("row(s)...") }}');
         $("#approve-users").prop('disabled', true);
         var items = [];
         rows.each( function ( index, row ) {
@@ -315,7 +315,7 @@
         items.empty();
         $("#delete-pods").prop('disabled', false);
         if (data.length === 0) {
-          items.append("<li>No Pod selected!</li>");
+          items.append("<li>{{ _('No Pod selected!') }}</li>");
           $("#delete-pods").prop('disabled', true);
           return;
         }
@@ -330,7 +330,7 @@
         items.empty();
         $("#approve-users").prop('disabled', false);
         if (data.length === 0) {
-          items.append("<li>No user selected!</li>");
+          items.append("<li>{{ _('No user selected!') }}</li>");
           $("#approve-users").prop('disabled', true);
           return;
         }

@@ -3,6 +3,7 @@ import os
 import shutil
 from collections import OrderedDict, defaultdict
 from flask import render_template, redirect, url_for, request, jsonify, current_app
+from flask_babel import gettext as _
 from flask_login import current_user, login_required
 from apps.controllers import c9s, k8s
 from apps import db
@@ -24,21 +25,21 @@ def upsert(clab_id="new"):
         clab = db.session.get(Labs, clab_id)
         # admins may open a soft-deleted clab in order to restore it
         if not clab or (clab.is_deleted and current_user.category != "admin"):
-            return render_template("pages/clabs_upsert.html", clab=None, msg_fail="ContainerLab not found")
+            return render_template("pages/clabs_upsert.html", clab=None, msg_fail=_("ContainerLab not found"))
         if not clab.is_clab:
             return redirect(url_for('home_blueprint.edit_lab', lab_id=clab_id))
         if current_user.category == "labcreator" and clab.updated_by != current_user.id:
             return render_template(
                 "pages/error.html",
-                title="Unauthorized access",
-                msg="You don't have permission to edit this Lab."
+                title=_("Unauthorized access"),
+                msg=_("You don't have permission to edit this Lab.")
             )
     else:
         clab = Labs()
 
     lab_categories = {cat.id: cat for cat in LabCategories.query.filter_by(is_deleted=False).all()}
     if not lab_categories:
-        return render_template("pages/clabs_upsert.html", msg_fail="No Lab Categories found. Please create a Lab Category first.", clab=clab)
+        return render_template("pages/clabs_upsert.html", msg_fail=_("No Lab Categories found. Please create a Lab Category first."), clab=clab)
 
     groups = Groups.query.filter_by(is_deleted=False).all()
 
@@ -75,14 +76,14 @@ def upsert(clab_id="new"):
         clab.categories.append(clab_category)
 
     if not clab.categories:
-        return render_template("pages/clabs_upsert.html", clab=clab, lab_categories=lab_categories, msg_fail="Please select at least one category", groups=groups)
+        return render_template("pages/clabs_upsert.html", clab=clab, lab_categories=lab_categories, msg_fail=_("Please select at least one category"), groups=groups)
 
     giturl = request.form.get("clab_giturl", "").strip()
     files = request.files.getlist("clab_files") or []
     relative_paths = request.form.getlist("relative_paths") or []
 
     if not clab.manifest and not giturl and len(files) == 0:
-        return jsonify({"ok": False, "result": "Provide GIT URL or files"}), 400
+        return jsonify({"ok": False, "result": _("Provide GIT URL or files")}), 400
 
     md = clab_md.md
     if not (secrets := md.get("secrets")):
@@ -137,7 +138,7 @@ def upsert(clab_id="new"):
     if len(files) > max_files:
         return jsonify({
             "ok": False,
-            "result": f"Too many files: {len(files)} (max {max_files})"
+            "result": _("Too many files: %(n)s (max %(max)s)", n=len(files), max=max_files)
         }), 400
 
     changed_files = False

@@ -1,6 +1,6 @@
 {% extends "layouts/base-fullscreen.html" %}
 
-{% block title %} Error 500 {% endblock title %}
+{% block title %} {{ _('Error 500') }} {% endblock title %}
 
 <!-- Element injected in the BODY element -->
 {% block body_class %} login-page {% endblock body_class %}
@@ -119,14 +119,13 @@
             <div class="lightning">⚡</div>
         </div>
         <h2 class="display-1 text-primary font-weight-bold">500</h2>
-        <h3 class="h4 text-dark">Internal Server Error</h3>
+        <h3 class="h4 text-dark">{{ _('Internal Server Error') }}</h3>
         <p class="text-muted" style="max-width: 40rem;">
-            Our servers are currently experiencing technical difficulties. 
-            Our team has been notified and is working to resolve the issue as quickly as possible.
+            {{ _('Our servers are currently experiencing technical difficulties. Our team has been notified and is working to resolve the issue as quickly as possible.') }}
         </p>
         <div class="d-flex justify-content-center gap-3 flex-wrap mt-3">
-            <a href="{{ url_for('authentication_blueprint.login') }}" class="btn btn-primary m-2">Return to Home</a>
-            <a href="mailto:support@hackinsdn.com" class="btn btn-secondary m-2">Contact Support</a>
+            <a href="{{ url_for('authentication_blueprint.login') }}" class="btn btn-primary m-2">{{ _('Return to Home') }}</a>
+            <a href="mailto:support@hackinsdn.com" class="btn btn-secondary m-2">{{ _('Contact Support') }}</a>
         </div>
     </div>
 

@@ -6,22 +6,23 @@ Copyright (c) 2019 - present AppSeed.us
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, DateField, BooleanField
 from wtforms.validators import Email, DataRequired, Optional, Length, EqualTo, Regexp
+from flask_babel import lazy_gettext as _l
 
 # login and registration
 
 
 class LoginForm(FlaskForm):
-    identifier = StringField('Identifier',
+    identifier = StringField(_l('Identifier'),
                          id='username_login',
                          validators=[DataRequired()])
-    password = PasswordField('Password',
+    password = PasswordField(_l('Password'),
                              id='pwd_login',
                              validators=[DataRequired()])
 
 
 class CreateAccountForm(FlaskForm):
     username = StringField(
-        'Username',
+        _l('Username'),
         id='username_create',
         # Trim leading/trailing spaces before validating
         filters=[lambda x: x.strip() if isinstance(x, str) else x],
@@ -31,62 +32,62 @@ class CreateAccountForm(FlaskForm):
             # Issue baseline: allow only A–Z a–z 0–9 underscore(_) dot(.) and hyphen (-)
             Regexp(
                 r'^[A-Za-z0-9_.-]+$',
-                message='Invalid character. Use letters, numbers, dot (.), underscore (_) or hyphen (-).'
+                message=_l('Invalid character. Use letters, numbers, dot (.), underscore (_) or hyphen (-).')
             ),
         ],
     )
-    email = StringField('Email',
+    email = StringField(_l('Email'),
                       id='email_create',
                       validators=[DataRequired(), Email()])
-    password = PasswordField('Password',
+    password = PasswordField(_l('Password'),
                              id='pwd_create',
                              validators=[DataRequired()])
 
 # Terms and conditions
     terms = BooleanField(
-        'I agree to the terms',
+        _l('I agree to the terms'),
         id='agreeTerms',
-        validators=[DataRequired(message='You must agree to the terms.')]
+        validators=[DataRequired(message=_l('You must agree to the terms.'))]
     )
 
 class GroupForm(FlaskForm):
-    groupname = StringField('Group Name', 
-                            id='groupname', 
+    groupname = StringField(_l('Group Name'),
+                            id='groupname',
                             validators=[DataRequired()])
-    description = StringField('Description', id='description', validators=[Optional()])
-    organization = StringField('Organization', id='organization', validators=[Optional()])
-    expiration = DateField("Expiration", format='%Y-%m-%d', validators=[Optional()])
-    accesstoken = StringField('Accesstoken', id='accesstoken', validators=[DataRequired()])
+    description = StringField(_l('Description'), id='description', validators=[Optional()])
+    organization = StringField(_l('Organization'), id='organization', validators=[Optional()])
+    expiration = DateField(_l("Expiration"), format='%Y-%m-%d', validators=[Optional()])
+    accesstoken = StringField(_l('Accesstoken'), id='accesstoken', validators=[DataRequired()])
 
 
 class RequireEmailForm(FlaskForm):
-    email = StringField('Email',
+    email = StringField(_l('Email'),
                       id='email_require',
                       validators=[DataRequired(), Email()])
 
 
 class ConfirmAccountForm(FlaskForm):
-    confirmation_token = StringField('Confirmation Token',
+    confirmation_token = StringField(_l('Confirmation Token'),
                                     id='confirmation_token',
                                     validators=[DataRequired()])
 
 class ResetPasswordForm(FlaskForm):
-    identifier = StringField('Identifier',
+    identifier = StringField(_l('Identifier'),
                       id='identifier',
                       validators=[DataRequired()])
 
 class ResetPasswordConfirmForm(FlaskForm):
     password = PasswordField(
-        'Password',
+        _l('Password'),
         id='pwd_reset',
         validators=[
             DataRequired(),
             Length(min=8),
-            EqualTo('password_confirm', message='Passwords must match'),
+            EqualTo('password_confirm', message=_l('Passwords must match')),
         ],
     )
     password_confirm = PasswordField(
-        'Password confirm',
+        _l('Password confirm'),
         validators=[
             DataRequired(),
             Length(min=8),

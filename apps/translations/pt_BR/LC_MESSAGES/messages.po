@@ -1,0 +1,3662 @@
+# Portuguese (Brazil) translations for PROJECT.
+# Copyright (C) 2026 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-07-15 11:37-0300\n"
+"PO-Revision-Date: 2026-07-12 19:36-0300\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: pt_BR\n"
+"Language-Team: pt_BR <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: apps/api/routes.py:30
+msgid "invalid auth token"
+msgstr "token de autenticação inválido"
+
+#: apps/api/routes.py:33
+msgid "Token not authorized"
+msgstr "Token não autorizado"
+
+#: apps/api/routes.py:45 apps/api/routes.py:72 apps/api/routes.py:166
+#: apps/api/routes.py:190 apps/api/routes.py:580
+msgid "Lab instance not found"
+msgstr "Instância do Lab não encontrada"
+
+#: apps/api/routes.py:48 apps/api/routes.py:75 apps/api/routes.py:169
+#: apps/api/routes.py:193 apps/api/routes.py:367 apps/api/routes.py:583
+msgid "Unauthorized access to this lab"
+msgstr "Acesso não autorizado a este lab"
+
+#: apps/api/routes.py:54 apps/api/routes.py:110
+msgid "Failed to obtain resource statuses"
+msgstr "Falha ao obter o status dos recursos"
+
+#: apps/api/routes.py:81
+msgid "Failed to delete resources"
+msgstr "Falha ao excluir os recursos"
+
+#: apps/api/routes.py:92
+msgid "Resources removed successfully!"
+msgstr "Recursos removidos com sucesso!"
+
+#: apps/api/routes.py:130 apps/api/routes.py:186 apps/api/routes.py:245
+#: apps/api/routes.py:408
+msgid "invalid content"
+msgstr "conteúdo inválido"
+
+#: apps/api/routes.py:145
+msgid "Invalid users to approve:"
+msgstr "Usuários inválidos para aprovação:"
+
+#: apps/api/routes.py:154
+msgid "Failed to save updated data"
+msgstr "Falha ao salvar os dados atualizados"
+
+#: apps/api/routes.py:156
+msgid "all users approved"
+msgstr "todos os usuários aprovados"
+
+#: apps/api/routes.py:218 apps/api/routes.py:258
+msgid "Answers saved successfully"
+msgstr "Respostas salvas com sucesso"
+
+#: apps/api/routes.py:224
+msgid "User not authorized"
+msgstr "Usuário não autorizado"
+
+#: apps/api/routes.py:228
+msgid "Lab answers not found"
+msgstr "Respostas do lab não encontradas"
+
+#: apps/api/routes.py:241
+msgid "Not authorized to save answers"
+msgstr "Não autorizado a salvar respostas"
+
+#: apps/api/routes.py:251
+#, python-format
+msgid "Invalid grade for question %(q)s"
+msgstr "Nota inválida para a pergunta %(q)s"
+
+#: apps/api/routes.py:264 apps/api/routes.py:299 apps/api/routes.py:336
+#: apps/api/routes.py:359 apps/api/routes.py:387 apps/api/routes.py:440
+#: apps/api/routes.py:490 apps/clabs/routes.py:34 apps/home/routes.py:310
+#: apps/home/routes.py:485 apps/home/routes.py:790 apps/home/routes.py:903
+#: apps/home/routes.py:914 apps/home/routes.py:921
+msgid "Unauthorized access"
+msgstr "Acesso não autorizado"
+
+#: apps/api/routes.py:268
+msgid "User not found"
+msgstr "Usuário não encontrado"
+
+#: apps/api/routes.py:272
+msgid "Failed to delete user: user has labs running"
+msgstr "Falha ao excluir o usuário: o usuário tem labs em execução"
+
+#: apps/api/routes.py:290
+msgid "Failed to delete user"
+msgstr "Falha ao excluir o usuário"
+
+#: apps/api/routes.py:292
+msgid "User deleted successfully"
+msgstr "Usuário excluído com sucesso"
+
+#: apps/api/routes.py:303 apps/api/routes.py:412 apps/home/routes.py:123
+#: apps/home/routes.py:910 apps/home/routes.py:1231
+msgid "Group not found"
+msgstr "Grupo não encontrado"
+
+#: apps/api/routes.py:306 apps/api/routes.py:415
+msgid "Only admins can change System groups"
+msgstr "Somente administradores podem alterar grupos de Sistema"
+
+#: apps/api/routes.py:309
+msgid "Unauthorized access to this group"
+msgstr "Acesso não autorizado a este grupo"
+
+#: apps/api/routes.py:327
+msgid "Failed to delete group"
+msgstr "Falha ao excluir o grupo"
+
+#: apps/api/routes.py:329
+msgid "Group deleted successfully"
+msgstr "Grupo excluído com sucesso"
+
+#: apps/api/routes.py:340 apps/home/routes.py:786
+msgid "Lab Category not found"
+msgstr "Categoria de Lab não encontrada"
+
+#: apps/api/routes.py:343
+#, python-format
+msgid "Cannot delete: Lab Category is still in use by %(n)s lab(s)"
+msgstr "Não é possível excluir: a Categoria de Lab ainda é usada por %(n)s lab(s)"
+
+#: apps/api/routes.py:350
+msgid "Failed to delete lab category"
+msgstr "Falha ao excluir a categoria de lab"
+
+#: apps/api/routes.py:352
+msgid "Lab Category deleted successfully"
+msgstr "Categoria de Lab excluída com sucesso"
+
+#: apps/api/routes.py:363 apps/api/routes.py:391 apps/api/routes.py:780
+#: apps/home/routes.py:201 apps/home/routes.py:275 apps/home/routes.py:288
+#: apps/home/routes.py:367 apps/home/routes.py:452 apps/home/routes.py:481
+#: apps/home/routes.py:618 apps/home/routes.py:624 apps/home/routes.py:1444
+#: apps/home/routes.py:1457
+msgid "Lab not found"
+msgstr "Lab não encontrado"
+
+#: apps/api/routes.py:371
+#, python-format
+msgid "Cannot delete: Lab has %(n)s running instance(s)"
+msgstr "Não é possível excluir: o Lab tem %(n)s instância(s) em execução"
+
+#: apps/api/routes.py:378
+msgid "Failed to delete lab"
+msgstr "Falha ao excluir o lab"
+
+#: apps/api/routes.py:380
+msgid "Lab deleted successfully"
+msgstr "Lab excluído com sucesso"
+
+#: apps/api/routes.py:398
+msgid "Failed to restore lab"
+msgstr "Falha ao restaurar o lab"
+
+#: apps/api/routes.py:400
+msgid "Lab restored successfully"
+msgstr "Lab restaurado com sucesso"
+
+#: apps/api/routes.py:418
+msgid "Invalid group access token"
+msgstr "Token de acesso ao grupo inválido"
+
+#: apps/api/routes.py:421
+msgid "Already member of group"
+msgstr "Já é membro do grupo"
+
+#: apps/api/routes.py:429
+msgid "Failed to join group"
+msgstr "Falha ao entrar no grupo"
+
+#: apps/api/routes.py:434
+msgid ""
+"Joint group successfully! Click on 'Reload profile' to update your "
+"authorization."
+msgstr ""
+"Entrou no grupo com sucesso! Clique em 'Recarregar perfil' para atualizar "
+"sua autorização."
+
+#: apps/api/routes.py:444 apps/api/routes.py:451
+msgid "Invalid or Unauthorized access to lab"
+msgstr "Acesso inválido ou não autorizado ao lab"
+
+#: apps/api/routes.py:455
+msgid "Invalid or Unauthorized access to lab answer"
+msgstr "Acesso inválido ou não autorizado à resposta do lab"
+
+#: apps/api/routes.py:459 apps/home/routes.py:1121
+msgid "No Lab Answer Sheet available. Please create the Answer Sheet first."
+msgstr "Nenhum Gabarito de Lab disponível. Crie o Gabarito primeiro."
+
+#: apps/api/routes.py:506
+msgid "Stars/Rating mandatory"
+msgstr "Estrelas/Avaliação obrigatória"
+
+#: apps/api/routes.py:521
+msgid "Failed to save user feedback"
+msgstr "Falha ao salvar o feedback do usuário"
+
+#: apps/api/routes.py:537
+msgid "Feedback given successfully"
+msgstr "Feedback enviado com sucesso"
+
+#: apps/api/routes.py:555
+msgid "Failed to add user like"
+msgstr "Falha ao adicionar a curtida do usuário"
+
+#: apps/api/routes.py:568
+msgid "Failed to delete user like"
+msgstr "Falha ao remover a curtida do usuário"
+
+#: apps/api/routes.py:587
+msgid "Invalid content"
+msgstr "Conteúdo inválido"
+
+#: apps/api/routes.py:591
+msgid "Invalid extend hours"
+msgstr "Horas de extensão inválidas"
+
+#: apps/api/routes.py:604
+msgid "Failed updating lab duration, please contact the administrator."
+msgstr "Falha ao atualizar a duração do lab, entre em contato com o administrador."
+
+#: apps/api/routes.py:632
+msgid "Failed to list templates"
+msgstr "Falha ao listar os modelos"
+
+#: apps/api/routes.py:669 apps/api/routes.py:766
+msgid "message body is required"
+msgstr "o corpo da mensagem é obrigatório"
+
+#: apps/api/routes.py:676 apps/api/routes.py:714 apps/api/routes.py:745
+#: apps/api/routes.py:761
+msgid "Thread not found"
+msgstr "Conversa não encontrada"
+
+#: apps/api/routes.py:717 apps/api/routes.py:741 apps/api/routes.py:757
+#: apps/api/routes.py:777 apps/api/routes.py:782 apps/home/routes.py:1446
+#: apps/home/routes.py:1459 apps/templates/pages/users.html:51
+msgid "Unauthorized"
+msgstr "Não autorizados"
+
+#: apps/api/routes.py:794 apps/api/routes.py:815 apps/api/routes.py:834
+#, python-format
+msgid "Unknown field, tracked fields: %(fields)s"
+msgstr "Campo desconhecido, campos rastreados: %(fields)s"
+
+#: apps/api/routes.py:819 apps/api/routes.py:837
+msgid "Version not found"
+msgstr "Versão não encontrada"
+
+#: apps/api/routes.py:839
+#, python-format
+msgid "Version v%(v)s deleted"
+msgstr "Versão v%(v)s excluída"
+
+#: apps/authentication/forms.py:15 apps/authentication/forms.py:75
+msgid "Identifier"
+msgstr "Identificador"
+
+#: apps/authentication/forms.py:18 apps/authentication/forms.py:42
+#: apps/authentication/forms.py:81
+#: apps/templates/pages/confirm_reset_password.html:42
+#: apps/templates/pages/edit_user.html:91 apps/templates/pages/edit_user.html:92
+#: apps/templates/pages/login.html:65 apps/templates/pages/register.html:69
+msgid "Password"
+msgstr "Senha"
+
+#: apps/authentication/forms.py:25 apps/templates/pages/clabs_upsert.html:260
+#: apps/templates/pages/edit_user.html:70 apps/templates/pages/register.html:50
+#: apps/templates/pages/users.html:69
+msgid "Username"
+msgstr "Usuário"
+
+#: apps/authentication/forms.py:35
+msgid ""
+"Invalid character. Use letters, numbers, dot (.), underscore (_) or hyphen "
+"(-)."
+msgstr ""
+"Caractere inválido. Use letras, números, ponto (.), sublinhado (_) ou hífen "
+"(-)."
+
+#: apps/authentication/forms.py:39 apps/authentication/forms.py:64
+#: apps/templates/pages/email_required.html:49
+#: apps/templates/pages/register.html:61
+msgid "Email"
+msgstr "E-mail"
+
+#: apps/authentication/forms.py:48
+msgid "I agree to the terms"
+msgstr "Concordo com os termos"
+
+#: apps/authentication/forms.py:50
+msgid "You must agree to the terms."
+msgstr "Você deve concordar com os termos."
+
+#: apps/authentication/forms.py:54 apps/templates/pages/groups_edit.html:81
+#: apps/templates/pages/groups_list.html:75
+msgid "Group Name"
+msgstr "Nome do Grupo"
+
+#: apps/authentication/forms.py:57 apps/templates/pages/groups_edit.html:86
+msgid "Description"
+msgstr "Descrição"
+
+#: apps/authentication/forms.py:58 apps/templates/pages/groups_edit.html:91
+#: apps/templates/pages/groups_list.html:76
+msgid "Organization"
+msgstr "Organização"
+
+#: apps/authentication/forms.py:59
+msgid "Expiration"
+msgstr "Expiração"
+
+#: apps/authentication/forms.py:60
+msgid "Accesstoken"
+msgstr "Token de Acesso"
+
+#: apps/authentication/forms.py:70
+msgid "Confirmation Token"
+msgstr "Token de Confirmação"
+
+#: apps/authentication/forms.py:86
+msgid "Passwords must match"
+msgstr "As senhas devem coincidir"
+
+#: apps/authentication/forms.py:90
+#: apps/templates/pages/confirm_reset_password.html:50
+msgid "Password confirm"
+msgstr "Confirmação de senha"
+
+#: apps/authentication/routes.py:78
+msgid "Wrong user or password"
+msgstr "Usuário ou senha incorretos"
+
+#: apps/authentication/routes.py:138 apps/authentication/routes.py:287
+msgid "Failed to validate form."
+msgstr "Falha ao validar o formulário."
+
+#: apps/authentication/routes.py:151
+msgid "Username already registered"
+msgstr "Nome de usuário já registrado"
+
+#: apps/authentication/routes.py:159 apps/authentication/routes.py:298
+msgid "Email already registered"
+msgstr "E-mail já registrado"
+
+#: apps/authentication/routes.py:198 apps/authentication/routes.py:270
+#: apps/authentication/routes.py:342 apps/authentication/routes.py:419
+#: apps/authentication/routes.py:461
+msgid "Failed to send confirmation e-mail. Please try again later"
+msgstr "Falha ao enviar o e-mail de confirmação. Tente novamente mais tarde"
+
+#: apps/authentication/routes.py:221
+msgid "Token expired, please <a href=/register>click here</a> to register again"
+msgstr "Token expirado, <a href=/register>clique aqui</a> para se registrar novamente"
+
+#: apps/authentication/routes.py:224 apps/authentication/routes.py:369
+msgid "Invalid token"
+msgstr "Token inválido"
+
+#: apps/authentication/routes.py:248
+msgid "Failed to send confirmation e-mail. No user found"
+msgstr "Falha ao enviar o e-mail de confirmação. Nenhum usuário encontrado"
+
+#: apps/authentication/routes.py:366
+msgid ""
+"Token expired, please <a href=/email/required>click here</a> to request a "
+"new code"
+msgstr ""
+"Token expirado, <a href=/email/required>clique aqui</a> para solicitar um "
+"novo código"
+
+#: apps/authentication/routes.py:432
+msgid ""
+"If the user provided is valid, you will receive an e-mail with password "
+"reset link."
+msgstr ""
+"Se o usuário informado for válido, você receberá um e-mail com o link de "
+"redefinição de senha."
+
+#: apps/authentication/routes.py:472
+#, python-format
+msgid ""
+"Invalid or expired token! You need to request a new <a "
+"href='%(url)s'>Password Reset</a>"
+msgstr ""
+"Token inválido ou expirado! Você precisa solicitar uma nova <a "
+"href='%(url)s'>Redefinição de Senha</a>"
+
+#: apps/authentication/routes.py:485
+#, python-format
+msgid ""
+"Invalid password reset request! You need to request a new <a "
+"href='%(url)s'>Password Reset</a>"
+msgstr ""
+"Solicitação de redefinição de senha inválida! Você precisa solicitar uma "
+"nova <a href='%(url)s'>Redefinição de Senha</a>"
+
+#: apps/authentication/routes.py:492
+#, python-format
+msgid ""
+"Password changed successfully! Now you can <a href='%(url)s'>click to "
+"Login</a>"
+msgstr ""
+"Senha alterada com sucesso! Agora você pode <a href='%(url)s'>clicar para "
+"Entrar</a>"
+
+#: apps/authentication/routes.py:514
+msgid ""
+"Your note was already saved and can no longer be changed. Please contact an "
+"administrator if you need to update it."
+msgstr ""
+"Sua nota já foi salva e não pode mais ser alterada. Entre em contato com um "
+"administrador se precisar atualizá-la."
+
+#: apps/authentication/routes.py:518
+msgid "Note is too long, maximum 1000 characters"
+msgstr "A nota é muito longa, máximo de 1000 caracteres"
+
+#: apps/authentication/routes.py:527
+msgid "Note saved successfully!"
+msgstr "Nota salva com sucesso!"
+
+#: apps/clabs/routes.py:28
+msgid "ContainerLab not found"
+msgstr "ContainerLab não encontrado"
+
+#: apps/clabs/routes.py:35 apps/home/routes.py:486
+msgid "You don't have permission to edit this Lab."
+msgstr "Você não tem permissão para editar este Lab."
+
+#: apps/clabs/routes.py:42 apps/home/routes.py:493 apps/home/routes.py:628
+msgid "No Lab Categories found. Please create a Lab Category first."
+msgstr "Nenhuma Categoria de Lab encontrada. Crie uma Categoria de Lab primeiro."
+
+#: apps/clabs/routes.py:79
+msgid "Please select at least one category"
+msgstr "Selecione pelo menos uma categoria"
+
+#: apps/clabs/routes.py:86
+msgid "Provide GIT URL or files"
+msgstr "Forneça a URL do GIT ou arquivos"
+
+#: apps/clabs/routes.py:141
+#, python-format
+msgid "Too many files: %(n)s (max %(max)s)"
+msgstr "Arquivos demais: %(n)s (máximo %(max)s)"
+
+#: apps/home/routes.py:123
+msgid "Error getting running labs"
+msgstr "Erro ao obter os labs em execução"
+
+#: apps/home/routes.py:201 apps/home/routes.py:265
+msgid "Error Running Labs"
+msgstr "Erro ao Executar Labs"
+
+#: apps/home/routes.py:223
+msgid "Invalid lab duration/expiration, please choose one of the values provided."
+msgstr "Duração/expiração do lab inválida, escolha um dos valores fornecidos."
+
+#: apps/home/routes.py:275 apps/home/routes.py:278 apps/home/routes.py:288
+#: apps/home/routes.py:290
+msgid "Error checking lab status"
+msgstr "Erro ao verificar o status do lab"
+
+#: apps/home/routes.py:278 apps/home/routes.py:290
+msgid "You are not authorized to run this lab"
+msgstr "Você não está autorizado a executar este lab"
+
+#: apps/home/routes.py:310
+msgid "You dont have access for this page"
+msgstr "Você não tem acesso a esta página"
+
+#: apps/home/routes.py:314
+msgid "Invalid user"
+msgstr "Usuário inválido"
+
+#: apps/home/routes.py:314
+msgid "User not found or deactivated on the database"
+msgstr "Usuário não encontrado ou desativado no banco de dados"
+
+#: apps/home/routes.py:320
+msgid "Invalid username. Max size: 30. Allowed characters: a-z, A-Z, 0-9, _, . or -"
+msgstr ""
+"Nome de usuário inválido. Tamanho máximo: 30. Caracteres permitidos: a-z, "
+"A-Z, 0-9, _, . ou -"
+
+#: apps/home/routes.py:338
+msgid "No changes applied."
+msgstr "Nenhuma alteração aplicada."
+
+#: apps/home/routes.py:367 apps/home/routes.py:369 apps/home/routes.py:373
+#: apps/home/routes.py:381 apps/home/routes.py:452 apps/home/routes.py:455
+msgid "Error accessing Lab Instance"
+msgstr "Erro ao acessar a Instância do Lab"
+
+#: apps/home/routes.py:369
+msgid "Lab finished"
+msgstr "Lab finalizado"
+
+#: apps/home/routes.py:373
+msgid "Lab instance belongs to an unknown Lab."
+msgstr "A instância do lab pertence a um Lab desconhecido."
+
+#: apps/home/routes.py:381 apps/home/routes.py:455
+msgid "Not authorized to access this Lab"
+msgstr "Não autorizado a acessar este Lab"
+
+#: apps/home/routes.py:399
+msgid "Failed to get Lab Resources"
+msgstr "Falha ao obter os Recursos do Lab"
+
+#: apps/home/routes.py:400
+msgid ""
+"No resource found for Lab Instance. Try again later and if the error "
+"persists, please contact the administrator."
+msgstr ""
+"Nenhum recurso encontrado para a Instância do Lab. Tente novamente mais "
+"tarde e, se o erro persistir, entre em contato com o administrador."
+
+#: apps/home/routes.py:462
+msgid "Error removing Lab Instance"
+msgstr "Erro ao remover a Instância do Lab"
+
+#: apps/home/routes.py:462
+msgid "Error removing Lab instance, please contact the administrator"
+msgstr "Erro ao remover a instância do Lab, entre em contato com o administrador"
+
+#: apps/home/routes.py:548
+msgid "Invalid display order: must be an integer number."
+msgstr "Ordem de exibição inválida: deve ser um número inteiro."
+
+#: apps/home/routes.py:725 apps/home/routes.py:748 apps/home/routes.py:786
+msgid "Not found"
+msgstr "Não encontrado"
+
+#: apps/home/routes.py:725 apps/home/routes.py:748
+msgid "Support thread not found"
+msgstr "Conversa de suporte não encontrada"
+
+#: apps/home/routes.py:791
+msgid ""
+"You don't have permission to edit this Lab Category (only its creator or an "
+"admin can)."
+msgstr ""
+"Você não tem permissão para editar esta Categoria de Lab (somente o criador "
+"ou um administrador podem)."
+
+#: apps/home/routes.py:800
+msgid "Category name is required."
+msgstr "O nome da categoria é obrigatório."
+
+#: apps/home/routes.py:802
+msgid "Invalid color selected."
+msgstr "Cor selecionada inválida."
+
+#: apps/home/routes.py:813
+msgid "Failed to save Lab Category."
+msgstr "Falha ao salvar a Categoria de Lab."
+
+#: apps/home/routes.py:818
+msgid "Lab Category updated successfully"
+msgstr "Categoria de Lab atualizada com sucesso"
+
+#: apps/home/routes.py:829
+msgid "No Lab Categories"
+msgstr "Nenhuma Categoria de Lab"
+
+#: apps/home/routes.py:829
+msgid "No lab categories found. Please create a Lab Category first."
+msgstr "Nenhuma categoria de lab encontrada. Crie uma Categoria de Lab primeiro."
+
+#: apps/home/routes.py:904 apps/home/routes.py:915
+msgid "You don't have permission to edit this group."
+msgstr "Você não tem permissão para editar este grupo."
+
+#: apps/home/routes.py:922
+msgid "Only admins can create/change System groups."
+msgstr "Somente administradores podem criar/alterar grupos de Sistema."
+
+#: apps/home/routes.py:1042
+msgid "No changes were made to the group."
+msgstr "Nenhuma alteração foi feita no grupo."
+
+#: apps/home/routes.py:1058
+msgid "Failed to update group."
+msgstr "Falha ao atualizar o grupo."
+
+#: apps/home/routes.py:1071
+msgid "Group updated successfully"
+msgstr "Grupo atualizado com sucesso"
+
+#: apps/home/routes.py:1104
+msgid "Invalid Lab provided for filtering."
+msgstr "Lab inválido fornecido para filtragem."
+
+#: apps/home/routes.py:1109
+msgid "Invalid Group provided for filtering."
+msgstr "Grupo inválido fornecido para filtragem."
+
+#: apps/home/routes.py:1116
+msgid "To check with the Answer Sheet you must provide a Lab (Filter by Lab)."
+msgstr "Para verificar com o Gabarito você deve fornecer um Lab (Filtrar por Lab)."
+
+#: apps/home/routes.py:1163
+msgid "Invalid Lab provided. Please choose the Lab."
+msgstr "Lab inválido fornecido. Escolha o Lab."
+
+#: apps/home/routes.py:1191
+msgid "Failed to update lab answers sheet."
+msgstr "Falha ao atualizar o gabarito do lab."
+
+#: apps/home/routes.py:1197
+msgid "Lab answer sheet saved!"
+msgstr "Gabarito do lab salvo!"
+
+#: apps/home/routes.py:1231
+msgid "Error getting finished labs"
+msgstr "Erro ao obter os labs concluídos"
+
+#: apps/home/routes.py:1360
+msgid "No file part in the request"
+msgstr "Nenhum arquivo na requisição"
+
+#: apps/home/routes.py:1364
+msgid "No file selected"
+msgstr "Nenhum arquivo selecionado"
+
+#: apps/home/routes.py:1379
+#, python-format
+msgid "File extension not allowed. Allowed: %(exts)s"
+msgstr "Extensão de arquivo não permitida. Permitidas: %(exts)s"
+
+#: apps/home/routes.py:1388
+#, python-format
+msgid "File exceeds maximum allowed size (%(size)sMB)"
+msgstr "O arquivo excede o tamanho máximo permitido (%(size)sMB)"
+
+#: apps/home/routes.py:1402
+msgid "Failed to save file on server"
+msgstr "Falha ao salvar o arquivo no servidor"
+
+#: apps/home/routes.py:1463
+msgid "No uploads found"
+msgstr "Nenhum arquivo enviado encontrado"
+
+#: apps/home/routes.py:1470
+msgid "File not found in uploads list"
+msgstr "Arquivo não encontrado na lista de enviados"
+
+#: apps/home/routes.py:1498
+msgid "Failed to update metadata"
+msgstr "Falha ao atualizar os metadados"
+
+#: apps/lti/routes.py:607
+msgid "A label is required (who the token is for)"
+msgstr "Um rótulo é obrigatório (para quem é o token)"
+
+#: apps/lti/routes.py:611
+msgid "TTL must be a whole number of hours"
+msgstr "O TTL deve ser um número inteiro de horas"
+
+#: apps/lti/routes.py:613
+msgid "TTL must be a positive number of hours"
+msgstr "O TTL deve ser um número positivo de horas"
+
+#: apps/lti/routes.py:650
+#, python-format
+msgid ""
+"Rotated key for %(client)s @ %(issuer)s. The old key is retired but stays "
+"published in /lti/jwks/ until you purge it after the grace period."
+msgstr ""
+"Chave rotacionada para %(client)s @ %(issuer)s. A chave antiga foi "
+"aposentada, mas permanece publicada em /lti/jwks/ até que você a expurgue "
+"após o período de carência."
+
+#: apps/lti/routes.py:664
+msgid "Grace period must be a whole number of days"
+msgstr "O período de carência deve ser um número inteiro de dias"
+
+#: apps/lti/routes.py:666
+msgid "Grace period cannot be negative"
+msgstr "O período de carência não pode ser negativo"
+
+#: apps/lti/routes.py:673
+#, python-format
+msgid "Removed %(n)s retired key file(s)"
+msgstr "%(n)s arquivo(s) de chave aposentada removido(s)"
+
+#: apps/templates/includes/chatbot.html:77 apps/templates/includes/chatbot.html:81
+msgid "Support chat"
+msgstr "Chat de suporte"
+
+#: apps/templates/includes/chatbot.html:77
+msgid "Open support chat"
+msgstr "Abrir o chat de suporte"
+
+#: apps/templates/includes/chatbot.html:83
+#: apps/templates/includes/sidebar.html:134
+#: apps/templates/pages/my_support_thread_view.html:68
+#: apps/templates/pages/my_support_thread_view.html:130
+#: apps/templates/pages/support_thread_view.html:30
+#: apps/templates/pages/support_thread_view.html:86
+#: apps/templates/pages/support_thread_view.html:156
+#: apps/templates/pages/support_threads.html:3
+#: apps/templates/pages/support_threads.html:30
+msgid "Support"
+msgstr "Suporte"
+
+#: apps/templates/includes/chatbot.html:84
+msgid "Minimize"
+msgstr "Minimizar"
+
+#: apps/templates/includes/chatbot.html:84
+msgid "Minimize chat"
+msgstr "Minimizar o chat"
+
+#: apps/templates/includes/chatbot.html:89
+msgid "Send a message and our team will get back to you."
+msgstr "Envie uma mensagem e nossa equipe entrará em contato."
+
+#: apps/templates/includes/chatbot.html:93
+msgid "See all your support cases"
+msgstr "Ver todos os seus casos de suporte"
+
+#: apps/templates/includes/chatbot.html:94
+msgid "See all cases"
+msgstr "Ver todos os casos"
+
+#: apps/templates/includes/chatbot.html:96
+msgid "Finish this conversation"
+msgstr "Encerrar esta conversa"
+
+#: apps/templates/includes/chatbot.html:97
+#: apps/templates/pages/support_thread_view.html:54
+msgid "Finish conversation"
+msgstr "Encerrar conversa"
+
+#: apps/templates/includes/chatbot.html:99
+msgid "Start a new conversation"
+msgstr "Iniciar uma nova conversa"
+
+#: apps/templates/includes/chatbot.html:100
+msgid "Start new conversation"
+msgstr "Iniciar nova conversa"
+
+#: apps/templates/includes/chatbot.html:104
+msgid "Type your message ... (Shift+Enter for a new line)"
+msgstr "Digite sua mensagem ... (Shift+Enter para nova linha)"
+
+#: apps/templates/includes/chatbot.html:104
+msgid "Message"
+msgstr "Mensagem"
+
+#: apps/templates/includes/chatbot.html:105
+#: apps/templates/pages/support_thread_view.html:100
+msgid "Send"
+msgstr "Enviar"
+
+#: apps/templates/includes/chatbot.html:183
+msgid "This conversation has been finished."
+msgstr "Esta conversa foi encerrada."
+
+#: apps/templates/includes/navigation.html:10
+#: apps/templates/pages/clabs_upsert.html:84
+#: apps/templates/pages/edit_user.html:47 apps/templates/pages/error.html:32
+#: apps/templates/pages/feedback_view.html:3
+#: apps/templates/pages/feedback_view.html:35
+#: apps/templates/pages/finished_lab_infos.html:62
+#: apps/templates/pages/finished_labs.html:39 apps/templates/pages/gallery.html:35
+#: apps/templates/pages/groups_edit.html:54
+#: apps/templates/pages/groups_list.html:47 apps/templates/pages/index.html:3
+#: apps/templates/pages/index.html:37 apps/templates/pages/k8s_dep_list.html:37
+#: apps/templates/pages/k8s_pod_list.html:37
+#: apps/templates/pages/k8s_srv_list.html:37
+#: apps/templates/pages/lab_answers_list.html:47
+#: apps/templates/pages/lab_answers_sheet.html:47
+#: apps/templates/pages/lab_categories_edit.html:47
+#: apps/templates/pages/lab_categories_list.html:47
+#: apps/templates/pages/lab_instance_view.html:88
+#: apps/templates/pages/labs_edit.html:79 apps/templates/pages/labs_view.html:37
+#: apps/templates/pages/lti_management.html:35
+#: apps/templates/pages/my_support_thread_view.html:27
+#: apps/templates/pages/my_support_threads.html:25
+#: apps/templates/pages/run_lab.html:43
+#: apps/templates/pages/run_lab_status.html:34
+#: apps/templates/pages/running.html:39
+#: apps/templates/pages/support_thread_view.html:29
+#: apps/templates/pages/support_threads.html:29 apps/templates/pages/users.html:37
+#: apps/templates/pages/waiting_approval.html:3
+#: apps/templates/pages/waiting_approval.html:50
+msgid "Home"
+msgstr "Início"
+
+#: apps/templates/includes/navigation.html:13
+msgid "Contact"
+msgstr "Contato"
+
+#: apps/templates/includes/navigation.html:20
+#: apps/templates/includes/sidebar.html:27
+msgid "Search"
+msgstr "Pesquisar"
+
+#: apps/templates/includes/navigation.html:40
+msgid "Support cases"
+msgstr "Casos de suporte"
+
+#: apps/templates/includes/navigation.html:49
+#: apps/templates/pages/my_support_thread_view.html:29
+#: apps/templates/pages/my_support_threads.html:44
+msgid "Case"
+msgstr "Caso"
+
+#: apps/templates/includes/navigation.html:55
+msgid "New reply"
+msgstr "Nova resposta"
+
+#: apps/templates/includes/navigation.html:65
+msgid "No support cases yet"
+msgstr "Nenhum caso de suporte ainda"
+
+#: apps/templates/includes/navigation.html:68
+msgid "See All Messages"
+msgstr "Ver todas as mensagens"
+
+#: apps/templates/includes/navigation.html:80
+msgid "No Notifications"
+msgstr "Sem notificações"
+
+#: apps/templates/includes/navigation.html:99
+msgid "See All Notifications"
+msgstr "Ver todas as notificações"
+
+#: apps/templates/includes/navigation.html:104
+msgid "Language"
+msgstr "Idioma"
+
+#: apps/templates/includes/navigation.html:119
+msgid "Reload profile"
+msgstr "Recarregar perfil"
+
+#: apps/templates/includes/navigation.html:124
+msgid "Sign-out"
+msgstr "Sair"
+
+#: apps/templates/includes/sidebar.html:45 apps/templates/pages/index.html:38
+msgid "Dashboard"
+msgstr "Painel"
+
+#: apps/templates/includes/sidebar.html:53
+#: apps/templates/pages/groups_edit.html:55
+#: apps/templates/pages/groups_list.html:3
+#: apps/templates/pages/groups_list.html:29
+#: apps/templates/pages/groups_list.html:48
+#: apps/templates/pages/groups_list.html:61
+msgid "Groups"
+msgstr "Grupos"
+
+#: apps/templates/includes/sidebar.html:60
+#: apps/templates/pages/clabs_upsert.html:85
+#: apps/templates/pages/finished_lab_infos.html:63
+#: apps/templates/pages/lab_answers_list.html:48
+#: apps/templates/pages/lab_answers_sheet.html:48
+#: apps/templates/pages/labs_edit.html:80 apps/templates/pages/labs_view.html:38
+#: apps/templates/pages/run_lab.html:44
+msgid "Labs"
+msgstr "Laboratórios"
+
+#: apps/templates/includes/sidebar.html:68 apps/templates/pages/labs_view.html:3
+#: apps/templates/pages/labs_view.html:33 apps/templates/pages/labs_view.html:39
+msgid "View Labs"
+msgstr "Ver Labs"
+
+#: apps/templates/includes/sidebar.html:75
+msgid "Create Lab"
+msgstr "Criar Lab"
+
+#: apps/templates/includes/sidebar.html:83
+#: apps/templates/pages/clabs_upsert.html:3
+#: apps/templates/pages/clabs_upsert.html:323
+msgid "Create ContainerLab"
+msgstr "Criar ContainerLab"
+
+#: apps/templates/includes/sidebar.html:91
+#: apps/templates/pages/lab_answers_list.html:3
+#: apps/templates/pages/lab_answers_list.html:29
+#: apps/templates/pages/lab_answers_list.html:49
+#: apps/templates/pages/lab_answers_sheet.html:49
+msgid "Lab Answers"
+msgstr "Respostas dos Labs"
+
+#: apps/templates/includes/sidebar.html:97
+msgid "Answer Sheet"
+msgstr "Gabarito"
+
+#: apps/templates/includes/sidebar.html:104
+#: apps/templates/pages/finished_labs.html:3
+#: apps/templates/pages/finished_labs.html:35
+#: apps/templates/pages/finished_labs.html:40
+#: apps/templates/pages/finished_labs.html:53 apps/templates/pages/index.html:56
+msgid "Finished Labs"
+msgstr "Labs Concluídos"
+
+#: apps/templates/includes/sidebar.html:113
+#: apps/templates/pages/lab_instance_view.html:89
+#: apps/templates/pages/running.html:3 apps/templates/pages/running.html:35
+#: apps/templates/pages/running.html:40 apps/templates/pages/running.html:53
+msgid "Running Labs"
+msgstr "Labs em Execução"
+
+#: apps/templates/includes/sidebar.html:119
+msgid "MANAGEMENT"
+msgstr "GERENCIAMENTO"
+
+#: apps/templates/includes/sidebar.html:125 apps/templates/pages/edit_user.html:48
+#: apps/templates/pages/index.html:89 apps/templates/pages/users.html:3
+#: apps/templates/pages/users.html:33 apps/templates/pages/users.html:38
+msgid "Users"
+msgstr "Usuários"
+
+#: apps/templates/includes/sidebar.html:146
+#: apps/templates/pages/lab_categories_edit.html:48
+#: apps/templates/pages/lab_categories_list.html:3
+#: apps/templates/pages/lab_categories_list.html:29
+#: apps/templates/pages/lab_categories_list.html:48
+#: apps/templates/pages/lab_categories_list.html:61
+msgid "Lab Categories"
+msgstr "Categorias de Labs"
+
+#: apps/templates/includes/sidebar.html:166
+msgid "New"
+msgstr "Novo"
+
+#: apps/templates/includes/sidebar.html:173 apps/templates/pages/index.html:175
+#: apps/templates/pages/k8s_pod_list.html:39
+msgid "Pods"
+msgstr "Pods"
+
+#: apps/templates/includes/sidebar.html:179
+#: apps/templates/pages/k8s_dep_list.html:39
+msgid "Deployments"
+msgstr "Deployments"
+
+#: apps/templates/includes/sidebar.html:185
+#: apps/templates/pages/k8s_srv_list.html:39
+#: apps/templates/pages/lab_instance_view.html:129
+msgid "Services"
+msgstr "Serviços"
+
+#: apps/templates/includes/sidebar.html:191
+msgid "MORE INFO"
+msgstr "MAIS INFORMAÇÕES"
+
+#: apps/templates/includes/sidebar.html:196
+msgid "Documentation"
+msgstr "Documentação"
+
+#: apps/templates/includes/sidebar.html:204
+msgid "Extra tools"
+msgstr "Ferramentas extras"
+
+#: apps/templates/layouts/base.html:41 apps/templates/pages/finished_labs.html:184
+#: apps/templates/pages/groups_list.html:214 apps/templates/pages/index.html:815
+#: apps/templates/pages/k8s_dep_list.html:238
+#: apps/templates/pages/k8s_pod_list.html:244
+#: apps/templates/pages/k8s_srv_list.html:232
+#: apps/templates/pages/lab_answers_list.html:273
+#: apps/templates/pages/lab_answers_sheet.html:164
+#: apps/templates/pages/lab_categories_list.html:180
+#: apps/templates/pages/lab_instance_view.html:436
+#: apps/templates/pages/lab_instance_view.html:537
+#: apps/templates/pages/lti_management.html:340
+#: apps/templates/pages/running.html:243 apps/templates/pages/users.html:250
+msgid "Success"
+msgstr "Sucesso"
+
+#: apps/templates/layouts/base.html:42 apps/templates/pages/clabs_upsert.html:437
+#: apps/templates/pages/clabs_upsert.html:693
+#: apps/templates/pages/clabs_upsert.html:735
+#: apps/templates/pages/finished_labs.html:192
+#: apps/templates/pages/groups_list.html:222
+#: apps/templates/pages/k8s_dep_list.html:246
+#: apps/templates/pages/k8s_pod_list.html:252
+#: apps/templates/pages/k8s_srv_list.html:240
+#: apps/templates/pages/lab_answers_list.html:281
+#: apps/templates/pages/lab_answers_sheet.html:172
+#: apps/templates/pages/lab_categories_list.html:188
+#: apps/templates/pages/lti_management.html:332
+#: apps/templates/pages/running.html:251 apps/templates/pages/users.html:258
+msgid "Failure"
+msgstr "Falha"
+
+#: apps/templates/pages/clabs_upsert.html:66
+msgid "Create/Update Container Lab"
+msgstr "Criar/Atualizar Container Lab"
+
+#: apps/templates/pages/clabs_upsert.html:70
+#: apps/templates/pages/labs_edit.html:58
+msgid "Lab created/updated successfully!"
+msgstr "Lab criado/atualizado com sucesso!"
+
+#: apps/templates/pages/clabs_upsert.html:77
+msgid "Fail to insert/update container lab!"
+msgstr "Falha ao inserir/atualizar o container lab!"
+
+#: apps/templates/pages/clabs_upsert.html:86
+msgid "Create/Update CLab"
+msgstr "Criar/Atualizar CLab"
+
+#: apps/templates/pages/clabs_upsert.html:102
+#: apps/templates/pages/labs_edit.html:100
+msgid "General information"
+msgstr "Informações gerais"
+
+#: apps/templates/pages/clabs_upsert.html:108
+#: apps/templates/pages/finished_labs.html:90
+#: apps/templates/pages/labs_edit.html:106 apps/templates/pages/run_lab.html:67
+#: apps/templates/pages/running.html:97
+msgid "Lab title"
+msgstr "Título do laboratório"
+
+#: apps/templates/pages/clabs_upsert.html:109
+msgid "Enter container lab title..."
+msgstr "Digite o título do container lab..."
+
+#: apps/templates/pages/clabs_upsert.html:112
+#: apps/templates/pages/labs_edit.html:110
+msgid "Short Description"
+msgstr "Descrição curta"
+
+#: apps/templates/pages/clabs_upsert.html:113
+#: apps/templates/pages/clabs_upsert.html:212
+#: apps/templates/pages/labs_edit.html:111
+msgid "Max 255 characters"
+msgstr "Máximo de 255 caracteres"
+
+#: apps/templates/pages/clabs_upsert.html:116
+#: apps/templates/pages/labs_edit.html:121
+msgid "Lab categories"
+msgstr "Categorias do Lab"
+
+#: apps/templates/pages/clabs_upsert.html:117
+#: apps/templates/pages/clabs_upsert.html:122
+#: apps/templates/pages/clabs_upsert.html:369
+#: apps/templates/pages/labs_edit.html:122 apps/templates/pages/labs_edit.html:127
+#: apps/templates/pages/labs_edit.html:846
+msgid "Select one or more categories"
+msgstr "Selecione uma ou mais categorias"
+
+#: apps/templates/pages/clabs_upsert.html:136
+#: apps/templates/pages/labs_edit.html:141
+msgid "Lab additional information"
+msgstr "Informações adicionais do Lab"
+
+#: apps/templates/pages/clabs_upsert.html:142
+#: apps/templates/pages/labs_edit.html:147
+msgid "Access Control: Availabe groups (left) &gt;&gt; Allowed groups (right)"
+msgstr ""
+"Controle de acesso: Grupos disponíveis (esquerda) &gt;&gt; Grupos permitidos"
+" (direita)"
+
+#: apps/templates/pages/clabs_upsert.html:169
+msgid "ContainerLab extended description"
+msgstr "Descrição estendida do ContainerLab"
+
+#: apps/templates/pages/clabs_upsert.html:173
+#: apps/templates/pages/lab_instance_view.html:106
+#: apps/templates/pages/labs_view.html:120
+#: apps/templates/pages/waiting_approval.html:68
+msgid "Collapse"
+msgstr "Recolher"
+
+#: apps/templates/pages/clabs_upsert.html:176
+#: apps/templates/pages/lab_instance_view.html:109
+#: apps/templates/pages/labs_edit.html:302 apps/templates/pages/labs_edit.html:678
+#: apps/templates/pages/labs_edit.html:697 apps/templates/pages/labs_view.html:123
+#: apps/templates/pages/waiting_approval.html:71
+msgid "Remove"
+msgstr "Remover"
+
+#: apps/templates/pages/clabs_upsert.html:185
+#: apps/templates/pages/clabs_upsert.html:248
+#: apps/templates/pages/clabs_upsert.html:312
+#: apps/templates/pages/labs_edit.html:196 apps/templates/pages/labs_edit.html:243
+#: apps/templates/pages/labs_edit.html:293
+msgid "Place some text here"
+msgstr "Coloque algum texto aqui"
+
+#: apps/templates/pages/clabs_upsert.html:189
+#: apps/templates/pages/labs_edit.html:200
+#, python-format
+msgid "Editor %(link_start)sDocumentation and license information.%(link_end)s"
+msgstr "Editor %(link_start)sDocumentação e informações de licença.%(link_end)s"
+
+#: apps/templates/pages/clabs_upsert.html:202
+msgid "ContainerLab Resources"
+msgstr "Recursos do ContainerLab"
+
+#: apps/templates/pages/clabs_upsert.html:208
+msgid ""
+"You can specify the GIT repository containing all information necessary to "
+"create the container lab below (will be read when you hit the save button --"
+" you can always come back here and save again to reload!)."
+msgstr ""
+"Você pode especificar abaixo o repositório GIT contendo todas as informações"
+" necessárias para criar o container lab (será lido quando você clicar no "
+"botão salvar -- você sempre pode voltar aqui e salvar novamente para "
+"recarregar!)."
+
+#: apps/templates/pages/clabs_upsert.html:211
+#, python-format
+msgid "GIT repo URL (%(dev_start)sUnder development%(dev_end)s):"
+msgstr "URL do repositório GIT (%(dev_start)sEm desenvolvimento%(dev_end)s):"
+
+#: apps/templates/pages/clabs_upsert.html:218
+msgid "Or you can upload here your ContainerLab topology and additional files."
+msgstr ""
+"Ou você pode enviar aqui a sua topologia do ContainerLab e arquivos "
+"adicionais."
+
+#: apps/templates/pages/clabs_upsert.html:222
+msgid "Upload Area"
+msgstr "Área de envio"
+
+#: apps/templates/pages/clabs_upsert.html:223
+msgid "Upload actions"
+msgstr "Ações de envio"
+
+#: apps/templates/pages/clabs_upsert.html:225
+msgid "Add File"
+msgstr "Adicionar Arquivo"
+
+#: apps/templates/pages/clabs_upsert.html:229
+msgid "Add Directory"
+msgstr "Adicionar Diretório"
+
+#: apps/templates/pages/clabs_upsert.html:235
+msgid "Drag & drop files here, or click to select"
+msgstr "Arraste e solte os arquivos aqui, ou clique para selecionar"
+
+#: apps/templates/pages/clabs_upsert.html:236
+msgid "Accepted: multiple files"
+msgstr "Aceito: múltiplos arquivos"
+
+#: apps/templates/pages/clabs_upsert.html:247
+msgid "ContainerLab manifest"
+msgstr "Manifesto do ContainerLab"
+
+#: apps/templates/pages/clabs_upsert.html:253
+msgid "Image Secrets"
+msgstr "Secrets de Imagem"
+
+#: apps/templates/pages/clabs_upsert.html:254
+msgid ""
+"In this section you can define <b>imagePullSecrets</b> to use a K8s Secret "
+"to pull an image from a private container image registry or repository. The "
+"name of the secret must match the name defined on your Clab topology."
+msgstr ""
+"Nesta seção você pode definir <b>imagePullSecrets</b> para usar um Secret do"
+" K8s para baixar uma imagem de um registro ou repositório privado de imagens"
+" de contêiner. O nome do secret deve corresponder ao nome definido na sua "
+"topologia Clab."
+
+#: apps/templates/pages/clabs_upsert.html:258
+msgid "Secret Name"
+msgstr "Nome do Secret"
+
+#: apps/templates/pages/clabs_upsert.html:259
+msgid "Server"
+msgstr "Servidor"
+
+#: apps/templates/pages/clabs_upsert.html:261
+msgid "Password/Token"
+msgstr "Senha/Token"
+
+#: apps/templates/pages/clabs_upsert.html:285
+msgid "Add secret"
+msgstr "Adicionar secret"
+
+#: apps/templates/pages/clabs_upsert.html:302
+#: apps/templates/pages/lab_instance_view.html:230
+#: apps/templates/pages/labs_edit.html:259
+#: apps/templates/pages/labs_edit.html:1084
+msgid "Lab Guide"
+msgstr "Guia do Lab"
+
+#: apps/templates/pages/clabs_upsert.html:307
+#: apps/templates/pages/labs_edit.html:271
+#, python-format
+msgid ""
+"Add here the Lab instructions for students/experimenters to run this Lab "
+"(step-by-step) using Markdown format (%(link_start)sread more about Markdown"
+" syntax%(link_end)s):"
+msgstr ""
+"Adicione aqui as instruções do Lab para os alunos/experimentadores "
+"executarem este Lab (passo a passo) usando o formato Markdown "
+"(%(link_start)sleia mais sobre a sintaxe Markdown%(link_end)s):"
+
+#: apps/templates/pages/clabs_upsert.html:308
+msgid "Add text question"
+msgstr "Adicionar pergunta de texto"
+
+#: apps/templates/pages/clabs_upsert.html:309
+#: apps/templates/pages/labs_edit.html:288
+msgid "Add select question"
+msgstr "Adicionar pergunta de seleção"
+
+#: apps/templates/pages/clabs_upsert.html:310
+#: apps/templates/pages/labs_edit.html:289
+msgid "Add checkbox question"
+msgstr "Adicionar pergunta de caixa de seleção"
+
+#: apps/templates/pages/clabs_upsert.html:323
+msgid "Update ContainerLab"
+msgstr "Atualizar ContainerLab"
+
+#: apps/templates/pages/clabs_upsert.html:326
+#: apps/templates/pages/edit_user.html:154
+#: apps/templates/pages/groups_edit.html:205
+#: apps/templates/pages/groups_list.html:127
+#: apps/templates/pages/groups_list.html:155 apps/templates/pages/index.html:361
+#: apps/templates/pages/k8s_dep_list.html:134
+#: apps/templates/pages/k8s_dep_list.html:157
+#: apps/templates/pages/k8s_pod_list.html:138
+#: apps/templates/pages/k8s_pod_list.html:161
+#: apps/templates/pages/k8s_srv_list.html:128
+#: apps/templates/pages/k8s_srv_list.html:151
+#: apps/templates/pages/lab_answers_list.html:163
+#: apps/templates/pages/lab_categories_edit.html:88
+#: apps/templates/pages/lab_categories_list.html:124
+#: apps/templates/pages/lab_instance_view.html:216
+#: apps/templates/pages/labs_edit.html:473 apps/templates/pages/labs_edit.html:503
+#: apps/templates/pages/labs_edit.html:526 apps/templates/pages/labs_view.html:195
+#: apps/templates/pages/labs_view.html:218
+#: apps/templates/pages/lti_management.html:241
+#: apps/templates/pages/lti_management.html:266
+#: apps/templates/pages/running.html:157 apps/templates/pages/users.html:137
+#: apps/templates/pages/users.html:160
+msgid "Cancel"
+msgstr "Cancelar"
+
+#: apps/templates/pages/clabs_upsert.html:403
+#: apps/templates/pages/labs_edit.html:616
+msgid "Image upload failed:"
+msgstr "Falha no envio da imagem:"
+
+#: apps/templates/pages/clabs_upsert.html:403
+msgid "(Maximum size: 350KB)"
+msgstr "(Tamanho máximo: 350KB)"
+
+#: apps/templates/pages/clabs_upsert.html:437
+msgid "Failed to load editor. You can still upload files/folders and submit."
+msgstr ""
+"Falha ao carregar o editor. Você ainda pode enviar arquivos/pastas e "
+"submeter."
+
+#: apps/templates/pages/clabs_upsert.html:484
+msgid "No files selected"
+msgstr "Nenhum arquivo selecionado"
+
+#: apps/templates/pages/clabs_upsert.html:536
+msgid "YAML error"
+msgstr "Erro de YAML"
+
+#: apps/templates/pages/clabs_upsert.html:660
+msgid "Heads up"
+msgstr "Atenção"
+
+#: apps/templates/pages/clabs_upsert.html:660
+msgid ""
+"Folder drops may not be fully supported in this browser. Use the \"Add "
+"Directory\" button below."
+msgstr ""
+"O arraste de pastas pode não ser totalmente suportado neste navegador. Use o"
+" botão \"Adicionar Diretório\" abaixo."
+
+#: apps/templates/pages/clabs_upsert.html:693
+msgid "Provide YAML and/or files"
+msgstr "Forneça o YAML e/ou arquivos"
+
+#: apps/templates/pages/clabs_upsert.html:720
+msgid "Failed"
+msgstr "Falhou"
+
+#: apps/templates/pages/clabs_upsert.html:722
+msgid "CLab created (mock)."
+msgstr "CLab criado (simulação)."
+
+#: apps/templates/pages/clabs_upsert.html:730
+msgid "CLab created."
+msgstr "CLab criado."
+
+#: apps/templates/pages/clabs_upsert.html:735
+msgid "Failed to create ContainerLab:"
+msgstr "Falha ao criar o ContainerLab:"
+
+#: apps/templates/pages/confirm.html:3
+#: apps/templates/pages/confirm_reset_password.html:3
+#: apps/templates/pages/login.html:3 apps/templates/pages/register.html:94
+#: apps/templates/pages/reset_password.html:3
+msgid "Login"
+msgstr "Entrar"
+
+#: apps/templates/pages/confirm.html:40
+#, python-format
+msgid ""
+"Insert the token sent to your email (check your spam/junk folder!). The "
+"token will expire in %(minutes)s minutes."
+msgstr ""
+"Insira o token enviado para o seu e-mail (verifique sua caixa de spam/lixo "
+"eletrônico!). O token expira em %(minutes)s minutos."
+
+#: apps/templates/pages/confirm.html:49 apps/templates/pages/confirm_email.html:49
+msgid "Token"
+msgstr "Token"
+
+#: apps/templates/pages/confirm.html:58 apps/templates/pages/confirm_email.html:58
+msgid "Verify code"
+msgstr "Verificar código"
+
+#: apps/templates/pages/confirm.html:61 apps/templates/pages/confirm_email.html:61
+msgid "Resend code"
+msgstr "Reenviar código"
+
+#: apps/templates/pages/confirm_email.html:3
+#: apps/templates/pages/email_required.html:3
+msgid "Confirm your e-mail"
+msgstr "Confirme seu e-mail"
+
+#: apps/templates/pages/confirm_email.html:40
+#, python-format
+msgid ""
+"Insert the token sent to your email (check your spam/junk folder!). The "
+"token will expire in %(minutes)s minutes"
+msgstr ""
+"Insira o token enviado para o seu e-mail (verifique sua caixa de spam/lixo "
+"eletrônico!). O token expira em %(minutes)s minutos"
+
+#: apps/templates/pages/confirm_email.html:68
+#: apps/templates/pages/email_required.html:62
+msgid "Logout"
+msgstr "Sair"
+
+#: apps/templates/pages/confirm_reset_password.html:59
+#: apps/templates/pages/index.html:362 apps/templates/pages/labs_edit.html:472
+#: apps/templates/pages/reset_password.html:58
+msgid "Submit"
+msgstr "Enviar"
+
+#: apps/templates/pages/edit_user.html:3
+msgid "Profile"
+msgstr "Perfil"
+
+#: apps/templates/pages/edit_user.html:29
+msgid "View/Update User"
+msgstr "Ver/Atualizar Usuário"
+
+#: apps/templates/pages/edit_user.html:33
+msgid "User updated successfully!"
+msgstr "Usuário atualizado com sucesso!"
+
+#: apps/templates/pages/edit_user.html:40
+msgid "Fail to update user!"
+msgstr "Falha ao atualizar o usuário!"
+
+#: apps/templates/pages/edit_user.html:61
+#: apps/templates/pages/finished_labs.html:89
+#: apps/templates/pages/lab_answers_list.html:112
+#: apps/templates/pages/running.html:96
+#: apps/templates/pages/support_thread_view.html:69
+#: apps/templates/pages/support_thread_view.html:78
+#: apps/templates/pages/support_thread_view.html:124
+#: apps/templates/pages/support_threads.html:59
+msgid "User"
+msgstr "Usuário"
+
+#: apps/templates/pages/edit_user.html:66
+msgid "User information"
+msgstr "Informações do usuário"
+
+#: apps/templates/pages/edit_user.html:75 apps/templates/pages/users.html:71
+msgid "E-mail"
+msgstr "E-mail"
+
+#: apps/templates/pages/edit_user.html:80
+msgid "First Name"
+msgstr "Nome"
+
+#: apps/templates/pages/edit_user.html:85
+msgid "Last Name"
+msgstr "Sobrenome"
+
+#: apps/templates/pages/edit_user.html:97
+msgid "User category"
+msgstr "Categoria do usuário"
+
+#: apps/templates/pages/edit_user.html:114
+#: apps/templates/pages/lti_management.html:60 apps/templates/pages/users.html:73
+msgid "Issuer"
+msgstr "Emissor"
+
+#: apps/templates/pages/edit_user.html:120
+msgid "Approval notes (user-provided reference)"
+msgstr "Notas de aprovação (referência fornecida pelo usuário)"
+
+#: apps/templates/pages/edit_user.html:126
+msgid "Member of groups:"
+msgstr "Membro dos grupos:"
+
+#: apps/templates/pages/edit_user.html:134
+msgid "Assistant of groups:"
+msgstr "Assistente dos grupos:"
+
+#: apps/templates/pages/edit_user.html:142
+msgid "Owner of groups:"
+msgstr "Proprietário dos grupos:"
+
+#: apps/templates/pages/edit_user.html:153
+msgid "Save"
+msgstr "Salvar"
+
+#: apps/templates/pages/edit_user.html:198
+msgid ""
+"Invalid character. Allowed letters, numbers, dot (.), underscore (_) or "
+"hyphen (-)"
+msgstr ""
+"Caractere inválido. São permitidos letras, números, ponto (.), sublinhado "
+"(_) ou hífen (-)"
+
+#: apps/templates/pages/email_required.html:39
+msgid "We need a valid e-mail address for your account before you can continue."
+msgstr "Precisamos de um endereço de e-mail válido para sua conta antes de continuar."
+
+#: apps/templates/pages/email_required.html:57
+msgid "Continue"
+msgstr "Continuar"
+
+#: apps/templates/pages/error.html:3 apps/templates/pages/error.html:28
+#: apps/templates/pages/error.html:33
+msgid "Error"
+msgstr "Erro"
+
+#: apps/templates/pages/error.html:45
+msgid "Oops!"
+msgstr "Ops!"
+
+#: apps/templates/pages/error.html:45
+msgid "Error."
+msgstr "Erro."
+
+#: apps/templates/pages/error.html:47
+msgid "Failed to run task."
+msgstr "Falha ao executar a tarefa."
+
+#: apps/templates/pages/feedback_view.html:31
+#: apps/templates/pages/feedback_view.html:36
+msgid "Feedbacks"
+msgstr "Feedbacks"
+
+#: apps/templates/pages/feedback_view.html:50
+msgid "User Feedbacks"
+msgstr "Feedbacks dos Usuários"
+
+#: apps/templates/pages/feedback_view.html:76
+msgid "Unhide"
+msgstr "Reexibir"
+
+#: apps/templates/pages/feedback_view.html:82
+msgid "Hide"
+msgstr "Ocultar"
+
+#: apps/templates/pages/feedback_view.html:94
+msgid "No feedbacks available yet."
+msgstr "Nenhum feedback disponível ainda."
+
+#: apps/templates/pages/finished_lab_infos.html:3
+#: apps/templates/pages/finished_lab_infos.html:58
+#: apps/templates/pages/finished_lab_infos.html:64
+msgid "Lab Completed"
+msgstr "Lab Concluído"
+
+#: apps/templates/pages/finished_lab_infos.html:80
+msgid "Congratulations!"
+msgstr "Parabéns!"
+
+#: apps/templates/pages/finished_lab_infos.html:82
+msgid "You have successfully completed the laboratory!"
+msgstr "Você concluiu o laboratório com sucesso!"
+
+#: apps/templates/pages/finished_lab_infos.html:85
+msgid "Your answers have been successfully saved in the system."
+msgstr "Suas respostas foram salvas com sucesso no sistema."
+
+#: apps/templates/pages/finished_lab_infos.html:88
+msgid "You can execute this laboratory again as many times as you want."
+msgstr "Você pode executar este laboratório novamente quantas vezes quiser."
+
+#: apps/templates/pages/finished_lab_infos.html:94
+msgid "Your answers and grade were sent to your course gradebook."
+msgstr "Suas respostas e nota foram enviadas para o boletim do seu curso."
+
+#: apps/templates/pages/finished_lab_infos.html:100
+msgid "Execute Again"
+msgstr "Executar Novamente"
+
+#: apps/templates/pages/finished_lab_infos.html:110
+msgid "Back to Home"
+msgstr "Voltar ao início"
+
+#: apps/templates/pages/finished_lab_infos.html:123
+msgid "Completion Date"
+msgstr "Data de Conclusão"
+
+#: apps/templates/pages/finished_labs.html:60 apps/templates/pages/running.html:67
+msgid "Filter by group:"
+msgstr "Filtrar por grupo:"
+
+#: apps/templates/pages/finished_labs.html:64 apps/templates/pages/running.html:71
+msgid "My own labs"
+msgstr "Meus próprios laboratórios"
+
+#: apps/templates/pages/finished_labs.html:65 apps/templates/pages/running.html:72
+msgid "All labs"
+msgstr "Todos os laboratórios"
+
+#: apps/templates/pages/finished_labs.html:91
+msgid "Created At (UTC)"
+msgstr "Criado em (UTC)"
+
+#: apps/templates/pages/finished_labs.html:92
+msgid "Finished At (UTC)"
+msgstr "Concluído em (UTC)"
+
+#: apps/templates/pages/finished_labs.html:93
+msgid "Finish reason"
+msgstr "Motivo da conclusão"
+
+#: apps/templates/pages/finished_labs.html:166
+msgid "No finished labs"
+msgstr "Nenhum laboratório concluído"
+
+#: apps/templates/pages/finished_labs.html:200
+#: apps/templates/pages/k8s_dep_list.html:254
+#: apps/templates/pages/k8s_pod_list.html:260
+#: apps/templates/pages/k8s_srv_list.html:248
+#: apps/templates/pages/running.html:259 apps/templates/pages/users.html:266
+msgid "Deleting"
+msgstr "Excluindo"
+
+#: apps/templates/pages/finished_labs.html:200
+#: apps/templates/pages/k8s_dep_list.html:254
+#: apps/templates/pages/k8s_dep_list.html:283
+#: apps/templates/pages/k8s_pod_list.html:260
+#: apps/templates/pages/k8s_pod_list.html:289
+#: apps/templates/pages/k8s_srv_list.html:248
+#: apps/templates/pages/k8s_srv_list.html:277
+#: apps/templates/pages/running.html:259 apps/templates/pages/users.html:266
+#: apps/templates/pages/users.html:295
+msgid "row(s)..."
+msgstr "linha(s)..."
+
+#: apps/templates/pages/finished_labs.html:234
+#: apps/templates/pages/running.html:293
+msgid "No lab selected!"
+msgstr "Nenhum laboratório selecionado!"
+
+#: apps/templates/pages/gallery.html:3 apps/templates/pages/gallery.html:31
+#: apps/templates/pages/gallery.html:36
+msgid "Gallery"
+msgstr "Galeria"
+
+#: apps/templates/pages/groups_edit.html:3
+#: apps/templates/pages/groups_edit.html:36
+msgid "Edit Group"
+msgstr "Editar Grupo"
+
+#: apps/templates/pages/groups_edit.html:40
+msgid "Group updated successfully!"
+msgstr "Grupo atualizado com sucesso!"
+
+#: apps/templates/pages/groups_edit.html:47
+msgid "Fail to update group!"
+msgstr "Falha ao atualizar o grupo!"
+
+#: apps/templates/pages/groups_edit.html:68
+msgid "Group"
+msgstr "Grupo"
+
+#: apps/templates/pages/groups_edit.html:77
+msgid "General Information"
+msgstr "Informações Gerais"
+
+#: apps/templates/pages/groups_edit.html:95
+#: apps/templates/pages/groups_list.html:148
+#: apps/templates/pages/groups_list.html:150
+msgid "Access Token"
+msgstr "Token de Acesso"
+
+#: apps/templates/pages/groups_edit.html:96
+msgid ""
+"Access token is a method of allowing <i>self enrolment/auto join</i> to a "
+"group. Users will be asked to supply the access token to be authorized as a "
+"member of the group."
+msgstr ""
+"O token de acesso é um método que permite a <i>auto-inscrição/entrada "
+"automática</i> em um grupo. Os usuários deverão fornecer o token de acesso "
+"para serem autorizados como membros do grupo."
+
+#: apps/templates/pages/groups_edit.html:98
+msgid "Generate Random Token"
+msgstr "Gerar Token Aleatório"
+
+#: apps/templates/pages/groups_edit.html:103
+msgid "Expiration Date"
+msgstr "Data de Expiração"
+
+#: apps/templates/pages/groups_edit.html:104
+msgid ""
+"The date after which this group and its resources will no longer be "
+"available. Can be used, for instance, to setup a due date for running a lab "
+"(for an exam, contest, CTF, etc). Default: never expires."
+msgstr ""
+"A data após a qual este grupo e seus recursos deixarão de estar disponíveis."
+" Pode ser usada, por exemplo, para definir um prazo para a execução de um "
+"laboratório (para uma prova, competição, CTF, etc). Padrão: nunca expira."
+
+#: apps/templates/pages/groups_edit.html:114
+msgid "Pre-Approved Users"
+msgstr "Usuários Pré-Aprovados"
+
+#: apps/templates/pages/groups_edit.html:115
+msgid ""
+"Please provide a list of users (e-mail addresses, one per line) to be "
+"automatically approved when they first login."
+msgstr ""
+"Forneça uma lista de usuários (endereços de e-mail, um por linha) a serem "
+"aprovados automaticamente no primeiro login."
+
+#: apps/templates/pages/groups_edit.html:130
+msgid "Members"
+msgstr "Membros"
+
+#: apps/templates/pages/groups_edit.html:134
+msgid ""
+"Select the users (left) which will be <i>members</i> of the group (right). "
+"Group members cannot change any attribute of the group (only used for Labs "
+"access control)."
+msgstr ""
+"Selecione os usuários (à esquerda) que serão <i>membros</i> do grupo (à "
+"direita). Os membros do grupo não podem alterar nenhum atributo do grupo "
+"(usado apenas para controle de acesso aos Laboratórios)."
+
+#: apps/templates/pages/groups_edit.html:152
+msgid "Assistants"
+msgstr "Assistentes"
+
+#: apps/templates/pages/groups_edit.html:156
+msgid ""
+"Select the users (left) which will be <i>assistants</i> of the group "
+"(right). Group assistants are only allowed to modify the list of members and"
+" access group resources (labs and lab instances)."
+msgstr ""
+"Selecione os usuários (à esquerda) que serão <i>assistentes</i> do grupo (à "
+"direita). Os assistentes do grupo só podem modificar a lista de membros e "
+"acessar os recursos do grupo (laboratórios e instâncias de laboratório)."
+
+#: apps/templates/pages/groups_edit.html:174
+msgid "Owners"
+msgstr "Proprietários"
+
+#: apps/templates/pages/groups_edit.html:178
+msgid ""
+"Select the users (left) which will be <i>owners</i> of the group (right). "
+"Group owner are allowed to modify any attribute of the group, as well as "
+"remove it."
+msgstr ""
+"Selecione os usuários (à esquerda) que serão <i>proprietários</i> do grupo "
+"(à direita). Os proprietários do grupo podem modificar qualquer atributo do "
+"grupo, bem como removê-lo."
+
+#: apps/templates/pages/groups_edit.html:204
+#: apps/templates/pages/lab_categories_edit.html:87
+msgid "Create"
+msgstr "Criar"
+
+#: apps/templates/pages/groups_edit.html:204
+#: apps/templates/pages/lab_categories_edit.html:87
+#: apps/templates/pages/labs_view.html:164
+msgid "Update"
+msgstr "Atualizar"
+
+#: apps/templates/pages/groups_list.html:33
+msgid "List Groups"
+msgstr "Listar Grupos"
+
+#: apps/templates/pages/groups_list.html:40
+#: apps/templates/pages/lab_categories_list.html:40
+msgid "Ops! A failure happened.."
+msgstr "Ops! Ocorreu uma falha.."
+
+#: apps/templates/pages/groups_list.html:65
+msgid "Create New Group"
+msgstr "Criar Novo Grupo"
+
+#: apps/templates/pages/groups_list.html:77
+#: apps/templates/pages/k8s_dep_list.html:73
+#: apps/templates/pages/k8s_pod_list.html:75
+#: apps/templates/pages/k8s_srv_list.html:70
+#: apps/templates/pages/lab_answers_list.html:115
+#: apps/templates/pages/lab_categories_list.html:77
+#: apps/templates/pages/labs_edit.html:552
+#: apps/templates/pages/lti_management.html:64
+#: apps/templates/pages/my_support_threads.html:47
+#: apps/templates/pages/running.html:99
+#: apps/templates/pages/support_threads.html:63 apps/templates/pages/users.html:76
+msgid "Actions"
+msgstr "Ações"
+
+#: apps/templates/pages/groups_list.html:87
+msgid "Join group"
+msgstr "Entrar no grupo"
+
+#: apps/templates/pages/groups_list.html:88
+msgid "Join/Auto-Enrol"
+msgstr "Entrar/Auto-inscrição"
+
+#: apps/templates/pages/groups_list.html:93
+msgid "Edit/View"
+msgstr "Editar/Ver"
+
+#: apps/templates/pages/groups_list.html:95
+#: apps/templates/pages/groups_list.html:128
+msgid "Delete group"
+msgstr "Excluir grupo"
+
+#: apps/templates/pages/groups_list.html:96
+#: apps/templates/pages/lab_categories_list.html:93
+#: apps/templates/pages/labs_edit.html:1138
+#: apps/templates/pages/labs_view.html:170
+msgid "Delete"
+msgstr "Excluir"
+
+#: apps/templates/pages/groups_list.html:117
+msgid "Confirm delete group"
+msgstr "Confirmar exclusão do grupo"
+
+#: apps/templates/pages/groups_list.html:124
+#: apps/templates/pages/groups_list.html:191
+#: apps/templates/pages/lab_answers_list.html:202
+#: apps/templates/pages/lab_answers_sheet.html:158
+msgid "Are you sure you want to delete this group?"
+msgstr "Tem certeza de que deseja excluir este grupo?"
+
+#: apps/templates/pages/groups_list.html:140
+msgid "Please provide the access token to join the group"
+msgstr "Forneça o token de acesso para entrar no grupo"
+
+#: apps/templates/pages/groups_list.html:156
+msgid "Join the group"
+msgstr "Entrar no grupo"
+
+#: apps/templates/pages/groups_list.html:199
+msgid "No group"
+msgstr "Nenhum grupo"
+
+#: apps/templates/pages/index.html:33
+msgid "HackInSDN Dashboard"
+msgstr "Painel HackInSDN"
+
+#: apps/templates/pages/index.html:71
+msgid "Registered Labs"
+msgstr "Labs Registrados"
+
+#: apps/templates/pages/index.html:102
+msgid "Likes"
+msgstr "Curtidas"
+
+#: apps/templates/pages/index.html:145
+msgid "Available CPUs"
+msgstr "CPUs Disponíveis"
+
+#: apps/templates/pages/index.html:155
+msgid "Available Memory"
+msgstr "Memória Disponível"
+
+#: apps/templates/pages/index.html:165
+msgid "Storage capacity"
+msgstr "Capacidade de Armazenamento"
+
+#: apps/templates/pages/index.html:185
+msgid "Nodes"
+msgstr "Nós"
+
+#: apps/templates/pages/index.html:205
+msgid "Lab Usage Report"
+msgstr "Relatório de Uso de Labs"
+
+#: apps/templates/pages/index.html:212
+msgid "Completed Labs in the past 6 months"
+msgstr "Labs Concluídos nos últimos 6 meses"
+
+#: apps/templates/pages/index.html:224
+msgid "User evaluation"
+msgstr "Avaliação do usuário"
+
+#: apps/templates/pages/index.html:228
+msgid "Completed Labs"
+msgstr "Labs Concluídos"
+
+#: apps/templates/pages/index.html:237
+msgid "Answered questions"
+msgstr "Perguntas respondidas"
+
+#: apps/templates/pages/index.html:246
+msgid "Solved Challenges"
+msgstr "Desafios resolvidos"
+
+#: apps/templates/pages/index.html:255
+msgid "Send Inquiries"
+msgstr "Enviar Solicitações"
+
+#: apps/templates/pages/index.html:276
+msgid "LAST MONTH LAB COMPLETION"
+msgstr "CONCLUSÃO DE LABS NO ÚLTIMO MÊS"
+
+#: apps/templates/pages/index.html:287
+msgid "LAST MONTH ANSWRED QUESTIONS"
+msgstr "PERGUNTAS RESPONDIDAS NO ÚLTIMO MÊS"
+
+#: apps/templates/pages/index.html:298
+msgid "LAST MONTH SOLVED CHALLENGES"
+msgstr "DESAFIOS RESOLVIDOS NO ÚLTIMO MÊS"
+
+#: apps/templates/pages/index.html:316
+msgid "Users Feedback"
+msgstr "Feedback dos Usuários"
+
+#: apps/templates/pages/index.html:318
+#: apps/templates/pages/lab_categories_list.html:88
+#: apps/templates/pages/users.html:95
+msgid "Edit"
+msgstr "Editar"
+
+#: apps/templates/pages/index.html:318
+msgid "Add Feedback"
+msgstr "Adicionar Feedback"
+
+#: apps/templates/pages/index.html:319
+msgid "See All"
+msgstr "Ver Tudo"
+
+#: apps/templates/pages/index.html:331
+msgid "Please rate your overall experience on our website!"
+msgstr "Por favor, avalie sua experiência geral em nosso site!"
+
+#: apps/templates/pages/index.html:338
+msgid "Enjoying the platform?"
+msgstr "Está gostando da plataforma?"
+
+#: apps/templates/pages/index.html:344
+msgid "Rating:"
+msgstr "Avaliação:"
+
+#: apps/templates/pages/index.html:356
+msgid "Please leave a comment (Optional):"
+msgstr "Deixe um comentário (Opcional):"
+
+#: apps/templates/pages/index.html:357
+msgid "Leave your comment..."
+msgstr "Deixe seu comentário..."
+
+#: apps/templates/pages/index.html:382
+msgid "Recently Added Labs"
+msgstr "Labs Adicionados Recentemente"
+
+#: apps/templates/pages/index.html:401
+msgid "No short description provided. Click to see more details"
+msgstr "Nenhuma descrição breve fornecida. Clique para ver mais detalhes"
+
+#: apps/templates/pages/index.html:411
+msgid "View All Labs"
+msgstr "Ver Todos os Labs"
+
+#: apps/templates/pages/index.html:423
+msgid "Lab categories and usage"
+msgstr "Categorias e uso de Labs"
+
+#: apps/templates/pages/index.html:662
+msgid "Lab Instances"
+msgstr "Instâncias de Lab"
+
+#: apps/templates/pages/index.html:791
+msgid "Please select a rating before submitting."
+msgstr "Selecione uma avaliação antes de enviar."
+
+#: apps/templates/pages/index.html:818
+msgid "Rating submitted successfully!"
+msgstr "Avaliação enviada com sucesso!"
+
+#: apps/templates/pages/k8s_dep_list.html:3
+#: apps/templates/pages/k8s_dep_list.html:33
+#: apps/templates/pages/k8s_dep_list.html:52
+msgid "Kubernetes Deployments"
+msgstr "Deployments do Kubernetes"
+
+#: apps/templates/pages/k8s_dep_list.html:54
+msgid "Select all Deployments"
+msgstr "Selecionar todos os Deployments"
+
+#: apps/templates/pages/k8s_dep_list.html:55
+msgid "Delete selected Deployments"
+msgstr "Excluir Deployments selecionados"
+
+#: apps/templates/pages/k8s_dep_list.html:58
+#: apps/templates/pages/k8s_dep_list.html:108
+#: apps/templates/pages/k8s_pod_list.html:58
+#: apps/templates/pages/k8s_pod_list.html:112 apps/templates/pages/users.html:57
+#: apps/templates/pages/users.html:110
+msgid "Approve selected users"
+msgstr "Aprovar usuários selecionados"
+
+#: apps/templates/pages/k8s_dep_list.html:69
+#: apps/templates/pages/k8s_pod_list.html:69
+#: apps/templates/pages/k8s_srv_list.html:66
+msgid "Name"
+msgstr "Nome"
+
+#: apps/templates/pages/k8s_dep_list.html:70
+#: apps/templates/pages/k8s_pod_list.html:70
+#: apps/templates/pages/run_lab_status.html:179
+#: apps/templates/pages/run_lab_status.html:187
+msgid "Ready"
+msgstr "Pronto"
+
+#: apps/templates/pages/k8s_dep_list.html:71
+#: apps/templates/pages/k8s_pod_list.html:72
+#: apps/templates/pages/k8s_srv_list.html:68
+#: apps/templates/pages/lab_instance_view.html:127
+msgid "Age"
+msgstr "Idade"
+
+#: apps/templates/pages/k8s_dep_list.html:72
+msgid "Containers"
+msgstr "Contêineres"
+
+#: apps/templates/pages/k8s_dep_list.html:90
+msgid "Show deployment yaml"
+msgstr "Mostrar YAML do deployment"
+
+#: apps/templates/pages/k8s_dep_list.html:90
+msgid "Deployment information in YAML format:"
+msgstr "Informações do Deployment em formato YAML:"
+
+#: apps/templates/pages/k8s_dep_list.html:104
+#: apps/templates/pages/k8s_pod_list.html:108 apps/templates/pages/users.html:53
+#: apps/templates/pages/users.html:106
+msgid "Select all users"
+msgstr "Selecionar todos os usuários"
+
+#: apps/templates/pages/k8s_dep_list.html:105
+#: apps/templates/pages/k8s_pod_list.html:109 apps/templates/pages/users.html:54
+#: apps/templates/pages/users.html:107
+msgid "Delete selected users"
+msgstr "Excluir usuários selecionados"
+
+#: apps/templates/pages/k8s_dep_list.html:124
+#: apps/templates/pages/k8s_pod_list.html:128
+#: apps/templates/pages/k8s_srv_list.html:118 apps/templates/pages/users.html:127
+msgid "Confirm User removal"
+msgstr "Confirmar remoção de Usuário"
+
+#: apps/templates/pages/k8s_dep_list.html:130
+#: apps/templates/pages/k8s_pod_list.html:134
+#: apps/templates/pages/k8s_srv_list.html:124 apps/templates/pages/users.html:133
+msgid "Are you sure you want to remove the selected Users?"
+msgstr "Tem certeza de que deseja remover os Usuários selecionados?"
+
+#: apps/templates/pages/k8s_dep_list.html:135
+#: apps/templates/pages/k8s_pod_list.html:139
+#: apps/templates/pages/k8s_srv_list.html:129 apps/templates/pages/users.html:138
+msgid "Delete Users"
+msgstr "Excluir Usuários"
+
+#: apps/templates/pages/k8s_dep_list.html:147
+#: apps/templates/pages/k8s_pod_list.html:151
+#: apps/templates/pages/k8s_srv_list.html:141 apps/templates/pages/users.html:150
+msgid "Confirm Approve Users"
+msgstr "Confirmar Aprovação de Usuários"
+
+#: apps/templates/pages/k8s_dep_list.html:153
+#: apps/templates/pages/k8s_pod_list.html:157
+#: apps/templates/pages/k8s_srv_list.html:147 apps/templates/pages/users.html:156
+msgid ""
+"Are you sure you want to approve the selected Users? Approved users have "
+"access to run Labs."
+msgstr ""
+"Tem certeza de que deseja aprovar os Usuários selecionados? Usuários "
+"aprovados têm acesso para executar Laboratórios."
+
+#: apps/templates/pages/k8s_dep_list.html:158
+#: apps/templates/pages/k8s_pod_list.html:162
+#: apps/templates/pages/k8s_srv_list.html:152 apps/templates/pages/users.html:161
+msgid "Approve Users"
+msgstr "Aprovar Usuários"
+
+#: apps/templates/pages/k8s_dep_list.html:170
+msgid "Show Deployment YAML"
+msgstr "Mostrar YAML do Deployment"
+
+#: apps/templates/pages/k8s_dep_list.html:179
+#: apps/templates/pages/k8s_pod_list.html:183
+#: apps/templates/pages/k8s_srv_list.html:173
+#: apps/templates/pages/labs_edit.html:562
+#: apps/templates/pages/lti_management.html:213
+#: apps/templates/pages/lti_management.html:288
+msgid "Close"
+msgstr "Fechar"
+
+#: apps/templates/pages/k8s_dep_list.html:217
+msgid "No Deployment running"
+msgstr "Nenhum Deployment em execução"
+
+#: apps/templates/pages/k8s_dep_list.html:283
+#: apps/templates/pages/k8s_pod_list.html:289
+#: apps/templates/pages/k8s_srv_list.html:277 apps/templates/pages/users.html:295
+msgid "Approving"
+msgstr "Aprovando"
+
+#: apps/templates/pages/k8s_dep_list.html:312
+msgid "No Deployment selected!"
+msgstr "Nenhum Deployment selecionado!"
+
+#: apps/templates/pages/k8s_dep_list.html:327
+#: apps/templates/pages/k8s_pod_list.html:333
+#: apps/templates/pages/k8s_srv_list.html:321 apps/templates/pages/users.html:324
+#: apps/templates/pages/users.html:338
+msgid "No user selected!"
+msgstr "Nenhum usuário selecionado!"
+
+#: apps/templates/pages/k8s_pod_list.html:3
+#: apps/templates/pages/k8s_pod_list.html:33
+#: apps/templates/pages/k8s_pod_list.html:52
+msgid "Kubernetes Pods"
+msgstr "Pods do Kubernetes"
+
+#: apps/templates/pages/k8s_pod_list.html:54
+msgid "Select all Pods"
+msgstr "Selecionar todos os Pods"
+
+#: apps/templates/pages/k8s_pod_list.html:55
+msgid "Delete selected Pods"
+msgstr "Excluir Pods selecionados"
+
+#: apps/templates/pages/k8s_pod_list.html:71
+#: apps/templates/pages/lti_management.html:117
+#: apps/templates/pages/my_support_threads.html:45
+#: apps/templates/pages/support_threads.html:60
+msgid "Status"
+msgstr "Status"
+
+#: apps/templates/pages/k8s_pod_list.html:73
+#: apps/templates/pages/lab_instance_view.html:126
+msgid "IP"
+msgstr "IP"
+
+#: apps/templates/pages/k8s_pod_list.html:74
+#: apps/templates/pages/lab_instance_view.html:125
+msgid "Node"
+msgstr "Nó"
+
+#: apps/templates/pages/k8s_pod_list.html:94
+msgid "Show pod yaml"
+msgstr "Mostrar YAML do pod"
+
+#: apps/templates/pages/k8s_pod_list.html:94
+msgid "Pod information in YAML format:"
+msgstr "Informações do Pod em formato YAML:"
+
+#: apps/templates/pages/k8s_pod_list.html:174
+msgid "Show Pod YAML"
+msgstr "Mostrar YAML do Pod"
+
+#: apps/templates/pages/k8s_pod_list.html:221
+msgid "No Pod running"
+msgstr "Nenhum Pod em execução"
+
+#: apps/templates/pages/k8s_pod_list.html:318
+msgid "No Pod selected!"
+msgstr "Nenhum Pod selecionado!"
+
+#: apps/templates/pages/k8s_srv_list.html:3
+#: apps/templates/pages/k8s_srv_list.html:33
+#: apps/templates/pages/k8s_srv_list.html:52
+msgid "Kubernetes Services"
+msgstr "Serviços do Kubernetes"
+
+#: apps/templates/pages/k8s_srv_list.html:54
+#: apps/templates/pages/k8s_srv_list.html:101
+msgid "Select all Services"
+msgstr "Selecionar todos os Serviços"
+
+#: apps/templates/pages/k8s_srv_list.html:55
+#: apps/templates/pages/k8s_srv_list.html:102
+msgid "Delete selected Services"
+msgstr "Excluir Serviços selecionados"
+
+#: apps/templates/pages/k8s_srv_list.html:67
+msgid "Type"
+msgstr "Tipo"
+
+#: apps/templates/pages/k8s_srv_list.html:69
+msgid "Ports"
+msgstr "Portas"
+
+#: apps/templates/pages/k8s_srv_list.html:87
+msgid "Show service yaml"
+msgstr "Mostrar YAML do serviço"
+
+#: apps/templates/pages/k8s_srv_list.html:87
+msgid "Service information in YAML format:"
+msgstr "Informações do Serviço em formato YAML:"
+
+#: apps/templates/pages/k8s_srv_list.html:164
+msgid "Show Service YAML"
+msgstr "Mostrar YAML do Serviço"
+
+#: apps/templates/pages/k8s_srv_list.html:211
+msgid "No Service running"
+msgstr "Nenhum Serviço em execução"
+
+#: apps/templates/pages/k8s_srv_list.html:306
+msgid "No Service selected!"
+msgstr "Nenhum Serviço selecionado!"
+
+#: apps/templates/pages/lab_answers_list.html:33
+msgid "List Lab Answers"
+msgstr "Listar Respostas dos Labs"
+
+#: apps/templates/pages/lab_answers_list.html:40
+msgid "Fail while listing lab answers!"
+msgstr "Falha ao listar as respostas dos labs!"
+
+#: apps/templates/pages/lab_answers_list.html:67
+msgid "Filter by Lab:"
+msgstr "Filtrar por Lab:"
+
+#: apps/templates/pages/lab_answers_list.html:69
+#: apps/templates/pages/labs_view.html:83
+msgid "All Labs"
+msgstr "Todos os Laboratórios"
+
+#: apps/templates/pages/lab_answers_list.html:77
+#: apps/templates/pages/labs_view.html:47
+msgid "Filter by Group:"
+msgstr "Filtrar por Grupo:"
+
+#: apps/templates/pages/lab_answers_list.html:79
+#: apps/templates/pages/labs_view.html:49
+msgid "All Groups"
+msgstr "Todos os Grupos"
+
+#: apps/templates/pages/lab_answers_list.html:89
+msgid "Check answers with Lab Answer Sheet"
+msgstr "Verificar respostas com o Gabarito do Lab"
+
+#: apps/templates/pages/lab_answers_list.html:89
+msgid "see more information in"
+msgstr "veja mais informações em"
+
+#: apps/templates/pages/lab_answers_list.html:89
+msgid "Lab Answer Sheet"
+msgstr "Gabarito do Lab"
+
+#: apps/templates/pages/lab_answers_list.html:93
+#: apps/templates/pages/labs_view.html:55
+msgid "Filter"
+msgstr "Filtrar"
+
+#: apps/templates/pages/lab_answers_list.html:111
+#: apps/templates/pages/run_lab.html:58
+msgid "Lab"
+msgstr "Lab"
+
+#: apps/templates/pages/lab_answers_list.html:113
+#, python-format
+msgid "Correct Answers (%%)"
+msgstr "Respostas Corretas (%%)"
+
+#: apps/templates/pages/lab_answers_list.html:114
+msgid "User answers"
+msgstr "Respostas do usuário"
+
+#: apps/templates/pages/lab_answers_list.html:126
+msgid "Show answer"
+msgstr "Mostrar resposta"
+
+#: apps/templates/pages/lab_answers_list.html:126
+msgid "Lab answers for user"
+msgstr "Respostas do Lab para o usuário"
+
+#: apps/templates/pages/lab_answers_list.html:127
+msgid "View Answers"
+msgstr "Ver Respostas"
+
+#: apps/templates/pages/lab_answers_list.html:147
+msgid "Show Lab Answer"
+msgstr "Mostrar Resposta do Lab"
+
+#: apps/templates/pages/lab_answers_list.html:160
+msgid ""
+"**Manual grades are the ones assigned by the teacher after manual reviewing "
+"the answer. When calculating the score, manual grades have precedence of "
+"automatic grades from Answer Sheet."
+msgstr ""
+"**As notas manuais são aquelas atribuídas pelo professor após a revisão "
+"manual da resposta. Ao calcular a pontuação, as notas manuais têm "
+"precedência sobre as notas automáticas do Gabarito."
+
+#: apps/templates/pages/lab_answers_list.html:165
+msgid "Calculate score"
+msgstr "Calcular pontuação"
+
+#: apps/templates/pages/lab_answers_list.html:166
+msgid "Save grades and comments"
+msgstr "Salvar notas e comentários"
+
+#: apps/templates/pages/lab_answers_list.html:230
+msgid "Clear filters"
+msgstr "Limpar filtros"
+
+#: apps/templates/pages/lab_answers_list.html:242
+msgid "No lab answer"
+msgstr "Nenhuma resposta de lab"
+
+#: apps/templates/pages/lab_answers_list.html:305
+#, python-format
+msgid "Lab answer score (%%):"
+msgstr "Pontuação da resposta do lab (%%):"
+
+#: apps/templates/pages/lab_answers_list.html:308
+msgid "Fail to check answers:"
+msgstr "Falha ao verificar as respostas:"
+
+#: apps/templates/pages/lab_answers_list.html:343
+msgid "Comments saved!"
+msgstr "Comentários salvos!"
+
+#: apps/templates/pages/lab_answers_list.html:346
+msgid "Error saving comments:"
+msgstr "Erro ao salvar comentários:"
+
+#: apps/templates/pages/lab_answers_sheet.html:3
+#: apps/templates/pages/lab_answers_sheet.html:29
+#: apps/templates/pages/lab_answers_sheet.html:33
+#: apps/templates/pages/lab_answers_sheet.html:50
+msgid "Lab Answers Sheet"
+msgstr "Gabarito do Lab"
+
+#: apps/templates/pages/lab_answers_sheet.html:40
+msgid "Failure on answer sheet"
+msgstr "Falha no gabarito"
+
+#: apps/templates/pages/lab_answers_sheet.html:55
+#, python-brace-format, python-format
+msgid ""
+"The lab answer sheet can be used to automatically validate the answers "
+"provided by the users by using regular expression matching. Please choose "
+"the Lab below and, for each question, provide the expected regex which the "
+"answer should match to be considered correct (the calculation is done in "
+"Python using <code>re</code> library, pretty much like this: "
+"<code>re.match(fr\"^{expected_answer}$\", answer)</code>). Only the "
+"registered questions in the answer sheet will be used actually used for "
+"validating the score (for example: if your Lab has 5 questions and the "
+"answer sheet only contains 3 expected answers, then people who provide the 3"
+" correct ones will be considered 100%% correct."
+msgstr ""
+"O gabarito do lab pode ser usado para validar automaticamente as respostas "
+"fornecidas pelos usuários por meio de correspondência com expressões "
+"regulares. Escolha o Lab abaixo e, para cada pergunta, forneça a regex "
+"esperada que a resposta deve corresponder para ser considerada correta (o "
+"cálculo é feito em Python usando a biblioteca <code>re</code>, mais ou menos"
+" assim: <code>re.match(fr\"^{expected_answer}$\", answer)</code>). Apenas as"
+" perguntas registradas no gabarito serão de fato usadas para validar a "
+"pontuação (por exemplo: se o seu Lab tem 5 perguntas e o gabarito contém "
+"apenas 3 respostas esperadas, então quem fornecer as 3 corretas será "
+"considerado 100%% correto."
+
+#: apps/templates/pages/lab_answers_sheet.html:71
+msgid "Choose the Lab:"
+msgstr "Escolha o Lab:"
+
+#: apps/templates/pages/lab_answers_sheet.html:97
+msgid "Question"
+msgstr "Pergunta"
+
+#: apps/templates/pages/lab_answers_sheet.html:98
+msgid "Expected Answer (regex)"
+msgstr "Resposta Esperada (regex)"
+
+#: apps/templates/pages/lab_answers_sheet.html:115
+msgid "Add more answers"
+msgstr "Adicionar mais respostas"
+
+#: apps/templates/pages/lab_answers_sheet.html:116
+msgid "Save answer sheet"
+msgstr "Salvar gabarito"
+
+#: apps/templates/pages/lab_categories_edit.html:3
+#: apps/templates/pages/lab_categories_edit.html:29
+msgid "Edit Lab Category"
+msgstr "Editar Categoria de Laboratório"
+
+#: apps/templates/pages/lab_categories_edit.html:33
+msgid "Lab Category updated successfully!"
+msgstr "Categoria de laboratório atualizada com sucesso!"
+
+#: apps/templates/pages/lab_categories_edit.html:40
+msgid "Fail to update Lab Category!"
+msgstr "Falha ao atualizar a Categoria de Laboratório!"
+
+#: apps/templates/pages/lab_categories_edit.html:49
+msgid "New Lab Category"
+msgstr "Nova Categoria de Laboratório"
+
+#: apps/templates/pages/lab_categories_edit.html:61
+msgid "Lab Category"
+msgstr "Categoria de Laboratório"
+
+#: apps/templates/pages/lab_categories_edit.html:69
+msgid "Category Name"
+msgstr "Nome da Categoria"
+
+#: apps/templates/pages/lab_categories_edit.html:74
+#: apps/templates/pages/lab_categories_list.html:76
+msgid "Color"
+msgstr "Cor"
+
+#: apps/templates/pages/lab_categories_list.html:33
+msgid "List Lab Categories"
+msgstr "Listar Categorias de Laboratório"
+
+#: apps/templates/pages/lab_categories_list.html:65
+msgid "Create New Lab Category"
+msgstr "Criar Nova Categoria de Laboratório"
+
+#: apps/templates/pages/lab_categories_list.html:75
+#: apps/templates/pages/users.html:72
+msgid "Category"
+msgstr "Categoria"
+
+#: apps/templates/pages/lab_categories_list.html:92
+msgid "Delete lab category"
+msgstr "Excluir categoria de laboratório"
+
+#: apps/templates/pages/lab_categories_list.html:114
+msgid "Confirm delete Lab Category"
+msgstr "Confirmar exclusão da Categoria de Laboratório"
+
+#: apps/templates/pages/lab_categories_list.html:121
+msgid "Are you sure you want to delete Lab Category"
+msgstr "Tem certeza de que deseja excluir a Categoria de Laboratório"
+
+#: apps/templates/pages/lab_categories_list.html:125
+msgid "Delete Lab Category"
+msgstr "Excluir Categoria de Laboratório"
+
+#: apps/templates/pages/lab_categories_list.html:165
+msgid "No lab category"
+msgstr "Nenhuma categoria de laboratório"
+
+#: apps/templates/pages/lab_instance_view.html:3
+#: apps/templates/pages/lab_instance_view.html:84
+msgid "View Lab Instance"
+msgstr "Ver Instância do Lab"
+
+#: apps/templates/pages/lab_instance_view.html:90
+msgid "View Lab"
+msgstr "Ver Lab"
+
+#: apps/templates/pages/lab_instance_view.html:103
+#, python-format
+msgid "Lab title: %(title)s / Lab owner: %(owner)s"
+msgstr "Título do Lab: %(title)s / Proprietário do Lab: %(owner)s"
+
+#: apps/templates/pages/lab_instance_view.html:105
+#: apps/templates/pages/lab_instance_view.html:321
+#: apps/templates/pages/lab_instance_view.html:543
+msgid "Expires at:"
+msgstr "Expira em:"
+
+#: apps/templates/pages/lab_instance_view.html:105
+msgid "Never"
+msgstr "Nunca"
+
+#: apps/templates/pages/lab_instance_view.html:112
+msgid "Pin header to top"
+msgstr "Fixar cabeçalho no topo"
+
+#: apps/templates/pages/lab_instance_view.html:123
+msgid "Pod Name"
+msgstr "Nome do Pod"
+
+#: apps/templates/pages/lab_instance_view.html:124
+msgid "Info"
+msgstr "Info"
+
+#: apps/templates/pages/lab_instance_view.html:128
+msgid "Terminals"
+msgstr "Terminais"
+
+#: apps/templates/pages/lab_instance_view.html:178
+msgid "Save &amp; Finish Lab"
+msgstr "Salvar &amp; Finalizar Lab"
+
+#: apps/templates/pages/lab_instance_view.html:183
+msgid "Extend Lab"
+msgstr "Estender Lab"
+
+#: apps/templates/pages/lab_instance_view.html:186
+msgid "Select a time to extend the lab expiration"
+msgstr "Selecione um tempo para estender a expiração do lab"
+
+#: apps/templates/pages/lab_instance_view.html:188
+msgid "+ 1 day"
+msgstr "+ 1 dia"
+
+#: apps/templates/pages/lab_instance_view.html:189
+msgid "+ 1 week"
+msgstr "+ 1 semana"
+
+#: apps/templates/pages/lab_instance_view.html:190
+msgid "+ 1 month"
+msgstr "+ 1 mês"
+
+#: apps/templates/pages/lab_instance_view.html:207
+msgid "Confirm Finish Lab"
+msgstr "Confirmar Finalização do Lab"
+
+#: apps/templates/pages/lab_instance_view.html:213
+msgid ""
+"Are you sure you want to Finish this Lab? (Make sure to save any data you "
+"want! After finishing the lab, resources will be deleted.)"
+msgstr ""
+"Tem certeza de que deseja Finalizar este Lab? (Certifique-se de salvar todos"
+" os dados que desejar! Após finalizar o lab, os recursos serão excluídos.)"
+
+#: apps/templates/pages/lab_instance_view.html:217
+#: apps/templates/pages/lab_instance_view.html:239
+msgid "Finish Lab"
+msgstr "Finalizar Lab"
+
+#: apps/templates/pages/lab_instance_view.html:242
+msgid "Save Answers"
+msgstr "Salvar Respostas"
+
+#: apps/templates/pages/lab_instance_view.html:323
+msgid "Expired!"
+msgstr "Expirado!"
+
+#: apps/templates/pages/lab_instance_view.html:333
+#: apps/templates/pages/lab_instance_view.html:338
+msgid "Copy to clipboard"
+msgstr "Copiar para a área de transferência"
+
+#: apps/templates/pages/lab_instance_view.html:338
+#: apps/templates/pages/lti_management.html:289
+msgid "Copy"
+msgstr "Copiar"
+
+#: apps/templates/pages/lab_instance_view.html:347
+msgid "Copied!"
+msgstr "Copiado!"
+
+#: apps/templates/pages/lab_instance_view.html:358
+msgid "Finishing..."
+msgstr "Finalizando..."
+
+#: apps/templates/pages/lab_instance_view.html:445
+msgid "Failure to save Lab Answers"
+msgstr "Falha ao salvar as Respostas do Lab"
+
+#: apps/templates/pages/lab_instance_view.html:513
+msgid "Failed to load Lab Answers"
+msgstr "Falha ao carregar as Respostas do Lab"
+
+#: apps/templates/pages/lab_instance_view.html:540
+msgid "Lab duration/expiration extended successfully"
+msgstr "Duração/expiração do lab estendida com sucesso"
+
+#: apps/templates/pages/lab_instance_view.html:548
+msgid "Failure to extend Lab"
+msgstr "Falha ao estender o Lab"
+
+#: apps/templates/pages/labs_edit.html:3 apps/templates/pages/labs_edit.html:54
+#: apps/templates/pages/labs_edit.html:81
+msgid "Create/Update Lab"
+msgstr "Criar/Atualizar Lab"
+
+#: apps/templates/pages/labs_edit.html:65
+msgid "Fail to create/update lab!"
+msgstr "Falha ao criar/atualizar o lab!"
+
+#: apps/templates/pages/labs_edit.html:72
+msgid "Forking Lab"
+msgstr "Bifurcando Lab"
+
+#: apps/templates/pages/labs_edit.html:73
+#, python-format
+msgid "You are forking \"%(name)s\". Nothing is saved until you press Submit."
+msgstr "Você está bifurcando \"%(name)s\". Nada é salvo até você pressionar Enviar."
+
+#: apps/templates/pages/labs_edit.html:107
+msgid "Enter lab title..."
+msgstr "Digite o título do lab..."
+
+#: apps/templates/pages/labs_edit.html:115
+msgid "Display order"
+msgstr "Ordem de exibição"
+
+#: apps/templates/pages/labs_edit.html:117
+msgid "Labs are listed by ascending display order, then by title. Default is 1000."
+msgstr ""
+"Os Labs são listados por ordem de exibição crescente e, em seguida, por "
+"título. O padrão é 1000."
+
+#: apps/templates/pages/labs_edit.html:181
+#: apps/templates/pages/labs_edit.html:1085
+msgid "Lab extended description"
+msgstr "Descrição estendida do Lab"
+
+#: apps/templates/pages/labs_edit.html:186 apps/templates/pages/labs_edit.html:217
+#: apps/templates/pages/labs_edit.html:263
+msgid "Version history"
+msgstr "Histórico de versões"
+
+#: apps/templates/pages/labs_edit.html:187 apps/templates/pages/labs_edit.html:218
+#: apps/templates/pages/labs_edit.html:264
+msgid "Versions"
+msgstr "Versões"
+
+#: apps/templates/pages/labs_edit.html:213
+#: apps/templates/pages/labs_edit.html:1083
+msgid "Kubernetes Lab Manifest"
+msgstr "Manifesto Kubernetes do Lab"
+
+#: apps/templates/pages/labs_edit.html:225
+#, python-brace-format
+msgid ""
+"Add here your Kubernetes Manifest file containing Pods, Deployments and "
+"Services. You should customize the item names with variables that will be "
+"replaced during resource creation, example: <code>${pod_hash}</code>"
+msgstr ""
+"Adicione aqui o seu arquivo de Manifesto Kubernetes contendo Pods, "
+"Deployments e Services. Você deve personalizar os nomes dos itens com "
+"variáveis que serão substituídas durante a criação dos recursos, exemplo: "
+"<code>${pod_hash}</code>"
+
+#: apps/templates/pages/labs_edit.html:229
+msgid "Kubernetes Manifest Template:"
+msgstr "Modelo de Manifesto Kubernetes:"
+
+#: apps/templates/pages/labs_edit.html:232
+msgid "Wait! Loading templates..."
+msgstr "Aguarde! Carregando modelos..."
+
+#: apps/templates/pages/labs_edit.html:235
+msgid "Load Template"
+msgstr "Carregar Modelo"
+
+#: apps/templates/pages/labs_edit.html:236
+msgid "Force Refresh"
+msgstr "Forçar Atualização"
+
+#: apps/templates/pages/labs_edit.html:246
+#, python-format
+msgid ""
+"Read %(link_start)smore information%(link_end)s about the Kubernetes "
+"manifest."
+msgstr "Leia %(link_start)smais informações%(link_end)s sobre o manifesto Kubernetes."
+
+#: apps/templates/pages/labs_edit.html:276
+msgid "Editor"
+msgstr "Editor"
+
+#: apps/templates/pages/labs_edit.html:279
+msgid "Preview"
+msgstr "Pré-visualização"
+
+#: apps/templates/pages/labs_edit.html:286
+msgid "Add simple question"
+msgstr "Adicionar pergunta simples"
+
+#: apps/templates/pages/labs_edit.html:287
+msgid "Add text area question"
+msgstr "Adicionar pergunta de área de texto"
+
+#: apps/templates/pages/labs_edit.html:290
+msgid "Paste, drop, or click to add files"
+msgstr "Cole, arraste ou clique para adicionar arquivos"
+
+#: apps/templates/pages/labs_edit.html:296
+msgid "Attached files"
+msgstr "Arquivos anexados"
+
+#: apps/templates/pages/labs_edit.html:312
+msgid "back to the top"
+msgstr "voltar ao topo"
+
+#: apps/templates/pages/labs_edit.html:475 apps/templates/pages/labs_view.html:161
+msgid "Fork"
+msgstr "Bifurcar"
+
+#: apps/templates/pages/labs_edit.html:479
+msgid "Restore Lab"
+msgstr "Restaurar Lab"
+
+#: apps/templates/pages/labs_edit.html:481
+msgid "Delete Lab"
+msgstr "Excluir Lab"
+
+#: apps/templates/pages/labs_edit.html:494 apps/templates/pages/labs_view.html:208
+msgid "Confirm restore lab"
+msgstr "Confirmar restauração do laboratório"
+
+#: apps/templates/pages/labs_edit.html:500 apps/templates/pages/labs_view.html:215
+msgid "Are you sure you want to restore this lab?"
+msgstr "Tem certeza de que deseja restaurar este laboratório?"
+
+#: apps/templates/pages/labs_edit.html:504 apps/templates/pages/labs_view.html:219
+msgid "Restore lab"
+msgstr "Restaurar laboratório"
+
+#: apps/templates/pages/labs_edit.html:517 apps/templates/pages/labs_view.html:185
+msgid "Confirm delete lab"
+msgstr "Confirmar exclusão do laboratório"
+
+#: apps/templates/pages/labs_edit.html:523 apps/templates/pages/labs_view.html:192
+msgid "Are you sure you want to delete Lab"
+msgstr "Tem certeza de que deseja excluir o Laboratório"
+
+#: apps/templates/pages/labs_edit.html:527 apps/templates/pages/labs_view.html:196
+msgid "Delete lab"
+msgstr "Excluir laboratório"
+
+#: apps/templates/pages/labs_edit.html:543
+msgid "Version history:"
+msgstr "Histórico de versões:"
+
+#: apps/templates/pages/labs_edit.html:549
+msgid ""
+"Restoring a version loads it back into the editor; it becomes a new version "
+"once you save the Lab."
+msgstr ""
+"Restaurar uma versão a carrega de volta no editor; ela se torna uma nova "
+"versão quando você salva o Lab."
+
+#: apps/templates/pages/labs_edit.html:552
+msgid "Version"
+msgstr "Versão"
+
+#: apps/templates/pages/labs_edit.html:552
+msgid "Saved at (UTC)"
+msgstr "Salvo em (UTC)"
+
+#: apps/templates/pages/labs_edit.html:552
+msgid "Author"
+msgstr "Autor"
+
+#: apps/templates/pages/labs_edit.html:639 apps/templates/pages/labs_edit.html:644
+msgid "Failed to upload image:"
+msgstr "Falha ao enviar a imagem:"
+
+#: apps/templates/pages/labs_edit.html:708
+msgid ""
+"Warning: this file is still referenced in the Lab Guide. Remove the "
+"reference before deleting."
+msgstr ""
+"Aviso: este arquivo ainda é referenciado no Guia do Lab. Remova a referência"
+" antes de excluir."
+
+#: apps/templates/pages/labs_edit.html:713
+msgid ""
+"Warning: this file is still referenced in the Lab extended description. "
+"Remove the reference before deleting."
+msgstr ""
+"Aviso: este arquivo ainda é referenciado na descrição estendida do Lab. "
+"Remova a referência antes de excluir."
+
+#: apps/templates/pages/labs_edit.html:724 apps/templates/pages/labs_edit.html:729
+msgid "Failed to remove file:"
+msgstr "Falha ao remover o arquivo:"
+
+#: apps/templates/pages/labs_edit.html:728
+#: apps/templates/pages/labs_edit.html:1066
+msgid "Unknown error"
+msgstr "Erro desconhecido"
+
+#: apps/templates/pages/labs_edit.html:929
+msgid "Duplicated question name found:"
+msgstr "Nome de pergunta duplicado encontrado:"
+
+#: apps/templates/pages/labs_edit.html:932
+msgid "Duplicated input id found:"
+msgstr "ID de campo duplicado encontrado:"
+
+#: apps/templates/pages/labs_edit.html:943
+msgid "Please select at least one lab category."
+msgstr "Selecione pelo menos uma categoria de lab."
+
+#: apps/templates/pages/labs_edit.html:995
+msgid "Fail to load the list of templates."
+msgstr "Falha ao carregar a lista de modelos."
+
+#: apps/templates/pages/labs_edit.html:1019
+msgid "Failed to load"
+msgstr "Falha ao carregar"
+
+#: apps/templates/pages/labs_edit.html:1020
+msgid "Failed to load templates."
+msgstr "Falha ao carregar os modelos."
+
+#: apps/templates/pages/labs_edit.html:1040
+msgid "Please select a template to load."
+msgstr "Selecione um modelo para carregar."
+
+#: apps/templates/pages/labs_edit.html:1052
+#: apps/templates/pages/labs_edit.html:1055
+msgid "Failed to load template:"
+msgstr "Falha ao carregar o modelo:"
+
+#: apps/templates/pages/labs_edit.html:1062
+msgid "Failed to refresh templates (server error)."
+msgstr "Falha ao atualizar os modelos (erro do servidor)."
+
+#: apps/templates/pages/labs_edit.html:1065
+msgid "Templates refreshed successfully!"
+msgstr "Modelos atualizados com sucesso!"
+
+#: apps/templates/pages/labs_edit.html:1066
+msgid "Failed to refresh templates:"
+msgstr "Falha ao atualizar os modelos:"
+
+#: apps/templates/pages/labs_edit.html:1109
+#: apps/templates/pages/lti_management.html:372
+#: apps/templates/pages/run_lab_status.html:66
+msgid "Loading..."
+msgstr "Carregando..."
+
+#: apps/templates/pages/labs_edit.html:1116
+msgid "No versions recorded yet."
+msgstr "Nenhuma versão registrada ainda."
+
+#: apps/templates/pages/labs_edit.html:1121
+msgid "(latest)"
+msgstr "(mais recente)"
+
+#: apps/templates/pages/labs_edit.html:1126
+msgid "Diff vs current"
+msgstr "Comparar com a atual"
+
+#: apps/templates/pages/labs_edit.html:1126
+msgid "Diff"
+msgstr "Comparar"
+
+#: apps/templates/pages/labs_edit.html:1130
+msgid "View content"
+msgstr "Ver conteúdo"
+
+#: apps/templates/pages/labs_edit.html:1130
+#: apps/templates/pages/labs_view.html:156
+#: apps/templates/pages/my_support_threads.html:69
+#: apps/templates/pages/running.html:115
+msgid "View"
+msgstr "Visualizar"
+
+#: apps/templates/pages/labs_edit.html:1134
+msgid "Restore into editor"
+msgstr "Restaurar no editor"
+
+#: apps/templates/pages/labs_edit.html:1134
+#: apps/templates/pages/labs_view.html:167
+msgid "Restore"
+msgstr "Restaurar"
+
+#: apps/templates/pages/labs_edit.html:1138
+msgid "Delete this version"
+msgstr "Excluir esta versão"
+
+#: apps/templates/pages/labs_edit.html:1145
+msgid "Failed to load history:"
+msgstr "Falha ao carregar o histórico:"
+
+#: apps/templates/pages/labs_edit.html:1154
+#: apps/templates/pages/labs_edit.html:1191
+msgid "Failed to load version:"
+msgstr "Falha ao carregar a versão:"
+
+#: apps/templates/pages/labs_edit.html:1154
+#: apps/templates/pages/labs_edit.html:1191
+#: apps/templates/pages/labs_edit.html:1208
+msgid "request failed"
+msgstr "a requisição falhou"
+
+#: apps/templates/pages/labs_edit.html:1157
+msgid "Diff v"
+msgstr "Comparação da v"
+
+#: apps/templates/pages/labs_edit.html:1157
+msgid " -> current:"
+msgstr " -> atual:"
+
+#: apps/templates/pages/labs_edit.html:1157
+msgid "Content of v"
+msgstr "Conteúdo da v"
+
+#: apps/templates/pages/labs_edit.html:1162
+msgid "(no differences against the saved Lab)"
+msgstr "(nenhuma diferença em relação ao Lab salvo)"
+
+#: apps/templates/pages/labs_edit.html:1162
+msgid "(empty)"
+msgstr "(vazio)"
+
+#: apps/templates/pages/labs_edit.html:1199
+msgid "Delete version v"
+msgstr "Excluir a versão v"
+
+#: apps/templates/pages/labs_edit.html:1199
+msgid "? This cannot be undone."
+msgstr "? Isso não pode ser desfeito."
+
+#: apps/templates/pages/labs_edit.html:1208
+msgid "Failed to delete version:"
+msgstr "Falha ao excluir a versão:"
+
+#: apps/templates/pages/labs_view.html:57
+msgid "Clear"
+msgstr "Limpar"
+
+#: apps/templates/pages/labs_view.html:61
+msgid "Hide deleted"
+msgstr "Ocultar excluídos"
+
+#: apps/templates/pages/labs_view.html:63
+msgid "Show deleted"
+msgstr "Mostrar excluídos"
+
+#: apps/templates/pages/labs_view.html:71
+msgid "Filter by Category:"
+msgstr "Filtrar por Categoria:"
+
+#: apps/templates/pages/labs_view.html:81
+msgid "Filter by Status:"
+msgstr "Filtrar por Status:"
+
+#: apps/templates/pages/labs_view.html:86 apps/templates/pages/labs_view.html:135
+#: apps/templates/pages/labs_view.html:140
+msgid "Completed"
+msgstr "Concluído"
+
+#: apps/templates/pages/labs_view.html:89
+msgid "Not Completed"
+msgstr "Não Concluído"
+
+#: apps/templates/pages/labs_view.html:117
+msgid "Deleted"
+msgstr "Excluído"
+
+#: apps/templates/pages/labs_view.html:150
+msgid "Resume"
+msgstr "Retomar"
+
+#: apps/templates/pages/labs_view.html:154
+msgid "Start"
+msgstr "Iniciar"
+
+#: apps/templates/pages/login.html:36
+msgid "Federated authentication?"
+msgstr "Autenticação federada?"
+
+#: apps/templates/pages/login.html:48
+msgid "Local Authentication"
+msgstr "Autenticação Local"
+
+#: apps/templates/pages/login.html:57
+msgid "Email or Username"
+msgstr "E-mail ou Usuário"
+
+#: apps/templates/pages/login.html:74
+msgid "Create an account"
+msgstr "Criar uma conta"
+
+#: apps/templates/pages/login.html:78
+msgid "Sign In"
+msgstr "Entrar"
+
+#: apps/templates/pages/login.html:82
+msgid "Forgot Password"
+msgstr "Esqueci a senha"
+
+#: apps/templates/pages/lti_management.html:3
+#: apps/templates/pages/lti_management.html:31
+msgid "LTI Management"
+msgstr "Gerenciamento de LTI"
+
+#: apps/templates/pages/lti_management.html:51
+msgid "Platform Registrations"
+msgstr "Registros de Plataforma"
+
+#: apps/templates/pages/lti_management.html:55
+msgid ""
+"LTI 1.3 platform registrations (created by dynamic registration). Rotate a "
+"registration's signing key or show its public key (PEM) to paste into the "
+"LMS when it cannot fetch <code>/lti/jwks/</code>."
+msgstr ""
+"Registros de plataforma LTI 1.3 (criados por registro dinâmico). Rotacione a"
+" chave de assinatura de um registro ou exiba sua chave pública (PEM) para "
+"colar no LMS quando ele não conseguir obter <code>/lti/jwks/</code>."
+
+#: apps/templates/pages/lti_management.html:61
+msgid "Client ID"
+msgstr "ID do Cliente"
+
+#: apps/templates/pages/lti_management.html:62
+msgid "Deployment IDs"
+msgstr "IDs de Implantação"
+
+#: apps/templates/pages/lti_management.html:63
+msgid "Default"
+msgstr "Padrão"
+
+#: apps/templates/pages/lti_management.html:73
+msgid "default"
+msgstr "padrão"
+
+#: apps/templates/pages/lti_management.html:77
+msgid "Public Key"
+msgstr "Chave Pública"
+
+#: apps/templates/pages/lti_management.html:81
+#: apps/templates/pages/lti_management.html:242
+msgid "Rotate Key"
+msgstr "Rotacionar Chave"
+
+#: apps/templates/pages/lti_management.html:98
+msgid "Registration Tokens"
+msgstr "Tokens de Registro"
+
+#: apps/templates/pages/lti_management.html:101
+#: apps/templates/pages/lti_management.html:214
+msgid "Mint Token"
+msgstr "Gerar Token"
+
+#: apps/templates/pages/lti_management.html:107
+msgid ""
+"One-time credentials for the dynamic registration endpoint. The token itself"
+" is shown only once, at mint time; only its hash is stored."
+msgstr ""
+"Credenciais de uso único para o endpoint de registro dinâmico. O token em si"
+" é exibido apenas uma vez, no momento da geração; somente o seu hash é "
+"armazenado."
+
+#: apps/templates/pages/lti_management.html:112
+msgid "ID"
+msgstr "ID"
+
+#: apps/templates/pages/lti_management.html:113
+msgid "Label"
+msgstr "Rótulo"
+
+#: apps/templates/pages/lti_management.html:114
+msgid "Created"
+msgstr "Criado"
+
+#: apps/templates/pages/lti_management.html:115
+msgid "Expires"
+msgstr "Expira"
+
+#: apps/templates/pages/lti_management.html:116
+msgid "Used"
+msgstr "Usado"
+
+#: apps/templates/pages/lti_management.html:130
+msgid "used"
+msgstr "usado"
+
+#: apps/templates/pages/lti_management.html:132
+msgid "expired"
+msgstr "expirado"
+
+#: apps/templates/pages/lti_management.html:134
+msgid "valid"
+msgstr "válido"
+
+#: apps/templates/pages/lti_management.html:151
+msgid "Retired Keys"
+msgstr "Chaves Aposentadas"
+
+#: apps/templates/pages/lti_management.html:154
+#: apps/templates/pages/lti_management.html:253
+msgid "Purge Retired Keys"
+msgstr "Expurgar Chaves Aposentadas"
+
+#: apps/templates/pages/lti_management.html:160
+msgid ""
+"Rotated keys stay published in <code>/lti/jwks/</code> during a grace period"
+" so platforms validating cached tokens keep finding the old key. Purge them "
+"once the grace period has passed."
+msgstr ""
+"As chaves rotacionadas permanecem publicadas em <code>/lti/jwks/</code> "
+"durante um período de carência, para que as plataformas que validam tokens "
+"em cache continuem encontrando a chave antiga. Expurgue-as assim que o "
+"período de carência terminar."
+
+#: apps/templates/pages/lti_management.html:165
+msgid "Key File"
+msgstr "Arquivo de Chave"
+
+#: apps/templates/pages/lti_management.html:166
+msgid "Retired At (UTC)"
+msgstr "Aposentada em (UTC)"
+
+#: apps/templates/pages/lti_management.html:188
+msgid "Mint Registration Token"
+msgstr "Gerar Token de Registro"
+
+#: apps/templates/pages/lti_management.html:195
+msgid "Label (who this token is for)"
+msgstr "Rótulo (para quem é este token)"
+
+#: apps/templates/pages/lti_management.html:196
+msgid "e.g. Prof. Smith / Moodle prod"
+msgstr "ex.: Prof. Silva / Moodle produção"
+
+#: apps/templates/pages/lti_management.html:199
+msgid "Validity (hours)"
+msgstr "Validade (horas)"
+
+#: apps/templates/pages/lti_management.html:203
+msgid "Registration URL (shown once — hand it to the LMS admin):"
+msgstr "URL de registro (exibida uma única vez — entregue ao administrador do LMS):"
+
+#: apps/templates/pages/lti_management.html:207
+msgid "Copy URL"
+msgstr "Copiar URL"
+
+#: apps/templates/pages/lti_management.html:225
+msgid "Rotate Signing Key"
+msgstr "Rotacionar Chave de Assinatura"
+
+#: apps/templates/pages/lti_management.html:231
+msgid "Rotate the signing key for this registration?"
+msgstr "Rotacionar a chave de assinatura deste registro?"
+
+#: apps/templates/pages/lti_management.html:233
+msgid "Issuer:"
+msgstr "Emissor:"
+
+#: apps/templates/pages/lti_management.html:234
+msgid "Client ID:"
+msgstr "ID do Cliente:"
+
+#: apps/templates/pages/lti_management.html:237
+msgid ""
+"The new key is published immediately; the old key is retired but stays "
+"published in <code>/lti/jwks/</code> until you purge it after the grace "
+"period."
+msgstr ""
+"A nova chave é publicada imediatamente; a chave antiga é aposentada, mas "
+"permanece publicada em <code>/lti/jwks/</code> até que você a expurgue após "
+"o período de carência."
+
+#: apps/templates/pages/lti_management.html:259
+msgid "Delete retired key files older than the grace period."
+msgstr ""
+"Excluir arquivos de chaves aposentadas mais antigos que o período de "
+"carência."
+
+#: apps/templates/pages/lti_management.html:261
+msgid "Grace period (days)"
+msgstr "Período de carência (dias)"
+
+#: apps/templates/pages/lti_management.html:267
+msgid "Purge"
+msgstr "Expurgar"
+
+#: apps/templates/pages/lti_management.html:278
+msgid "Registration Public Key"
+msgstr "Chave Pública do Registro"
+
+#: apps/templates/pages/lti_management.html:284
+msgid ""
+"Paste this into the LMS as the tool's RSA key when it cannot fetch "
+"<code>/lti/jwks/</code>."
+msgstr ""
+"Cole isto no LMS como a chave RSA da ferramenta quando ele não conseguir "
+"obter <code>/lti/jwks/</code>."
+
+#: apps/templates/pages/lti_management.html:320
+msgid "No platform registrations yet"
+msgstr "Nenhum registro de plataforma ainda"
+
+#: apps/templates/pages/lti_management.html:322
+msgid "No registration tokens minted yet"
+msgstr "Nenhum token de registro gerado ainda"
+
+#: apps/templates/pages/lti_management.html:324
+msgid "No retired keys"
+msgstr "Nenhuma chave aposentada"
+
+#: apps/templates/pages/lti_management.html:330
+msgid "Request failed"
+msgstr "A requisição falhou"
+
+#: apps/templates/pages/lti_management.html:352
+msgid "Missing label"
+msgstr "Rótulo ausente"
+
+#: apps/templates/pages/lti_management.html:352
+msgid "Please enter a label"
+msgstr "Informe um rótulo"
+
+#: apps/templates/pages/my_support_thread_view.html:3
+msgid "My Support Case"
+msgstr "Meu Caso de Suporte"
+
+#: apps/templates/pages/my_support_thread_view.html:23
+msgid "Support Case"
+msgstr "Caso de Suporte"
+
+#: apps/templates/pages/my_support_thread_view.html:28
+#: apps/templates/pages/my_support_threads.html:3
+#: apps/templates/pages/my_support_threads.html:26
+msgid "My Support"
+msgstr "Meu Suporte"
+
+#: apps/templates/pages/my_support_thread_view.html:42
+msgid "Conversation"
+msgstr "Conversa"
+
+#: apps/templates/pages/my_support_thread_view.html:44
+#: apps/templates/pages/my_support_threads.html:61
+#: apps/templates/pages/support_thread_view.html:46
+#: apps/templates/pages/support_threads.html:72
+#: apps/templates/pages/support_threads.html:87
+msgid "Open"
+msgstr "Aberto"
+
+#: apps/templates/pages/my_support_thread_view.html:46
+#: apps/templates/pages/my_support_threads.html:63
+#: apps/templates/pages/support_thread_view.html:48
+#: apps/templates/pages/support_threads.html:74
+msgid "Finished"
+msgstr "Finalizado"
+
+#: apps/templates/pages/my_support_thread_view.html:60
+#: apps/templates/pages/my_support_thread_view.html:130
+msgid "You"
+msgstr "Você"
+
+#: apps/templates/pages/my_support_thread_view.html:68
+#: apps/templates/pages/my_support_thread_view.html:130
+#: apps/templates/pages/support_thread_view.html:86
+#: apps/templates/pages/support_thread_view.html:156
+msgid "Assistant"
+msgstr "Assistente"
+
+#: apps/templates/pages/my_support_thread_view.html:79
+msgid ""
+"Use the chat button at the bottom-right of any page to continue this "
+"conversation."
+msgstr ""
+"Use o botão de chat no canto inferior direito de qualquer página para "
+"continuar esta conversa."
+
+#: apps/templates/pages/my_support_thread_view.html:81
+msgid ""
+"This conversation is finished. Start a new one from the chat button at the "
+"bottom-right."
+msgstr ""
+"Esta conversa foi finalizada. Inicie uma nova pelo botão de chat no canto "
+"inferior direito."
+
+#: apps/templates/pages/my_support_threads.html:21
+msgid "My Support Cases"
+msgstr "Meus Casos de Suporte"
+
+#: apps/templates/pages/my_support_threads.html:38
+msgid "Your conversations with support"
+msgstr "Suas conversas com o suporte"
+
+#: apps/templates/pages/my_support_threads.html:46
+#: apps/templates/pages/support_threads.html:62
+msgid "Last activity"
+msgstr "Última atividade"
+
+#: apps/templates/pages/my_support_threads.html:56
+msgid "new reply"
+msgstr "nova resposta"
+
+#: apps/templates/pages/my_support_threads.html:98
+msgid "You have no support cases yet"
+msgstr "Você ainda não tem casos de suporte"
+
+#: apps/templates/pages/page-403.html:3
+msgid "Error 403"
+msgstr "Erro 403"
+
+#: apps/templates/pages/page-403.html:123
+msgid "Access Forbidden"
+msgstr "Acesso proibido"
+
+#: apps/templates/pages/page-403.html:125
+msgid ""
+"You don't have permission to access this resource. This might be due to "
+"insufficient privileges or security restrictions on this server."
+msgstr ""
+"Você não tem permissão para acessar este recurso. Isso pode ocorrer por "
+"privilégios insuficientes ou restrições de segurança neste servidor."
+
+#: apps/templates/pages/page-403.html:128 apps/templates/pages/page-404.html:80
+msgid "Go Back"
+msgstr "Voltar"
+
+#: apps/templates/pages/page-404.html:3
+msgid "Error 404"
+msgstr "Erro 404"
+
+#: apps/templates/pages/page-404.html:74
+msgid "Page Not Found"
+msgstr "Página não encontrada"
+
+#: apps/templates/pages/page-404.html:76
+msgid ""
+"The page you are looking for might have been removed, had its name changed, "
+"or is temporarily unavailable. Please check the URL for any mistakes."
+msgstr ""
+"A página que você procura pode ter sido removida, ter tido seu nome alterado"
+" ou estar temporariamente indisponível. Verifique se há erros na URL."
+
+#: apps/templates/pages/page-404.html:79 apps/templates/pages/page-500.html:127
+msgid "Return to Home"
+msgstr "Voltar ao início"
+
+#: apps/templates/pages/page-500.html:3
+msgid "Error 500"
+msgstr "Erro 500"
+
+#: apps/templates/pages/page-500.html:122
+msgid "Internal Server Error"
+msgstr "Erro interno do servidor"
+
+#: apps/templates/pages/page-500.html:124
+msgid ""
+"Our servers are currently experiencing technical difficulties. Our team has "
+"been notified and is working to resolve the issue as quickly as possible."
+msgstr ""
+"Nossos servidores estão enfrentando dificuldades técnicas no momento. Nossa "
+"equipe foi notificada e está trabalhando para resolver o problema o mais "
+"rápido possível."
+
+#: apps/templates/pages/page-500.html:128
+msgid "Contact Support"
+msgstr "Contatar o suporte"
+
+#: apps/templates/pages/register.html:3 apps/templates/pages/register.html:87
+msgid "Register"
+msgstr "Registrar"
+
+#: apps/templates/pages/register.html:39
+msgid "Add your credentials"
+msgstr "Insira suas credenciais"
+
+#: apps/templates/pages/register.html:82
+msgid "I agree to the"
+msgstr "Concordo com os"
+
+#: apps/templates/pages/register.html:82
+msgid "terms"
+msgstr "termos"
+
+#: apps/templates/pages/register.html:94
+msgid "Have an account?"
+msgstr "Já tem uma conta?"
+
+#: apps/templates/pages/register.html:131
+msgid ""
+"Invalid character. Use letters, numbers, dot (.), underscore (_) or hyphen "
+"(-)"
+msgstr ""
+"Caractere inválido. Use letras, números, ponto (.), sublinhado (_) ou hífen "
+"(-)"
+
+#: apps/templates/pages/reset_password.html:40
+msgid "Enter your email or username"
+msgstr "Digite seu e-mail ou nome de usuário"
+
+#: apps/templates/pages/reset_password.html:49
+msgid "Email or username"
+msgstr "E-mail ou nome de usuário"
+
+#: apps/templates/pages/run_lab.html:3 apps/templates/pages/run_lab.html:32
+#: apps/templates/pages/run_lab.html:45
+msgid "Run Lab"
+msgstr "Executar Lab"
+
+#: apps/templates/pages/run_lab.html:36
+msgid "Fail to execute the lab!"
+msgstr "Falha ao executar o lab!"
+
+#: apps/templates/pages/run_lab.html:63
+msgid "Overall information"
+msgstr "Informações gerais"
+
+#: apps/templates/pages/run_lab.html:72
+msgid "User label"
+msgstr "Identificação do usuário"
+
+#: apps/templates/pages/run_lab.html:80
+msgid "Lab category"
+msgstr "Categoria do Lab"
+
+#: apps/templates/pages/run_lab.html:106
+msgid "Lab scheduling"
+msgstr "Agendamento do Lab"
+
+#: apps/templates/pages/run_lab.html:110
+msgid "Lab Duration/Expiration"
+msgstr "Duração/Expiração do Lab"
+
+#: apps/templates/pages/run_lab.html:133
+msgid "Run"
+msgstr "Executar"
+
+#: apps/templates/pages/run_lab.html:140
+#, python-format
+msgid "Visit %(link_start)sLab documentation%(link_end)s for more information."
+msgstr "Visite a %(link_start)sdocumentação do Lab%(link_end)s para mais informações."
+
+#: apps/templates/pages/run_lab.html:178
+msgid "Starting lab..."
+msgstr "Iniciando o lab..."
+
+#: apps/templates/pages/run_lab_status.html:3
+msgid "Run Lab - Status"
+msgstr "Executar Lab - Status"
+
+#: apps/templates/pages/run_lab_status.html:30
+msgid "Running Lab - Status"
+msgstr "Lab em Execução - Status"
+
+#: apps/templates/pages/run_lab_status.html:35
+msgid "Lab Status"
+msgstr "Status do Lab"
+
+#: apps/templates/pages/run_lab_status.html:48
+msgid "Wait while checking for resource statuses..."
+msgstr "Aguarde enquanto verificamos o status dos recursos..."
+
+#: apps/templates/pages/run_lab_status.html:58
+msgid "Resource statuses"
+msgstr "Status dos recursos"
+
+#: apps/templates/pages/run_lab_status.html:69
+msgid "Unknown"
+msgstr "Desconhecido"
+
+#: apps/templates/pages/run_lab_status.html:74
+#: apps/templates/pages/run_lab_status.html:186
+msgid "Start using the Lab resources and Lab guide!"
+msgstr "Comece a usar os recursos do Lab e o guia do Lab!"
+
+#: apps/templates/pages/run_lab_status.html:117
+msgid ""
+"We could not confirm all resources became ready within 5 minutes. Your Lab "
+"may still be provisioning in the background — open the Lab page below to "
+"check it."
+msgstr ""
+"Não conseguimos confirmar que todos os recursos ficaram prontos em 5 "
+"minutos. Seu Lab pode ainda estar sendo provisionado em segundo plano — abra"
+" a página do Lab abaixo para verificar."
+
+#: apps/templates/pages/run_lab_status.html:118
+msgid "Taking more than expected, but still waiting for resources."
+msgstr "Está demorando mais que o esperado, mas ainda aguardando os recursos."
+
+#: apps/templates/pages/run_lab_status.html:119
+msgid ""
+"Almost there — provisioning can take a few minutes on busy clusters. Please "
+"bear with us a little longer."
+msgstr ""
+"Quase lá — o provisionamento pode levar alguns minutos em clusters ocupados."
+" Aguarde mais um pouco, por favor."
+
+#: apps/templates/pages/run_lab_status.html:120
+msgid "Still waiting for all resources to be provisioned."
+msgstr "Ainda aguardando o provisionamento de todos os recursos."
+
+#: apps/templates/pages/run_lab_status.html:121
+msgid "This is taking a little longer than usual — thank you for your patience!"
+msgstr "Isto está demorando um pouco mais que o normal — obrigado pela sua paciência!"
+
+#: apps/templates/pages/run_lab_status.html:138
+msgid "Check the running Lab"
+msgstr "Verificar o Lab em execução"
+
+#: apps/templates/pages/run_lab_status.html:145
+msgid "Waiting for"
+msgstr "Aguardando há"
+
+#: apps/templates/pages/run_lab_status.html:169
+msgid "Failed to get data"
+msgstr "Falha ao obter os dados"
+
+#: apps/templates/pages/run_lab_status.html:185
+msgid "All resources are ready!"
+msgstr "Todos os recursos estão prontos!"
+
+#: apps/templates/pages/run_lab_status.html:196
+msgid "Failed to process request:"
+msgstr "Falha ao processar a solicitação:"
+
+#: apps/templates/pages/running.html:59 apps/templates/pages/running.html:133
+#: apps/templates/pages/users.html:60 apps/templates/pages/users.html:113
+msgid "Clear table filters"
+msgstr "Limpar filtros da tabela"
+
+#: apps/templates/pages/running.html:98
+msgid "Created (UTC)"
+msgstr "Criado (UTC)"
+
+#: apps/templates/pages/running.html:147
+msgid "Confirm Lab removal"
+msgstr "Confirmar remoção do Lab"
+
+#: apps/templates/pages/running.html:153
+msgid "Are you sure you want to remove the selected Labs?"
+msgstr "Tem certeza de que deseja remover os Labs selecionados?"
+
+#: apps/templates/pages/running.html:158
+msgid "Delete Labs"
+msgstr "Excluir Labs"
+
+#: apps/templates/pages/running.html:220
+msgid "No running labs"
+msgstr "Nenhum lab em execução"
+
+#: apps/templates/pages/support_thread_view.html:3
+#: apps/templates/pages/support_thread_view.html:25
+msgid "Support Chat"
+msgstr "Chat de Suporte"
+
+#: apps/templates/pages/support_thread_view.html:31
+msgid "Thread"
+msgstr "Conversa"
+
+#: apps/templates/pages/support_thread_view.html:61
+msgid "Started from:"
+msgstr "Iniciado em:"
+
+#: apps/templates/pages/support_thread_view.html:62
+msgid "IP:"
+msgstr "IP:"
+
+#: apps/templates/pages/support_thread_view.html:63
+msgid "Browser:"
+msgstr "Navegador:"
+
+#: apps/templates/pages/support_thread_view.html:98
+msgid "Type your reply ..."
+msgstr "Digite sua resposta ..."
+
+#: apps/templates/pages/support_thread_view.html:174
+msgid "Finish this conversation?"
+msgstr "Encerrar esta conversa?"
+
+#: apps/templates/pages/support_thread_view.html:196
+msgid "Failed to send reply"
+msgstr "Falha ao enviar a resposta"
+
+#: apps/templates/pages/support_threads.html:25
+msgid "Support Chats"
+msgstr "Chats de Suporte"
+
+#: apps/templates/pages/support_threads.html:42
+msgid "All support threads"
+msgstr "Todas as conversas de suporte"
+
+#: apps/templates/pages/support_threads.html:42
+msgid "Open support threads"
+msgstr "Conversas de suporte abertas"
+
+#: apps/templates/pages/support_threads.html:46
+msgid "Show open only"
+msgstr "Mostrar apenas abertas"
+
+#: apps/templates/pages/support_threads.html:50
+msgid "Show all threads"
+msgstr "Mostrar todas as conversas"
+
+#: apps/templates/pages/support_threads.html:61
+msgid "Unread"
+msgstr "Não lidas"
+
+#: apps/templates/pages/support_threads.html:116
+msgid "No open conversations or unread messages"
+msgstr "Nenhuma conversa aberta ou mensagem não lida"
+
+#: apps/templates/pages/users.html:51
+msgid "Current users"
+msgstr "Usuários atuais"
+
+#: apps/templates/pages/users.html:51
+msgid "All"
+msgstr "Todos"
+
+#: apps/templates/pages/users.html:51
+msgid "users"
+msgstr "usuários"
+
+#: apps/templates/pages/users.html:70
+msgid "Full name"
+msgstr "Nome completo"
+
+#: apps/templates/pages/users.html:74
+msgid "Last login (UTC)"
+msgstr "Último login (UTC)"
+
+#: apps/templates/pages/users.html:75
+msgid "Created at (UTC)"
+msgstr "Criado em (UTC)"
+
+#: apps/templates/pages/users.html:223
+msgid "No user"
+msgstr "Nenhum usuário"
+
+#: apps/templates/pages/waiting_approval.html:32
+msgid "Unauthorized user"
+msgstr "Usuário não autorizado"
+
+#: apps/templates/pages/waiting_approval.html:36
+msgid "Success!"
+msgstr "Sucesso!"
+
+#: apps/templates/pages/waiting_approval.html:43
+msgid "Fail to save note!"
+msgstr "Falha ao salvar a nota!"
+
+#: apps/templates/pages/waiting_approval.html:65
+msgid "Waiting for approval"
+msgstr "Aguardando aprovação"
+
+#: apps/templates/pages/waiting_approval.html:78
+#: apps/templates/pages/waiting_approval.html:93
+msgid "You must wait until your user is approved!"
+msgstr "Você deve aguardar até que seu usuário seja aprovado!"
+
+#: apps/templates/pages/waiting_approval.html:79
+msgid ""
+"Your note below was already sent to the administrators and can no longer be "
+"changed. Please contact an administrator if you need to update it."
+msgstr ""
+"Sua nota abaixo já foi enviada aos administradores e não pode mais ser "
+"alterada. Entre em contato com um administrador se precisar atualizá-la."
+
+#: apps/templates/pages/waiting_approval.html:81
+#: apps/templates/pages/waiting_approval.html:96
+msgid "Note for the administrators"
+msgstr "Nota para os administradores"
+
+#: apps/templates/pages/waiting_approval.html:87
+msgid "wait!"
+msgstr "aguarde!"
+
+#: apps/templates/pages/waiting_approval.html:94
+msgid ""
+"To help the administrators identify you, please leave a note below with a "
+"reference (e.g., your institution, course, professor, or who referred you to"
+" HackInSDN). Note that once saved, the note can no longer be changed."
+msgstr ""
+"Para ajudar os administradores a identificá-lo, deixe uma nota abaixo com "
+"uma referência (ex.: sua instituição, curso, professor ou quem o indicou ao "
+"HackInSDN). Observe que, uma vez salva, a nota não pode mais ser alterada."
+
+#: apps/templates/pages/waiting_approval.html:97
+msgid "Ex: I'm a student of Prof. X at University Y"
+msgstr "Ex.: Sou aluno do Prof. X na Universidade Y"
+
+#: apps/templates/pages/waiting_approval.html:102
+msgid "Save note"
+msgstr "Salvar nota"
+
+#~ msgid "Correct Answers (%)"
+#~ msgstr "Respostas Corretas (%)"
+
+#~ msgid "Lab answer score (%):"
+#~ msgstr "Pontuação da resposta do lab (%):"
+
+#~ msgid ""
+#~ "The lab answer sheet can be used "
+#~ "to automatically validate the answers "
+#~ "provided by the users by using "
+#~ "regular expression matching. Please choose "
+#~ "the Lab below and, for each question,"
+#~ " provide the expected regex which the"
+#~ " answer should match to be considered"
+#~ " correct (the calculation is done in "
+#~ "Python using <code>re</code> library, pretty "
+#~ "much like this: "
+#~ "<code>re.match(fr\"^{expected_answer}$\", answer)</code>). "
+#~ "Only the registered questions in the "
+#~ "answer sheet will be used actually "
+#~ "used for validating the score (for "
+#~ "example: if your Lab has 5 questions"
+#~ " and the answer sheet only contains "
+#~ "3 expected answers, then people who "
+#~ "provide the 3 correct ones will be"
+#~ " considered 100% correct."
+#~ msgstr ""
+#~ "O gabarito do lab pode ser usado "
+#~ "para validar automaticamente as respostas "
+#~ "fornecidas pelos usuários por meio de "
+#~ "correspondência com expressões regulares. Escolha"
+#~ " o Lab abaixo e, para cada "
+#~ "pergunta, forneça a regex esperada que "
+#~ "a resposta deve corresponder para ser "
+#~ "considerada correta (o cálculo é feito "
+#~ "em Python usando a biblioteca "
+#~ "<code>re</code>, mais ou menos assim: "
+#~ "<code>re.match(fr\"^{expected_answer}$\", answer)</code>). "
+#~ "Apenas as perguntas registradas no gabarito"
+#~ " serão de fato usadas para validar "
+#~ "a pontuação (por exemplo: se o seu"
+#~ " Lab tem 5 perguntas e o gabarito"
+#~ " contém apenas 3 respostas esperadas, "
+#~ "então quem fornecer as 3 corretas "
+#~ "será considerado 100% correto."
+
+#~ msgid "View Feedback"
+#~ msgstr "Ver Feedback"
+

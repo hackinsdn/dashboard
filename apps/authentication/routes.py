@@ -8,6 +8,7 @@ import traceback
 
 from flask import render_template, redirect, request, url_for, session
 from flask import current_app as app
+from flask_babel import gettext as _
 from flask_login import (
     current_user,
     login_user,
@@ -74,7 +75,7 @@ def login():
 
         # Something (user or pass) is not ok
         return render_template('pages/login.html',
-                               msg='Wrong user or password',
+                               msg=_('Wrong user or password'),
                                form=login_form)
 
     if not current_user.is_authenticated:
@@ -134,7 +135,7 @@ def register():
 
     if request.method == 'POST':
         if not create_account_form.validate_on_submit():
-            msg = "Failed to validate form."
+            msg = _("Failed to validate form.")
             if create_account_form.errors:
                 msg += f" Errors: {create_account_form.errors}"
             return render_template('pages/register.html', form=create_account_form, msg=msg)
@@ -147,7 +148,7 @@ def register():
         user = Users.query.filter_by(username=username).first()
         if user:
             return render_template('pages/register.html',
-                                   msg='Username already registered',
+                                   msg=_('Username already registered'),
                                    success=False,
                                    form=create_account_form)
 
@@ -155,7 +156,7 @@ def register():
         user = Users.query.filter_by(email=email).first()
         if user:
             return render_template('pages/register.html',
-                                   msg='Email already registered',
+                                   msg=_('Email already registered'),
                                    success=False,
                                    form=create_account_form)
 
@@ -194,7 +195,7 @@ def register():
             return render_template(
                 "pages/confirm.html",
                 form=create_account_form,
-                msg="Failed to send confirmation e-mail. Please try again later",
+                msg=_("Failed to send confirmation e-mail. Please try again later"),
                 success=False,
             )
 
@@ -217,10 +218,10 @@ def confirm_page():
      
         now = utcnow()
         if not user or not created_at or now - created_at > timedelta(minutes=app.config["EMAIL_TOKEN_EXPIRY_MINUTES"]):
-            return render_template('pages/confirm.html', msg='Token expired, please <a href=/register>click here</a> to register again', success=False, form=form)
+            return render_template('pages/confirm.html', msg=_('Token expired, please <a href=/register>click here</a> to register again'), success=False, form=form)
 
         if request.form['confirmation_token'] != confirmation_token:
-            return render_template('pages/confirm.html', msg='Invalid token', success=False, form=form)
+            return render_template('pages/confirm.html', msg=_('Invalid token'), success=False, form=form)
 
         session.pop('confirmation_token')
         session.pop('user')
@@ -244,7 +245,7 @@ def resend_code():
     email = session.get('user', {}).get('email')
     confirmation_token = session.get('confirmation_token')
     if not email or not confirmation_token:
-        session['error_msg'] = "Failed to send confirmation e-mail. No user found"
+        session['error_msg'] = _("Failed to send confirmation e-mail. No user found")
         return redirect(url_for('authentication_blueprint.confirm_page'))
 
     msg = Message(
@@ -266,7 +267,7 @@ def resend_code():
     except Exception:
         error = traceback.format_exc().replace("\n", ", ")
         app.logger.error(f"Fail to send e-mail to email={email}: {error}")
-        session['error_msg'] = "Failed to send confirmation e-mail. Please try again later"
+        session['error_msg'] = _("Failed to send confirmation e-mail. Please try again later")
 
     return redirect(url_for('authentication_blueprint.confirm_page'))
 
@@ -283,7 +284,7 @@ def require_email():
 
     if 'submit_email' in request.form:
         if not form.validate_on_submit():
-            msg = "Failed to validate form."
+            msg = _("Failed to validate form.")
             if form.errors:
                 msg += f" Errors: {form.errors}"
             return render_template('pages/email_required.html', form=form, msg=msg)
@@ -294,7 +295,7 @@ def require_email():
         user = Users.query.filter(Users.email == email, Users.id != current_user.id).first()
         if user:
             return render_template('pages/email_required.html',
-                                   msg='Email already registered',
+                                   msg=_('Email already registered'),
                                    success=False,
                                    form=form)
 
@@ -338,7 +339,7 @@ def require_email():
             session.pop('email_datetime', None)
             return render_template(
                 'pages/email_required.html',
-                msg='Failed to send confirmation e-mail. Please try again later',
+                msg=_('Failed to send confirmation e-mail. Please try again later'),
                 success=False,
                 form=form,
             )
@@ -362,10 +363,10 @@ def confirm_email():
 
         now = utcnow()
         if not created_at or now - created_at > timedelta(minutes=app.config["EMAIL_TOKEN_EXPIRY_MINUTES"]) or not pending_email:
-            return render_template('pages/confirm_email.html', msg='Token expired, please <a href=/email/required>click here</a> to request a new code', success=False, form=form)
+            return render_template('pages/confirm_email.html', msg=_('Token expired, please <a href=/email/required>click here</a> to request a new code'), success=False, form=form)
 
         if request.form['confirmation_token'] != confirmation_token:
-            return render_template('pages/confirm_email.html', msg='Invalid token', success=False, form=form)
+            return render_template('pages/confirm_email.html', msg=_('Invalid token'), success=False, form=form)
 
         session.pop('email_confirmation_token')
         session.pop('pending_email')
@@ -415,7 +416,7 @@ def resend_email_code():
     except Exception:
         error = traceback.format_exc().replace("\n", ", ")
         app.logger.error(f"Fail to send e-mail to {email}: {error}")
-        session['error_msg'] = "Failed to send confirmation e-mail. Please try again later"
+        session['error_msg'] = _("Failed to send confirmation e-mail. Please try again later")
 
     return redirect(url_for('authentication_blueprint.confirm_email'))
 
@@ -428,7 +429,7 @@ def reset_password():
             msg = f"Errors validating form: {form.errors}"
         return render_template('pages/reset_password.html', form=form, msg=msg)
 
-    msg = "If the user provided is valid, you will receive an e-mail with password reset link."
+    msg = _("If the user provided is valid, you will receive an e-mail with password reset link.")
     identifier = form.identifier.data
     user = Users.query.filter(or_(Users.email == identifier, Users.username == identifier)).first()
     if not user or user.is_deleted:
@@ -457,7 +458,7 @@ def reset_password():
     except Exception:
         error = traceback.format_exc().replace("\n", ", ")
         app.logger.error(f"Fail to send e-mail to {user.email} user={user.username}: {error}")
-        msg = "Failed to send confirmation e-mail. Please try again later"
+        msg = _("Failed to send confirmation e-mail. Please try again later")
 
     return render_template('pages/reset_password.html', form=form, msg=msg)
 
@@ -468,7 +469,7 @@ def confirm_reset_password(token):
     resetpw_user = cache.get(f"resetpw-{token}")
     if not resetpw_user:
         app.logger.info(f"Invalid password reset request ipaddr={get_remote_addr()} token={token}")
-        msg = "Invalid or expired token! You need to request a new <a href='{url_for('authentication_blueprint.reset_password')}'>Password Reset</a>"
+        msg = _("Invalid or expired token! You need to request a new <a href='%(url)s'>Password Reset</a>", url=url_for('authentication_blueprint.reset_password'))
         return render_template('pages/confirm_reset_password.html', form=None, msg=msg)
 
     if not form.validate_on_submit():
@@ -481,14 +482,14 @@ def confirm_reset_password(token):
     user = db.session.get(Users, resetpw_user)
     if not user or user.is_deleted:
         app.logger.info(f"Invalid password reset request ipaddr={get_remote_addr()} user={resetpw_user}")
-        msg = "Invalid password reset request! You need to request a new <a href='{url_for('authentication_blueprint.reset_password')}'>Password Reset</a>"
+        msg = _("Invalid password reset request! You need to request a new <a href='%(url)s'>Password Reset</a>", url=url_for('authentication_blueprint.reset_password'))
         return render_template('pages/confirm_reset_password.html', form=None, msg=msg)
 
     user.set_password(form.password.data)
     db.session.commit()
 
     app.logger.info(f"Successful password reset ipaddr={get_remote_addr()} login={user.username} auth_provider=local")
-    msg = f"Password changed successfully! Now you can <a href='{url_for('authentication_blueprint.login')}'>click to Login</a>"
+    msg = _("Password changed successfully! Now you can <a href='%(url)s'>click to Login</a>", url=url_for('authentication_blueprint.login'))
     return render_template('pages/confirm_reset_password.html', form=form, msg=msg)
 
 @blueprint.route('/logout')
@@ -510,11 +511,11 @@ def save_approval_notes():
     if current_user.notes:
         if current_user.category != "user":
             return redirect(url_for('authentication_blueprint.route_default'))
-        return render_template('pages/waiting_approval.html', msg_fail="Your note was already saved and can no longer be changed. Please contact an administrator if you need to update it.")
+        return render_template('pages/waiting_approval.html', msg_fail=_("Your note was already saved and can no longer be changed. Please contact an administrator if you need to update it."))
 
     notes = request.form.get("notes", "").strip()
     if len(notes) > 1000:
-        return render_template('pages/waiting_approval.html', msg_fail="Note is too long, maximum 1000 characters")
+        return render_template('pages/waiting_approval.html', msg_fail=_("Note is too long, maximum 1000 characters"))
 
     current_user.notes = notes
     db.session.commit()
@@ -523,7 +524,7 @@ def save_approval_notes():
     if current_user.category != "user":
         return redirect(url_for('authentication_blueprint.route_default'))
 
-    return render_template('pages/waiting_approval.html', msg_ok="Note saved successfully!")
+    return render_template('pages/waiting_approval.html', msg_ok=_("Note saved successfully!"))
 
 # Errors
 

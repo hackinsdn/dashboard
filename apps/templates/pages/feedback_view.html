@@ -1,6 +1,6 @@
 {% extends "layouts/base.html" %}
 
-{% block title %} Home {% endblock title %}
+{% block title %} {{ _('Home') }} {% endblock title %}
 
 <!-- Element injected in the BODY element -->
 {% block body_class %} sidebar-mini layout-navbar-fixed {% endblock body_class %}
@@ -28,12 +28,12 @@
     <div class="container-fluid">
       <div class="row mb-2">
         <div class="col-sm-6">
-          <h1 class="m-0 text-dark"><i class="fas fa-comments mr-2"></i>Feedbacks</h1>
+          <h1 class="m-0 text-dark"><i class="fas fa-comments mr-2"></i>{{ _('Feedbacks') }}</h1>
         </div>
         <div class="col-sm-6">
           <ol class="breadcrumb float-sm-right">
-            <li class="breadcrumb-item"><a href="/">Home</a></li>
-            <li class="breadcrumb-item active">Feedbacks</li>
+            <li class="breadcrumb-item"><a href="/">{{ _('Home') }}</a></li>
+            <li class="breadcrumb-item active">{{ _('Feedbacks') }}</li>
           </ol>
         </div>
       </div>
@@ -47,7 +47,7 @@
         <div class="col-md-10">
           <div class="card card-outline card-primary shadow">
             <div class="card-header">
-              <h3 class="card-title"><i class="fas fa-star-half-alt mr-1"></i> User Feedbacks</h3>
+              <h3 class="card-title"><i class="fas fa-star-half-alt mr-1"></i> {{ _('User Feedbacks') }}</h3>
             </div>
 
             <div class="card-body">
@@ -73,13 +73,13 @@
                         <form action="{{ url_for('home_blueprint.hide_feedback') }}" method="post" class="d-inline">
                           <input type="hidden" name="feedback_id" value="{{ feedback.id }}">
                           <input type="hidden" name="action" value="unhide">
-                          <button type="submit" class="btn btn-info btn-sm">Unhide</button>
+                          <button type="submit" class="btn btn-info btn-sm">{{ _('Unhide') }}</button>
                         </form>
                         {% else %}
                         <form action="{{ url_for('home_blueprint.hide_feedback') }}" method="post" class="d-inline">
                           <input type="hidden" name="feedback_id" value="{{ feedback.id }}">
                           <input type="hidden" name="action" value="hide">
-                          <button type="submit" class="btn btn-warning btn-sm">Hide</button>
+                          <button type="submit" class="btn btn-warning btn-sm">{{ _('Hide') }}</button>
                         </form>
                         {% endif %}
                       </div>
@@ -91,7 +91,7 @@
                   </div>
                 {% endfor %}
               {% else %}
-                <p class="text-center text-muted">No feedbacks available yet.</p>
+                <p class="text-center text-muted">{{ _('No feedbacks available yet.') }}</p>
               {% endif %}
             </div>
           </div>

@@ -1,6 +1,6 @@
 {% extends "layouts/base.html" %}
 
-{% block title %} Finished Labs {% endblock title %}
+{% block title %} {{ _('Finished Labs') }} {% endblock title %}
 
 <!-- Element injected in the BODY element -->
 {% block body_class %} sidebar-mini layout-navbar-fixed {% endblock body_class %}
@@ -32,12 +32,12 @@
       <div class="container-fluid">
         <div class="row mb-2">
           <div class="col-sm-6">
-            <h1>Finished Labs</h1>
+            <h1>{{ _('Finished Labs') }}</h1>
           </div>
           <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
-              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.index') }}">Home</a></li>
-              <li class="breadcrumb-item active">Finished Labs</li>
+              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.index') }}">{{ _('Home') }}</a></li>
+              <li class="breadcrumb-item active">{{ _('Finished Labs') }}</li>
             </ol>
           </div>
         </div>
@@ -50,19 +50,19 @@
         <div class="col-md-12">
           <div class="card">
             <div class="card-header">
-              <h3 class="card-title">Finished Labs</h3>
+              <h3 class="card-title">{{ _('Finished Labs') }}</h3>
               <div class="row">
                 <!-- left column -->
                 <div class="col-md-6">
                   <form>
                     <div class="form-group row">
                       <div class="col-md-4">
-                        <label>Filter by group:</label>
+                        <label>{{ _('Filter by group:') }}</label>
                       </div>
                       <div class="col-md-8">
                         <select name="filter_group" class="form-control" onchange="this.form.submit()">
-                          <option value="">My own labs</option>
-                          <option value="all" {{ 'selected' if filter_group == 'all' else '' }}>All labs</option>
+                          <option value="">{{ _('My own labs') }}</option>
+                          <option value="all" {{ 'selected' if filter_group == 'all' else '' }}>{{ _('All labs') }}</option>
                           {% for group_id in groups %}
                           <option value="{{ group_id }}" {{ 'selected' if filter_group == group_id else '' }}>{{ groups[group_id].groupname }}</option>
                           {% endfor %}
@@ -86,11 +86,11 @@
                 <thead>
                   <tr>
                     <th></th>
-                    <th>User</th>
-                    <th>Lab title</th>
-                    <th>Created At (UTC)</th>
-                    <th>Finished At (UTC)</th>
-                    <th>Finish reason</th>
+                    <th>{{ _('User') }}</th>
+                    <th>{{ _('Lab title') }}</th>
+                    <th>{{ _('Created At (UTC)') }}</th>
+                    <th>{{ _('Finished At (UTC)') }}</th>
+                    <th>{{ _('Finish reason') }}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -163,7 +163,7 @@
         responsive: false,
         autoWidth: false,
         language: {
-          emptyTable: 'No finished labs',
+          emptyTable: '{{ _("No finished labs") }}',
         },
         columns: [
           {
@@ -181,7 +181,7 @@
       if ( sessionStorage.getItem('msgSuccess') ) {
         $(document).Toasts('create', {
           class: 'bg-success',
-          title: 'Sucess',
+          title: '{{ _("Success") }}',
           body: sessionStorage.getItem('msgSuccess')
         });
         sessionStorage.removeItem('msgSuccess');
@@ -189,7 +189,7 @@
       if ( sessionStorage.getItem('msgFail') ) {
         $(document).Toasts('create', {
           class: 'bg-danger',
-          title: 'Failure',
+          title: '{{ _("Failure") }}',
           body: sessionStorage.getItem('msgFail')
         });
         sessionStorage.removeItem('msgFail');
@@ -197,7 +197,7 @@
       //Enable check and uncheck all functionality
       $('#delete-labs').click(function () {
         var rows = $('#tableLabs tr').filter(':has(:checkbox:checked)');
-        $("#delete-labs").html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Deleting ' + table.rows(rows).data().length + ' row(s)...');
+        $("#delete-labs").html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> {{ _("Deleting") }} ' + table.rows(rows).data().length + ' {{ _("row(s)...") }}');
         $("#delete-labs").prop('disabled', true);
         var items = [];
         table.rows(rows).each( function ( index ) {
@@ -231,7 +231,7 @@
         items.empty();
         $("#delete-labs").prop('disabled', false);
         if (data.length === 0) {
-          items.append("<li>No lab selected!</li>");
+          items.append("<li>{{ _('No lab selected!') }}</li>");
           $("#delete-labs").prop('disabled', true);
           return;
         }

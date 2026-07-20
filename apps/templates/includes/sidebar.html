@@ -24,7 +24,7 @@
       <!-- SidebarSearch Form -->
       <div class="form-inline">
         <div class="input-group" data-widget="sidebar-search">
-          <input class="form-control form-control-sidebar" type="search" placeholder="Search" aria-label="Search">
+          <input class="form-control form-control-sidebar" type="search" placeholder="{{ _('Search') }}" aria-label="{{ _('Search') }}">
           <div class="input-group-append">
             <button class="btn btn-sidebar">
               <i class="fas fa-search fa-fw"></i>
@@ -42,22 +42,22 @@
             <a href="{{ url_for('home_blueprint.index') }}" class="nav-link {% if 'index' in segment %} active {% endif %}">
               <i class="nav-icon fas fa-tachometer-alt"></i>
               <p>
-                Dashboard
+                {{ _('Dashboard') }}
               </p>
             </a>
           </li>
           <li class="nav-item">
-            <a href="{{ url_for('home_blueprint.list_groups') }}" 
+            <a href="{{ url_for('home_blueprint.list_groups') }}"
                class="nav-link {% if request.url_rule.endpoint == 'home_blueprint.list_groups' %} active {% endif %}">
               <i class="nav-icon fas fa-users"></i>
-              <p>Groups</p>
+              <p>{{ _('Groups') }}</p>
             </a>
           </li>
           <li class="nav-item has-treeview {% if 'labs' in segment %} menu-open {% endif %}">
             <a href="#" class="nav-link {% if 'labs' in segment %} active {% endif %}">
               <i class="nav-icon fas fa-th"></i>
               <p>
-                Labs
+                {{ _('Labs') }}
                 <i class="fas fa-angle-left right"></i>
               </p>
             </a>
@@ -65,14 +65,14 @@
               <li class="nav-item">
                 <a href="{{ url_for('home_blueprint.view_labs') }}" class="nav-link {% if request.url_rule.endpoint == 'home_blueprint.view_labs' %} active {% endif %}">
                   <i class="far fa-circle nav-icon"></i>
-                  <p>View Labs</p>
+                  <p>{{ _('View Labs') }}</p>
                 </a>
               </li>
               {% if current_user.category == "admin" or current_user.category == "teacher" or current_user.category == "labcreator" %}
               <li class="nav-item">
                 <a href="{{ url_for('home_blueprint.edit_lab', lab_id='new') }}" class="nav-link {% if request.url_rule.endpoint == 'home_blueprint.edit_lab' %} active {% endif %}">
                   <i class="far fa-circle nav-icon"></i>
-                  <p>Create Lab</p>
+                  <p>{{ _('Create Lab') }}</p>
                 </a>
               </li>
 	      {% endif %}
@@ -80,7 +80,7 @@
               <li class="nav-item">
                 <a href="{{ url_for('clabs_blueprint.upsert') }}" class="nav-link {% if request.endpoint == 'clabs_blueprint.upsert' %} active {% endif %}">
                   <i class="far fa-circle nav-icon"></i>
-                  <p>Create ContainerLab</p>
+                  <p>{{ _('Create ContainerLab') }}</p>
                 </a>
               </li>
 	      {% endif %}
@@ -88,20 +88,20 @@
               <li class="nav-item">
                 <a href="{{ url_for('home_blueprint.list_lab_answers') }}" class="nav-link {% if request.url_rule.endpoint == 'home_blueprint.list_lab_answers' %} active {% endif %}">
                   <i class="far fa-circle nav-icon"></i>
-                  <p>Lab Answers</p>
+                  <p>{{ _('Lab Answers') }}</p>
                 </a>
               </li>
               <li class="nav-item">
                 <a href="{{ url_for('home_blueprint.add_answer_sheet') }}" class="nav-link {% if request.url_rule.endpoint == 'home_blueprint.add_answer_sheet' %} active {% endif %}">
                   <i class="far fa-circle nav-icon"></i>
-                  <p>Answer Sheet</p>
+                  <p>{{ _('Answer Sheet') }}</p>
                 </a>
               </li>
               {% endif %}
               <li class="nav-item">
                 <a href="{{ url_for('home_blueprint.view_finished_labs') }}" class="nav-link {% if request.url_rule.endpoint == 'home_blueprint.view_finished_labs' %} active {% endif %}">
                   <i class="far fa-circle nav-icon"></i>
-                  <p>Finished Labs</p>
+                  <p>{{ _('Finished Labs') }}</p>
                 </a>
               </li>
             </ul>
@@ -110,19 +110,19 @@
             <a href="{{ url_for('home_blueprint.running_labs') }}" class="nav-link {% if request.url_rule.endpoint == 'home_blueprint.running_labs' %} active {% endif %}">
               <i class="nav-icon far fa-calendar-alt"></i>
               <p>
-                Running Labs
+                {{ _('Running Labs') }}
                 <span class="badge badge-info right">{{ g.running_labs }}</span>
               </p>
             </a>
           </li>
 
-          <li class="nav-header">MANAGEMENT</li>
+          <li class="nav-header">{{ _('MANAGEMENT') }}</li>
           {% if current_user.category == "admin" or current_user.category == "teacher" %}
           <li class="nav-item">
             <a href="{{ url_for('home_blueprint.view_users') }}" class="nav-link {% if request.url_rule.endpoint == 'home_blueprint.view_users' %} active {% endif %}">
               <i class="nav-icon fas fa-users"></i>
               <p>
-                Users
+                {{ _('Users') }}
               </p>
             </a>
           </li>
@@ -131,7 +131,7 @@
             <a href="{{ url_for('home_blueprint.list_support_threads') }}" class="nav-link {% if request.url_rule.endpoint == 'home_blueprint.list_support_threads' or request.url_rule.endpoint == 'home_blueprint.view_support_thread' %} active {% endif %}">
               <i class="nav-icon fas fa-comments"></i>
               <p>
-                Support
+                {{ _('Support') }}
                 {% if support_admin_open_count %}
                 <span class="badge badge-warning right">{{ support_admin_open_count }}</span>
                 {% endif %}
@@ -143,7 +143,7 @@
             <a href="{{ url_for('home_blueprint.list_lab_categories') }}" class="nav-link {% if request.url_rule.endpoint == 'home_blueprint.list_lab_categories' or request.url_rule.endpoint == 'home_blueprint.edit_lab_category' %} active {% endif %}">
               <i class="nav-icon fas fa-tags"></i>
               <p>
-                Lab Categories
+                {{ _('Lab Categories') }}
               </p>
             </a>
           </li>
@@ -163,37 +163,37 @@
               <p>
                 Kubernetes
                 <i class="fas fa-angle-left right"></i>
-                <span class="right badge badge-danger">New</span>
+                <span class="right badge badge-danger">{{ _('New') }}</span>
               </p>
             </a>
             <ul class="nav nav-treeview">
               <li class="nav-item">
                 <a href="{{ url_for('k8s_blueprint.list_pods') }}" class="nav-link {% if request.url_rule.endpoint == 'k8s_blueprint.list_pods' %} active {% endif %}">
                   <i class="far fa-circle nav-icon"></i>
-                  <p>Pods</p>
+                  <p>{{ _('Pods') }}</p>
                 </a>
               </li>
               <li class="nav-item">
                 <a href="{{ url_for('k8s_blueprint.list_deployments') }}" class="nav-link {% if request.url_rule.endpoint == 'k8s_blueprint.list_deployments' %} active {% endif %}">
                   <i class="far fa-circle nav-icon"></i>
-                  <p>Deployments</p>
+                  <p>{{ _('Deployments') }}</p>
                 </a>
               </li>
               <li class="nav-item">
                 <a href="{{ url_for('k8s_blueprint.list_services') }}" class="nav-link {% if request.url_rule.endpoint == 'k8s_blueprint.list_services' %} active {% endif %}">
                   <i class="far fa-circle nav-icon"></i>
-                  <p>Services</p>
+                  <p>{{ _('Services') }}</p>
                 </a>
               </li>
             </ul>
           </li>
           {% endif %}
-          <li class="nav-header">MORE INFO</li>
+          <li class="nav-header">{{ _('MORE INFO') }}</li>
           <li class="nav-item">
             <a href="{{ url_for('home_blueprint.view_documentation') }}" class="nav-link {% if request.url_rule.endpoint == 'home_blueprint.view_documentation' %} active {% endif %}">
               <i class="nav-icon fas fa-file"></i>
               <p>
-                Documentation
+                {{ _('Documentation') }}
               </p>
             </a>
           </li>
@@ -201,7 +201,7 @@
             <a href="{{ url_for('home_blueprint.view_gallery') }}" class="nav-link {% if request.url_rule.endpoint == 'home_blueprint.view_gallery' %} active {% endif %}">
               <i class="nav-icon far fa-plus-square"></i>
               <p>
-                Extra tools
+                {{ _('Extra tools') }}
               </p>
             </a>
           </li>
@@ -211,4 +211,4 @@
     </div>
     <!-- /.sidebar -->
   </aside>
-  
+

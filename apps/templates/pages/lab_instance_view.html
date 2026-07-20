@@ -1,6 +1,6 @@
 {% extends "layouts/base.html" %}
 
-{% block title %} View Lab Instance {% endblock title %}
+{% block title %} {{ _('View Lab Instance') }} {% endblock title %}
 
 <!-- Element injected in the BODY element -->
 {% block body_class %} sidebar-mini layout-navbar-fixed {% endblock body_class %}
@@ -81,13 +81,13 @@ word-break: break-all;
       <div class="container-fluid">
         <div class="row mb-2">
           <div class="col-sm-6">
-            <h1>View Lab Instance</h1>
+            <h1>{{ _('View Lab Instance') }}</h1>
           </div>
           <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
-              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.index') }}">Home</a></li>
-              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.running_labs') }}">Running Labs</a></li>
-              <li class="breadcrumb-item active">View Lab</li>
+              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.index') }}">{{ _('Home') }}</a></li>
+              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.running_labs') }}">{{ _('Running Labs') }}</a></li>
+              <li class="breadcrumb-item active">{{ _('View Lab') }}</li>
             </ol>
           </div>
         </div>
@@ -100,16 +100,16 @@ word-break: break-all;
         <div class="col-md-12">
           <div class="card card-dark">
             <div class="card-header" id="lab-header">
-              <h3 class="card-title text single-line">Lab title: {{ lab['title'] }} / Lab owner: {{ lab['user'] }}</h3>
+              <h3 class="card-title text single-line">{{ _('Lab title: %(title)s / Lab owner: %(owner)s', title=lab['title'], owner=lab['user']) }}</h3>
 	      <div class="card-tools">
-                <span id="lab-expiration" class="pr-3" data-expires-at="{{ lab['expires_at']|default('', true) }}">Expires at: {{ lab['expires_at']|default('Never', true) }}</span>
-                  <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
+                <span id="lab-expiration" class="pr-3" data-expires-at="{{ lab['expires_at']|default('', true) }}">{{ _('Expires at:') }} {{ lab['expires_at']|default(_('Never'), true) }}</span>
+                  <button type="button" class="btn btn-tool" data-card-widget="collapse" title="{{ _('Collapse') }}">
                     <i class="fas fa-minus"></i>
                   </button>
-                  <button type="button" class="btn btn-tool" data-card-widget="remove" title="Remove">
+                  <button type="button" class="btn btn-tool" data-card-widget="remove" title="{{ _('Remove') }}">
                     <i class="fas fa-times"></i>
                   </button>
-                  <button type="button" class="btn btn-tool" id="pin-header" title="Pin header to top">
+                  <button type="button" class="btn btn-tool" id="pin-header" title="{{ _('Pin header to top') }}">
                     <i class="fas fa-thumbtack"></i>
                   </button>
               </div>
@@ -120,13 +120,13 @@ word-break: break-all;
                 <table id="tableLabsResource" class="table table-hover">
                   <thead>
                   <tr>
-                    <th>Pod Name</th>
-                    <th>Info</th>
-                    <th>Node</th>
-                    <th>IP</th>
-                    <th>Age</th>
-                    <th>Terminals</th>
-                    <th>Services</th>
+                    <th>{{ _('Pod Name') }}</th>
+                    <th>{{ _('Info') }}</th>
+                    <th>{{ _('Node') }}</th>
+                    <th>{{ _('IP') }}</th>
+                    <th>{{ _('Age') }}</th>
+                    <th>{{ _('Terminals') }}</th>
+                    <th>{{ _('Services') }}</th>
                   </tr>
                   </thead>
                   <tbody>
@@ -175,19 +175,19 @@ word-break: break-all;
             <!-- /.card-body -->
             <div class="card-footer" id="card-footer-resources">
               <button type="button" class="btn btn-outline-dark save-answers"  data-toggle="modal" data-target="#modal-finish-lab">
-                <i class="fas fa-check"></i>  Save &amp; Finish Lab
+                <i class="fas fa-check"></i>  {{ _('Save &amp; Finish Lab') }}
               </button>
               {% if lab['expires_at'] %}
               <div class="dropdown d-inline-block">
                 <button type="button" class="btn btn-outline-dark dropdown-toggle" data-toggle="dropdown">
-                  <i class="fas fa-clock"></i> Extend Lab
+                  <i class="fas fa-clock"></i> {{ _('Extend Lab') }}
                 </button>
                 <div class="dropdown-menu">
-                  <a class="dropdown-item disabled" href="#"> Select a time to extend the lab expiration</a>
+                  <a class="dropdown-item disabled" href="#"> {{ _('Select a time to extend the lab expiration') }}</a>
                   <div class="dropdown-divider"></div>
-                  <a class="dropdown-item" onclick="extendLabExpiration(24);">+ 1 day</a>
-                  <a class="dropdown-item" onclick="extendLabExpiration(168);">+ 1 week</a>
-                  <a class="dropdown-item" onclick="extendLabExpiration(720);">+ 1 month</a>
+                  <a class="dropdown-item" onclick="extendLabExpiration(24);">{{ _('+ 1 day') }}</a>
+                  <a class="dropdown-item" onclick="extendLabExpiration(168);">{{ _('+ 1 week') }}</a>
+                  <a class="dropdown-item" onclick="extendLabExpiration(720);">{{ _('+ 1 month') }}</a>
                 </div>
               </div>
               {% endif %}
@@ -204,17 +204,17 @@ word-break: break-all;
         <div class="modal-dialog">
           <div class="modal-content">
             <div class="modal-header">
-              <h4 class="modal-title">Confirm Finish Lab</h4>
+              <h4 class="modal-title">{{ _('Confirm Finish Lab') }}</h4>
               <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                 <span aria-hidden="true">&times;</span>
               </button>
             </div>
             <div class="modal-body">
-              <p>Are you sure you want to Finish this Lab? (Make sure to save any data you want! After finishing the lab, resources will be deleted.)</p>
+              <p>{{ _('Are you sure you want to Finish this Lab? (Make sure to save any data you want! After finishing the lab, resources will be deleted.)') }}</p>
             </div>
             <div class="modal-footer justify-content-between">
-              <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-              <button type="button" class="btn btn-danger" id="delete-lab">Finish Lab</button>
+              <button type="button" class="btn btn-default" data-dismiss="modal">{{ _('Cancel') }}</button>
+              <button type="button" class="btn btn-danger" id="delete-lab">{{ _('Finish Lab') }}</button>
             </div>
           </div>
           <!-- /.modal-content -->
@@ -227,7 +227,7 @@ word-break: break-all;
         <div class="col-md-12">
           <div class="card card-dark">
             <div class="card-header">
-              <h3 class="card-title">Lab Guide</h3>
+              <h3 class="card-title">{{ _('Lab Guide') }}</h3>
             </div>
             <!-- /.card-header -->
             <div class="card-body" id="lab-guide">
@@ -236,10 +236,10 @@ word-break: break-all;
             <!-- /.card-body -->
             <div class="card-footer">
               <button type="button" class="btn btn-outline-dark"  data-toggle="modal" data-target="#modal-finish-lab">
-                <i class="fas fa-check"></i>  Finish Lab
+                <i class="fas fa-check"></i>  {{ _('Finish Lab') }}
               </button>
               <button type="button" class="btn btn-outline-dark save-answers">
-                <i class="far fa-save"></i> Save Answers
+                <i class="far fa-save"></i> {{ _('Save Answers') }}
               </button>
             </div>
           </div>
@@ -318,9 +318,9 @@ word-break: break-all;
       if (labExp.attr('data-expires-at')) {
         var expiresAt = new Date(labExp.attr('data-expires-at'));
 	var today = new Date();
-        var labExpHtml = 'Expires at: ' + expiresAt.toLocaleString();
+        var labExpHtml = '{{ _("Expires at:") }} ' + expiresAt.toLocaleString();
         if (expiresAt < today) {
-          labExpHtml += ' <span class="right badge badge-danger blink">Expired!</span>';
+          labExpHtml += ' <span class="right badge badge-danger blink">{{ _("Expired!") }}</span>';
         }
         labExp.html(labExpHtml);
       }
@@ -330,12 +330,12 @@ word-break: break-all;
       }
       function hideTooltip(btn) {
         setTimeout(function() {
-          $(btn).attr('data-original-title', "Copy to clipboard");
+          $(btn).attr('data-original-title', "{{ _('Copy to clipboard') }}");
         }, 1000);
       }
       var a = document.querySelectorAll("pre");
       [].forEach.call(a, function(a) {
-          a.firstChild.insertAdjacentHTML("beforebegin", '<button class="btn btn-outline-dark btn-sm btn-sml float-right copy" title="Copy to clipboard" data-clipboard-snippet>Copy</button>')
+          a.firstChild.insertAdjacentHTML("beforebegin", '<button class="btn btn-outline-dark btn-sm btn-sml float-right copy" title="{{ _("Copy to clipboard") }}" data-clipboard-snippet>{{ _("Copy") }}</button>')
       });
       var clipboard = new ClipboardJS("[data-clipboard-snippet]", {
           target: function(a) {
@@ -344,7 +344,7 @@ word-break: break-all;
       });
       clipboard.on("success", function(e) {
           e.clearSelection();
-          setTooltip(e.trigger, 'Copied!');
+          setTooltip(e.trigger, '{{ _("Copied!") }}');
           hideTooltip(e.trigger);
           //showTooltip(a.trigger, "Copied!")
       });
@@ -355,7 +355,7 @@ word-break: break-all;
       // finish lab
       $('#delete-lab').click(function () {
         var rows = $('#tableLabs tr').filter(':has(:checkbox:checked)');
-        $("#delete-lab").html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Finishing... ');
+        $("#delete-lab").html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> {{ _("Finishing...") }} ');
         $("#delete-lab").prop('disabled', true);
         var request = $.ajax({
           url:  "/api/lab/{{ lab['lab_instance_id'] }}",
@@ -433,7 +433,7 @@ word-break: break-all;
         request.done(function(data) {
           $(document).Toasts('create', {
             class: 'bg-success',
-            title: 'Sucess',
+            title: '{{ _("Success") }}',
             autohide: true,
             delay: 2000,
             body: data.result
@@ -442,7 +442,7 @@ word-break: break-all;
         request.fail(function(xhr) {
           $(document).Toasts('create', {
             class: 'bg-danger',
-            title: 'Failure to save Lab Answers',
+            title: '{{ _("Failure to save Lab Answers") }}',
             body: xhr.responseText
           });
         });
@@ -510,7 +510,7 @@ word-break: break-all;
           }
           $(document).Toasts('create', {
             class: 'bg-danger',
-            title: 'Failed to load Lab Answers',
+            title: '{{ _("Failed to load Lab Answers") }}',
             autohide: true,
             delay: 4000,
             body: xhr.responseText
@@ -534,18 +534,18 @@ word-break: break-all;
       request.done(function(data) {
         $(document).Toasts('create', {
           class: 'bg-success',
-          title: 'Success',
+          title: '{{ _("Success") }}',
           autohide: true,
           delay: 4000,
-          body: 'Lab duration/expiration extended successfully'
+          body: '{{ _("Lab duration/expiration extended successfully") }}'
         });
         var labExp = $('#lab-expiration');
-        labExp.html('Expires at: ' + new Date(data.result).toLocaleString());
+        labExp.html('{{ _("Expires at:") }} ' + new Date(data.result).toLocaleString());
       });
       request.fail(function(xhr) {
         $(document).Toasts('create', {
           class: 'bg-danger',
-          title: 'Failure to extend Lab',
+          title: '{{ _("Failure to extend Lab") }}',
           body: xhr.responseText
         });
       });

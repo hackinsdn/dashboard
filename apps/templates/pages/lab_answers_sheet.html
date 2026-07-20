@@ -1,6 +1,6 @@
 {% extends "layouts/base.html" %}
 
-{% block title %} Lab Answers Sheet {% endblock title %}
+{% block title %} {{ _('Lab Answers Sheet') }} {% endblock title %}
 
 {% block body_class %} sidebar-mini layout-navbar-fixed {% endblock body_class %}
 
@@ -26,33 +26,33 @@
       <div class="container-fluid">
         <div class="row mb-2">
           <div class="col-sm-6">
-            <h1>Lab Answers Sheet</h1>
+            <h1>{{ _('Lab Answers Sheet') }}</h1>
             {% if msg_ok %}
             <div class="alert alert-success alert-dismissible">
               <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-              <h5><i class="icon fas fa-check"></i> Lab Answers Sheet</h5>
+              <h5><i class="icon fas fa-check"></i> {{ _('Lab Answers Sheet') }}</h5>
               {{ msg_ok }}
             </div>
             {% endif %}
             {% if msg_fail %}
             <div class="alert alert-danger alert-dismissible">
               <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-              <h5><i class="icon fas fa-ban"></i> Failure on answer sheet</h5>
+              <h5><i class="icon fas fa-ban"></i> {{ _('Failure on answer sheet') }}</h5>
               {{ msg_fail }}
             </div>
             {% endif %}
           </div>
           <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
-              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.index') }}">Home</a></li>
-	      <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.view_labs') }}">Labs</a></li>
-	      <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.list_lab_answers') }}">Labs Answers</a></li>
-              <li class="breadcrumb-item active">Lab Answers Sheet</li>
+              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.index') }}">{{ _('Home') }}</a></li>
+	      <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.view_labs') }}">{{ _('Labs') }}</a></li>
+	      <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.list_lab_answers') }}">{{ _('Lab Answers') }}</a></li>
+              <li class="breadcrumb-item active">{{ _('Lab Answers Sheet') }}</li>
             </ol>
           </div>
         </div>
 	<div class="row">
-          <p>The lab answer sheet can be used to automatically validate the answers provided by the users by using regular expression matching. Please choose the Lab below and, for each question, provide the expected regex which the answer should match to be considered correct (the calculation is done in Python using <code>re</code> library, pretty much like this: <code>re.match(fr"^{expected_answer}$", answer)</code>). Only the registered questions in the answer sheet will be used actually used for validating the score (for example: if your Lab has 5 questions and the answer sheet only contains 3 expected answers, then people who provide the 3 correct ones will be considered 100% correct.</p>
+          <p>{{ _('The lab answer sheet can be used to automatically validate the answers provided by the users by using regular expression matching. Please choose the Lab below and, for each question, provide the expected regex which the answer should match to be considered correct (the calculation is done in Python using <code>re</code> library, pretty much like this: <code>re.match(fr"^{expected_answer}$", answer)</code>). Only the registered questions in the answer sheet will be used actually used for validating the score (for example: if your Lab has 5 questions and the answer sheet only contains 3 expected answers, then people who provide the 3 correct ones will be considered 100%% correct.')|safe }}</p>
         </div>
       </div><!-- /.container-fluid -->
     </section>
@@ -68,7 +68,7 @@
                 <div class="col-md-6">
                   <form>
                     <div class="form-group row">
-                      <label>Choose the Lab:</label>
+                      <label>{{ _('Choose the Lab:') }}</label>
                       <select name="lab_id" class="form-control" onchange="this.form.submit()">
                           <option value="">--</option>
 			{% for labid in labs %}
@@ -94,8 +94,8 @@
                 <table id="tableLabAnswers" class="table table-striped display">
                   <thead>
                     <tr>
-                      <th>Question</th>
-                      <th>Expected Answer (regex)</th>
+                      <th>{{ _('Question') }}</th>
+                      <th>{{ _('Expected Answer (regex)') }}</th>
                     </tr>
                   </thead>
                   <tbody id="table-body-answers">
@@ -112,8 +112,8 @@
                   </tbody>
 	          <tfoot>
                     <tr><td colspan='2'>
-                      <button type="button" class="btn btn-secondary add-more"><i class="fa fa-plus"></i> Add more answers</button>
-                      <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Save answer sheet</button>
+                      <button type="button" class="btn btn-secondary add-more"><i class="fa fa-plus"></i> {{ _('Add more answers') }}</button>
+                      <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> {{ _('Save answer sheet') }}</button>
                     </td></tr>
                   </tfoot>
                 </table>
@@ -155,13 +155,13 @@
   <!-- Custom Script for Delete Functionality -->
   <script>
     function confirmDelete() {
-      return confirm("Are you sure you want to delete this group?");
+      return confirm("{{ _('Are you sure you want to delete this group?') }}");
     }
     $(function () {
       if ( sessionStorage.getItem('msgSuccess') ) {
         $(document).Toasts('create', {
           class: 'bg-success',
-          title: 'Sucess',
+          title: '{{ _("Success") }}',
           body: sessionStorage.getItem('msgSuccess')
         });
         sessionStorage.removeItem('msgSuccess');
@@ -169,7 +169,7 @@
       if ( sessionStorage.getItem('msgFail') ) {
         $(document).Toasts('create', {
           class: 'bg-danger',
-          title: 'Failure',
+          title: '{{ _("Failure") }}',
           body: sessionStorage.getItem('msgFail')
         });
         sessionStorage.removeItem('msgFail');

@@ -1,6 +1,6 @@
 {% extends "layouts/base.html" %}
 
-{% block title %} Gallery {% endblock title %}
+{% block title %} {{ _('Gallery') }} {% endblock title %}
 
 <!-- Element injected in the BODY element -->
 {% block body_class %} sidebar-mini layout-navbar-fixed {% endblock body_class %}
@@ -28,12 +28,12 @@
       <div class="container-fluid">
         <div class="row mb-2">
           <div class="col-sm-6">
-            <h1>Gallery</h1>
+            <h1>{{ _('Gallery') }}</h1>
           </div>
           <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
-              <li class="breadcrumb-item"><a href="#">Home</a></li>
-              <li class="breadcrumb-item active">Gallery</li>
+              <li class="breadcrumb-item"><a href="#">{{ _('Home') }}</a></li>
+              <li class="breadcrumb-item active">{{ _('Gallery') }}</li>
             </ol>
           </div>
         </div>

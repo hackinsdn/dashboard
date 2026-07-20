@@ -7,17 +7,17 @@
         <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
       </li>
       <li class="nav-item d-none d-sm-inline-block">
-        <a href="{{ url_for('home_blueprint.index') }}" class="nav-link">Home</a>
+        <a href="{{ url_for('home_blueprint.index') }}" class="nav-link">{{ _('Home') }}</a>
       </li>
       <li class="nav-item d-none d-sm-inline-block">
-        <a href="{{ url_for('home_blueprint.view_contact') }}" class="nav-link">Contact</a>
+        <a href="{{ url_for('home_blueprint.view_contact') }}" class="nav-link">{{ _('Contact') }}</a>
       </li>
     </ul>
 
     <!-- SEARCH FORM -->
     <form class="form-inline ml-3">
       <div class="input-group input-group-sm">
-        <input class="form-control form-control-navbar" type="search" placeholder="Search" aria-label="Search">
+        <input class="form-control form-control-navbar" type="search" placeholder="{{ _('Search') }}" aria-label="{{ _('Search') }}">
         <div class="input-group-append">
           <button class="btn btn-navbar" type="submit">
             <i class="fas fa-search"></i>
@@ -37,7 +37,7 @@
           {% endif %}
         </a>
         <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
-          <span class="dropdown-item dropdown-header">Support cases</span>
+          <span class="dropdown-item dropdown-header">{{ _('Support cases') }}</span>
           <div class="dropdown-divider"></div>
           {% for thread in support_recent_threads %}
           <a href="{{ url_for('home_blueprint.view_my_support_thread', thread_id=thread.id) }}" class="dropdown-item">
@@ -46,13 +46,13 @@
               <i class="fas fa-comments img-size-50 mr-3 text-muted" style="font-size: 1.6rem; width: 50px; text-align: center; line-height: 50px;"></i>
               <div class="media-body">
                 <h3 class="dropdown-item-title">
-                  Case #{{ thread.id }}
+                  {{ _('Case') }} #{{ thread.id }}
                   {% if thread.status == "open" %}
                   <span class="float-right text-sm text-success"><i class="fas fa-circle"></i></span>
                   {% endif %}
                 </h3>
                 <p class="text-sm">
-                  {% if thread.has_unseen_for_user %}<span class="text-danger">New reply</span>{% else %}{{ thread.status|capitalize }}{% endif %}
+                  {% if thread.has_unseen_for_user %}<span class="text-danger">{{ _('New reply') }}</span>{% else %}{{ thread.status|capitalize }}{% endif %}
                   {% if thread.messages %} &middot; {{ thread.messages[-1].body|truncate(28) }}{% endif %}
                 </p>
                 <p class="text-sm text-muted"><i class="far fa-clock mr-1"></i> {{ thread.updated_at.strftime('%Y-%m-%d %H:%M') if thread.updated_at else '' }} UTC</p>
@@ -62,10 +62,10 @@
           </a>
           <div class="dropdown-divider"></div>
           {% else %}
-          <span class="dropdown-item text-muted text-sm">No support cases yet</span>
+          <span class="dropdown-item text-muted text-sm">{{ _('No support cases yet') }}</span>
           <div class="dropdown-divider"></div>
           {% endfor %}
-          <a href="{{ url_for('home_blueprint.list_my_support_threads') }}" class="dropdown-item dropdown-footer">See All Messages</a>
+          <a href="{{ url_for('home_blueprint.list_my_support_threads') }}" class="dropdown-item dropdown-footer">{{ _('See All Messages') }}</a>
         </div>
       </li>
       <!-- Notifications Dropdown Menu -->
@@ -77,7 +77,7 @@
           -->
         </a>
         <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
-          <span class="dropdown-item dropdown-header">No Notifications</span>
+          <span class="dropdown-item dropdown-header">{{ _('No Notifications') }}</span>
           <div class="dropdown-divider"></div>
           <!--
           <a href="#" class="dropdown-item">
@@ -96,16 +96,32 @@
           </a>
           <div class="dropdown-divider"></div>
           -->
-          <a href="#" class="dropdown-item dropdown-footer">See All Notifications</a>
+          <a href="#" class="dropdown-item dropdown-footer">{{ _('See All Notifications') }}</a>
+        </div>
+      </li>
+      <!-- Language switcher -->
+      <li class="nav-item dropdown">
+        <a class="nav-link" data-toggle="dropdown" href="#" role="button" title="{{ _('Language') }}">
+          <i class="fas fa-globe"></i>
+          <span class="d-none d-md-inline text-uppercase">{{ get_locale() }}</span>
+        </a>
+        <div class="dropdown-menu dropdown-menu-right">
+          {% set lang_names = {"en": "English", "pt_BR": "Português (BR)"} %}
+          {% for lang in LANGUAGES %}
+          <a class="dropdown-item {% if get_locale()|string == lang %}active{% endif %}"
+             href="{{ url_for('home_blueprint.set_locale', locale=lang) }}">
+            {{ lang_names.get(lang, lang) }}
+          </a>
+          {% endfor %}
         </div>
       </li>
       <li class="nav-item">
-        <a class="nav-link" data-toggle="tooltip" title="Reload profile"  href="{{ url_for('authentication_blueprint.reload_profile') }}" role="button">
+        <a class="nav-link" data-toggle="tooltip" title="{{ _('Reload profile') }}"  href="{{ url_for('authentication_blueprint.reload_profile') }}" role="button">
           <i class="fas fa-redo"></i>
         </a>
       </li>
       <li class="nav-item">
-        <a class="nav-link" data-toggle="tooltip" title="Sign-out"  href="{{ url_for('authentication_blueprint.logout') }}" role="button">
+        <a class="nav-link" data-toggle="tooltip" title="{{ _('Sign-out') }}"  href="{{ url_for('authentication_blueprint.logout') }}" role="button">
           <i class="fas fa-sign-out-alt"></i>
         </a>
       </li>

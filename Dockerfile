@@ -14,6 +14,9 @@ WORKDIR /app
 RUN --mount=source=.,target=/mnt,type=bind \
     cd /mnt && cp -r apps dbinit.py docker-entrypoint.sh scripts run.py migrations /app/
 
+# Compile i18n message catalogs (.po -> .mo) so translations are available at runtime
+RUN pybabel compile -d /app/apps/translations
+
 EXPOSE 3000
 
 ENTRYPOINT ["/app/docker-entrypoint.sh"]

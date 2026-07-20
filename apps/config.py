@@ -37,6 +37,17 @@ class Config(object):
     # Assets Management
     ASSETS_ROOT = os.getenv('ASSETS_ROOT', '/static/assets')
 
+    # --- Internationalization (i18n) ---
+    # Supported locales (first entry is the default). Codes must match the
+    # translation catalog directories under BABEL_TRANSLATION_DIRECTORIES.
+    LANGUAGES = [l.strip() for l in os.getenv("LANGUAGES", "en,pt_BR").split(",") if l.strip()]
+    BABEL_DEFAULT_LOCALE = os.getenv("BABEL_DEFAULT_LOCALE", "en")
+    BABEL_DEFAULT_TIMEZONE = os.getenv("BABEL_DEFAULT_TIMEZONE", "UTC")
+    BABEL_TRANSLATION_DIRECTORIES = os.getenv(
+        "BABEL_TRANSLATION_DIRECTORIES",
+        os.path.join(basedir, "translations"),
+    )
+
     # --- Logo Header ---
     LOGO_HEADER_URL = os.getenv('LOGO_HEADER_URL', '/static/assets/img/hackinsdn.png')
     LOGO_HEADER_ALT = os.getenv('LOGO_HEADER_ALT', 'HackInSDN')

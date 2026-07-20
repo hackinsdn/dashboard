@@ -1,6 +1,6 @@
 {% extends "layouts/base.html" %}
 
-{% block title %} My Support Case {% endblock title %}
+{% block title %} {{ _('My Support Case') }} {% endblock title %}
 
 {% block body_class %} sidebar-mini layout-navbar-fixed {% endblock body_class %}
 
@@ -20,13 +20,13 @@
       <div class="container-fluid">
         <div class="row mb-2">
           <div class="col-sm-6">
-            <h1>Support Case #{{ thread.id }}</h1>
+            <h1>{{ _('Support Case') }} #{{ thread.id }}</h1>
           </div>
           <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
-              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.index') }}">Home</a></li>
-              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.list_my_support_threads') }}">My Support</a></li>
-              <li class="breadcrumb-item active">Case #{{ thread.id }}</li>
+              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.index') }}">{{ _('Home') }}</a></li>
+              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.list_my_support_threads') }}">{{ _('My Support') }}</a></li>
+              <li class="breadcrumb-item active">{{ _('Case') }} #{{ thread.id }}</li>
             </ol>
           </div>
         </div>
@@ -39,11 +39,11 @@
           <div class="card direct-chat direct-chat-primary">
             <div class="card-header">
               <h3 class="card-title">
-                Conversation
+                {{ _('Conversation') }}
                 {% if thread.status == "open" %}
-                  <span class="badge badge-success ml-2">Open</span>
+                  <span class="badge badge-success ml-2">{{ _('Open') }}</span>
                 {% else %}
-                  <span class="badge badge-secondary ml-2">Finished</span>
+                  <span class="badge badge-secondary ml-2">{{ _('Finished') }}</span>
                 {% endif %}
               </h3>
             </div>
@@ -57,7 +57,7 @@
                   {% elif message.sender == "user" %}
                   <div class="direct-chat-msg right" data-id="{{ message.id }}">
                     <div class="direct-chat-infos clearfix">
-                      <span class="direct-chat-name float-right">You</span>
+                      <span class="direct-chat-name float-right">{{ _('You') }}</span>
                       <span class="direct-chat-timestamp float-left" data-ts="{{ message.created_at.isoformat() if message.created_at else '' }}"></span>
                     </div>
                     <div class="direct-chat-text">{{ message.body }}</div>
@@ -65,7 +65,7 @@
                   {% else %}
                   <div class="direct-chat-msg" data-id="{{ message.id }}">
                     <div class="direct-chat-infos clearfix">
-                      <span class="direct-chat-name float-left">{{ "Assistant" if message.sender == "assistant" else "Support" }}</span>
+                      <span class="direct-chat-name float-left">{{ _("Assistant") if message.sender == "assistant" else _("Support") }}</span>
                       <span class="direct-chat-timestamp float-right" data-ts="{{ message.created_at.isoformat() if message.created_at else '' }}"></span>
                     </div>
                     <div class="direct-chat-text">{{ message.body }}</div>
@@ -76,9 +76,9 @@
             </div>
             <div class="card-footer text-muted">
               {% if thread.status == "open" %}
-                <i class="fas fa-info-circle mr-1"></i> Use the chat button at the bottom-right of any page to continue this conversation.
+                <i class="fas fa-info-circle mr-1"></i> {{ _('Use the chat button at the bottom-right of any page to continue this conversation.') }}
               {% else %}
-                <i class="fas fa-check-circle mr-1"></i> This conversation is finished. Start a new one from the chat button at the bottom-right.
+                <i class="fas fa-check-circle mr-1"></i> {{ _('This conversation is finished. Start a new one from the chat button at the bottom-right.') }}
               {% endif %}
             </div>
           </div>
@@ -127,7 +127,7 @@
           return;
         }
         var isUser = msg.sender === 'user';
-        var name = isUser ? 'You' : (msg.sender === 'assistant' ? 'Assistant' : 'Support');
+        var name = isUser ? '{{ _("You") }}' : (msg.sender === 'assistant' ? '{{ _("Assistant") }}' : '{{ _("Support") }}');
         var side = isUser ? ' right' : '';
         var nameFloat = isUser ? 'float-right' : 'float-left';
         var tsFloat = isUser ? 'float-left' : 'float-right';

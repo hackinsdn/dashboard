@@ -1,6 +1,6 @@
 {% extends "layouts/base.html" %}
 
-{% block title %} View Labs {% endblock title %}
+{% block title %} {{ _('View Labs') }} {% endblock title %}
 
 <!-- Element injected in the BODY element -->
 {% block body_class %} sidebar-mini layout-navbar-fixed {% endblock body_class %}
@@ -30,13 +30,13 @@
       <div class="container-fluid">
         <div class="row mb-2">
           <div class="col-sm-6">
-            <h1>View Labs</h1>
+            <h1>{{ _('View Labs') }}</h1>
           </div>
           <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
-              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.index') }}">Home</a></li>
-              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.view_labs') }}">Labs</a></li>
-              <li class="breadcrumb-item active">View Labs</li>
+              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.index') }}">{{ _('Home') }}</a></li>
+              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.view_labs') }}">{{ _('Labs') }}</a></li>
+              <li class="breadcrumb-item active">{{ _('View Labs') }}</li>
             </ol>
           </div>
         </div>
@@ -44,23 +44,23 @@
           <div class="row mb-3">
             <div class="col-12">
               <form method="get" action="{{ url_for('home_blueprint.view_labs') }}" class="form-inline">
-                <label class="mr-2"><i class="fas fa-users"></i> Filter by Group:</label>
+                <h5 class="mr-2"><i class="fas fa-users"></i> {{ _('Filter by Group:') }}</h5>
                 <select name="filter_group" class="form-control mr-2">
-                  <option value="">All Groups</option>
+                  <option value="">{{ _('All Groups') }}</option>
                   <option disabled>--</option>
                   {% for group_id in groups %}
                     <option value="{{ group_id }}" {{ 'selected' if group_id == filter_group else '' }}>{{ groups[group_id].groupname }}</option>
                   {% endfor %}
                 </select>
-                <button type="submit" class="btn btn-primary mr-2">Filter</button>
+                <button type="submit" class="btn btn-primary mr-2">{{ _('Filter') }}</button>
                 {% if filter_group %}
-                <a href="{{ url_for('home_blueprint.view_labs') }}" class="btn btn-secondary">Clear</a>
+                <a href="{{ url_for('home_blueprint.view_labs') }}" class="btn btn-secondary">{{ _('Clear') }}</a>
                 {% endif %}
                 {% if current_user.category == "admin" %}
                   {% if show_deleted %}
-                <a href="{{ url_for('home_blueprint.view_labs', filter_group=filter_group or None) }}" class="btn btn-outline-secondary ml-2"><i class="fas fa-eye-slash"></i> Hide deleted</a>
+                <a href="{{ url_for('home_blueprint.view_labs', filter_group=filter_group or None) }}" class="btn btn-outline-secondary ml-2"><i class="fas fa-eye-slash"></i> {{ _('Hide deleted') }}</a>
                   {% else %}
-                <a href="{{ url_for('home_blueprint.view_labs', filter_group=filter_group or None, show_deleted=1) }}" class="btn btn-outline-secondary ml-2"><i class="fas fa-trash-restore"></i> Show deleted</a>
+                <a href="{{ url_for('home_blueprint.view_labs', filter_group=filter_group or None, show_deleted=1) }}" class="btn btn-outline-secondary ml-2"><i class="fas fa-trash-restore"></i> {{ _('Show deleted') }}</a>
                   {% endif %}
                 {% endif %}
               </form>
@@ -68,7 +68,7 @@
           </div>
           <div class="row mb-3">
             <div class="col-12">
-              <h5><i class="fas fa-tags"></i> Filter by Category:</h5>
+              <h5><i class="fas fa-tags"></i> {{ _('Filter by Category:') }}</h5>
               {% for cat_id in lab_categories %}
               <button class="btn btn-{{ lab_categories[cat_id].color_cls }} mx-2 filter-button{% if loop.first %} active-underline{% endif %}" data-filter="category-{{ cat_id }}">
                 {{ lab_categories[cat_id].category }}
@@ -78,15 +78,15 @@
           </div>
           <div class="row">
             <div class="col-12">
-              <h5><i class="fas fa-filter"></i> Filter by Status:</h5>
+              <h5><i class="fas fa-filter"></i> {{ _('Filter by Status:') }}</h5>
               <button class="btn btn-secondary mx-2 status-filter-button active-underline" data-filter="all">
-                <i class="fas fa-list"></i> All Labs
+                <i class="fas fa-list"></i> {{ _('All Labs') }}
               </button>
               <button class="btn btn-success mx-2 status-filter-button" data-filter="completed">
-                <i class="fas fa-check-circle"></i> Completed
+                <i class="fas fa-check-circle"></i> {{ _('Completed') }}
               </button>
               <button class="btn btn-info mx-2 status-filter-button" data-filter="not-completed">
-                <i class="fas fa-clock"></i> Not Completed
+                <i class="fas fa-clock"></i> {{ _('Not Completed') }}
               </button>
             </div>
           </div>
@@ -107,20 +107,20 @@
           <!-- card begin -->
           {% set category_classes = [] %}
           {% for cat in lab.categories %}
-            {% set _ = category_classes.append("category-" ~ cat.id) %}
+            {% set _ignore = category_classes.append("category-" ~ cat.id) %}
           {% endfor %}
           <div class="{{ card_size }} filter {{ category_classes|join(' ') }} {% if is_completed %}lab-completed{% else %}lab-not-completed{% endif %}">
             <div class="card {% if lab.is_deleted %}card-danger{% else %}card-dark{% endif %} mh-100">
               <div class="card-header">
                 <h2 class="card-title">
                   {{ lab.title }}
-                  {% if lab.is_deleted %}<span class="badge badge-light ml-2"><i class="fas fa-trash"></i> Deleted</span>{% endif %}
+                  {% if lab.is_deleted %}<span class="badge badge-light ml-2"><i class="fas fa-trash"></i> {{ _('Deleted') }}</span>{% endif %}
                 </h2>
                 <div class="card-tools">
-                  <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
+                  <button type="button" class="btn btn-tool" data-card-widget="collapse" title="{{ _('Collapse') }}">
                     <i class="fas fa-minus"></i>
                   </button>
-                  <button type="button" class="btn btn-tool" data-card-widget="remove" title="Remove">
+                  <button type="button" class="btn btn-tool" data-card-widget="remove" title="{{ _('Remove') }}">
                     <i class="fas fa-times"></i>
                   </button>
                 </div>
@@ -132,12 +132,12 @@
                     <span class="badge badge-{{ category.color_cls }} mr-1">{{ category.category }}</span>
                   {% endfor %}
                   {% if is_completed %}
-                    <span class="badge badge-success mr-1"><i class="fas fa-check"></i> Completed</span>
+                    <span class="badge badge-success mr-1"><i class="fas fa-check"></i> {{ _('Completed') }}</span>
                   {% endif %}
                 </div>
                 {% elif is_completed %}
                 <div class="float-left w-100 pb-2">
-                  <span class="badge badge-success mr-1"><i class="fas fa-check"></i> Completed</span>
+                  <span class="badge badge-success mr-1"><i class="fas fa-check"></i> {{ _('Completed') }}</span>
                 </div>
                 {% endif %}
                 {{ lab.extended_desc_str|safe }}
@@ -147,27 +147,27 @@
                 {% if is_running %}
                 {% set route = 'home_blueprint.view_lab_instance' %}
                 {% set lab_id = user_labs_status[lab.id]["running_id"] %}
-                {% set link_text = 'Resume' %}
+                {% set link_text = _('Resume') %}
                 {% else %}
                 {% set route = 'home_blueprint.run_lab' %}
                 {% set lab_id = lab.id %}
-                {% set link_text = 'Start' %}
+                {% set link_text = _('Start') %}
                 {% endif %}
-                <a class="btn btn-outline-dark mx-1 card-action-btn" href="{{ url_for('home_blueprint.view_labs', lab_id=lab.id) }}" role="button" title="View" aria-label="View"><i class="fas fa-eye"></i></a>
+                <a class="btn btn-outline-dark mx-1 card-action-btn" href="{{ url_for('home_blueprint.view_labs', lab_id=lab.id) }}" role="button" title="{{ _('View') }}" aria-label="{{ _('View') }}"><i class="fas fa-eye"></i></a>
                 {% if not lab.is_deleted %}
                 <a class="btn btn-outline-dark mx-1 card-action-btn" href="{{ url_for(route, lab_id=lab_id) }}" role="button" title="{{ link_text }}" aria-label="{{ link_text }}"><i class="far fa-play-circle"></i></a>
                 {% endif %}
                 {% if not lab.is_deleted and current_user.category in ["admin", "teacher", "labcreator"] and (not config.get("ENABLE_CLABS") or not lab.is_clab) %}
-                <a class="btn btn-outline-dark mx-1 card-action-btn" href="{{ url_for('home_blueprint.fork_lab', lab_id=lab.id) }}" role="button" title="Fork" aria-label="Fork"><i class="fas fa-code-branch"></i></a>
+                <a class="btn btn-outline-dark mx-1 card-action-btn" href="{{ url_for('home_blueprint.fork_lab', lab_id=lab.id) }}" role="button" title="{{ _('Fork') }}" aria-label="{{ _('Fork') }}"><i class="fas fa-code-branch"></i></a>
                 {% endif %}
                 {% if current_user.category == "admin" or current_user.category == "teacher" or (current_user.category == "labcreator" and lab.updated_by == current_user.id) %}
-		<a class="btn btn-outline-dark mx-1 card-action-btn" href="{{ url_for('home_blueprint.edit_lab', lab_id=lab.id) if not config.get("ENABLE_CLABS") or not lab.is_clab else url_for('clabs_blueprint.upsert', clab_id=lab.id) }}" role="button" title="Update" aria-label="Update"><i class="fas fa-edit"></i></a>
+		<a class="btn btn-outline-dark mx-1 card-action-btn" href="{{ url_for('home_blueprint.edit_lab', lab_id=lab.id) if not config.get("ENABLE_CLABS") or not lab.is_clab else url_for('clabs_blueprint.upsert', clab_id=lab.id) }}" role="button" title="{{ _('Update') }}" aria-label="{{ _('Update') }}"><i class="fas fa-edit"></i></a>
                 {% if lab.is_deleted %}
                 {% if current_user.category == "admin" %}
-                <button type="button" class="btn btn-outline-success mx-1 card-action-btn button-restore-lab" data-toggle="modal" data-target="#modal-restore-lab" data-id="{{ lab.id }}" title="Restore" aria-label="Restore"><i class="fas fa-trash-restore"></i></button>
+                <button type="button" class="btn btn-outline-success mx-1 card-action-btn button-restore-lab" data-toggle="modal" data-target="#modal-restore-lab" data-id="{{ lab.id }}" title="{{ _('Restore') }}" aria-label="{{ _('Restore') }}"><i class="fas fa-trash-restore"></i></button>
                 {% endif %}
                 {% elif current_user.category == "admin" or lab.updated_by == current_user.id %}
-                <button type="button" class="btn btn-outline-danger mx-1 card-action-btn button-delete-lab" data-toggle="modal" data-target="#modal-delete-lab" data-id="{{ lab.id }}" data-name="{{ lab.title }}" title="Delete" aria-label="Delete"><i class="fas fa-trash"></i></button>
+                <button type="button" class="btn btn-outline-danger mx-1 card-action-btn button-delete-lab" data-toggle="modal" data-target="#modal-delete-lab" data-id="{{ lab.id }}" data-name="{{ lab.title }}" title="{{ _('Delete') }}" aria-label="{{ _('Delete') }}"><i class="fas fa-trash"></i></button>
                 {% endif %}
                 {% endif %}
               </div>
@@ -182,18 +182,18 @@
         <div class="modal-dialog">
           <div class="modal-content">
             <div class="modal-header">
-              <h4 class="modal-title">Confirm delete lab</h4>
+              <h4 class="modal-title">{{ _('Confirm delete lab') }}</h4>
               <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                 <span aria-hidden="true">&times;</span>
               </button>
               <input type="hidden" id="delete-lab-id" />
             </div>
             <div class="modal-body">
-              <p>Are you sure you want to delete Lab <span class="text-danger" id="delete-lab-name"></span>?</p>
+              <p>{{ _('Are you sure you want to delete Lab') }} <span class="text-danger" id="delete-lab-name"></span>?</p>
             </div>
             <div class="modal-footer justify-content-between">
-              <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-              <button type="button" class="btn btn-danger" id="delete-lab">Delete lab</button>
+              <button type="button" class="btn btn-default" data-dismiss="modal">{{ _('Cancel') }}</button>
+              <button type="button" class="btn btn-danger" id="delete-lab">{{ _('Delete lab') }}</button>
             </div>
           </div>
           <!-- /.modal-content -->
@@ -205,18 +205,18 @@
         <div class="modal-dialog">
           <div class="modal-content">
             <div class="modal-header">
-              <h4 class="modal-title">Confirm restore lab</h4>
+              <h4 class="modal-title">{{ _('Confirm restore lab') }}</h4>
               <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                 <span aria-hidden="true">&times;</span>
               </button>
               <input type="hidden" id="restore-lab-id" />
             </div>
             <div class="modal-body">
-              <p>Are you sure you want to restore this lab?</p>
+              <p>{{ _('Are you sure you want to restore this lab?') }}</p>
             </div>
             <div class="modal-footer justify-content-between">
-              <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-              <button type="button" class="btn btn-success" id="restore-lab">Restore lab</button>
+              <button type="button" class="btn btn-default" data-dismiss="modal">{{ _('Cancel') }}</button>
+              <button type="button" class="btn btn-success" id="restore-lab">{{ _('Restore lab') }}</button>
             </div>
           </div>
           <!-- /.modal-content -->
@@ -263,13 +263,13 @@
         $('.filter-button').removeClass('active-underline');
         $(this).addClass("active-underline");
         var value = $(this).attr('data-filter');
-        
+
         $('.filter').removeClass('category-visible');
         $('.filter').filter('.' + value).addClass('category-visible');
         if (value == "category-1") {
           $('.filter').addClass('category-visible');
         }
-        
+
         applyFilters();
       });
 
@@ -293,9 +293,9 @@
 
       function applyFilters() {
         var statusActive = $('.status-filter-button.active-underline').attr('data-filter');
-        
+
         $('.filter').hide();
-        
+
         if (statusActive == "all") {
           $('.filter.category-visible').show('1000');
         } else {

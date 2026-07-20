@@ -1,6 +1,6 @@
 {% extends "layouts/base.html" %}
 
-{% block title %} Forms Advanced {% endblock title %}
+{% block title %} {{ _('Run Lab') }} {% endblock title %}
 
 <!-- Element injected in the BODY element -->
 {% block body_class %} sidebar-mini {% endblock body_class %}
@@ -29,20 +29,20 @@
       <div class="container-fluid">
         <div class="row mb-2">
           <div class="col-sm-6">
-            <h1>Run Lab</h1>
+            <h1>{{ _('Run Lab') }}</h1>
             {% if msg_fail %}
             <div class="alert alert-danger alert-dismissible">
               <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-              <h5><i class="icon fas fa-ban"></i> Fail to execute the lab!</h5>
+              <h5><i class="icon fas fa-ban"></i> {{ _('Fail to execute the lab!') }}</h5>
               {{ msg_fail }}
             </div>
             {% endif %}
           </div>
           <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
-              <li class="breadcrumb-item"><a href="/">Home</a></li>
-              <li class="breadcrumb-item"><a href="#">Labs</a></li>
-              <li class="breadcrumb-item active">Run Lab</li>
+              <li class="breadcrumb-item"><a href="/">{{ _('Home') }}</a></li>
+              <li class="breadcrumb-item"><a href="#">{{ _('Labs') }}</a></li>
+              <li class="breadcrumb-item active">{{ _('Run Lab') }}</li>
             </ol>
           </div>
         </div>
@@ -55,21 +55,21 @@
         <!-- SELECT2 EXAMPLE -->
         <div class="card card-default">
           <div class="card-header">
-            <h3 class="card-title">Lab -- {{ lab.title }}</h3>
+            <h3 class="card-title">{{ _('Lab') }} -- {{ lab.title }}</h3>
           </div>
           <!-- /.card-header -->
           <div class="card-body">
           <form method="post">
-            <h5>Overall information</h5>
+            <h5>{{ _('Overall information') }}</h5>
             <div class="row">
               <div class="col-md-6">
                 <div class="form-group">
-                  <label>Lab title</label>
+                  <label>{{ _('Lab title') }}</label>
                   <input type="text" class="form-control" disabled="disabled" value="{{ lab.title }}"/>
                 </div>
                 <!-- /.form-group -->
                 <div class="form-group">
-                  <label>User label</label>
+                  <label>{{ _('User label') }}</label>
                   <input type="text" class="form-control" disabled="disabled" value="{{ current_user.email }}"/>
                 </div>
                 <!-- /.form-group -->
@@ -77,7 +77,7 @@
               <!-- /.col -->
               <div class="col-md-6">
                 <div class="form-group">
-                  <label>Lab category</label>
+                  <label>{{ _('Lab category') }}</label>
                   <input type="text" class="form-control" disabled="disabled" value="{{ lab.category }}"/>
                 </div>
                 <!-- /.form-group -->
@@ -103,11 +103,11 @@
             </div>
             <!-- /.row -->
 
-            <h5>Lab scheduling</h5>
+            <h5>{{ _('Lab scheduling') }}</h5>
             <div class="row">
               <div class="col-12 col-sm-6">
                 <div class="form-group">
-                  <label>Lab Duration/Expiration</label>
+                  <label>{{ _('Lab Duration/Expiration') }}</label>
                   <select name="lab_expiration" class="form-control" required>
                     {% for exp_sec in lab_expirations %}
                     <option value="{{ exp_sec }}">{{ lab_expirations[exp_sec] }}</option>
@@ -130,14 +130,14 @@
             </div>
             <!-- /.row -->
             <div class="row">
-              <button class="btn btn-primary btn-flat" type="submit" id="btn-run-lab">Run</button>
+              <button class="btn btn-primary btn-flat" type="submit" id="btn-run-lab">{{ _('Run') }}</button>
             </div>
             <!-- /.row -->
           </form>
           </div>
           <!-- /.card-body -->
           <div class="card-footer">
-            Visit <a href="#">Lab documentation</a> for more information.
+            {{ _('Visit %(link_start)sLab documentation%(link_end)s for more information.', link_start='<a href="#">'|safe, link_end='</a>'|safe) }}
           </div>
         </div>
         <!-- /.card -->
@@ -175,7 +175,7 @@
       //  theme: 'bootstrap4'
       //})
       $('#btn-run-lab').on('click', function () {
-        $("#btn-run-lab").html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Starting lab...');
+        $("#btn-run-lab").html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> {{ _("Starting lab...") }}');
         $("#btn-run-lab").css("pointer-events", "none");
       });
     })

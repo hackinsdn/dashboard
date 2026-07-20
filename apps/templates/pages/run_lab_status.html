@@ -1,6 +1,6 @@
 {% extends "layouts/base.html" %}
 
-{% block title %} Run Lab - Status {% endblock title %}
+{% block title %} {{ _('Run Lab - Status') }} {% endblock title %}
 
 <!-- Element injected in the BODY element -->
 {% block body_class %} sidebar-mini pace-primary {% endblock body_class %}
@@ -27,12 +27,12 @@
       <div class="container-fluid">
         <div class="row mb-2">
           <div class="col-sm-6">
-            <h1>Running Lab - Status</h1>
+            <h1>{{ _('Running Lab - Status') }}</h1>
           </div>
           <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
-              <li class="breadcrumb-item"><a href="#">Home</a></li>
-              <li class="breadcrumb-item active">Lab Status</li>
+              <li class="breadcrumb-item"><a href="#">{{ _('Home') }}</a></li>
+              <li class="breadcrumb-item active">{{ _('Lab Status') }}</li>
             </ol>
           </div>
         </div>
@@ -45,7 +45,7 @@
       <div class="container-fluid">
         <div class="row">
           <div class="col-12">
-            <h4>Wait while checking for resource statuses... <span id="elapsedTimer" class="badge badge-info"></span></h4>
+            <h4>{{ _('Wait while checking for resource statuses...') }} <span id="elapsedTimer" class="badge badge-info"></span></h4>
             <p id="waitMessage" class="text-muted"></p>
           </div>
         </div>
@@ -55,7 +55,7 @@
               <div class="card-header p-0 pt-1">
                 <ul class="nav nav-tabs" id="custom-tabs-five-tab" role="tablist">
                   <li class="nav-item">
-                    <a class="nav-link active" id="custom-tabs-five-overlay-tab" data-toggle="pill" href="#custom-tabs-five-overlay" role="tab" aria-controls="custom-tabs-five-overlay" aria-selected="true">Resource statuses</a>
+                    <a class="nav-link active" id="custom-tabs-five-overlay-tab" data-toggle="pill" href="#custom-tabs-five-overlay" role="tab" aria-controls="custom-tabs-five-overlay" aria-selected="true">{{ _('Resource statuses') }}</a>
                   </li>
                 </ul>
               </div>
@@ -63,15 +63,15 @@
                 <div class="tab-content" id="custom-tabs-five-tabContent">
                   <div class="tab-pane fade show active" id="custom-tabs-five-overlay" role="tabpanel" aria-labelledby="custom-tabs-five-overlay-tab">
                     <div class="overlay-wrapper">
-                      <div id="loading" class="overlay"><i class="fas fa-3x fa-sync-alt fa-spin"></i><div class="text-bold pt-2">Loading...</div></div>
+                      <div id="loading" class="overlay"><i class="fas fa-3x fa-sync-alt fa-spin"></i><div class="text-bold pt-2">{{ _('Loading...') }}</div></div>
                       <ul>
                         {% for resource in resources %}
-                        <li><span id="{{ resource['kind'] + '__' + resource['name'] }}" class="badge badge-secondary status-badge">Unknown</span> {{ resource['kind'] }}/{{ resource['name'] }}</li>
+                        <li><span id="{{ resource['kind'] + '__' + resource['name'] }}" class="badge badge-secondary status-badge">{{ _('Unknown') }}</span> {{ resource['kind'] }}/{{ resource['name'] }}</li>
                         {% endfor %}
                       </ul>
                       <p id="statusText"></p>
                       <p id="resourceExtraInfo" class="text-muted"></p>
-                      <a style="display: none;" id="labLink" class="btn btn-outline-success" href="{{ url_for('home_blueprint.view_lab_instance', lab_id=lab_instance_id) }}">Start using the Lab resources and Lab guide!</a>
+                      <a style="display: none;" id="labLink" class="btn btn-outline-success" href="{{ url_for('home_blueprint.view_lab_instance', lab_id=lab_instance_id) }}">{{ _('Start using the Lab resources and Lab guide!') }}</a>
                     </div>
                   </div>
                 </div>
@@ -114,11 +114,11 @@
       var giveUpSeconds = 300;
       // staged wait messages: highest matching threshold (seconds) wins
       var waitMessages = [
-        [giveUpSeconds, "We could not confirm all resources became ready within 5 minutes. Your Lab may still be provisioning in the background — open the Lab page below to check it."],
-        [240, "Taking more than expected, but still waiting for resources."],
-        [180, "Almost there — provisioning can take a few minutes on busy clusters. Please bear with us a little longer."],
-        [120, "Still waiting for all resources to be provisioned."],
-        [60, "This is taking a little longer than usual — thank you for your patience!"]
+        [giveUpSeconds, "{{ _('We could not confirm all resources became ready within 5 minutes. Your Lab may still be provisioning in the background — open the Lab page below to check it.') }}"],
+        [240, "{{ _('Taking more than expected, but still waiting for resources.') }}"],
+        [180, "{{ _('Almost there — provisioning can take a few minutes on busy clusters. Please bear with us a little longer.') }}"],
+        [120, "{{ _('Still waiting for all resources to be provisioned.') }}"],
+        [60, "{{ _('This is taking a little longer than usual — thank you for your patience!') }}"]
       ];
 
       function elapsedSeconds() {
@@ -135,14 +135,14 @@
         gaveUp = true;
         clearInterval(timerInterval);
         document.getElementById("loading").style.display = "none";
-        $("#labLink").text("Check the running Lab").show();
+        $("#labLink").text("{{ _('Check the running Lab') }}").show();
         $("#elapsedTimer").removeClass('badge-info');
         $("#elapsedTimer").addClass('badge-danger');
       }
 
       function updateElapsed() {
         var elapsed = elapsedSeconds();
-        $("#elapsedTimer").text("Waiting for " + elapsed + "s");
+        $("#elapsedTimer").text("{{ _('Waiting for') }} " + elapsed + "s");
         for (var i = 0; i < waitMessages.length; i++) {
           if (elapsed >= waitMessages[i][0]) {
             $("#waitMessage").text(waitMessages[i][1]);
@@ -166,7 +166,7 @@
         });
         request.done(function(data) {
           if (data.status != "ok") {
-            $("#statusText").text("Failed to get data");
+            $("#statusText").text("{{ _('Failed to get data') }}");
             stopWaiting();
             return;
           }
@@ -176,15 +176,15 @@
               allOk = false;
               $(`#${resource.name}`).text(resource.status);
             } else {
-              $(`#${resource.name}`).text("Ready");
+              $(`#${resource.name}`).text("{{ _('Ready') }}");
               $(`#${resource.name}`).removeClass("badge-secondary");
               $(`#${resource.name}`).addClass("badge-success");
             }
           });
           if (allOk) {
-            $("#statusText").text("All resources are ready!");
-            $("#labLink").text("Start using the Lab resources and Lab guide!").show();
-            $(".status-badge").text("Ready");
+            $("#statusText").text("{{ _('All resources are ready!') }}");
+            $("#labLink").text("{{ _('Start using the Lab resources and Lab guide!') }}").show();
+            $(".status-badge").text("{{ _('Ready') }}");
             $(".status-badge").removeClass("badge-secondary");
             $(".status-badge").addClass("badge-success");
             stopWaiting();
@@ -193,7 +193,7 @@
           }
         });
         request.fail(function(xhr) {
-          $("#statusText").text("Failed to process request: " + xhr.responseText);
+          $("#statusText").text("{{ _('Failed to process request:') }} " + xhr.responseText);
           stopWaiting();
         });
       };
