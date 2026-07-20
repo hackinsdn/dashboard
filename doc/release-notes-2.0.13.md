@@ -1,11 +1,13 @@
 # Release Notes — v2.0.13
 
 This release delivers a large batch of new features across lab management, an
-LTI 1.3 integration, a support-chat system, plus numerous fixes, dependency
-upgrades, and a big jump in automated test coverage.
+LTI 1.3 integration, a support-chat system, full internationalization, plus
+numerous fixes, dependency upgrades, and a big jump in automated test coverage.
 
 ## Highlights
 
+- **Internationalization (EN + pt_BR)** — the whole UI is now translatable, with a
+  navbar language switcher and a per-user language preference.
 - **LTI 1.3 integration** — HackInSDN can now be embedded as an external tool in
   Moodle/LMS platforms, including grade passback.
 - **Support chat** — an in-app chat widget with admin thread management and open-case
@@ -43,6 +45,7 @@ upgrades, and a big jump in automated test coverage.
 | [#266](https://github.com/hackinsdn/dashboard/pull/266) | Version control for editable Lab fields (manifest, lab guide, extended description) |
 | [#267](https://github.com/hackinsdn/dashboard/pull/267) | LTI 1.3 integration (optional module `lti`) |
 | [#270](https://github.com/hackinsdn/dashboard/pull/270) | Resolve service pods via Discovery API endpoint slices |
+| [#286](https://github.com/hackinsdn/dashboard/pull/286) | Internationalization with Flask-Babel: English + Brazilian Portuguese, navbar language switcher, per-user `locale` preference |
 | [#290](https://github.com/hackinsdn/dashboard/pull/290) | Bulk delete of running Lab instances and of users (`DELETE /api/labs`, `DELETE /api/users/bulk`) |
 
 ## Fixes
@@ -55,6 +58,7 @@ upgrades, and a big jump in automated test coverage.
 | [#258](https://github.com/hackinsdn/dashboard/pull/258) | `Users.created_at` can be null for old migrated data |
 | [#259](https://github.com/hackinsdn/dashboard/pull/259) | Fix djlint errors in templates and add lint CI workflow |
 | [#271](https://github.com/hackinsdn/dashboard/pull/271) | Add timeout to kubectl delete operations |
+| [#286](https://github.com/hackinsdn/dashboard/pull/286) | Password-reset e-mails showed a literal `{url_for(...)}` instead of the reset link (missing f-prefix) |
 
 ## Dependencies & Security
 
@@ -74,8 +78,14 @@ upgrades, and a big jump in automated test coverage.
 
 ## Upgrade Notes
 
-- This release includes new Alembic migrations up to **2.0.13**
-  (`2.0.11_add_lti_2.0.12` and `2.0.12_add_lti_launch_context_2.0.13`). Run
-  `flask db upgrade` after deploying.
+- This release includes new Alembic migrations up to **2.0.14**
+  (`2.0.11_add_lti_2.0.12`, `2.0.12_add_lti_launch_context_2.0.13` and
+  `2.0.13_add_users_locale_2.0.14`). Run `flask db upgrade` after deploying.
 - The LTI integration is shipped as an **optional module** (`lti`); enable it only
   where needed.
+- **Translations must be compiled** before the app can serve a non-default locale.
+  The Docker build runs this automatically; for source deployments run
+  `make i18n-compile` to build the `.mo` catalogs. The available locales are
+  controlled by `LANGUAGES` (default `en,pt_BR`), and the fallback by
+  `BABEL_DEFAULT_LOCALE` (default `en`). See [i18n.md](i18n.md) for the
+  maintainer workflow.
