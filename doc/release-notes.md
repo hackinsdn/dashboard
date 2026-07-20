@@ -1,4 +1,4 @@
-# Release Notes — v2.0.13
+# Release Notes — v2.0.14
 
 This release delivers a large batch of new features across lab management, an
 LTI 1.3 integration, a support-chat system, full internationalization, plus
