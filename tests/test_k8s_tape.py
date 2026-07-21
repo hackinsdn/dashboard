@@ -61,6 +61,7 @@ flask_app.config["TESTING"] = True
 
 TAPE = os.path.join(os.path.dirname(__file__), "data", "k8s_tape.yaml")
 NAMESPACE = "hackinsdn"
+REQUEST_TIMEOUT = 30.0
 
 
 # --- rebuild the taped JSON into real kubernetes model objects ----------
@@ -152,6 +153,7 @@ def _app_context():
 def ctrl(monkeypatch):
     """A fully-wired K8sController with the kube client patched out."""
     monkeypatch.setattr(k8s_module.app_config, "K8S_NAMESPACE", NAMESPACE)
+    monkeypatch.setattr(k8s_module.app_config, "K8S_REQUEST_TIMEOUT", REQUEST_TIMEOUT)
     monkeypatch.setattr(k8s_module.config, "load_kube_config", lambda **k: None)
     monkeypatch.setattr(k8s_module.client, "CoreV1Api", lambda: MagicMock())
     monkeypatch.setattr(k8s_module.client, "AppsV1Api", lambda: MagicMock())
@@ -415,10 +417,12 @@ class TestDeleteResourcesByName:
 
         assert results == [True, True]
         ctrl.apps_v1_api.delete_namespaced_deployment.assert_called_once_with(
-            name="helloworld-hackinsdn-18fb2637c46a47", namespace=NAMESPACE
+            name="helloworld-hackinsdn-18fb2637c46a47", namespace=NAMESPACE,
+            _request_timeout=REQUEST_TIMEOUT,
         )
         ctrl.v1_api.delete_namespaced_service.assert_called_once_with(
-            name="helloworld-hackinsdn-18fb2637c46a47", namespace=NAMESPACE
+            name="helloworld-hackinsdn-18fb2637c46a47", namespace=NAMESPACE,
+            _request_timeout=REQUEST_TIMEOUT,
         )
 
     def test_delete_failure_returns_false(self, ctrl):
@@ -441,7 +445,7 @@ class TestListPods:
         ) as mock_list:
             pods = ctrl.list_pods()
 
-        mock_list.assert_called_once_with(namespace=NAMESPACE)
+        mock_list.assert_called_once_with(namespace=NAMESPACE, _request_timeout=REQUEST_TIMEOUT)
         assert len(pods) == 2
         by_name = {p["name"]: p for p in pods}
 
@@ -480,7 +484,7 @@ class TestListDeployments:
         ) as mock_list:
             deployments = ctrl.list_deployments()
 
-        mock_list.assert_called_once_with(namespace=NAMESPACE)
+        mock_list.assert_called_once_with(namespace=NAMESPACE, _request_timeout=REQUEST_TIMEOUT)
         assert len(deployments) == 2
         by_name = {d["name"]: d for d in deployments}
 
@@ -513,7 +517,7 @@ class TestListServices:
         ) as mock_list:
             services = ctrl.list_services()
 
-        mock_list.assert_called_once_with(namespace=NAMESPACE)
+        mock_list.assert_called_once_with(namespace=NAMESPACE, _request_timeout=REQUEST_TIMEOUT)
         assert len(services) == 2
         by_name = {s["name"]: s for s in services}
 

@@ -80,6 +80,8 @@ Here are some options you can use to configure Dashboard HackInSDN:
 
 - `K8S_NAMESPACE`: default namespace that will be used
 
+- `K8S_REQUEST_TIMEOUT`: timeout (in seconds) applied to every Kubernetes API call, so the application does not hang indefinitely when the API server is unreachable/unavailable (default: `10`)
+
 - `SECRET_KEY`: used to create session IDs and other secrets on the application. Choose a secret key for you to use among container restarts to avoid session being invalidated
 
 - `BASE_URL`: used basically to create the redirect URL when submitting external Oauth2 authentication

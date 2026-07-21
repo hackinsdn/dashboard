@@ -66,10 +66,15 @@ def _app_context():
         yield
 
 
+# a distinctive value so tests can assert it is threaded into every API call
+TEST_TIMEOUT = 7.0
+
+
 @pytest.fixture()
 def ctrl(monkeypatch):
     """A fully-wired K8sController with the kube client mocked out."""
     monkeypatch.setattr(k8s_module.app_config, "K8S_NAMESPACE", "test-ns")
+    monkeypatch.setattr(k8s_module.app_config, "K8S_REQUEST_TIMEOUT", TEST_TIMEOUT)
     monkeypatch.setattr(k8s_module.config, "load_kube_config", lambda **k: None)
     monkeypatch.setattr(k8s_module.client, "CoreV1Api", lambda: MagicMock())
     monkeypatch.setattr(k8s_module.client, "AppsV1Api", lambda: MagicMock())
@@ -354,3 +359,128 @@ class TestMoreByName:
             side_effect=RuntimeError("boom")
         )
         assert ctrl.delete_config_map_by_name({"name": "c1"}) is False
+
+
+# --- request timeout ----------------------------------------------------
+class TestRequestTimeout:
+    """The controller must thread a configurable timeout into every call so a
+    stalled API server cannot hang the whole application."""
+
+    def test_timeout_from_config(self, ctrl):
+        assert ctrl.request_timeout == TEST_TIMEOUT
+
+    def test_list_pods_passes_timeout(self, ctrl):
+        ctrl.v1_api.list_namespaced_pod = MagicMock(
+            return_value=types.SimpleNamespace(items=[])
+        )
+        ctrl.list_pods()
+        _, kwargs = ctrl.v1_api.list_namespaced_pod.call_args
+        assert kwargs["_request_timeout"] == TEST_TIMEOUT
+
+    def test_list_deployments_passes_timeout(self, ctrl):
+        ctrl.apps_v1_api.list_namespaced_deployment = MagicMock(
+            return_value=types.SimpleNamespace(items=[])
+        )
+        ctrl.list_deployments()
+        _, kwargs = ctrl.apps_v1_api.list_namespaced_deployment.call_args
+        assert kwargs["_request_timeout"] == TEST_TIMEOUT
+
+    def test_list_services_passes_timeout(self, ctrl):
+        ctrl.v1_api.list_namespaced_service = MagicMock(
+            return_value=types.SimpleNamespace(items=[])
+        )
+        ctrl.list_services()
+        _, kwargs = ctrl.v1_api.list_namespaced_service.call_args
+        assert kwargs["_request_timeout"] == TEST_TIMEOUT
+
+    def test_update_nodes_passes_timeout(self, ctrl):
+        ctrl.v1_api.list_node = MagicMock(return_value=types.SimpleNamespace(items=[]))
+        ctrl.nodes_last_updated = 0
+        ctrl.update_nodes()
+        _, kwargs = ctrl.v1_api.list_node.call_args
+        assert kwargs["_request_timeout"] == TEST_TIMEOUT
+
+    def test_read_pod_passes_timeout(self, ctrl):
+        pod = MagicMock()
+        pod.to_dict.return_value = {}
+        pod.status.phase = "Running"
+        ctrl.v1_api.read_namespaced_pod = MagicMock(return_value=pod)
+        ctrl.get_pod_by_name({"name": "p1"})
+        _, kwargs = ctrl.v1_api.read_namespaced_pod.call_args
+        assert kwargs["_request_timeout"] == TEST_TIMEOUT
+
+    def test_delete_pod_passes_timeout(self, ctrl):
+        ctrl.v1_api.delete_namespaced_pod = MagicMock()
+        ctrl.delete_pod_by_name({"name": "p1"})
+        _, kwargs = ctrl.v1_api.delete_namespaced_pod.call_args
+        assert kwargs["_request_timeout"] == TEST_TIMEOUT
+
+    def test_create_registry_secret_passes_timeout(self, ctrl):
+        ctrl.v1_api.create_namespaced_secret = MagicMock()
+        ctrl.create_registry_secret("s1", "reg.io", "bob", "pw")
+        _, kwargs = ctrl.v1_api.create_namespaced_secret.call_args
+        assert kwargs["_request_timeout"] == TEST_TIMEOUT
+
+    def test_create_from_dict_passes_timeout(self, ctrl, monkeypatch):
+        created = MagicMock()
+        created.to_dict.return_value = {"kind": "Pod"}
+        capture = {}
+
+        def fake_create(client, data, namespace, _request_timeout):
+            capture["_request_timeout"] = _request_timeout
+            return [created]
+
+        monkeypatch.setattr(k8s_module, "create_from_dict", fake_create)
+        ctrl.create_k8s_resource({"kind": "Pod", "metadata": {}})
+        assert capture["_request_timeout"] == TEST_TIMEOUT
+
+    def test_subprocess_get_passes_timeout(self, ctrl, monkeypatch):
+        capture = {}
+
+        def fake_run(*a, **k):
+            capture.update(k)
+            return _completed(json.dumps({}))
+
+        monkeypatch.setattr(k8s_module.subprocess, "run", fake_run)
+        ctrl.get_k8s_resource({"kind": "Foo", "name": "f1"})
+        assert capture["timeout"] == TEST_TIMEOUT
+
+    def test_subprocess_delete_passes_timeout(self, ctrl, monkeypatch):
+        capture = {}
+
+        def fake_run(*a, **k):
+            capture.update(k)
+            return _completed("")
+
+        monkeypatch.setattr(k8s_module.subprocess, "run", fake_run)
+        ctrl.delete_k8s_resource({"kind": "Foo", "name": "f1"})
+        assert capture["timeout"] == TEST_TIMEOUT
+
+
+# --- timeout / connectivity error handling ------------------------------
+class TestTimeoutHandling:
+    """A stalled server surfaces as a timeout; each wrapper must handle it in
+    the same way it handles any other failure (raise vs. return False)."""
+
+    def test_get_k8s_resource_timeout_raises(self, ctrl, monkeypatch):
+        def boom(*a, **k):
+            raise subprocess.TimeoutExpired(cmd="kubectl", timeout=k.get("timeout"))
+
+        monkeypatch.setattr(k8s_module.subprocess, "run", boom)
+        with pytest.raises(Exception, match="Timeout while getting"):
+            ctrl.get_k8s_resource({"kind": "Foo", "name": "f1"})
+
+    def test_create_k8s_resource_timeout_raises(self, ctrl, monkeypatch):
+        def boom(*a, **k):
+            raise subprocess.TimeoutExpired(cmd="kubectl", timeout=k.get("timeout"))
+
+        monkeypatch.setattr(k8s_module.subprocess, "run", boom)
+        with pytest.raises(Exception, match="Timeout while creating"):
+            ctrl.create_k8s_resource({"kind": "Topology", "metadata": {}})
+
+    def test_delete_k8s_resource_timeout_returns_false(self, ctrl, monkeypatch):
+        def boom(*a, **k):
+            raise subprocess.TimeoutExpired(cmd="kubectl", timeout=k.get("timeout"))
+
+        monkeypatch.setattr(k8s_module.subprocess, "run", boom)
+        assert ctrl.delete_k8s_resource({"kind": "Foo", "name": "f1"}) is False
