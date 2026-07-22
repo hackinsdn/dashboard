@@ -369,6 +369,9 @@ class TestRequestTimeout:
 
     def test_timeout_from_config(self, ctrl):
         assert ctrl.request_timeout == TEST_TIMEOUT
+        # the kubernetes client only honors a single-value timeout when it is an
+        # int, so a float must be threaded as a (connect, read) tuple
+        assert ctrl.api_request_timeout == (TEST_TIMEOUT, TEST_TIMEOUT)
 
     def test_list_pods_passes_timeout(self, ctrl):
         ctrl.v1_api.list_namespaced_pod = MagicMock(
@@ -376,7 +379,7 @@ class TestRequestTimeout:
         )
         ctrl.list_pods()
         _, kwargs = ctrl.v1_api.list_namespaced_pod.call_args
-        assert kwargs["_request_timeout"] == TEST_TIMEOUT
+        assert kwargs["_request_timeout"] == (TEST_TIMEOUT, TEST_TIMEOUT)
 
     def test_list_deployments_passes_timeout(self, ctrl):
         ctrl.apps_v1_api.list_namespaced_deployment = MagicMock(
@@ -384,7 +387,7 @@ class TestRequestTimeout:
         )
         ctrl.list_deployments()
         _, kwargs = ctrl.apps_v1_api.list_namespaced_deployment.call_args
-        assert kwargs["_request_timeout"] == TEST_TIMEOUT
+        assert kwargs["_request_timeout"] == (TEST_TIMEOUT, TEST_TIMEOUT)
 
     def test_list_services_passes_timeout(self, ctrl):
         ctrl.v1_api.list_namespaced_service = MagicMock(
@@ -392,14 +395,14 @@ class TestRequestTimeout:
         )
         ctrl.list_services()
         _, kwargs = ctrl.v1_api.list_namespaced_service.call_args
-        assert kwargs["_request_timeout"] == TEST_TIMEOUT
+        assert kwargs["_request_timeout"] == (TEST_TIMEOUT, TEST_TIMEOUT)
 
     def test_update_nodes_passes_timeout(self, ctrl):
         ctrl.v1_api.list_node = MagicMock(return_value=types.SimpleNamespace(items=[]))
         ctrl.nodes_last_updated = 0
         ctrl.update_nodes()
         _, kwargs = ctrl.v1_api.list_node.call_args
-        assert kwargs["_request_timeout"] == TEST_TIMEOUT
+        assert kwargs["_request_timeout"] == (TEST_TIMEOUT, TEST_TIMEOUT)
 
     def test_read_pod_passes_timeout(self, ctrl):
         pod = MagicMock()
@@ -408,19 +411,19 @@ class TestRequestTimeout:
         ctrl.v1_api.read_namespaced_pod = MagicMock(return_value=pod)
         ctrl.get_pod_by_name({"name": "p1"})
         _, kwargs = ctrl.v1_api.read_namespaced_pod.call_args
-        assert kwargs["_request_timeout"] == TEST_TIMEOUT
+        assert kwargs["_request_timeout"] == (TEST_TIMEOUT, TEST_TIMEOUT)
 
     def test_delete_pod_passes_timeout(self, ctrl):
         ctrl.v1_api.delete_namespaced_pod = MagicMock()
         ctrl.delete_pod_by_name({"name": "p1"})
         _, kwargs = ctrl.v1_api.delete_namespaced_pod.call_args
-        assert kwargs["_request_timeout"] == TEST_TIMEOUT
+        assert kwargs["_request_timeout"] == (TEST_TIMEOUT, TEST_TIMEOUT)
 
     def test_create_registry_secret_passes_timeout(self, ctrl):
         ctrl.v1_api.create_namespaced_secret = MagicMock()
         ctrl.create_registry_secret("s1", "reg.io", "bob", "pw")
         _, kwargs = ctrl.v1_api.create_namespaced_secret.call_args
-        assert kwargs["_request_timeout"] == TEST_TIMEOUT
+        assert kwargs["_request_timeout"] == (TEST_TIMEOUT, TEST_TIMEOUT)
 
     def test_create_from_dict_passes_timeout(self, ctrl, monkeypatch):
         created = MagicMock()
@@ -433,7 +436,7 @@ class TestRequestTimeout:
 
         monkeypatch.setattr(k8s_module, "create_from_dict", fake_create)
         ctrl.create_k8s_resource({"kind": "Pod", "metadata": {}})
-        assert capture["_request_timeout"] == TEST_TIMEOUT
+        assert capture["_request_timeout"] == (TEST_TIMEOUT, TEST_TIMEOUT)
 
     def test_subprocess_get_passes_timeout(self, ctrl, monkeypatch):
         capture = {}
@@ -456,6 +459,23 @@ class TestRequestTimeout:
         monkeypatch.setattr(k8s_module.subprocess, "run", fake_run)
         ctrl.delete_k8s_resource({"kind": "Foo", "name": "f1"})
         assert capture["timeout"] == TEST_TIMEOUT
+
+    def test_endpoint_disables_client_retries(self, monkeypatch):
+        """Each endpoint's Configuration must disable urllib3 retries so an
+        unreachable server cannot multiply the per-attempt request timeout."""
+        import threading
+
+        real_cfg = k8s_module.client.Configuration()
+        monkeypatch.setattr(k8s_module.client, "Configuration", lambda: real_cfg)
+        monkeypatch.setattr(k8s_module.config, "load_kube_config", lambda **k: None)
+        monkeypatch.setattr(k8s_module.client, "ApiClient", lambda **k: MagicMock())
+        monkeypatch.setattr(k8s_module.client, "CoreV1Api", lambda *a, **k: MagicMock())
+        monkeypatch.setattr(k8s_module.client, "AppsV1Api", lambda *a, **k: MagicMock())
+        monkeypatch.setattr(k8s_module.client, "DiscoveryV1Api", lambda *a, **k: MagicMock())
+
+        ep = k8s_module._KubeEndpoint("/some/kubeconfig")
+        ep.ensure_built(threading.Lock())
+        assert real_cfg.retries == 0
 
 
 # --- timeout / connectivity error handling ------------------------------

@@ -419,11 +419,11 @@ class TestDeleteResourcesByName:
         assert results == [True, True]
         ctrl.apps_v1_api.delete_namespaced_deployment.assert_called_once_with(
             name="helloworld-hackinsdn-18fb2637c46a47", namespace=NAMESPACE,
-            _request_timeout=REQUEST_TIMEOUT,
+            _request_timeout=(REQUEST_TIMEOUT, REQUEST_TIMEOUT),
         )
         ctrl.v1_api.delete_namespaced_service.assert_called_once_with(
             name="helloworld-hackinsdn-18fb2637c46a47", namespace=NAMESPACE,
-            _request_timeout=REQUEST_TIMEOUT,
+            _request_timeout=(REQUEST_TIMEOUT, REQUEST_TIMEOUT),
         )
 
     def test_delete_failure_returns_false(self, ctrl):
@@ -446,7 +446,7 @@ class TestListPods:
         ) as mock_list:
             pods = ctrl.list_pods()
 
-        mock_list.assert_called_once_with(namespace=NAMESPACE, _request_timeout=REQUEST_TIMEOUT)
+        mock_list.assert_called_once_with(namespace=NAMESPACE, _request_timeout=(REQUEST_TIMEOUT, REQUEST_TIMEOUT))
         assert len(pods) == 2
         by_name = {p["name"]: p for p in pods}
 
@@ -485,7 +485,7 @@ class TestListDeployments:
         ) as mock_list:
             deployments = ctrl.list_deployments()
 
-        mock_list.assert_called_once_with(namespace=NAMESPACE, _request_timeout=REQUEST_TIMEOUT)
+        mock_list.assert_called_once_with(namespace=NAMESPACE, _request_timeout=(REQUEST_TIMEOUT, REQUEST_TIMEOUT))
         assert len(deployments) == 2
         by_name = {d["name"]: d for d in deployments}
 
@@ -518,7 +518,7 @@ class TestListServices:
         ) as mock_list:
             services = ctrl.list_services()
 
-        mock_list.assert_called_once_with(namespace=NAMESPACE, _request_timeout=REQUEST_TIMEOUT)
+        mock_list.assert_called_once_with(namespace=NAMESPACE, _request_timeout=(REQUEST_TIMEOUT, REQUEST_TIMEOUT))
         assert len(services) == 2
         by_name = {s["name"]: s for s in services}
 
