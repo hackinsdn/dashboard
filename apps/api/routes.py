@@ -487,6 +487,13 @@ def delete_lab_catalog(lab_id):
         current_app.logger.error(f"Failed to delete lab {lab_id}: {exc}")
         return {"status": "fail", "result": _("Failed to delete lab")}, 400
 
+    # remove the lab-data ConfigMaps from the cluster; files stay on disk so a
+    # restore can recreate them. Best effort: never blocks the delete.
+    try:
+        k8s.delete_labdata_configmaps(lab_id)
+    except Exception as exc:
+        current_app.logger.error(f"Failed to delete lab-data ConfigMaps for lab {lab_id}: {exc}")
+
     return {"status": "ok", "result": _("Lab deleted successfully")}, 200
 
 
@@ -506,6 +513,15 @@ def restore_lab_catalog(lab_id):
     except Exception as exc:
         current_app.logger.error(f"Failed to restore lab {lab_id}: {exc}")
         return {"status": "fail", "result": _("Failed to restore lab")}, 400
+
+    # recreate the lab-data ConfigMaps that were removed when the lab was deleted
+    labdata = lab.lab_metadata.md.get("labdata", []) if lab.lab_metadata else []
+    if labdata:
+        from apps.home.routes import _labdata_dir
+        try:
+            k8s.sync_labdata_configmaps(lab_id, labdata, _labdata_dir(lab_id))
+        except Exception as exc:
+            current_app.logger.error(f"Failed to restore lab-data ConfigMaps for lab {lab_id}: {exc}")
 
     return {"status": "ok", "result": _("Lab restored successfully")}, 200
 

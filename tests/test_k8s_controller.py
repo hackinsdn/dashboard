@@ -485,3 +485,116 @@ class TestTimeoutHandling:
 
         monkeypatch.setattr(k8s_module.subprocess, "run", boom)
         assert ctrl.delete_k8s_resource({"kind": "Foo", "name": "f1"}) is False
+
+
+# --- sync_labdata_configmaps / delete_labdata_configmaps ----------------
+class TestLabdataConfigMaps:
+    def _entry(self, tmp_path, cm_uuid, key, content):
+        fname = f"{cm_uuid}.dat"
+        (tmp_path / fname).write_bytes(content)
+        return {
+            "cm_uuid": cm_uuid,
+            "configmap_name": f"labdata-{cm_uuid}",
+            "filename": fname,
+            "original_name": key,
+        }
+
+    def test_create_text_configmap(self, ctrl, tmp_path):
+        ctrl.v1_api.read_namespaced_config_map = MagicMock(
+            side_effect=k8s_module.ApiException(status=404)
+        )
+        ctrl.v1_api.create_namespaced_config_map = MagicMock()
+        ctrl.v1_api.list_namespaced_config_map = MagicMock(
+            return_value=types.SimpleNamespace(items=[])
+        )
+        entry = self._entry(tmp_path, "aaaa", "config.yaml", b"key: value\n")
+        ok, msg = ctrl.sync_labdata_configmaps("lab-1", [entry], str(tmp_path))
+        assert ok is True
+        ctrl.v1_api.create_namespaced_config_map.assert_called_once()
+        body = ctrl.v1_api.create_namespaced_config_map.call_args.kwargs["body"]
+        assert body.data == {"config.yaml": "key: value\n"}
+        assert body.binary_data is None
+        assert body.metadata.name == "labdata-aaaa"
+        assert body.metadata.labels["lab_id"] == "lab-1"
+        assert body.metadata.labels["hackinsdn.io/labdata"] == "true"
+
+    def test_binary_goes_to_binary_data(self, ctrl, tmp_path):
+        ctrl.v1_api.read_namespaced_config_map = MagicMock(
+            side_effect=k8s_module.ApiException(status=404)
+        )
+        ctrl.v1_api.create_namespaced_config_map = MagicMock()
+        ctrl.v1_api.list_namespaced_config_map = MagicMock(
+            return_value=types.SimpleNamespace(items=[])
+        )
+        raw = b"\x89PNG\x00\xff\xfe"
+        entry = self._entry(tmp_path, "bbbb", "logo.png", raw)
+        ok, _msg = ctrl.sync_labdata_configmaps("lab-1", [entry], str(tmp_path))
+        assert ok is True
+        body = ctrl.v1_api.create_namespaced_config_map.call_args.kwargs["body"]
+        assert body.data is None
+        import base64 as _b64
+        assert body.binary_data == {"logo.png": _b64.b64encode(raw).decode("ascii")}
+
+    def test_existing_configmap_is_replaced(self, ctrl, tmp_path):
+        ctrl.v1_api.read_namespaced_config_map = MagicMock(return_value=MagicMock())
+        ctrl.v1_api.replace_namespaced_config_map = MagicMock()
+        ctrl.v1_api.create_namespaced_config_map = MagicMock()
+        ctrl.v1_api.list_namespaced_config_map = MagicMock(
+            return_value=types.SimpleNamespace(items=[])
+        )
+        entry = self._entry(tmp_path, "cccc", "a.txt", b"data")
+        ok, _msg = ctrl.sync_labdata_configmaps("lab-1", [entry], str(tmp_path))
+        assert ok is True
+        ctrl.v1_api.replace_namespaced_config_map.assert_called_once()
+        ctrl.v1_api.create_namespaced_config_map.assert_not_called()
+
+    def test_orphans_are_pruned(self, ctrl, tmp_path):
+        ctrl.v1_api.read_namespaced_config_map = MagicMock(
+            side_effect=k8s_module.ApiException(status=404)
+        )
+        ctrl.v1_api.create_namespaced_config_map = MagicMock()
+        keep = types.SimpleNamespace(metadata=types.SimpleNamespace(name="labdata-dddd"))
+        orphan = types.SimpleNamespace(metadata=types.SimpleNamespace(name="labdata-old"))
+        ctrl.v1_api.list_namespaced_config_map = MagicMock(
+            return_value=types.SimpleNamespace(items=[keep, orphan])
+        )
+        ctrl.v1_api.delete_namespaced_config_map = MagicMock()
+        entry = self._entry(tmp_path, "dddd", "a.txt", b"data")
+        ok, _msg = ctrl.sync_labdata_configmaps("lab-1", [entry], str(tmp_path))
+        assert ok is True
+        ctrl.v1_api.delete_namespaced_config_map.assert_called_once()
+        assert ctrl.v1_api.delete_namespaced_config_map.call_args.kwargs["name"] == "labdata-old"
+
+    def test_missing_file_on_disk_is_skipped(self, ctrl, tmp_path):
+        ctrl.v1_api.read_namespaced_config_map = MagicMock()
+        ctrl.v1_api.create_namespaced_config_map = MagicMock()
+        ctrl.v1_api.replace_namespaced_config_map = MagicMock()
+        ctrl.v1_api.list_namespaced_config_map = MagicMock(
+            return_value=types.SimpleNamespace(items=[])
+        )
+        entry = {
+            "cm_uuid": "eeee",
+            "configmap_name": "labdata-eeee",
+            "filename": "nope.dat",
+            "original_name": "a.txt",
+        }
+        ok, _msg = ctrl.sync_labdata_configmaps("lab-1", [entry], str(tmp_path))
+        assert ok is True
+        ctrl.v1_api.create_namespaced_config_map.assert_not_called()
+        ctrl.v1_api.replace_namespaced_config_map.assert_not_called()
+
+    def test_non_failover_read_error_returns_false(self, ctrl, tmp_path):
+        ctrl.v1_api.read_namespaced_config_map = MagicMock(
+            side_effect=k8s_module.ApiException(status=400)
+        )
+        entry = self._entry(tmp_path, "ffff", "a.txt", b"data")
+        ok, msg = ctrl.sync_labdata_configmaps("lab-1", [entry], str(tmp_path))
+        assert ok is False
+        assert "labdata-ffff" in msg
+
+    def test_delete_labdata_configmaps(self, ctrl):
+        ctrl.v1_api.delete_collection_namespaced_config_map = MagicMock()
+        ok, _msg = ctrl.delete_labdata_configmaps("lab-9")
+        assert ok is True
+        kwargs = ctrl.v1_api.delete_collection_namespaced_config_map.call_args.kwargs
+        assert kwargs["label_selector"] == "lab_id=lab-9,hackinsdn.io/labdata=true"

@@ -600,6 +600,18 @@ TRANSLATIONS = {
     "Kubernetes Lab Manifest": "Manifesto Kubernetes do Lab",
     "Add here your Kubernetes Manifest file containing Pods, Deployments and Services. You should customize the item names with variables that will be replaced during resource creation, example: <code>${pod_hash}</code>":
         "Adicione aqui o seu arquivo de Manifesto Kubernetes contendo Pods, Deployments e Services. Você deve personalizar os nomes dos itens com variáveis que serão substituídas durante a criação dos recursos, exemplo: <code>${pod_hash}</code>",
+    "You can also attach data files to this Lab (see <em>Lab Data</em> below).":
+        "Você também pode anexar arquivos de dados a este Lab (veja <em>Lab Data</em> abaixo).",
+    "Each attached file is published as its own Kubernetes ConfigMap named <code>labdata-XXXX</code> (the exact name is shown next to each file). To make a file available inside a container, declare a <code>volume</code> pointing to that ConfigMap and a matching <code>volumeMount</code>, for example:":
+        "Cada arquivo anexado é publicado como um ConfigMap Kubernetes próprio, chamado <code>labdata-XXXX</code> (o nome exato é exibido ao lado de cada arquivo). Para disponibilizar um arquivo dentro de um contêiner, declare um <code>volume</code> apontando para esse ConfigMap e um <code>volumeMount</code> correspondente, por exemplo:",
+    "Lab Data": "Lab Data",
+    "Attach data files to be mounted into the Lab Pods. Each file becomes a ConfigMap named %(name)s and is limited to 950 KiB.":
+        "Anexe arquivos de dados para serem montados nos Pods do Lab. Cada arquivo se torna um ConfigMap chamado %(name)s e é limitado a 950 KiB.",
+    "Click to add lab data files": "Clique para adicionar arquivos de Lab Data",
+    "ConfigMap name (use it in your manifest)": "Nome do ConfigMap (use-o no seu manifesto)",
+    "Failed to upload lab data file:": "Falha ao enviar o arquivo de Lab Data:",
+    "Warning: this ConfigMap is still referenced in the Kubernetes Manifest. Remove the reference before deleting.":
+        "Aviso: este ConfigMap ainda é referenciado no Manifesto Kubernetes. Remova a referência antes de excluir.",
     "Kubernetes Manifest Template:": "Modelo de Manifesto Kubernetes:",
     "Wait! Loading templates...": "Aguarde! Carregando modelos...",
     "Load Template": "Carregar Modelo",
@@ -741,6 +753,10 @@ TRANSLATIONS = {
     "Lab deleted successfully": "Lab excluído com sucesso",
     "Failed to restore lab": "Falha ao restaurar o lab",
     "Lab restored successfully": "Lab restaurado com sucesso",
+    "Invalid labs to delete:": "Labs inválidos para excluir:",
+    "Invalid users to delete:": "Usuários inválidos para excluir:",
+    "Failed to delete users": "Falha ao excluir os usuários",
+    "Users deleted successfully": "Usuários excluídos com sucesso",
     "Invalid group access token": "Token de acesso ao grupo inválido",
     "Already member of group": "Já é membro do grupo",
     "Failed to join group": "Falha ao entrar no grupo",
@@ -845,6 +861,15 @@ TRANSLATIONS = {
     "No uploads found": "Nenhum arquivo enviado encontrado",
     "File not found in uploads list": "Arquivo não encontrado na lista de enviados",
     "Failed to update metadata": "Falha ao atualizar os metadados",
+    # --- Python messages: Lab Data attachments (home/routes.py) ---
+    "Invalid or missing lab id": "ID do Lab inválido ou ausente",
+    "Invalid lab id": "ID do Lab inválido",
+    "File is too large to expose as a ConfigMap (max %(size)s KiB once encoded)":
+        "O arquivo é grande demais para ser exposto como ConfigMap (máx. %(size)s KiB após a codificação)",
+    "File not found in lab data list": "Arquivo não encontrado na lista de Lab Data",
+    "Lab saved.": "Lab salvo.",
+    "Lab data files were saved on disk, but their Kubernetes ConfigMaps could not be synced (%(detail)s). They will be retried on the next save.":
+        "Os arquivos de Lab Data foram salvos em disco, mas seus ConfigMaps Kubernetes não puderam ser sincronizados (%(detail)s). Eles serão tentados novamente no próximo salvamento.",
     # --- Python messages: lti/routes.py ---
     "A label is required (who the token is for)": "Um rótulo é obrigatório (para quem é o token)",
     "TTL must be a whole number of hours": "O TTL deve ser um número inteiro de horas",

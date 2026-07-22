@@ -90,6 +90,8 @@
       <form method="post" enctype="multipart/form-data" action="{{ url_for('home_blueprint.edit_lab', lab_id=lab.id|default('new', true)) }}">
       <input type="hidden" name="pending_upload_filenames" id="pending-upload-filenames" value="[]">
       <input type="hidden" name="pending_upload_orignames" id="pending-upload-orignames" value="[]">
+      <input type="hidden" name="labdata_lab_id" id="labdata-lab-id" value="{{ labdata_lab_id|default('', true) }}">
+      <input type="hidden" name="pending_labdata" id="pending-labdata" value="[]">
       <div class="container-fluid">
         <div class="row">
           <!-- left column -->
@@ -223,6 +225,7 @@
               <!-- /.card-header -->
               <div class="card-body">
                 <p>{{ _('Add here your Kubernetes Manifest file containing Pods, Deployments and Services. You should customize the item names with variables that will be replaced during resource creation, example: <code>${pod_hash}</code>')|safe }}</p>
+                <p>{{ _('You can also attach data files to this Lab (see <em>Lab Data</em> below).')|safe }}</p>
                 <div class="row">
                   <div class="col-md-6">
                     <div class="form-group">
@@ -242,9 +245,39 @@
                 <div class="mb-3">
                   <textarea name="lab_manifest" id="lab-edit-manifest" class="textarea" placeholder="{{ _('Place some text here') }}" rows="16">{{ lab.manifest|default('', true) }}</textarea>
                 </div>
-                <p class="text-sm mb-0">
+                <p class="text-sm">
                   {{ _('Read %(link_start)smore information%(link_end)s about the Kubernetes manifest.', link_start='<a href="#">'|safe, link_end='</a>'|safe) }}
                 </p>
+                <!-- Lab Data attachments -->
+                <div id="lab-labdata" class="mt-3">
+                  <label class="mb-1">{{ _('Lab Data') }}</label>
+                  <p class="text-sm text-muted mb-2">{{ _('Attach data files to be mounted into the Lab Pods. Each file becomes a ConfigMap named %(name)s and is limited to 950 KiB.', name='<code>labdata-XXXX</code>'|safe)|safe }}</p>
+                  <p class="text-sm text-muted mb-2">{{ _('Each attached file is published as its own Kubernetes ConfigMap named <code>labdata-XXXX</code> (the exact name is shown next to each file). To make a file available inside a container, declare a <code>volume</code> pointing to that ConfigMap and a matching <code>volumeMount</code>, for example:')|safe }}</p>
+                  <pre class="text-sm"><code>volumes:
+  - name: labdata
+    configMap:
+      name: labdata-XXXX
+containers:
+  - name: mypod
+    volumeMounts:
+      - name: labdata
+        mountPath: /data</code></pre>
+                  <button type="button" class="btn btn-outline-secondary btn-sm" id="upload-file-labdata-btn"><i class="fas fa-paperclip"></i> {{ _('Click to add lab data files') }}</button>
+                  <input type="file" id="labdata-file-input" style="display: none;">
+                  <ul id="labdata-uploads-list" class="list-group list-group-flush mt-2">
+                    {% for item in lab_labdata|default([], true) %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center" data-filename="{{ item.filename }}">
+                      <span>
+                        <a href="{{ item.url }}" target="_blank">{{ item.original_name }}</a>
+                        &rarr; <code class="labdata-cm-name" title="{{ _('ConfigMap name (use it in your manifest)') }}">{{ item.configmap_name }}</code>
+                      </span>
+                      <button type="button" class="btn btn-sm btn-outline-danger remove-labdata-btn" data-filename="{{ item.filename }}">
+                        <i class="fas fa-trash"></i> {{ _('Remove') }}
+                      </button>
+                    </li>
+                    {% endfor %}
+                  </ul>
+                </div>
               </div>
             </div>
           </div>
@@ -839,6 +872,99 @@
           }
         }
       }
+
+      // ---- Lab Data attachments (per-file ConfigMaps) ----
+      var labdataLabId = $('#labdata-lab-id').val();
+      var pendingLabdata = [];  // entries for a brand-new lab, associated on save
+
+      function labdataRowHtml(entry) {
+        return '<li class="list-group-item d-flex justify-content-between align-items-center"' +
+          ' data-filename="' + entry.filename + '">' +
+          '<span><a href="' + entry.url + '" target="_blank">' + entry.original_name + '</a>' +
+          ' &rarr; <code class="labdata-cm-name" title="{{ _("ConfigMap name (use it in your manifest)") }}">' + entry.configmap_name + '</code></span>' +
+          '<button type="button" class="btn btn-sm btn-outline-danger remove-labdata-btn"' +
+          ' data-filename="' + entry.filename + '"><i class="fas fa-trash"></i> {{ _("Remove") }}</button></li>';
+      }
+
+      $('#upload-file-labdata-btn').click(function() {
+        $('#labdata-file-input').click();
+      });
+
+      $('#labdata-file-input').change(function() {
+        if (this.files.length > 0) {
+          uploadLabdataFile(this.files[0]);
+          this.value = '';  // reset so the same file can be picked again
+        }
+      });
+
+      function uploadLabdataFile(file) {
+        var data = new FormData();
+        data.append("file", file);
+        data.append("lab_id", labdataLabId);
+        $('#upload-file-labdata-btn').prop('disabled', true);
+        $.ajax({
+          url: "/labs/labdata/upload-file",
+          type: "POST",
+          data: data,
+          contentType: false,
+          processData: false,
+          success: function(response) {
+            if (response.status === "ok") {
+              $('#labdata-uploads-list').append(labdataRowHtml(response.entry));
+              if (!labId) {
+                pendingLabdata.push(response.entry);
+                $('#pending-labdata').val(JSON.stringify(pendingLabdata));
+              }
+            } else {
+              alert("{{ _('Failed to upload lab data file:') }} " + response.result);
+            }
+          },
+          error: function(jqXHR, textStatus, errorThrown) {
+            var msg = jqXHR.responseJSON && jqXHR.responseJSON.result ? jqXHR.responseJSON.result : errorThrown;
+            alert("{{ _('Failed to upload lab data file:') }} " + msg);
+          },
+          complete: function() {
+            $('#upload-file-labdata-btn').prop('disabled', false);
+          }
+        });
+      }
+
+      $(document).on('click', '.remove-labdata-btn', function() {
+        var btn = $(this);
+        var filename = btn.data('filename');
+        var manifest = (typeof cmEditor !== 'undefined') ? cmEditor.getValue() : $('#lab-edit-manifest').val();
+        var row = btn.closest('li');
+        var cmName = row.find('.labdata-cm-name').text();
+        if (cmName && manifest.indexOf(cmName) !== -1) {
+          alert('{{ _("Warning: this ConfigMap is still referenced in the Kubernetes Manifest. Remove the reference before deleting.") }}');
+          return;
+        }
+        if (labId) {
+          $.ajax({
+            url: '/labs/' + labId + '/labdata/' + encodeURIComponent(filename),
+            type: 'DELETE',
+            success: function(response) {
+              if (response.status === 'ok') {
+                row.remove();
+              } else {
+                alert('{{ _("Failed to remove file:") }} ' + response.result);
+              }
+            },
+            error: function(jqXHR) {
+              var msg = jqXHR.responseJSON && jqXHR.responseJSON.result ? jqXHR.responseJSON.result : '{{ _("Unknown error") }}';
+              alert('{{ _("Failed to remove file:") }} ' + msg);
+            }
+          });
+        } else {
+          // new-lab mode: drop from the pending list and DOM (file lingers on
+          // disk until the lab is saved, then is simply never associated)
+          pendingLabdata = pendingLabdata.filter(function(e) { return e.filename !== filename; });
+          $('#pending-labdata').val(JSON.stringify(pendingLabdata));
+          row.remove();
+        }
+      });
+      // ---- end Lab Data attachments ----
+
       //Initialize Select2 Elements
       $('.select2').select2();
 

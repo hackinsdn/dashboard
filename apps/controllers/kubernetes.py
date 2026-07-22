@@ -1059,6 +1059,128 @@ class K8sController():
             return False, msg
         return True, "secret cretated"
 
+    @with_failover(default=(False, "Failed to sync lab data: all kubeconfigs unreachable"))
+    def sync_labdata_configmaps(self, lab_id, entries, files_dir):
+        """Reconcile the per-file lab-data ConfigMaps of a lab.
+
+        Each entry becomes its own ConfigMap (entry["configmap_name"]) holding
+        the single file keyed by its original filename; text is stored in
+        ``data`` and binary in ``binaryData`` (base64). Every ConfigMap carries
+        ``lab_id`` + ``hackinsdn.io/labdata`` labels so files removed since the
+        previous save can be located by selector and pruned.
+        """
+        desired = {}
+        for entry in entries:
+            cm_name = entry["configmap_name"]
+            key = entry["original_name"]
+            fpath = os.path.join(files_dir, entry["filename"])
+            try:
+                with open(fpath, "rb") as fh:
+                    raw = fh.read()
+            except FileNotFoundError:
+                current_app.logger.warning(
+                    f"Lab data file missing on disk, skipping ConfigMap {cm_name}: {fpath}"
+                )
+                continue
+            body = client.V1ConfigMap(
+                metadata=client.V1ObjectMeta(
+                    name=cm_name,
+                    labels={
+                        "app": "hackinsdn-dashboard",
+                        "lab_id": lab_id,
+                        "hackinsdn.io/labdata": "true",
+                    },
+                ),
+            )
+            try:
+                body.data = {key: raw.decode("utf-8")}
+            except UnicodeDecodeError:
+                body.binary_data = {key: base64.b64encode(raw).decode("ascii")}
+            desired[cm_name] = body
+
+        # create or replace the ConfigMaps for the files currently attached
+        for cm_name, body in desired.items():
+            try:
+                self.v1_api.read_namespaced_config_map(
+                    name=cm_name, namespace=self.namespace,
+                    _request_timeout=self.request_timeout,
+                )
+                exists = True
+            except ApiException as exc:
+                if exc.status == 404:
+                    exists = False
+                else:
+                    if _is_failover_error(exc):
+                        raise
+                    msg = f"Failed to read ConfigMap {cm_name}: {exc}"
+                    current_app.logger.error(msg)
+                    return False, msg
+            try:
+                if exists:
+                    self.v1_api.replace_namespaced_config_map(
+                        name=cm_name, namespace=self.namespace, body=body,
+                        _request_timeout=self.request_timeout,
+                    )
+                else:
+                    self.v1_api.create_namespaced_config_map(
+                        namespace=self.namespace, body=body,
+                        _request_timeout=self.request_timeout,
+                    )
+            except Exception as exc:
+                if _is_failover_error(exc):
+                    raise
+                msg = f"Failed to sync ConfigMap {cm_name}: {exc}"
+                current_app.logger.error(msg)
+                return False, msg
+
+        # prune ConfigMaps that belong to this lab but are no longer attached
+        try:
+            existing = self.v1_api.list_namespaced_config_map(
+                namespace=self.namespace,
+                label_selector=f"lab_id={lab_id},hackinsdn.io/labdata=true",
+                _request_timeout=self.request_timeout,
+            )
+        except Exception as exc:
+            if _is_failover_error(exc):
+                raise
+            current_app.logger.error(
+                f"Failed to list lab data ConfigMaps for lab {lab_id}: {exc}"
+            )
+            return True, "synced (pruning skipped)"
+        for cm in existing.items:
+            name = cm.metadata.name
+            if name in desired:
+                continue
+            try:
+                self.v1_api.delete_namespaced_config_map(
+                    name=name, namespace=self.namespace,
+                    _request_timeout=self.request_timeout,
+                )
+            except Exception as exc:
+                if _is_failover_error(exc):
+                    raise
+                current_app.logger.error(
+                    f"Failed to delete orphan lab data ConfigMap {name}: {exc}"
+                )
+        return True, "ok"
+
+    @with_failover(default=(False, "Failed to delete lab data: all kubeconfigs unreachable"))
+    def delete_labdata_configmaps(self, lab_id):
+        """Delete every lab-data ConfigMap belonging to a lab."""
+        try:
+            self.v1_api.delete_collection_namespaced_config_map(
+                namespace=self.namespace,
+                label_selector=f"lab_id={lab_id},hackinsdn.io/labdata=true",
+                _request_timeout=self.request_timeout,
+            )
+        except Exception as exc:
+            if _is_failover_error(exc):
+                raise
+            msg = f"Failed to delete lab data ConfigMaps for lab {lab_id}: {exc}"
+            current_app.logger.error(msg)
+            return False, msg
+        return True, "ok"
+
     def validate_token(self, token):
         """Check if this token is authorized to access the API."""
         return True
