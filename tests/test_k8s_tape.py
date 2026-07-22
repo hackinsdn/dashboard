@@ -155,10 +155,11 @@ def ctrl(monkeypatch):
     monkeypatch.setattr(k8s_module.app_config, "K8S_NAMESPACE", NAMESPACE)
     monkeypatch.setattr(k8s_module.app_config, "K8S_REQUEST_TIMEOUT", REQUEST_TIMEOUT)
     monkeypatch.setattr(k8s_module.config, "load_kube_config", lambda **k: None)
-    monkeypatch.setattr(k8s_module.client, "CoreV1Api", lambda: MagicMock())
-    monkeypatch.setattr(k8s_module.client, "AppsV1Api", lambda: MagicMock())
-    monkeypatch.setattr(k8s_module.client, "DiscoveryV1Api", lambda: MagicMock())
-    monkeypatch.setattr(k8s_module.client, "ApiClient", lambda: MagicMock())
+    monkeypatch.setattr(k8s_module.client, "Configuration", lambda *a, **k: MagicMock())
+    monkeypatch.setattr(k8s_module.client, "CoreV1Api", lambda *a, **k: MagicMock())
+    monkeypatch.setattr(k8s_module.client, "AppsV1Api", lambda *a, **k: MagicMock())
+    monkeypatch.setattr(k8s_module.client, "DiscoveryV1Api", lambda *a, **k: MagicMock())
+    monkeypatch.setattr(k8s_module.client, "ApiClient", lambda *a, **k: MagicMock())
     controller = K8sController()
     controller.k8s_avoid_nodes = set()
     return controller
@@ -601,5 +602,5 @@ class TestGetLabsByUser:
 
     def test_returns_empty_without_api(self, ctrl):
         """No configured API client -> an empty list, no calls attempted."""
-        ctrl.v1_api = None
+        ctrl._endpoints = []  # simulate a disabled controller (v1_api -> None)
         assert ctrl.get_labs_by_user(USER_UID) == []

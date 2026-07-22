@@ -107,13 +107,28 @@ class Config(object):
 
     # Kubernetes
     K8S_NAMESPACE = os.getenv('K8S_NAMESPACE', "")
-    K8S_CONFIG = os.path.expanduser(os.getenv("KUBECONFIG", "~/.kube/config"))
+    # KUBECONFIG may list several kubeconfig files separated by commas. They are
+    # treated as redundant (HA) access paths to the *same* cluster: one is used
+    # at a time and, when it fails for a connectivity/auth reason, the controller
+    # fails over to the next one. A single path (the common case) behaves exactly
+    # as before. NOTE: comma is the separator on purpose -- a colon-separated
+    # KUBECONFIG is interpreted by kubectl/the client lib as files to *merge*.
+    K8S_CONFIGS = [
+        os.path.expanduser(p.strip())
+        for p in os.getenv("KUBECONFIG", "~/.kube/config").split(",")
+        if p.strip()
+    ]
+    # Backward-compatible alias: the first (preferred) kubeconfig path.
+    K8S_CONFIG = K8S_CONFIGS[0] if K8S_CONFIGS else ""
     K8S_AVOID_NODES = [n.strip() for n in os.getenv("K8S_AVOID_NODES", "").split(",") if n.strip()]
     # Timeout (in seconds) applied to every Kubernetes API call, so the app does
     # not hang indefinitely when the API server is unreachable/unavailable. It is
     # passed as `_request_timeout` to the kubernetes client library and as
     # `timeout` to the kubectl subprocess invocations.
     K8S_REQUEST_TIMEOUT = float(os.getenv("K8S_REQUEST_TIMEOUT", "10"))
+    # Number of failovers within a 5-minute window that flags the kubeconfig set
+    # as "flapping" (surfaced in get_statistics() and logged once as an ERROR).
+    K8S_FLAP_THRESHOLD = int(os.getenv("K8S_FLAP_THRESHOLD", "3"))
 
     # Base URL
     BASE_URL = os.getenv("BASE_URL", 'https://dashboard.hackinsdn.ufba.br')
