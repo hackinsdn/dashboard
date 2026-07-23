@@ -205,6 +205,17 @@ class Config(object):
     LAB_UPLOAD_MAX_SIZE = int(os.getenv("LAB_UPLOAD_MAX_SIZE", str(10 * 1024 * 1024))) # Default 10MB
     LAB_UPLOAD_ALLOWED_EXTENSIONS = set(os.getenv("LAB_UPLOAD_ALLOWED_EXTENSIONS", "png,jpg,jpeg,gif,svg,webp,pdf,txt,yaml,yml,zip,tar.gz,tgz,tar.xz").split(","))
 
+    # Lab Data attachments: each uploaded file becomes its own Kubernetes
+    # ConfigMap (labdata-<uuid>) mounted by the lab Pods. ConfigMaps are capped
+    # at ~1MiB by etcd, so the per-file limit is enforced on the *encoded*
+    # payload (raw bytes for text stored in data, base64 length for binary
+    # stored in binaryData) to guarantee the resulting ConfigMap fits.
+    LABDATA_UPLOAD_MAX_SIZE = int(os.getenv("LABDATA_UPLOAD_MAX_SIZE", str(950 * 1024))) # Default 950KiB
+    LABDATA_UPLOAD_ALLOWED_EXTENSIONS = set(os.getenv(
+        "LABDATA_UPLOAD_ALLOWED_EXTENSIONS",
+        "txt,yaml,yml,json,conf,cfg,ini,env,sh,py,pl,md,csv,xml,pcap,pem,crt,key,csr,png,jpg,jpeg,gif,svg,pdf,zip,tar.gz,tgz,tar.xz,gz",
+    ).split(","))
+
     # Lab Categories: allowed Bootstrap color classes for tagging (CSV -> list, extendable via env var)
     LAB_CATEGORY_COLORS = [c.strip() for c in os.getenv(
         "LAB_CATEGORY_COLORS",

@@ -16,6 +16,12 @@ export K8S_NAMESPACE=xxx
 # Number of failovers within a 5-minute window that flags the set as "flapping"
 # (surfaced in the dashboard statistics and logged once as an ERROR).
 #export K8S_FLAP_THRESHOLD=3
+# Lab Data attachments: files attached to a Lab's Kubernetes manifest are each
+# published as their own ConfigMap (labdata-<uuid>) mounted by the lab Pods.
+# ConfigMaps are capped at ~1MiB by etcd, so the per-file limit is enforced on
+# the *encoded* payload (base64 for binary) and defaults to 950 KiB.
+#export LABDATA_UPLOAD_MAX_SIZE=972800
+#export LABDATA_UPLOAD_ALLOWED_EXTENSIONS=txt,yaml,yml,json,conf,cfg,ini,env,sh,py,pl,md,csv,xml,pcap,pem,crt,key,csr,png,jpg,jpeg,gif,svg,pdf,zip,tar.gz,tgz,tar.xz,gz
 export SECRET_KEY=xxx
 # change to DEBUG=False when running in production
 export DEBUG=True

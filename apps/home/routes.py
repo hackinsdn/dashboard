@@ -15,7 +15,7 @@ from apps.home import blueprint
 from apps.controllers import k8s, c9s
 from apps.controllers import support
 from apps.controllers import lab_versions
-from apps.home.models import Labs, LabInstances, LabCategories, LabAnswers, LabAnswerSheet, HomeLogging, UserLikes, UserFeedbacks, LabMetadata, SupportThreads, SupportMessages
+from apps.home.models import Labs, LabInstances, LabCategories, LabAnswers, LabAnswerSheet, HomeLogging, UserLikes, UserFeedbacks, LabMetadata, SupportThreads, SupportMessages, generate_uuid
 from apps.authentication.models import Users, Groups
 from flask import render_template, request, current_app, redirect, url_for, session, send_from_directory, jsonify
 from flask_babel import gettext as _
@@ -23,8 +23,28 @@ from flask_login import login_required, current_user
 from jinja2 import TemplateNotFound
 from apps.audit_mixin import get_remote_addr, check_user_category
 from apps.authentication.forms import GroupForm
-from apps.utils import update_running_labs_stats, parse_lab_expiration, datetime_from_ts, epoch_from_datetime, update_category_stats, update_stats_lab_instances_answers, utcnow, compute_lab_score
+from apps.utils import update_running_labs_stats, parse_lab_expiration, datetime_from_ts, epoch_from_datetime, update_category_stats, update_stats_lab_instances_answers, utcnow, compute_lab_score, secure_filename
 from sqlalchemy import desc
+
+
+# lab-data attachments live in a per-lab folder (named after the lab uuid) so
+# they map 1:1 with the labdata-<uuid> ConfigMaps; the id is validated before
+# it ever reaches the filesystem to avoid path traversal.
+_LABDATA_ID_RE = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
+
+
+def _labdata_dir(lab_id):
+    return os.path.join(current_app.config['UPLOAD_DIR'], 'labdata', lab_id)
+
+
+def _labdata_encoded_size(raw):
+    """Size the payload will occupy inside a ConfigMap: raw bytes for text
+    (stored in data), base64 length for binary (stored in binaryData)."""
+    try:
+        raw.decode("utf-8")
+        return len(raw)
+    except UnicodeDecodeError:
+        return 4 * ((len(raw) + 2) // 3)
 
 
 @blueprint.before_request
@@ -495,11 +515,21 @@ def edit_lab(lab_id):
     groups = Groups.query.filter_by(is_deleted=False).all()
 
     lab_uploads = []
+    lab_labdata = []
     if lab.lab_metadata:
         lab_uploads = lab.lab_metadata.md.get("uploads", [])
+        lab_labdata = lab.lab_metadata.md.get("labdata", [])
+
+    # brand-new labs get their uuid assigned upfront so lab-data uploads can
+    # target a stable folder / ConfigMap name before the first DB save: GET
+    # mints a fresh one, POST reuses the id the form was rendered with
+    labdata_lab_id = lab.id
+    if not labdata_lab_id:
+        form_lab_id = request.form.get("labdata_lab_id", "").strip()
+        labdata_lab_id = form_lab_id if _LABDATA_ID_RE.match(form_lab_id) else generate_uuid()
 
     if request.method == "GET":
-        return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, groups=groups, allowed_groups=lab.allowed_groups, segment="/labs/edit", lab_uploads=lab_uploads)
+        return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, groups=groups, allowed_groups=lab.allowed_groups, segment="/labs/edit", lab_uploads=lab_uploads, lab_labdata=lab_labdata, labdata_lab_id=labdata_lab_id)
 
     # TODO: data validation/sanitization
     # validate manifest using k8s dry-run?
@@ -518,6 +548,10 @@ def edit_lab(lab_id):
     }
 
     db.session.add(lab)
+    # pin brand-new labs to the upfront uuid so lab-data uploaded before this
+    # first save (folder labdata/<id>/ and labdata-<uuid> ConfigMaps) lines up
+    if not lab.id:
+        lab.id = labdata_lab_id
     lab.title = request.form["lab_title"]
     lab.description = request.form["lab_description"]
 
@@ -545,10 +579,10 @@ def edit_lab(lab_id):
         try:
             lab.display_order = int(display_order_raw) if display_order_raw else 1000
         except ValueError:
-            return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, msg_fail=_("Invalid display order: must be an integer number."), segment="/labs/edit", groups=groups, allowed_groups=lab.allowed_groups, lab_uploads=lab_uploads)
+            return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, msg_fail=_("Invalid display order: must be an integer number."), segment="/labs/edit", groups=groups, allowed_groups=lab.allowed_groups, lab_uploads=lab_uploads, lab_labdata=lab_labdata, labdata_lab_id=labdata_lab_id)
 
     if not lab.categories or invalid_lab_category:
-        return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, msg_fail=invalid_lab_category+"Please select at least one category", segment="/labs/edit", groups=groups, allowed_groups=lab.allowed_groups, lab_uploads=lab_uploads)
+        return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, msg_fail=invalid_lab_category+"Please select at least one category", segment="/labs/edit", groups=groups, allowed_groups=lab.allowed_groups, lab_uploads=lab_uploads, lab_labdata=lab_labdata, labdata_lab_id=labdata_lab_id)
 
     # snapshot the changed fields in the same transaction as the lab save
     for field, value in changed_fields.items():
@@ -600,14 +634,65 @@ def edit_lab(lab_id):
             except Exception as exc:
                 current_app.logger.error(f"Failed to save pending uploads metadata for lab {lab.id}: {exc}")
 
+    # Associate pending lab-data (new-lab mode) and reconcile the per-file
+    # ConfigMaps (labdata-<uuid>) with the files currently attached to the lab
+    labdata_warning = None
+    if status:
+        try:
+            pending_labdata = json.loads(request.form.get("pending_labdata", "[]"))
+        except Exception:
+            pending_labdata = []
+
+        lab_md = lab.lab_metadata
+        had_labdata_key = bool(lab_md) and "labdata" in lab_md.md
+        if pending_labdata:
+            if not lab_md:
+                lab_md = LabMetadata(lab=lab, is_clab=False)
+                db.session.add(lab_md)
+            md = lab_md.md
+            existing_labdata = md.get("labdata", [])
+            existing_cm = {e["cm_uuid"] for e in existing_labdata}
+            files_dir = _labdata_dir(lab.id)
+            for entry in pending_labdata:
+                if not isinstance(entry, dict) or entry.get("cm_uuid") in existing_cm:
+                    continue
+                if not os.path.exists(os.path.join(files_dir, entry.get("filename", ""))):
+                    current_app.logger.warning(f"Pending lab-data file not found on disk: {entry.get('filename')}")
+                    continue
+                existing_labdata.append(entry)
+                existing_cm.add(entry["cm_uuid"])
+            md["labdata"] = existing_labdata
+            lab_md.md = md
+            try:
+                db.session.commit()
+            except Exception as exc:
+                current_app.logger.error(f"Failed to save pending lab-data metadata for lab {lab.id}: {exc}")
+            had_labdata_key = True
+
+        current_labdata = lab_md.md.get("labdata", []) if lab_md else []
+        if current_labdata or had_labdata_key:
+            # best effort: files stay on disk even if the cluster is unreachable
+            try:
+                cm_ok, cm_msg = k8s.sync_labdata_configmaps(lab.id, current_labdata, _labdata_dir(lab.id))
+            except Exception as exc:
+                current_app.logger.error(f"Failed to sync lab-data ConfigMaps for lab {lab.id}: {exc}")
+                cm_ok, cm_msg = False, str(exc)
+            if not cm_ok:
+                labdata_warning = _("Lab data files were saved on disk, but their Kubernetes ConfigMaps could not be synced (%(detail)s). They will be retried on the next save.", detail=cm_msg)
+
     edit_lab_log = HomeLogging(ipaddr=get_remote_addr(), action="edit_lab", success=status, lab_id=lab.id, user_id=current_user.id)
     db.session.add(edit_lab_log)
     db.session.commit()
 
     if status:
+        if labdata_warning:
+            # lab saved, but keep the author on the edit page so the ConfigMap
+            # sync warning is visible (files are safe on disk)
+            lab_labdata = lab.lab_metadata.md.get("labdata", []) if lab.lab_metadata else []
+            return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, msg_ok=_("Lab saved."), msg_fail=labdata_warning, segment="/labs/edit", groups=groups, allowed_groups=lab.allowed_groups, lab_uploads=lab_uploads, lab_labdata=lab_labdata, labdata_lab_id=lab.id)
         return redirect(url_for('home_blueprint.view_labs', lab_id=lab.id))
     else:
-        return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, msg_fail=msg, segment="/labs/edit", groups=groups, allowed_groups=lab.allowed_groups, lab_uploads=lab_uploads)
+        return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, msg_fail=msg, segment="/labs/edit", groups=groups, allowed_groups=lab.allowed_groups, lab_uploads=lab_uploads, lab_labdata=lab_labdata, labdata_lab_id=labdata_lab_id)
 
 @blueprint.route('/labs/fork/<lab_id>', methods=["GET"])
 @login_required
@@ -1495,6 +1580,134 @@ def delete_lab_upload(lab_id, filename):
         db.session.commit()
     except Exception as exc:
         current_app.logger.error(f"Failed to update uploads metadata after delete: {exc}")
+        return jsonify({"status": "fail", "result": _("Failed to update metadata")}), 500
+
+    return jsonify({"status": "ok"}), 200
+
+
+@blueprint.route('/labs/labdata/upload-file', methods=['POST'])
+@login_required
+@check_user_category(["admin", "teacher", "labcreator"])
+def upload_labdata_file():
+    """Upload one lab-data file: saved under labdata/<lab_id>/ and exposed as a
+    dedicated ConfigMap (labdata-<uuid>) when the lab is saved."""
+    lab_id = request.form.get("lab_id", "").strip()
+    if not _LABDATA_ID_RE.match(lab_id):
+        return jsonify({"status": "fail", "result": _("Invalid or missing lab id")}), 400
+
+    if 'file' not in request.files:
+        return jsonify({"status": "fail", "result": _("No file part in the request")}), 400
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"status": "fail", "result": _("No file selected")}), 400
+
+    # Validate extension (mirrors the Lab Guide upload, incl. double extensions)
+    allowed_exts = current_app.config['LABDATA_UPLOAD_ALLOWED_EXTENSIONS']
+    _basename, ext = os.path.splitext(file.filename)
+    is_allowed = bool(ext) and ext[1:].lower() in allowed_exts
+    if not is_allowed:
+        lower_filename = file.filename.lower()
+        for allowed_ext in allowed_exts:
+            if lower_filename.endswith('.' + allowed_ext.lower()):
+                is_allowed = True
+                ext = '.' + allowed_ext
+                break
+    if not is_allowed:
+        return jsonify({"status": "fail", "result": _("File extension not allowed. Allowed: %(exts)s", exts=", ".join(sorted(allowed_exts)))}), 400
+
+    raw = file.read()
+    max_size = current_app.config['LABDATA_UPLOAD_MAX_SIZE']
+    if _labdata_encoded_size(raw) > max_size:
+        return jsonify({"status": "fail", "result": _("File is too large to expose as a ConfigMap (max %(size)s KiB once encoded)", size=max_size // 1024)}), 400
+
+    files_dir = _labdata_dir(lab_id)
+    os.makedirs(files_dir, exist_ok=True)
+
+    cm_uuid = uuid.uuid4().hex
+    disk_name = f"{cm_uuid}{ext.lower()}"
+    original_name = secure_filename(file.filename) or disk_name
+    try:
+        with open(os.path.join(files_dir, disk_name), "wb") as fh:
+            fh.write(raw)
+    except Exception as exc:
+        current_app.logger.error(f"Failed to save lab-data file: {exc}")
+        return jsonify({"status": "fail", "result": _("Failed to save file on server")}), 500
+
+    entry = {
+        "cm_uuid": cm_uuid,
+        "configmap_name": f"labdata-{cm_uuid}",
+        "filename": disk_name,
+        "original_name": original_name,
+        "url": url_for('home_blueprint.serve_labdata', lab_id=lab_id, filename=disk_name),
+    }
+
+    # Existing lab -> persist to LabMetadata now; brand-new lab (no DB row yet)
+    # -> the client submits the entry as pending and it is associated on save.
+    labdata = []
+    lab = db.session.get(Labs, lab_id)
+    if lab:
+        if current_user.category == "labcreator" and lab.updated_by != current_user.id:
+            return jsonify({"status": "fail", "result": _("Unauthorized")}), 403
+        lab_md = lab.lab_metadata
+        if not lab_md:
+            lab_md = LabMetadata(lab=lab, is_clab=False)
+            db.session.add(lab_md)
+        md = lab_md.md
+        existing = md.get("labdata", [])
+        existing.append(entry)
+        md["labdata"] = existing
+        lab_md.md = md
+        try:
+            db.session.commit()
+        except Exception as exc:
+            current_app.logger.error(f"Failed to save lab-data metadata for lab {lab_id}: {exc}")
+        labdata = existing
+
+    return jsonify({"status": "ok", "entry": entry, "labdata": labdata}), 200
+
+
+@blueprint.route('/labs/<lab_id>/labdata/<path:filename>')
+@login_required
+def serve_labdata(lab_id, filename):
+    if not _LABDATA_ID_RE.match(lab_id):
+        return _("Not found"), 404
+    return send_from_directory(_labdata_dir(lab_id), filename)
+
+
+@blueprint.route("/labs/<lab_id>/labdata/<filename>", methods=["DELETE"])
+@login_required
+@check_user_category(["admin", "teacher", "labcreator"])
+def delete_labdata_file(lab_id, filename):
+    if not _LABDATA_ID_RE.match(lab_id):
+        return jsonify({"status": "fail", "result": _("Invalid lab id")}), 400
+    lab = db.session.get(Labs, lab_id)
+    if not lab:
+        return jsonify({"status": "fail", "result": _("Lab not found")}), 404
+    if current_user.category == "labcreator" and lab.updated_by != current_user.id:
+        return jsonify({"status": "fail", "result": _("Unauthorized")}), 403
+
+    lab_md = lab.lab_metadata
+    md = lab_md.md if lab_md else {}
+    labdata = md.get("labdata", [])
+    if not any(e.get("filename") == filename for e in labdata):
+        return jsonify({"status": "fail", "result": _("File not found in lab data list")}), 404
+    md["labdata"] = [e for e in labdata if e.get("filename") != filename]
+    lab_md.md = md
+
+    # lab-data files are per-lab (never shared across labs), safe to remove now;
+    # the matching ConfigMap is pruned on the next save reconcile
+    fpath = os.path.join(_labdata_dir(lab_id), filename)
+    try:
+        os.remove(fpath)
+    except FileNotFoundError:
+        current_app.logger.warning(f"Lab-data file not found on disk during delete: {filename}")
+    except Exception as exc:
+        current_app.logger.error(f"Failed to delete lab-data file {filename}: {exc}")
+
+    try:
+        db.session.commit()
+    except Exception as exc:
+        current_app.logger.error(f"Failed to update lab-data metadata after delete: {exc}")
         return jsonify({"status": "fail", "result": _("Failed to update metadata")}), 500
 
     return jsonify({"status": "ok"}), 200

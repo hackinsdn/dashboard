@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-07-15 11:37-0300\n"
+"POT-Creation-Date: 2026-07-22 09:22-0300\n"
 "PO-Revision-Date: 2026-07-12 19:36-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -26,248 +26,265 @@ msgstr ""
 msgid "Token not authorized"
 msgstr ""
 
-#: apps/api/routes.py:45 apps/api/routes.py:72 apps/api/routes.py:166
-#: apps/api/routes.py:190 apps/api/routes.py:580
+#: apps/api/routes.py:45 apps/api/routes.py:72 apps/api/routes.py:228
+#: apps/api/routes.py:252 apps/api/routes.py:706
 msgid "Lab instance not found"
 msgstr ""
 
-#: apps/api/routes.py:48 apps/api/routes.py:75 apps/api/routes.py:169
-#: apps/api/routes.py:193 apps/api/routes.py:367 apps/api/routes.py:583
+#: apps/api/routes.py:48 apps/api/routes.py:75 apps/api/routes.py:231
+#: apps/api/routes.py:255 apps/api/routes.py:477 apps/api/routes.py:709
 msgid "Unauthorized access to this lab"
 msgstr ""
 
-#: apps/api/routes.py:54 apps/api/routes.py:110
+#: apps/api/routes.py:54 apps/api/routes.py:172
 msgid "Failed to obtain resource statuses"
 msgstr ""
 
-#: apps/api/routes.py:81
+#: apps/api/routes.py:81 apps/api/routes.py:155
 msgid "Failed to delete resources"
 msgstr ""
 
-#: apps/api/routes.py:92
+#: apps/api/routes.py:92 apps/api/routes.py:160
 msgid "Resources removed successfully!"
 msgstr ""
 
-#: apps/api/routes.py:130 apps/api/routes.py:186 apps/api/routes.py:245
-#: apps/api/routes.py:408
+#: apps/api/routes.py:108 apps/api/routes.py:192 apps/api/routes.py:248
+#: apps/api/routes.py:307 apps/api/routes.py:373 apps/api/routes.py:534
 msgid "invalid content"
 msgstr ""
 
-#: apps/api/routes.py:145
-msgid "Invalid users to approve:"
+#: apps/api/routes.py:123
+msgid "Invalid labs to delete:"
 msgstr ""
 
-#: apps/api/routes.py:154
+#: apps/api/routes.py:148 apps/api/routes.py:216
 msgid "Failed to save updated data"
 msgstr ""
 
-#: apps/api/routes.py:156
+#: apps/api/routes.py:207
+msgid "Invalid users to approve:"
+msgstr ""
+
+#: apps/api/routes.py:218
 msgid "all users approved"
 msgstr ""
 
-#: apps/api/routes.py:218 apps/api/routes.py:258
+#: apps/api/routes.py:280 apps/api/routes.py:320
 msgid "Answers saved successfully"
 msgstr ""
 
-#: apps/api/routes.py:224
+#: apps/api/routes.py:286
 msgid "User not authorized"
 msgstr ""
 
-#: apps/api/routes.py:228
+#: apps/api/routes.py:290
 msgid "Lab answers not found"
 msgstr ""
 
-#: apps/api/routes.py:241
+#: apps/api/routes.py:303
 msgid "Not authorized to save answers"
 msgstr ""
 
-#: apps/api/routes.py:251
+#: apps/api/routes.py:313
 #, python-format
 msgid "Invalid grade for question %(q)s"
 msgstr ""
 
-#: apps/api/routes.py:264 apps/api/routes.py:299 apps/api/routes.py:336
-#: apps/api/routes.py:359 apps/api/routes.py:387 apps/api/routes.py:440
-#: apps/api/routes.py:490 apps/clabs/routes.py:34 apps/home/routes.py:310
-#: apps/home/routes.py:485 apps/home/routes.py:790 apps/home/routes.py:903
-#: apps/home/routes.py:914 apps/home/routes.py:921
+#: apps/api/routes.py:326 apps/api/routes.py:369 apps/api/routes.py:409
+#: apps/api/routes.py:446 apps/api/routes.py:469 apps/api/routes.py:504
+#: apps/api/routes.py:566 apps/api/routes.py:616 apps/clabs/routes.py:34
+#: apps/home/routes.py:330 apps/home/routes.py:505 apps/home/routes.py:875
+#: apps/home/routes.py:988 apps/home/routes.py:999 apps/home/routes.py:1006
 msgid "Unauthorized access"
 msgstr ""
 
-#: apps/api/routes.py:268
+#: apps/api/routes.py:330
 msgid "User not found"
 msgstr ""
 
-#: apps/api/routes.py:272
+#: apps/api/routes.py:334
 msgid "Failed to delete user: user has labs running"
 msgstr ""
 
-#: apps/api/routes.py:290
+#: apps/api/routes.py:342
 msgid "Failed to delete user"
 msgstr ""
 
-#: apps/api/routes.py:292
+#: apps/api/routes.py:344
 msgid "User deleted successfully"
 msgstr ""
 
-#: apps/api/routes.py:303 apps/api/routes.py:412 apps/home/routes.py:123
-#: apps/home/routes.py:910 apps/home/routes.py:1231
+#: apps/api/routes.py:391
+msgid "Invalid users to delete:"
+msgstr ""
+
+#: apps/api/routes.py:400
+msgid "Failed to delete users"
+msgstr ""
+
+#: apps/api/routes.py:402
+msgid "Users deleted successfully"
+msgstr ""
+
+#: apps/api/routes.py:413 apps/api/routes.py:538 apps/home/routes.py:143
+#: apps/home/routes.py:995 apps/home/routes.py:1316
 msgid "Group not found"
 msgstr ""
 
-#: apps/api/routes.py:306 apps/api/routes.py:415
+#: apps/api/routes.py:416 apps/api/routes.py:541
 msgid "Only admins can change System groups"
 msgstr ""
 
-#: apps/api/routes.py:309
+#: apps/api/routes.py:419
 msgid "Unauthorized access to this group"
 msgstr ""
 
-#: apps/api/routes.py:327
+#: apps/api/routes.py:437
 msgid "Failed to delete group"
 msgstr ""
 
-#: apps/api/routes.py:329
+#: apps/api/routes.py:439
 msgid "Group deleted successfully"
 msgstr ""
 
-#: apps/api/routes.py:340 apps/home/routes.py:786
+#: apps/api/routes.py:450 apps/home/routes.py:871
 msgid "Lab Category not found"
 msgstr ""
 
-#: apps/api/routes.py:343
+#: apps/api/routes.py:453
 #, python-format
 msgid "Cannot delete: Lab Category is still in use by %(n)s lab(s)"
 msgstr ""
 
-#: apps/api/routes.py:350
+#: apps/api/routes.py:460
 msgid "Failed to delete lab category"
 msgstr ""
 
-#: apps/api/routes.py:352
+#: apps/api/routes.py:462
 msgid "Lab Category deleted successfully"
 msgstr ""
 
-#: apps/api/routes.py:363 apps/api/routes.py:391 apps/api/routes.py:780
-#: apps/home/routes.py:201 apps/home/routes.py:275 apps/home/routes.py:288
-#: apps/home/routes.py:367 apps/home/routes.py:452 apps/home/routes.py:481
-#: apps/home/routes.py:618 apps/home/routes.py:624 apps/home/routes.py:1444
-#: apps/home/routes.py:1457
+#: apps/api/routes.py:473 apps/api/routes.py:508 apps/api/routes.py:906
+#: apps/home/routes.py:221 apps/home/routes.py:295 apps/home/routes.py:308
+#: apps/home/routes.py:387 apps/home/routes.py:472 apps/home/routes.py:501
+#: apps/home/routes.py:703 apps/home/routes.py:709 apps/home/routes.py:1529
+#: apps/home/routes.py:1542 apps/home/routes.py:1685
 msgid "Lab not found"
 msgstr ""
 
-#: apps/api/routes.py:371
+#: apps/api/routes.py:481
 #, python-format
 msgid "Cannot delete: Lab has %(n)s running instance(s)"
 msgstr ""
 
-#: apps/api/routes.py:378
+#: apps/api/routes.py:488
 msgid "Failed to delete lab"
 msgstr ""
 
-#: apps/api/routes.py:380
+#: apps/api/routes.py:497
 msgid "Lab deleted successfully"
 msgstr ""
 
-#: apps/api/routes.py:398
+#: apps/api/routes.py:515
 msgid "Failed to restore lab"
 msgstr ""
 
-#: apps/api/routes.py:400
+#: apps/api/routes.py:526
 msgid "Lab restored successfully"
 msgstr ""
 
-#: apps/api/routes.py:418
+#: apps/api/routes.py:544
 msgid "Invalid group access token"
 msgstr ""
 
-#: apps/api/routes.py:421
+#: apps/api/routes.py:547
 msgid "Already member of group"
 msgstr ""
 
-#: apps/api/routes.py:429
+#: apps/api/routes.py:555
 msgid "Failed to join group"
 msgstr ""
 
-#: apps/api/routes.py:434
+#: apps/api/routes.py:560
 msgid ""
 "Joint group successfully! Click on 'Reload profile' to update your "
 "authorization."
 msgstr ""
 
-#: apps/api/routes.py:444 apps/api/routes.py:451
+#: apps/api/routes.py:570 apps/api/routes.py:577
 msgid "Invalid or Unauthorized access to lab"
 msgstr ""
 
-#: apps/api/routes.py:455
+#: apps/api/routes.py:581
 msgid "Invalid or Unauthorized access to lab answer"
 msgstr ""
 
-#: apps/api/routes.py:459 apps/home/routes.py:1121
+#: apps/api/routes.py:585 apps/home/routes.py:1206
 msgid "No Lab Answer Sheet available. Please create the Answer Sheet first."
 msgstr ""
 
-#: apps/api/routes.py:506
+#: apps/api/routes.py:632
 msgid "Stars/Rating mandatory"
 msgstr ""
 
-#: apps/api/routes.py:521
+#: apps/api/routes.py:647
 msgid "Failed to save user feedback"
 msgstr ""
 
-#: apps/api/routes.py:537
+#: apps/api/routes.py:663
 msgid "Feedback given successfully"
 msgstr ""
 
-#: apps/api/routes.py:555
+#: apps/api/routes.py:681
 msgid "Failed to add user like"
 msgstr ""
 
-#: apps/api/routes.py:568
+#: apps/api/routes.py:694
 msgid "Failed to delete user like"
 msgstr ""
 
-#: apps/api/routes.py:587
+#: apps/api/routes.py:713
 msgid "Invalid content"
 msgstr ""
 
-#: apps/api/routes.py:591
+#: apps/api/routes.py:717
 msgid "Invalid extend hours"
 msgstr ""
 
-#: apps/api/routes.py:604
+#: apps/api/routes.py:730
 msgid "Failed updating lab duration, please contact the administrator."
 msgstr ""
 
-#: apps/api/routes.py:632
+#: apps/api/routes.py:758
 msgid "Failed to list templates"
 msgstr ""
 
-#: apps/api/routes.py:669 apps/api/routes.py:766
+#: apps/api/routes.py:795 apps/api/routes.py:892
 msgid "message body is required"
 msgstr ""
 
-#: apps/api/routes.py:676 apps/api/routes.py:714 apps/api/routes.py:745
-#: apps/api/routes.py:761
+#: apps/api/routes.py:802 apps/api/routes.py:840 apps/api/routes.py:871
+#: apps/api/routes.py:887
 msgid "Thread not found"
 msgstr ""
 
-#: apps/api/routes.py:717 apps/api/routes.py:741 apps/api/routes.py:757
-#: apps/api/routes.py:777 apps/api/routes.py:782 apps/home/routes.py:1446
-#: apps/home/routes.py:1459 apps/templates/pages/users.html:51
+#: apps/api/routes.py:843 apps/api/routes.py:867 apps/api/routes.py:883
+#: apps/api/routes.py:903 apps/api/routes.py:908 apps/home/routes.py:1531
+#: apps/home/routes.py:1544 apps/home/routes.py:1650 apps/home/routes.py:1687
+#: apps/templates/pages/users.html:51
 msgid "Unauthorized"
 msgstr ""
 
-#: apps/api/routes.py:794 apps/api/routes.py:815 apps/api/routes.py:834
+#: apps/api/routes.py:920 apps/api/routes.py:941 apps/api/routes.py:960
 #, python-format
 msgid "Unknown field, tracked fields: %(fields)s"
 msgstr ""
 
-#: apps/api/routes.py:819 apps/api/routes.py:837
+#: apps/api/routes.py:945 apps/api/routes.py:963
 msgid "Version not found"
 msgstr ""
 
-#: apps/api/routes.py:839
+#: apps/api/routes.py:965
 #, python-format
 msgid "Version v%(v)s deleted"
 msgstr ""
@@ -431,11 +448,11 @@ msgstr ""
 msgid "ContainerLab not found"
 msgstr ""
 
-#: apps/clabs/routes.py:35 apps/home/routes.py:486
+#: apps/clabs/routes.py:35 apps/home/routes.py:506
 msgid "You don't have permission to edit this Lab."
 msgstr ""
 
-#: apps/clabs/routes.py:42 apps/home/routes.py:493 apps/home/routes.py:628
+#: apps/clabs/routes.py:42 apps/home/routes.py:513 apps/home/routes.py:713
 msgid "No Lab Categories found. Please create a Lab Category first."
 msgstr ""
 
@@ -452,206 +469,235 @@ msgstr ""
 msgid "Too many files: %(n)s (max %(max)s)"
 msgstr ""
 
-#: apps/home/routes.py:123
+#: apps/home/routes.py:143
 msgid "Error getting running labs"
 msgstr ""
 
-#: apps/home/routes.py:201 apps/home/routes.py:265
+#: apps/home/routes.py:221 apps/home/routes.py:285
 msgid "Error Running Labs"
 msgstr ""
 
-#: apps/home/routes.py:223
+#: apps/home/routes.py:243
 msgid "Invalid lab duration/expiration, please choose one of the values provided."
 msgstr ""
 
-#: apps/home/routes.py:275 apps/home/routes.py:278 apps/home/routes.py:288
-#: apps/home/routes.py:290
+#: apps/home/routes.py:295 apps/home/routes.py:298 apps/home/routes.py:308
+#: apps/home/routes.py:310
 msgid "Error checking lab status"
 msgstr ""
 
-#: apps/home/routes.py:278 apps/home/routes.py:290
+#: apps/home/routes.py:298 apps/home/routes.py:310
 msgid "You are not authorized to run this lab"
 msgstr ""
 
-#: apps/home/routes.py:310
+#: apps/home/routes.py:330
 msgid "You dont have access for this page"
 msgstr ""
 
-#: apps/home/routes.py:314
+#: apps/home/routes.py:334
 msgid "Invalid user"
 msgstr ""
 
-#: apps/home/routes.py:314
+#: apps/home/routes.py:334
 msgid "User not found or deactivated on the database"
 msgstr ""
 
-#: apps/home/routes.py:320
+#: apps/home/routes.py:340
 msgid ""
 "Invalid username. Max size: 30. Allowed characters: a-z, A-Z, 0-9, _, . "
 "or -"
 msgstr ""
 
-#: apps/home/routes.py:338
+#: apps/home/routes.py:358
 msgid "No changes applied."
 msgstr ""
 
-#: apps/home/routes.py:367 apps/home/routes.py:369 apps/home/routes.py:373
-#: apps/home/routes.py:381 apps/home/routes.py:452 apps/home/routes.py:455
+#: apps/home/routes.py:387 apps/home/routes.py:389 apps/home/routes.py:393
+#: apps/home/routes.py:401 apps/home/routes.py:472 apps/home/routes.py:475
 msgid "Error accessing Lab Instance"
 msgstr ""
 
-#: apps/home/routes.py:369
+#: apps/home/routes.py:389
 msgid "Lab finished"
 msgstr ""
 
-#: apps/home/routes.py:373
+#: apps/home/routes.py:393
 msgid "Lab instance belongs to an unknown Lab."
 msgstr ""
 
-#: apps/home/routes.py:381 apps/home/routes.py:455
+#: apps/home/routes.py:401 apps/home/routes.py:475
 msgid "Not authorized to access this Lab"
 msgstr ""
 
-#: apps/home/routes.py:399
+#: apps/home/routes.py:419
 msgid "Failed to get Lab Resources"
 msgstr ""
 
-#: apps/home/routes.py:400
+#: apps/home/routes.py:420
 msgid ""
 "No resource found for Lab Instance. Try again later and if the error "
 "persists, please contact the administrator."
 msgstr ""
 
-#: apps/home/routes.py:462
+#: apps/home/routes.py:482
 msgid "Error removing Lab Instance"
 msgstr ""
 
-#: apps/home/routes.py:462
+#: apps/home/routes.py:482
 msgid "Error removing Lab instance, please contact the administrator"
 msgstr ""
 
-#: apps/home/routes.py:548
+#: apps/home/routes.py:582
 msgid "Invalid display order: must be an integer number."
 msgstr ""
 
-#: apps/home/routes.py:725 apps/home/routes.py:748 apps/home/routes.py:786
+#: apps/home/routes.py:681
+#, python-format
+msgid ""
+"Lab data files were saved on disk, but their Kubernetes ConfigMaps could "
+"not be synced (%(detail)s). They will be retried on the next save."
+msgstr ""
+
+#: apps/home/routes.py:692
+msgid "Lab saved."
+msgstr ""
+
+#: apps/home/routes.py:810 apps/home/routes.py:833 apps/home/routes.py:871
+#: apps/home/routes.py:1673
 msgid "Not found"
 msgstr ""
 
-#: apps/home/routes.py:725 apps/home/routes.py:748
+#: apps/home/routes.py:810 apps/home/routes.py:833
 msgid "Support thread not found"
 msgstr ""
 
-#: apps/home/routes.py:791
+#: apps/home/routes.py:876
 msgid ""
 "You don't have permission to edit this Lab Category (only its creator or "
 "an admin can)."
 msgstr ""
 
-#: apps/home/routes.py:800
+#: apps/home/routes.py:885
 msgid "Category name is required."
 msgstr ""
 
-#: apps/home/routes.py:802
+#: apps/home/routes.py:887
 msgid "Invalid color selected."
 msgstr ""
 
-#: apps/home/routes.py:813
+#: apps/home/routes.py:898
 msgid "Failed to save Lab Category."
 msgstr ""
 
-#: apps/home/routes.py:818
+#: apps/home/routes.py:903
 msgid "Lab Category updated successfully"
 msgstr ""
 
-#: apps/home/routes.py:829
+#: apps/home/routes.py:914
 msgid "No Lab Categories"
 msgstr ""
 
-#: apps/home/routes.py:829
+#: apps/home/routes.py:914
 msgid "No lab categories found. Please create a Lab Category first."
 msgstr ""
 
-#: apps/home/routes.py:904 apps/home/routes.py:915
+#: apps/home/routes.py:989 apps/home/routes.py:1000
 msgid "You don't have permission to edit this group."
 msgstr ""
 
-#: apps/home/routes.py:922
+#: apps/home/routes.py:1007
 msgid "Only admins can create/change System groups."
 msgstr ""
 
-#: apps/home/routes.py:1042
+#: apps/home/routes.py:1127
 msgid "No changes were made to the group."
 msgstr ""
 
-#: apps/home/routes.py:1058
+#: apps/home/routes.py:1143
 msgid "Failed to update group."
 msgstr ""
 
-#: apps/home/routes.py:1071
+#: apps/home/routes.py:1156
 msgid "Group updated successfully"
 msgstr ""
 
-#: apps/home/routes.py:1104
+#: apps/home/routes.py:1189
 msgid "Invalid Lab provided for filtering."
 msgstr ""
 
-#: apps/home/routes.py:1109
+#: apps/home/routes.py:1194
 msgid "Invalid Group provided for filtering."
 msgstr ""
 
-#: apps/home/routes.py:1116
+#: apps/home/routes.py:1201
 msgid "To check with the Answer Sheet you must provide a Lab (Filter by Lab)."
 msgstr ""
 
-#: apps/home/routes.py:1163
+#: apps/home/routes.py:1248
 msgid "Invalid Lab provided. Please choose the Lab."
 msgstr ""
 
-#: apps/home/routes.py:1191
+#: apps/home/routes.py:1276
 msgid "Failed to update lab answers sheet."
 msgstr ""
 
-#: apps/home/routes.py:1197
+#: apps/home/routes.py:1282
 msgid "Lab answer sheet saved!"
 msgstr ""
 
-#: apps/home/routes.py:1231
+#: apps/home/routes.py:1316
 msgid "Error getting finished labs"
 msgstr ""
 
-#: apps/home/routes.py:1360
+#: apps/home/routes.py:1445 apps/home/routes.py:1599
 msgid "No file part in the request"
 msgstr ""
 
-#: apps/home/routes.py:1364
+#: apps/home/routes.py:1449 apps/home/routes.py:1602
 msgid "No file selected"
 msgstr ""
 
-#: apps/home/routes.py:1379
+#: apps/home/routes.py:1464 apps/home/routes.py:1616
 #, python-format
 msgid "File extension not allowed. Allowed: %(exts)s"
 msgstr ""
 
-#: apps/home/routes.py:1388
+#: apps/home/routes.py:1473
 #, python-format
 msgid "File exceeds maximum allowed size (%(size)sMB)"
 msgstr ""
 
-#: apps/home/routes.py:1402
+#: apps/home/routes.py:1487 apps/home/routes.py:1634
 msgid "Failed to save file on server"
 msgstr ""
 
-#: apps/home/routes.py:1463
+#: apps/home/routes.py:1548
 msgid "No uploads found"
 msgstr ""
 
-#: apps/home/routes.py:1470
+#: apps/home/routes.py:1555
 msgid "File not found in uploads list"
 msgstr ""
 
-#: apps/home/routes.py:1498
+#: apps/home/routes.py:1583 apps/home/routes.py:1711
 msgid "Failed to update metadata"
+msgstr ""
+
+#: apps/home/routes.py:1596
+msgid "Invalid or missing lab id"
+msgstr ""
+
+#: apps/home/routes.py:1621
+#, python-format
+msgid "File is too large to expose as a ConfigMap (max %(size)s KiB once encoded)"
+msgstr ""
+
+#: apps/home/routes.py:1682
+msgid "Invalid lab id"
+msgstr ""
+
+#: apps/home/routes.py:1693
+msgid "File not found in lab data list"
 msgstr ""
 
 #: apps/lti/routes.py:607
@@ -1017,13 +1063,13 @@ msgid "Create/Update CLab"
 msgstr ""
 
 #: apps/templates/pages/clabs_upsert.html:102
-#: apps/templates/pages/labs_edit.html:100
+#: apps/templates/pages/labs_edit.html:102
 msgid "General information"
 msgstr ""
 
 #: apps/templates/pages/clabs_upsert.html:108
 #: apps/templates/pages/finished_labs.html:90
-#: apps/templates/pages/labs_edit.html:106 apps/templates/pages/run_lab.html:67
+#: apps/templates/pages/labs_edit.html:108 apps/templates/pages/run_lab.html:67
 #: apps/templates/pages/running.html:97
 msgid "Lab title"
 msgstr ""
@@ -1033,37 +1079,37 @@ msgid "Enter container lab title..."
 msgstr ""
 
 #: apps/templates/pages/clabs_upsert.html:112
-#: apps/templates/pages/labs_edit.html:110
+#: apps/templates/pages/labs_edit.html:112
 msgid "Short Description"
 msgstr ""
 
 #: apps/templates/pages/clabs_upsert.html:113
 #: apps/templates/pages/clabs_upsert.html:212
-#: apps/templates/pages/labs_edit.html:111
+#: apps/templates/pages/labs_edit.html:113
 msgid "Max 255 characters"
 msgstr ""
 
 #: apps/templates/pages/clabs_upsert.html:116
-#: apps/templates/pages/labs_edit.html:121
+#: apps/templates/pages/labs_edit.html:123
 msgid "Lab categories"
 msgstr ""
 
 #: apps/templates/pages/clabs_upsert.html:117
 #: apps/templates/pages/clabs_upsert.html:122
 #: apps/templates/pages/clabs_upsert.html:369
-#: apps/templates/pages/labs_edit.html:122
-#: apps/templates/pages/labs_edit.html:127
-#: apps/templates/pages/labs_edit.html:846
+#: apps/templates/pages/labs_edit.html:124
+#: apps/templates/pages/labs_edit.html:129
+#: apps/templates/pages/labs_edit.html:972
 msgid "Select one or more categories"
 msgstr ""
 
 #: apps/templates/pages/clabs_upsert.html:136
-#: apps/templates/pages/labs_edit.html:141
+#: apps/templates/pages/labs_edit.html:143
 msgid "Lab additional information"
 msgstr ""
 
 #: apps/templates/pages/clabs_upsert.html:142
-#: apps/templates/pages/labs_edit.html:147
+#: apps/templates/pages/labs_edit.html:149
 msgid "Access Control: Availabe groups (left) &gt;&gt; Allowed groups (right)"
 msgstr ""
 
@@ -1080,9 +1126,11 @@ msgstr ""
 
 #: apps/templates/pages/clabs_upsert.html:176
 #: apps/templates/pages/lab_instance_view.html:109
-#: apps/templates/pages/labs_edit.html:302
-#: apps/templates/pages/labs_edit.html:678
-#: apps/templates/pages/labs_edit.html:697
+#: apps/templates/pages/labs_edit.html:275
+#: apps/templates/pages/labs_edit.html:335
+#: apps/templates/pages/labs_edit.html:711
+#: apps/templates/pages/labs_edit.html:730
+#: apps/templates/pages/labs_edit.html:886
 #: apps/templates/pages/labs_view.html:123
 #: apps/templates/pages/waiting_approval.html:71
 msgid "Remove"
@@ -1091,14 +1139,14 @@ msgstr ""
 #: apps/templates/pages/clabs_upsert.html:185
 #: apps/templates/pages/clabs_upsert.html:248
 #: apps/templates/pages/clabs_upsert.html:312
-#: apps/templates/pages/labs_edit.html:196
-#: apps/templates/pages/labs_edit.html:243
-#: apps/templates/pages/labs_edit.html:293
+#: apps/templates/pages/labs_edit.html:198
+#: apps/templates/pages/labs_edit.html:246
+#: apps/templates/pages/labs_edit.html:326
 msgid "Place some text here"
 msgstr ""
 
 #: apps/templates/pages/clabs_upsert.html:189
-#: apps/templates/pages/labs_edit.html:200
+#: apps/templates/pages/labs_edit.html:202
 #, python-format
 msgid "Editor %(link_start)sDocumentation and license information.%(link_end)s"
 msgstr ""
@@ -1181,13 +1229,13 @@ msgstr ""
 
 #: apps/templates/pages/clabs_upsert.html:302
 #: apps/templates/pages/lab_instance_view.html:230
-#: apps/templates/pages/labs_edit.html:259
-#: apps/templates/pages/labs_edit.html:1084
+#: apps/templates/pages/labs_edit.html:292
+#: apps/templates/pages/labs_edit.html:1210
 msgid "Lab Guide"
 msgstr ""
 
 #: apps/templates/pages/clabs_upsert.html:307
-#: apps/templates/pages/labs_edit.html:271
+#: apps/templates/pages/labs_edit.html:304
 #, python-format
 msgid ""
 "Add here the Lab instructions for students/experimenters to run this Lab "
@@ -1200,12 +1248,12 @@ msgid "Add text question"
 msgstr ""
 
 #: apps/templates/pages/clabs_upsert.html:309
-#: apps/templates/pages/labs_edit.html:288
+#: apps/templates/pages/labs_edit.html:321
 msgid "Add select question"
 msgstr ""
 
 #: apps/templates/pages/clabs_upsert.html:310
-#: apps/templates/pages/labs_edit.html:289
+#: apps/templates/pages/labs_edit.html:322
 msgid "Add checkbox question"
 msgstr ""
 
@@ -1229,9 +1277,9 @@ msgstr ""
 #: apps/templates/pages/lab_categories_edit.html:88
 #: apps/templates/pages/lab_categories_list.html:124
 #: apps/templates/pages/lab_instance_view.html:216
-#: apps/templates/pages/labs_edit.html:473
-#: apps/templates/pages/labs_edit.html:503
-#: apps/templates/pages/labs_edit.html:526
+#: apps/templates/pages/labs_edit.html:506
+#: apps/templates/pages/labs_edit.html:536
+#: apps/templates/pages/labs_edit.html:559
 #: apps/templates/pages/labs_view.html:195
 #: apps/templates/pages/labs_view.html:218
 #: apps/templates/pages/lti_management.html:241
@@ -1242,7 +1290,7 @@ msgid "Cancel"
 msgstr ""
 
 #: apps/templates/pages/clabs_upsert.html:403
-#: apps/templates/pages/labs_edit.html:616
+#: apps/templates/pages/labs_edit.html:649
 msgid "Image upload failed:"
 msgstr ""
 
@@ -1339,7 +1387,7 @@ msgid "Logout"
 msgstr ""
 
 #: apps/templates/pages/confirm_reset_password.html:59
-#: apps/templates/pages/index.html:362 apps/templates/pages/labs_edit.html:472
+#: apps/templates/pages/index.html:362 apps/templates/pages/labs_edit.html:505
 #: apps/templates/pages/reset_password.html:58
 msgid "Submit"
 msgstr ""
@@ -1690,7 +1738,7 @@ msgstr ""
 #: apps/templates/pages/k8s_srv_list.html:70
 #: apps/templates/pages/lab_answers_list.html:115
 #: apps/templates/pages/lab_categories_list.html:77
-#: apps/templates/pages/labs_edit.html:552
+#: apps/templates/pages/labs_edit.html:585
 #: apps/templates/pages/lti_management.html:64
 #: apps/templates/pages/my_support_threads.html:47
 #: apps/templates/pages/running.html:99
@@ -1718,7 +1766,7 @@ msgstr ""
 
 #: apps/templates/pages/groups_list.html:96
 #: apps/templates/pages/lab_categories_list.html:93
-#: apps/templates/pages/labs_edit.html:1138
+#: apps/templates/pages/labs_edit.html:1264
 #: apps/templates/pages/labs_view.html:170
 msgid "Delete"
 msgstr ""
@@ -1997,7 +2045,7 @@ msgstr ""
 #: apps/templates/pages/k8s_dep_list.html:179
 #: apps/templates/pages/k8s_pod_list.html:183
 #: apps/templates/pages/k8s_srv_list.html:173
-#: apps/templates/pages/labs_edit.html:562
+#: apps/templates/pages/labs_edit.html:595
 #: apps/templates/pages/lti_management.html:213
 #: apps/templates/pages/lti_management.html:288
 msgid "Close"
@@ -2482,43 +2530,43 @@ msgstr ""
 msgid "You are forking \"%(name)s\". Nothing is saved until you press Submit."
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:107
+#: apps/templates/pages/labs_edit.html:109
 msgid "Enter lab title..."
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:115
+#: apps/templates/pages/labs_edit.html:117
 msgid "Display order"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:117
+#: apps/templates/pages/labs_edit.html:119
 msgid ""
 "Labs are listed by ascending display order, then by title. Default is "
 "1000."
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:181
-#: apps/templates/pages/labs_edit.html:1085
+#: apps/templates/pages/labs_edit.html:183
+#: apps/templates/pages/labs_edit.html:1211
 msgid "Lab extended description"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:186
-#: apps/templates/pages/labs_edit.html:217
-#: apps/templates/pages/labs_edit.html:263
+#: apps/templates/pages/labs_edit.html:188
+#: apps/templates/pages/labs_edit.html:219
+#: apps/templates/pages/labs_edit.html:296
 msgid "Version history"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:187
-#: apps/templates/pages/labs_edit.html:218
-#: apps/templates/pages/labs_edit.html:264
+#: apps/templates/pages/labs_edit.html:189
+#: apps/templates/pages/labs_edit.html:220
+#: apps/templates/pages/labs_edit.html:297
 msgid "Versions"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:213
-#: apps/templates/pages/labs_edit.html:1083
+#: apps/templates/pages/labs_edit.html:215
+#: apps/templates/pages/labs_edit.html:1209
 msgid "Kubernetes Lab Manifest"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:225
+#: apps/templates/pages/labs_edit.html:227
 #, python-brace-format
 msgid ""
 "Add here your Kubernetes Manifest file containing Pods, Deployments and "
@@ -2526,284 +2574,331 @@ msgid ""
 " replaced during resource creation, example: <code>${pod_hash}</code>"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:229
-msgid "Kubernetes Manifest Template:"
+#: apps/templates/pages/labs_edit.html:228
+msgid "You can also attach data files to this Lab (see <em>Lab Data</em> below)."
 msgstr ""
 
 #: apps/templates/pages/labs_edit.html:232
-msgid "Wait! Loading templates..."
+msgid "Kubernetes Manifest Template:"
 msgstr ""
 
 #: apps/templates/pages/labs_edit.html:235
+msgid "Wait! Loading templates..."
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:238
 msgid "Load Template"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:236
+#: apps/templates/pages/labs_edit.html:239
 msgid "Force Refresh"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:246
+#: apps/templates/pages/labs_edit.html:249
 #, python-format
 msgid ""
 "Read %(link_start)smore information%(link_end)s about the Kubernetes "
 "manifest."
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:276
+#: apps/templates/pages/labs_edit.html:253
+msgid "Lab Data"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:254
+#, python-format
+msgid ""
+"Attach data files to be mounted into the Lab Pods. Each file becomes a "
+"ConfigMap named %(name)s and is limited to 950 KiB."
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:255
+msgid ""
+"Each attached file is published as its own Kubernetes ConfigMap named "
+"<code>labdata-XXXX</code> (the exact name is shown next to each file). To"
+" make a file available inside a container, declare a <code>volume</code> "
+"pointing to that ConfigMap and a matching <code>volumeMount</code>, for "
+"example:"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:265
+msgid "Click to add lab data files"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:272
+#: apps/templates/pages/labs_edit.html:884
+msgid "ConfigMap name (use it in your manifest)"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:309
 msgid "Editor"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:279
+#: apps/templates/pages/labs_edit.html:312
 msgid "Preview"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:286
+#: apps/templates/pages/labs_edit.html:319
 msgid "Add simple question"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:287
+#: apps/templates/pages/labs_edit.html:320
 msgid "Add text area question"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:290
+#: apps/templates/pages/labs_edit.html:323
 msgid "Paste, drop, or click to add files"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:296
+#: apps/templates/pages/labs_edit.html:329
 msgid "Attached files"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:312
+#: apps/templates/pages/labs_edit.html:345
 msgid "back to the top"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:475
+#: apps/templates/pages/labs_edit.html:508
 #: apps/templates/pages/labs_view.html:161
 msgid "Fork"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:479
+#: apps/templates/pages/labs_edit.html:512
 msgid "Restore Lab"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:481
+#: apps/templates/pages/labs_edit.html:514
 msgid "Delete Lab"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:494
+#: apps/templates/pages/labs_edit.html:527
 #: apps/templates/pages/labs_view.html:208
 msgid "Confirm restore lab"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:500
+#: apps/templates/pages/labs_edit.html:533
 #: apps/templates/pages/labs_view.html:215
 msgid "Are you sure you want to restore this lab?"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:504
+#: apps/templates/pages/labs_edit.html:537
 #: apps/templates/pages/labs_view.html:219
 msgid "Restore lab"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:517
+#: apps/templates/pages/labs_edit.html:550
 #: apps/templates/pages/labs_view.html:185
 msgid "Confirm delete lab"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:523
+#: apps/templates/pages/labs_edit.html:556
 #: apps/templates/pages/labs_view.html:192
 msgid "Are you sure you want to delete Lab"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:527
+#: apps/templates/pages/labs_edit.html:560
 #: apps/templates/pages/labs_view.html:196
 msgid "Delete lab"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:543
+#: apps/templates/pages/labs_edit.html:576
 msgid "Version history:"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:549
+#: apps/templates/pages/labs_edit.html:582
 msgid ""
 "Restoring a version loads it back into the editor; it becomes a new "
 "version once you save the Lab."
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:552
+#: apps/templates/pages/labs_edit.html:585
 msgid "Version"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:552
+#: apps/templates/pages/labs_edit.html:585
 msgid "Saved at (UTC)"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:552
+#: apps/templates/pages/labs_edit.html:585
 msgid "Author"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:639
-#: apps/templates/pages/labs_edit.html:644
+#: apps/templates/pages/labs_edit.html:672
+#: apps/templates/pages/labs_edit.html:677
 msgid "Failed to upload image:"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:708
+#: apps/templates/pages/labs_edit.html:741
 msgid ""
 "Warning: this file is still referenced in the Lab Guide. Remove the "
 "reference before deleting."
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:713
+#: apps/templates/pages/labs_edit.html:746
 msgid ""
 "Warning: this file is still referenced in the Lab extended description. "
 "Remove the reference before deleting."
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:724
-#: apps/templates/pages/labs_edit.html:729
+#: apps/templates/pages/labs_edit.html:757
+#: apps/templates/pages/labs_edit.html:762
+#: apps/templates/pages/labs_edit.html:950
+#: apps/templates/pages/labs_edit.html:955
 msgid "Failed to remove file:"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:728
-#: apps/templates/pages/labs_edit.html:1066
+#: apps/templates/pages/labs_edit.html:761
+#: apps/templates/pages/labs_edit.html:954
+#: apps/templates/pages/labs_edit.html:1192
 msgid "Unknown error"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:929
+#: apps/templates/pages/labs_edit.html:919
+#: apps/templates/pages/labs_edit.html:924
+msgid "Failed to upload lab data file:"
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:939
+msgid ""
+"Warning: this ConfigMap is still referenced in the Kubernetes Manifest. "
+"Remove the reference before deleting."
+msgstr ""
+
+#: apps/templates/pages/labs_edit.html:1055
 msgid "Duplicated question name found:"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:932
+#: apps/templates/pages/labs_edit.html:1058
 msgid "Duplicated input id found:"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:943
+#: apps/templates/pages/labs_edit.html:1069
 msgid "Please select at least one lab category."
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:995
+#: apps/templates/pages/labs_edit.html:1121
 msgid "Fail to load the list of templates."
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:1019
+#: apps/templates/pages/labs_edit.html:1145
 msgid "Failed to load"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:1020
+#: apps/templates/pages/labs_edit.html:1146
 msgid "Failed to load templates."
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:1040
+#: apps/templates/pages/labs_edit.html:1166
 msgid "Please select a template to load."
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:1052
-#: apps/templates/pages/labs_edit.html:1055
+#: apps/templates/pages/labs_edit.html:1178
+#: apps/templates/pages/labs_edit.html:1181
 msgid "Failed to load template:"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:1062
+#: apps/templates/pages/labs_edit.html:1188
 msgid "Failed to refresh templates (server error)."
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:1065
+#: apps/templates/pages/labs_edit.html:1191
 msgid "Templates refreshed successfully!"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:1066
+#: apps/templates/pages/labs_edit.html:1192
 msgid "Failed to refresh templates:"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:1109
+#: apps/templates/pages/labs_edit.html:1235
 #: apps/templates/pages/lti_management.html:372
 #: apps/templates/pages/run_lab_status.html:66
 msgid "Loading..."
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:1116
+#: apps/templates/pages/labs_edit.html:1242
 msgid "No versions recorded yet."
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:1121
+#: apps/templates/pages/labs_edit.html:1247
 msgid "(latest)"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:1126
+#: apps/templates/pages/labs_edit.html:1252
 msgid "Diff vs current"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:1126
+#: apps/templates/pages/labs_edit.html:1252
 msgid "Diff"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:1130
+#: apps/templates/pages/labs_edit.html:1256
 msgid "View content"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:1130
+#: apps/templates/pages/labs_edit.html:1256
 #: apps/templates/pages/labs_view.html:156
 #: apps/templates/pages/my_support_threads.html:69
 #: apps/templates/pages/running.html:115
 msgid "View"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:1134
+#: apps/templates/pages/labs_edit.html:1260
 msgid "Restore into editor"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:1134
+#: apps/templates/pages/labs_edit.html:1260
 #: apps/templates/pages/labs_view.html:167
 msgid "Restore"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:1138
+#: apps/templates/pages/labs_edit.html:1264
 msgid "Delete this version"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:1145
+#: apps/templates/pages/labs_edit.html:1271
 msgid "Failed to load history:"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:1154
-#: apps/templates/pages/labs_edit.html:1191
+#: apps/templates/pages/labs_edit.html:1280
+#: apps/templates/pages/labs_edit.html:1317
 msgid "Failed to load version:"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:1154
-#: apps/templates/pages/labs_edit.html:1191
-#: apps/templates/pages/labs_edit.html:1208
+#: apps/templates/pages/labs_edit.html:1280
+#: apps/templates/pages/labs_edit.html:1317
+#: apps/templates/pages/labs_edit.html:1334
 msgid "request failed"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:1157
+#: apps/templates/pages/labs_edit.html:1283
 msgid "Diff v"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:1157
+#: apps/templates/pages/labs_edit.html:1283
 msgid " -> current:"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:1157
+#: apps/templates/pages/labs_edit.html:1283
 msgid "Content of v"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:1162
+#: apps/templates/pages/labs_edit.html:1288
 msgid "(no differences against the saved Lab)"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:1162
+#: apps/templates/pages/labs_edit.html:1288
 msgid "(empty)"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:1199
+#: apps/templates/pages/labs_edit.html:1325
 msgid "Delete version v"
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:1199
+#: apps/templates/pages/labs_edit.html:1325
 msgid "? This cannot be undone."
 msgstr ""
 
-#: apps/templates/pages/labs_edit.html:1208
+#: apps/templates/pages/labs_edit.html:1334
 msgid "Failed to delete version:"
 msgstr ""
 
@@ -3557,5 +3652,18 @@ msgstr ""
 #~ msgstr ""
 
 #~ msgid "View Feedback"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "You can also attach data files to"
+#~ " this Lab (see <em>Lab Data</em> "
+#~ "below). Each attached file is published"
+#~ " as its own Kubernetes ConfigMap "
+#~ "named <code>labdata-XXXX</code> (the exact "
+#~ "name is shown next to each file)."
+#~ " To make a file available inside "
+#~ "a container, declare a <code>volume</code> "
+#~ "pointing to that ConfigMap and a "
+#~ "matching <code>volumeMount</code>, for example:"
 #~ msgstr ""
 

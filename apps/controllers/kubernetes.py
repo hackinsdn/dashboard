@@ -201,6 +201,11 @@ class _KubeEndpoint:
                 return
             cfg = client.Configuration()
             config.load_kube_config(config_file=self.path, client_configuration=cfg)
+            # do not retry a failed call: urllib3 retries connection errors ~3
+            # times by default, multiplying the wall-clock time an unreachable
+            # API server can block a request (the request timeout is per-attempt).
+            # Failover to the next kubeconfig is our retry mechanism instead.
+            cfg.retries = 0
             api = client.ApiClient(configuration=cfg)
             self.v1_api = client.CoreV1Api(api)
             self.apps_v1_api = client.AppsV1Api(api)
@@ -224,8 +229,12 @@ class K8sController():
         if not self.namespace:
             return
         # timeout (seconds) for every Kubernetes API call, so the app does not
-        # hang indefinitely when the API server is unreachable
+        # hang indefinitely when the API server is unreachable. Scalar form is
+        # used by the kubectl subprocess calls; the (connect, read) tuple is used
+        # by the kubernetes client, whose single-value form only honors an int
+        # (a float is silently ignored, leaving the call without any timeout).
         self.request_timeout = app_config.K8S_REQUEST_TIMEOUT
+        self.api_request_timeout = (self.request_timeout, self.request_timeout)
         self.flap_threshold = app_config.K8S_FLAP_THRESHOLD
         self._endpoints = [_KubeEndpoint(p) for p in app_config.K8S_CONFIGS]
         self._init_failover_stats()
@@ -395,7 +404,7 @@ class K8sController():
     def list_pods(self):
         now = datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0)
         pods = self.v1_api.list_namespaced_pod(
-            namespace=self.namespace, _request_timeout=self.request_timeout
+            namespace=self.namespace, _request_timeout=self.api_request_timeout
         )
         response = []
         for pod in pods.items:
@@ -424,7 +433,7 @@ class K8sController():
     def list_deployments(self):
         now = datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0)
         deployments = self.apps_v1_api.list_namespaced_deployment(
-            namespace=self.namespace, _request_timeout=self.request_timeout
+            namespace=self.namespace, _request_timeout=self.api_request_timeout
         )
         response = []
         for dep in deployments.items:
@@ -447,7 +456,7 @@ class K8sController():
     def list_services(self):
         now = datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0)
         services = self.v1_api.list_namespaced_service(
-            namespace=self.namespace, _request_timeout=self.request_timeout
+            namespace=self.namespace, _request_timeout=self.api_request_timeout
         )
         response = []
         for srv in services.items:
@@ -477,7 +486,7 @@ class K8sController():
                 owners.add(resource["uid"])
 
         deployments = self.apps_v1_api.list_namespaced_deployment(
-            namespace=self.namespace, _request_timeout=self.request_timeout,
+            namespace=self.namespace, _request_timeout=self.api_request_timeout,
         )
         dep_uid = {}
         for dep in deployments.items:
@@ -491,7 +500,7 @@ class K8sController():
         owners.update(dep_uid.keys())
 
         replica_sets = self.apps_v1_api.list_namespaced_replica_set(
-            namespace=self.namespace, _request_timeout=self.request_timeout
+            namespace=self.namespace, _request_timeout=self.api_request_timeout
         )
         rs_uid_to_dep = {}
         for rs in replica_sets.items:
@@ -508,7 +517,7 @@ class K8sController():
         app_pod_map = defaultdict(list)
         pods_by_uid = {}
         pods = self.v1_api.list_namespaced_pod(
-            namespace=self.namespace, _request_timeout=self.request_timeout
+            namespace=self.namespace, _request_timeout=self.api_request_timeout
         )
         for pod in pods.items:
             pods_by_uid[pod.metadata.uid] = pod
@@ -555,7 +564,7 @@ class K8sController():
 
         service_to_pods = defaultdict(list)
         endpoint_slices = self.discovery_api.list_namespaced_endpoint_slice(
-            namespace=self.namespace, _request_timeout=self.request_timeout
+            namespace=self.namespace, _request_timeout=self.api_request_timeout
         )
         for slice_item in endpoint_slices.items:
             slice_pods = []
@@ -568,7 +577,7 @@ class K8sController():
                 service_to_pods[own_ref.uid].extend(slice_pods)
 
         services = self.v1_api.list_namespaced_service(
-            namespace=self.namespace, _request_timeout=self.request_timeout,
+            namespace=self.namespace, _request_timeout=self.api_request_timeout,
         )
         for srv in services.items:
             srv_labels = srv.metadata.labels or {}
@@ -621,7 +630,7 @@ class K8sController():
 
         deployments = self.apps_v1_api.list_namespaced_deployment(
             namespace=self.namespace, label_selector=label_selector,
-            _request_timeout=self.request_timeout,
+            _request_timeout=self.api_request_timeout,
         )
         dep_uid = {}
         for dep in deployments.items:
@@ -645,7 +654,7 @@ class K8sController():
             })
 
         replica_sets = self.apps_v1_api.list_namespaced_replica_set(
-            namespace=self.namespace, _request_timeout=self.request_timeout
+            namespace=self.namespace, _request_timeout=self.api_request_timeout
         )
         rs_uid_to_dep = {}
         for rs in replica_sets.items:
@@ -658,7 +667,7 @@ class K8sController():
         pod_services = {}
         app_pod_map = defaultdict(list)
         pods = self.v1_api.list_namespaced_pod(
-            namespace=self.namespace, _request_timeout=self.request_timeout
+            namespace=self.namespace, _request_timeout=self.api_request_timeout
         )
         for pod in pods.items:
             pod_labels = pod.metadata.labels or {}
@@ -708,7 +717,7 @@ class K8sController():
 
         services = self.v1_api.list_namespaced_service(
             namespace=self.namespace, label_selector=label_selector,
-            _request_timeout=self.request_timeout,
+            _request_timeout=self.api_request_timeout,
         )
         for srv in services.items:
             srv_labels = srv.metadata.labels or {}
@@ -750,7 +759,7 @@ class K8sController():
         ## ConfigMap
         config_maps = self.v1_api.list_namespaced_config_map(
             namespace=self.namespace, label_selector=label_selector,
-            _request_timeout=self.request_timeout,
+            _request_timeout=self.api_request_timeout,
         )
         for cfg in config_maps.items:
             cfg_labels = cfg.metadata.labels or {}
@@ -797,7 +806,7 @@ class K8sController():
             return
         self.nodes = {}
         self.ready_nodes = []
-        resp = self.v1_api.list_node(_request_timeout=self.request_timeout)
+        resp = self.v1_api.list_node(_request_timeout=self.api_request_timeout)
         for node in resp.items:
             self.nodes[node.metadata.name] = node
             # update ready_nodes unless we should avoid this node
@@ -906,7 +915,7 @@ class K8sController():
                 self.k8s_client,
                 data=resource,
                 namespace=self.namespace,
-                _request_timeout=self.request_timeout,
+                _request_timeout=self.api_request_timeout,
             )
             return k8s_objs[0].to_dict()
         try:
@@ -1048,7 +1057,7 @@ class K8sController():
                     type="kubernetes.io/dockerconfigjson",
                     data={".dockerconfigjson": docker_config},
                 ),
-                _request_timeout=self.request_timeout,
+                _request_timeout=self.api_request_timeout,
             )
         except Exception as exc:
             if _is_failover_error(exc):
@@ -1058,6 +1067,128 @@ class K8sController():
             current_app.logger.error(msg + " -- " + err)
             return False, msg
         return True, "secret cretated"
+
+    @with_failover(default=(False, "Failed to sync lab data: all kubeconfigs unreachable"))
+    def sync_labdata_configmaps(self, lab_id, entries, files_dir):
+        """Reconcile the per-file lab-data ConfigMaps of a lab.
+
+        Each entry becomes its own ConfigMap (entry["configmap_name"]) holding
+        the single file keyed by its original filename; text is stored in
+        ``data`` and binary in ``binaryData`` (base64). Every ConfigMap carries
+        ``lab_id`` + ``hackinsdn.io/labdata`` labels so files removed since the
+        previous save can be located by selector and pruned.
+        """
+        desired = {}
+        for entry in entries:
+            cm_name = entry["configmap_name"]
+            key = entry["original_name"]
+            fpath = os.path.join(files_dir, entry["filename"])
+            try:
+                with open(fpath, "rb") as fh:
+                    raw = fh.read()
+            except FileNotFoundError:
+                current_app.logger.warning(
+                    f"Lab data file missing on disk, skipping ConfigMap {cm_name}: {fpath}"
+                )
+                continue
+            body = client.V1ConfigMap(
+                metadata=client.V1ObjectMeta(
+                    name=cm_name,
+                    labels={
+                        "app": "hackinsdn-dashboard",
+                        "lab_id": lab_id,
+                        "hackinsdn.io/labdata": "true",
+                    },
+                ),
+            )
+            try:
+                body.data = {key: raw.decode("utf-8")}
+            except UnicodeDecodeError:
+                body.binary_data = {key: base64.b64encode(raw).decode("ascii")}
+            desired[cm_name] = body
+
+        # create or replace the ConfigMaps for the files currently attached
+        for cm_name, body in desired.items():
+            try:
+                self.v1_api.read_namespaced_config_map(
+                    name=cm_name, namespace=self.namespace,
+                    _request_timeout=self.api_request_timeout,
+                )
+                exists = True
+            except ApiException as exc:
+                if exc.status == 404:
+                    exists = False
+                else:
+                    if _is_failover_error(exc):
+                        raise
+                    msg = f"Failed to read ConfigMap {cm_name}: {exc}"
+                    current_app.logger.error(msg)
+                    return False, msg
+            try:
+                if exists:
+                    self.v1_api.replace_namespaced_config_map(
+                        name=cm_name, namespace=self.namespace, body=body,
+                        _request_timeout=self.api_request_timeout,
+                    )
+                else:
+                    self.v1_api.create_namespaced_config_map(
+                        namespace=self.namespace, body=body,
+                        _request_timeout=self.api_request_timeout,
+                    )
+            except Exception as exc:
+                if _is_failover_error(exc):
+                    raise
+                msg = f"Failed to sync ConfigMap {cm_name}: {exc}"
+                current_app.logger.error(msg)
+                return False, msg
+
+        # prune ConfigMaps that belong to this lab but are no longer attached
+        try:
+            existing = self.v1_api.list_namespaced_config_map(
+                namespace=self.namespace,
+                label_selector=f"lab_id={lab_id},hackinsdn.io/labdata=true",
+                _request_timeout=self.api_request_timeout,
+            )
+        except Exception as exc:
+            if _is_failover_error(exc):
+                raise
+            current_app.logger.error(
+                f"Failed to list lab data ConfigMaps for lab {lab_id}: {exc}"
+            )
+            return True, "synced (pruning skipped)"
+        for cm in existing.items:
+            name = cm.metadata.name
+            if name in desired:
+                continue
+            try:
+                self.v1_api.delete_namespaced_config_map(
+                    name=name, namespace=self.namespace,
+                    _request_timeout=self.api_request_timeout,
+                )
+            except Exception as exc:
+                if _is_failover_error(exc):
+                    raise
+                current_app.logger.error(
+                    f"Failed to delete orphan lab data ConfigMap {name}: {exc}"
+                )
+        return True, "ok"
+
+    @with_failover(default=(False, "Failed to delete lab data: all kubeconfigs unreachable"))
+    def delete_labdata_configmaps(self, lab_id):
+        """Delete every lab-data ConfigMap belonging to a lab."""
+        try:
+            self.v1_api.delete_collection_namespaced_config_map(
+                namespace=self.namespace,
+                label_selector=f"lab_id={lab_id},hackinsdn.io/labdata=true",
+                _request_timeout=self.api_request_timeout,
+            )
+        except Exception as exc:
+            if _is_failover_error(exc):
+                raise
+            msg = f"Failed to delete lab data ConfigMaps for lab {lab_id}: {exc}"
+            current_app.logger.error(msg)
+            return False, msg
+        return True, "ok"
 
     def validate_token(self, token):
         """Check if this token is authorized to access the API."""
@@ -1072,7 +1203,7 @@ class K8sController():
         """Return pod by its name."""
         pod = self.v1_api.read_namespaced_pod(
             name=pod["name"], namespace=self.namespace,
-            _request_timeout=self.request_timeout,
+            _request_timeout=self.api_request_timeout,
         )
         pod_dict = pod.to_dict()
         pod_dict["is_ok"] = pod.status.phase == "Running"
@@ -1083,7 +1214,7 @@ class K8sController():
         """Return deployment by its name."""
         deployment = self.apps_v1_api.read_namespaced_deployment(
             name=deployment["name"], namespace=self.namespace,
-            _request_timeout=self.request_timeout,
+            _request_timeout=self.api_request_timeout,
         )
         dep_dict = deployment.to_dict()
         dep_dict["is_ok"] = deployment.status.replicas == deployment.status.ready_replicas
@@ -1094,7 +1225,7 @@ class K8sController():
         """Return service by its name."""
         service = self.v1_api.read_namespaced_service(
             name=service["name"], namespace=self.namespace,
-            _request_timeout=self.request_timeout,
+            _request_timeout=self.api_request_timeout,
         )
         service_dict = service.to_dict()
         service_dict["is_ok"] = True
@@ -1105,7 +1236,7 @@ class K8sController():
         """Return config_map by its name."""
         config_map = self.v1_api.read_namespaced_config_map(
             name=config_map["name"], namespace=self.namespace,
-            _request_timeout=self.request_timeout,
+            _request_timeout=self.api_request_timeout,
         )
         config_map_dict = config_map.to_dict()
         config_map_dict["is_ok"] = True
@@ -1133,7 +1264,7 @@ class K8sController():
         try:
             self.v1_api.delete_namespaced_pod(
                 name=pod["name"], namespace=self.namespace,
-                _request_timeout=self.request_timeout,
+                _request_timeout=self.api_request_timeout,
             )
         except Exception as exc:
             if _is_failover_error(exc):
@@ -1148,7 +1279,7 @@ class K8sController():
         try:
             self.apps_v1_api.delete_namespaced_deployment(
                 name=deployment["name"], namespace=self.namespace,
-                _request_timeout=self.request_timeout,
+                _request_timeout=self.api_request_timeout,
             )
         except Exception as exc:
             if _is_failover_error(exc):
@@ -1163,7 +1294,7 @@ class K8sController():
         try:
             self.v1_api.delete_namespaced_service(
                 name=service["name"], namespace=self.namespace,
-                _request_timeout=self.request_timeout,
+                _request_timeout=self.api_request_timeout,
             )
         except Exception as exc:
             if _is_failover_error(exc):
@@ -1178,7 +1309,7 @@ class K8sController():
         try:
             self.v1_api.delete_namespaced_config_map(
                 name=config_map["name"], namespace=self.namespace,
-                _request_timeout=self.request_timeout,
+                _request_timeout=self.api_request_timeout,
             )
         except Exception as exc:
             if _is_failover_error(exc):
@@ -1194,7 +1325,7 @@ class K8sController():
         try:
             self.v1_api.delete_namespaced_secret(
                 name=name, namespace=self.namespace,
-                _request_timeout=self.request_timeout,
+                _request_timeout=self.api_request_timeout,
             )
         except Exception as exc:
             if _is_failover_error(exc):
