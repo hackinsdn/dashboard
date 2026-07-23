@@ -86,6 +86,8 @@ Here are some options you can use to configure Dashboard HackInSDN:
 
 - `BASE_URL`: used basically to create the redirect URL when submitting external Oauth2 authentication
 
+- `ISSUES_URL`: issue tracker advertised on the Contact page for bug reports (default: `https://github.com/hackinsdn/dashboard/issues`). Set it to an empty value to hide that section
+
 - `OAUTH_DOMAIN`: Oauth2 authentication provider (needs to be created -- see above)
 
 - `OAUTH_CLIENT_ID`: Oauth2 client ID

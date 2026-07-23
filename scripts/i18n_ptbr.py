@@ -886,6 +886,23 @@ TRANSLATIONS = {
     "Please select at least one category": "Selecione pelo menos uma categoria",
     # --- action buttons (groups_edit / lab_categories_edit) ---
     "Create": "Criar",
+    # --- contact page ---
+    "How to reach us": "Como falar conosco",
+    "We are glad to assist you. Please use the channel that best matches the nature of your request, so that your message reaches the appropriate team and is answered as quickly as possible.":
+        "Teremos prazer em ajudá-lo. Utilize o canal que melhor corresponda à natureza da sua solicitação, para que a sua mensagem chegue à equipe adequada e seja respondida com a maior brevidade possível.",
+    "Questions and support": "Dúvidas e suporte",
+    "For questions about the platform, guidance on the available Labs, or any request for assistance, please use the support chat available in the lower right corner of every page. Your conversation is registered as a support case and our team will reply to you as soon as possible.":
+        "Para dúvidas sobre a plataforma, orientações sobre os Labs disponíveis ou qualquer pedido de auxílio, utilize o chat de suporte disponível no canto inferior direito de todas as páginas. A sua conversa é registrada como um caso de suporte e nossa equipe responderá o mais breve possível.",
+    "Open the support chat": "Abrir o chat de suporte",
+    "Bug reports": "Relato de erros",
+    "If you have identified a defect or any unexpected behaviour, we kindly ask you to report it by opening an issue in our issue tracker. Please describe the steps required to reproduce the problem, the result you expected and the result you obtained.":
+        "Caso tenha identificado um defeito ou qualquer comportamento inesperado, solicitamos que o relate abrindo uma issue em nosso rastreador de problemas. Descreva os passos necessários para reproduzir o problema, o resultado esperado e o resultado obtido.",
+    "Open an issue": "Abrir uma issue",
+    "Other subjects": "Outros assuntos",
+    "For any other subject, such as institutional enquiries, partnership proposals or media requests, please write to us at the following address:":
+        "Para os demais assuntos, tais como consultas institucionais, propostas de parceria ou solicitações de imprensa, escreva-nos para o seguinte endereço:",
+    "For any other subject, such as institutional enquiries, partnership proposals or media requests, please contact the platform administrators through the support chat.":
+        "Para os demais assuntos, tais como consultas institucionais, propostas de parceria ou solicitações de imprensa, entre em contato com os administradores da plataforma por meio do chat de suporte.",
 }
 
 
