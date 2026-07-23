@@ -7,6 +7,9 @@ import json
 import yaml
 import string
 import re
+import socket
+import threading
+import functools
 import traceback
 import datetime
 import uuid
@@ -14,16 +17,196 @@ import random
 import subprocess
 import base64
 
+import urllib3
+
 from kubernetes import config, client
 from kubernetes.stream import stream
 from kubernetes.utils import create_from_dict, duration, parse_quantity
+from kubernetes.client.exceptions import ApiException
+from kubernetes.config.config_exception import ConfigException
 
 from flask import current_app
 from flask_login import current_user
-from collections import defaultdict
+from collections import defaultdict, deque
 
 from apps.config import app_config
 from apps.utils import format_duration
+
+
+# kubectl stderr fragments that indicate the API server is unreachable or the
+# credentials in the current kubeconfig were rejected -> worth failing over to
+# the next kubeconfig. Anything else (NotFound, AlreadyExists, validation, ...)
+# means the cluster answered a valid request and must NOT trigger a failover.
+_KUBECTL_FAILOVER_STRINGS = (
+    "unable to connect to the server",
+    "connection refused",
+    "i/o timeout",
+    "tls handshake timeout",
+    "no route to host",
+    "eof",
+    "unauthorized",
+    "you must be logged in",
+    "the server has asked for the client to provide credentials",
+    "forbidden",
+)
+
+# ApiException HTTP statuses that mean "try another kubeconfig": auth failures
+# (an HA path may carry an expired/invalid credential) and server-side / no
+# response conditions.
+_AUTH_STATUSES = (401, 403)
+
+
+class _FailoverError(Exception):
+    """A connectivity/auth failure a wrapper raises to trigger failover while
+    still carrying a human-friendly message (so the message survives when all
+    kubeconfigs are exhausted and the error propagates to the caller)."""
+
+    def __init__(self, reason, message):
+        self.reason = reason
+        super().__init__(message)
+
+
+def _kubectl_stderr_is_failover(stderr):
+    """True when a kubectl stderr indicates a connectivity/auth failure."""
+    if not stderr:
+        return False
+    low = stderr.lower()
+    return any(s in low for s in _KUBECTL_FAILOVER_STRINGS)
+
+
+def _is_failover_error(exc):
+    """Classify an exception as a failover trigger (connectivity or auth).
+
+    Connectivity: timeouts, connection errors, API status 0/None, HTTP 5xx, and
+    kubeconfig build/load errors (a broken standby file). Auth: HTTP 401/403.
+    Every other ApiException (a valid request the cluster answered: 400/404/409/
+    422/...) returns False so it propagates to the caller unchanged.
+    """
+    if isinstance(exc, _FailoverError):
+        return True
+    if isinstance(exc, ApiException):
+        status = exc.status or 0
+        return status == 0 or status in _AUTH_STATUSES or status >= 500
+    if isinstance(exc, subprocess.TimeoutExpired):
+        return True
+    if isinstance(exc, subprocess.CalledProcessError):
+        return _kubectl_stderr_is_failover(exc.stderr)
+    if isinstance(exc, (ConfigException, OSError)):
+        # broken/absent kubeconfig for this endpoint -> move to the next one
+        return True
+    return isinstance(exc, (
+        urllib3.exceptions.MaxRetryError,
+        urllib3.exceptions.ReadTimeoutError,
+        urllib3.exceptions.ConnectTimeoutError,
+        urllib3.exceptions.ProtocolError,
+        socket.timeout,
+        TimeoutError,
+        ConnectionError,
+    ))
+
+
+def _reason_for(exc):
+    """A short, log/metric-friendly tag for why a failover happened."""
+    if isinstance(exc, _FailoverError):
+        return exc.reason
+    if isinstance(exc, ApiException):
+        status = exc.status or 0
+        if status == 401:
+            return "auth_401"
+        if status == 403:
+            return "auth_403"
+        if status >= 500:
+            return "server_5xx"
+        return "conn_error"
+    if isinstance(exc, subprocess.TimeoutExpired):
+        return "timeout"
+    if isinstance(exc, subprocess.CalledProcessError):
+        low = (exc.stderr or "").lower()
+        if "unauthorized" in low or "you must be logged in" in low or "credentials" in low:
+            return "auth"
+        if "forbidden" in low:
+            return "auth"
+        return "conn_refused"
+    if isinstance(exc, (ConfigException, OSError)):
+        return "config_error"
+    if isinstance(exc, (urllib3.exceptions.ReadTimeoutError,
+                        urllib3.exceptions.ConnectTimeoutError,
+                        socket.timeout, TimeoutError)):
+        return "timeout"
+    return "conn_refused"
+
+
+_RAISE = object()  # sentinel: re-raise the last error when all kubeconfigs fail
+
+
+def with_failover(method=None, *, default=_RAISE):
+    """Retry a controller method against the next kubeconfig on a failover error.
+
+    Sticky + circular: the active endpoint is advanced only when the call fails
+    for a connectivity/auth reason, and each endpoint is tried at most once per
+    call. When every kubeconfig has failed, the last error is re-raised -- unless
+    ``default`` is given, in which case it is returned instead (used by the
+    best-effort delete/secret helpers that historically returned False rather
+    than raising).
+    """
+    def decorate(method):
+        @functools.wraps(method)
+        def wrapper(self, *args, **kwargs):
+            if not self._endpoints:
+                # disabled controller: behave as the single-config code path
+                return method(self, *args, **kwargs)
+            last_exc = None
+            for _ in range(len(self._endpoints)):
+                ep = self._current_endpoint()
+                try:
+                    return method(self, *args, **kwargs)
+                except Exception as exc:
+                    if not _is_failover_error(exc):
+                        raise
+                    last_exc = exc
+                    self._record_failover(ep, exc)
+                    self._rotate_from(ep)
+            if default is not _RAISE:
+                current_app.logger.error(
+                    f"k8s: all kubeconfigs failed for {method.__name__}: {last_exc}"
+                )
+                return default
+            raise last_exc
+        return wrapper
+
+    # support both @with_failover and @with_failover(default=...)
+    return decorate(method) if callable(method) else decorate
+
+
+class _KubeEndpoint:
+    """One kubeconfig file and its (lazily built) API clients.
+
+    Each endpoint owns an isolated ``client.Configuration`` so switching the
+    active endpoint never mutates state shared with another one.
+    """
+
+    def __init__(self, path):
+        self.path = path
+        self.built = False
+        self.v1_api = None
+        self.apps_v1_api = None
+        self.discovery_api = None
+        self.k8s_client = None
+
+    def ensure_built(self, lock):
+        if self.built:
+            return
+        with lock:
+            if self.built:
+                return
+            cfg = client.Configuration()
+            config.load_kube_config(config_file=self.path, client_configuration=cfg)
+            api = client.ApiClient(configuration=cfg)
+            self.v1_api = client.CoreV1Api(api)
+            self.apps_v1_api = client.AppsV1Api(api)
+            self.discovery_api = client.DiscoveryV1Api(api)
+            self.k8s_client = api
+            self.built = True
 
 
 class K8sController():
@@ -31,25 +214,23 @@ class K8sController():
 
     def __init__(self):
         self.namespace = app_config.K8S_NAMESPACE
-        self.v1_api = None
+        # failover state must exist even when the controller is disabled, since
+        # the client properties read self._endpoints.
+        self._lock = threading.Lock()
+        self._endpoints = []
+        self._active_idx = 0
+        self._flap_logged = False
+        self._failover_stats = None
         if not self.namespace:
             return
-        try:
-            config.load_kube_config(config_file=app_config.K8S_CONFIG)
-        except Exception as exc:
-            msg = f"Error while loading kube config ({app_config.K8S_CONFIG}): {exc}"
-            err = traceback.format_exc().replace("\n", ", ")
-            print(msg + " -- " + err)
-            return
-        self.v1_api = client.CoreV1Api()
-        self.apps_v1_api = client.AppsV1Api()
-        self.discovery_api = client.DiscoveryV1Api()
-        self.k8s_client = client.ApiClient()
-        self.k8s_avoid_nodes = set(app_config.K8S_AVOID_NODES)
-        self.k8s_nodes_geotag = app_config.TESTBED_NODES_GEOTAG
         # timeout (seconds) for every Kubernetes API call, so the app does not
         # hang indefinitely when the API server is unreachable
         self.request_timeout = app_config.K8S_REQUEST_TIMEOUT
+        self.flap_threshold = app_config.K8S_FLAP_THRESHOLD
+        self._endpoints = [_KubeEndpoint(p) for p in app_config.K8S_CONFIGS]
+        self._init_failover_stats()
+        self.k8s_avoid_nodes = set(app_config.K8S_AVOID_NODES)
+        self.k8s_nodes_geotag = app_config.TESTBED_NODES_GEOTAG
 
         self.identifiers = {
             "pod_hash": self.get_pod_hash,
@@ -59,7 +240,147 @@ class K8sController():
         }
         self.nodes = {}
         self.ready_nodes = []
-        self.nodes_last_updated = 0 
+        self.nodes_last_updated = 0
+
+        # eagerly build the preferred endpoint so a misconfiguration surfaces at
+        # startup (mirrors the old behaviour); standbys stay lazy. A failure
+        # here is non-fatal: the failover machinery will try it (and the others)
+        # again on the first real call.
+        try:
+            self._current_endpoint().ensure_built(self._lock)
+        except Exception as exc:
+            msg = f"Error while loading kube config ({app_config.K8S_CONFIG}): {exc}"
+            err = traceback.format_exc().replace("\n", ", ")
+            print(msg + " -- " + err)
+
+    # -- multi-kubeconfig plumbing ----------------------------------------
+
+    def _current_endpoint(self):
+        """Active endpoint (not built); None when the controller is disabled."""
+        if not self._endpoints:
+            return None
+        return self._endpoints[self._active_idx]
+
+    def _client(self, attr):
+        """Return the active endpoint's client, building it lazily."""
+        ep = self._current_endpoint()
+        if ep is None:
+            return None
+        ep.ensure_built(self._lock)
+        return getattr(ep, attr)
+
+    @property
+    def v1_api(self):
+        return self._client("v1_api")
+
+    @property
+    def apps_v1_api(self):
+        return self._client("apps_v1_api")
+
+    @property
+    def discovery_api(self):
+        return self._client("discovery_api")
+
+    @property
+    def k8s_client(self):
+        return self._client("k8s_client")
+
+    def _kubectl_base(self):
+        """kubectl command prefix pinned to the active kubeconfig."""
+        ep = self._current_endpoint()
+        if ep is None:
+            return ["kubectl"]
+        return ["kubectl", "--kubeconfig", ep.path]
+
+    def _init_failover_stats(self):
+        active = self._endpoints[0].path if self._endpoints else None
+        self._failover_stats = {
+            "active_path": active,
+            "active_since": time.time(),
+            "total_failovers": 0,
+            "per_endpoint": {
+                ep.path: {"failovers": 0, "last_error": None, "last_failover_ts": 0.0}
+                for ep in self._endpoints
+            },
+            "recent": deque(maxlen=50),
+        }
+
+    def _rotate_from(self, failed_ep):
+        """Advance the active endpoint, but only if it is still the failed one.
+
+        The compare-and-swap keeps a burst of concurrent failures (gevent
+        greenlets all hitting the same dead endpoint) from skipping past healthy
+        endpoints: the fleet advances exactly one step.
+        """
+        with self._lock:
+            if not self._endpoints or self._endpoints[self._active_idx] is not failed_ep:
+                return
+            self._active_idx = (self._active_idx + 1) % len(self._endpoints)
+            new_ep = self._endpoints[self._active_idx]
+            self._failover_stats["active_path"] = new_ep.path
+            self._failover_stats["active_since"] = time.time()
+        current_app.logger.info(f"k8s active kubeconfig is now {new_ep.path}")
+
+    def _record_failover(self, failed_ep, exc):
+        """Count a failover, log it, and edge-trigger the flapping alarm."""
+        reason = _reason_for(exc)
+        now = time.time()
+        n_endpoints = len(self._endpoints)
+        next_path = failed_ep.path
+        if n_endpoints > 1:
+            nxt_idx = (self._endpoints.index(failed_ep) + 1) % n_endpoints
+            next_path = self._endpoints[nxt_idx].path
+        with self._lock:
+            st = self._failover_stats
+            st["total_failovers"] += 1
+            pe = st["per_endpoint"].setdefault(
+                failed_ep.path,
+                {"failovers": 0, "last_error": None, "last_failover_ts": 0.0},
+            )
+            pe["failovers"] += 1
+            pe["last_error"] = f"{type(exc).__name__}: {reason}"
+            pe["last_failover_ts"] = now
+            st["recent"].append({
+                "ts": now, "from": failed_ep.path, "to": next_path, "reason": reason,
+            })
+            recent_5m = sum(1 for e in st["recent"] if now - e["ts"] <= 300)
+        current_app.logger.warning(
+            f"k8s failover: {failed_ep.path} -> {next_path} reason={reason} ({exc})"
+        )
+        # edge-triggered so a flapping set is logged once, not on every rotation
+        if recent_5m >= self.flap_threshold and not self._flap_logged:
+            self._flap_logged = True
+            current_app.logger.error(
+                f"k8s endpoints flapping: {recent_5m} failovers in last 5m"
+            )
+        elif recent_5m < self.flap_threshold:
+            self._flap_logged = False
+
+    def get_failover_stats(self):
+        """Failover metrics for get_statistics()/health; None when <2 configs."""
+        if len(self._endpoints) < 2:
+            return None
+        now = time.time()
+        with self._lock:
+            st = self._failover_stats
+            recent_5m = sum(1 for e in st["recent"] if now - e["ts"] <= 300)
+            active_path = st["active_path"]
+            return {
+                "active": active_path,
+                "active_since": st["active_since"],
+                "total_failovers": st["total_failovers"],
+                "failovers_last_5m": recent_5m,
+                "is_flapping": recent_5m >= self.flap_threshold,
+                "endpoints": [
+                    {
+                        "path": ep.path,
+                        "failovers": st["per_endpoint"].get(ep.path, {}).get("failovers", 0),
+                        "last_error": st["per_endpoint"].get(ep.path, {}).get("last_error"),
+                        "active": ep.path == active_path,
+                    }
+                    for ep in self._endpoints
+                ],
+            }
 
     def try_get_app(self, port_name):
         if not port_name:
@@ -70,6 +391,7 @@ class K8sController():
                 return app + "://"
         return "http://"
 
+    @with_failover
     def list_pods(self):
         now = datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0)
         pods = self.v1_api.list_namespaced_pod(
@@ -98,6 +420,7 @@ class K8sController():
             })
         return response
 
+    @with_failover
     def list_deployments(self):
         now = datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0)
         deployments = self.apps_v1_api.list_namespaced_deployment(
@@ -120,6 +443,7 @@ class K8sController():
             })
         return response
 
+    @with_failover
     def list_services(self):
         now = datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0)
         services = self.v1_api.list_namespaced_service(
@@ -141,6 +465,7 @@ class K8sController():
             })
         return response
 
+    @with_failover
     def get_lab_resources(self, resources, published_ports={}):
         labs = []
         owners = set()
@@ -282,6 +607,7 @@ class K8sController():
 
         return labs
 
+    @with_failover
     def get_labs_by_user(self, f_user_uid, f_lab_id=None):
         if not self.v1_api:
             return []
@@ -465,6 +791,7 @@ class K8sController():
         self.update_nodes()
         return random.choice(self.ready_nodes)
 
+    @with_failover
     def update_nodes(self):
         if time.time() - self.nodes_last_updated < 60:
             return
@@ -538,11 +865,12 @@ class K8sController():
 
         return True, data
 
+    @with_failover
     def get_k8s_resource(self, resource):
         """Get k8s resource using kubectl."""
         try:
             result = subprocess.run(
-                ["kubectl", "get", resource["kind"], resource["name"], "-o", "json"],
+                self._kubectl_base() + ["get", resource["kind"], resource["name"], "-o", "json"],
                 capture_output=True,
                 text=True,
                 check=True,
@@ -550,8 +878,10 @@ class K8sController():
             )
             result = json.loads(result.stdout)
         except subprocess.TimeoutExpired as exc:
-            raise Exception(f"Timeout while getting k8s resource: {exc}")
+            raise _FailoverError("timeout", f"Timeout while getting k8s resource: {exc}")
         except subprocess.CalledProcessError as exc:
+            if _kubectl_stderr_is_failover(exc.stderr):
+                raise _FailoverError(_reason_for(exc), f"Failed to get k8s resource: {exc} -- {exc.stderr}")
             raise Exception(f"Failed to get k8s resource: {exc} -- {exc.stderr}")
         except Exception as exc:
             raise Exception(f"Failed to get k8s resource: {exc}")
@@ -561,8 +891,16 @@ class K8sController():
             result["is_ok"] = True
         return result
 
+    @with_failover
     def create_k8s_resource(self, resource):
-        """Create k8s resource trying to use kubernetes lib and fallback to kubectl."""
+        """Create k8s resource trying to use kubernetes lib and fallback to kubectl.
+
+        Failover granularity is deliberately this single-resource call (not
+        create_lab): if the active endpoint dies mid-manifest, only the failing
+        doc is retried on the sibling endpoint (same cluster) so the lab still
+        completes; a genuine 409/AlreadyExists is not a failover error and flows
+        into create_lab's rollback.
+        """
         if resource["kind"] in ["Pod", "Service", "Deployment", "ConfigMap"]:
             k8s_objs = create_from_dict(
                 self.k8s_client,
@@ -573,7 +911,7 @@ class K8sController():
             return k8s_objs[0].to_dict()
         try:
             result = subprocess.run(
-                ["kubectl", "create", "-f", "-", "-o", "json"],
+                self._kubectl_base() + ["create", "-f", "-", "-o", "json"],
                 input=json.dumps(resource),
                 capture_output=True,
                 text=True,
@@ -582,27 +920,31 @@ class K8sController():
             )
             result = json.loads(result.stdout)
         except subprocess.TimeoutExpired as exc:
-            raise Exception(f"Timeout while creating k8s resource: {exc}")
+            raise _FailoverError("timeout", f"Timeout while creating k8s resource: {exc}")
         except subprocess.CalledProcessError as exc:
+            if _kubectl_stderr_is_failover(exc.stderr):
+                raise _FailoverError(_reason_for(exc), f"Failed to create k8s resource: {exc} -- {exc.stderr}")
             raise Exception(f"Failed to create k8s resource: {exc} -- {exc.stderr}")
         except Exception as exc:
             raise Exception(f"Failed to create k8s resource: {exc}")
         return result
 
+    @with_failover(default=False)
     def delete_k8s_resource(self, resource):
         """Delete k8s resource using kubectl."""
         try:
             result = subprocess.run(
-                ["kubectl", "delete", resource["kind"], resource["name"], "--timeout=10s"],
+                self._kubectl_base() + ["delete", resource["kind"], resource["name"], "--timeout=10s"],
                 capture_output=True,
                 text=True,
                 check=True,
                 timeout=self.request_timeout,
             )
         except subprocess.TimeoutExpired as exc:
-            current_app.logger.error(f"Timeout while deleting k8s resource: {exc}")
-            return False
+            raise _FailoverError("timeout", f"Timeout while deleting k8s resource: {exc}")
         except subprocess.CalledProcessError as exc:
+            if _kubectl_stderr_is_failover(exc.stderr):
+                raise _FailoverError(_reason_for(exc), f"Failed to delete k8s resource: {exc} -- {exc.stderr}")
             current_app.logger.error(f"Failed to delete k8s resource: {exc} -- {exc.stderr}")
             return False
         except Exception as exc:
@@ -680,6 +1022,7 @@ class K8sController():
 
         return True, results
 
+    @with_failover(default=(False, "Failed to create secret: all kubeconfigs unreachable"))
     def create_registry_secret(self, name, server, username, password):
         """Create to pull an image from a private container image registry or repository."""
         auth = base64.b64encode(f"{username}:{password}".encode("utf-8")).decode("utf-8")
@@ -708,6 +1051,8 @@ class K8sController():
                 _request_timeout=self.request_timeout,
             )
         except Exception as exc:
+            if _is_failover_error(exc):
+                raise  # let @with_failover try the next kubeconfig
             msg = f"Failed to create secret: {exc}"
             err = traceback.format_exc().replace("\n", ", ")
             current_app.logger.error(msg + " -- " + err)
@@ -722,6 +1067,7 @@ class K8sController():
         """Return all pods with a certain lab_id label."""
         return []
 
+    @with_failover
     def get_pod_by_name(self, pod):
         """Return pod by its name."""
         pod = self.v1_api.read_namespaced_pod(
@@ -732,6 +1078,7 @@ class K8sController():
         pod_dict["is_ok"] = pod.status.phase == "Running"
         return pod_dict
 
+    @with_failover
     def get_deployment_by_name(self, deployment):
         """Return deployment by its name."""
         deployment = self.apps_v1_api.read_namespaced_deployment(
@@ -742,6 +1089,7 @@ class K8sController():
         dep_dict["is_ok"] = deployment.status.replicas == deployment.status.ready_replicas
         return dep_dict
 
+    @with_failover
     def get_service_by_name(self, service):
         """Return service by its name."""
         service = self.v1_api.read_namespaced_service(
@@ -752,6 +1100,7 @@ class K8sController():
         service_dict["is_ok"] = True
         return service_dict
 
+    @with_failover
     def get_config_map_by_name(self, config_map):
         """Return config_map by its name."""
         config_map = self.v1_api.read_namespaced_config_map(
@@ -778,6 +1127,7 @@ class K8sController():
                 results.append(self.get_k8s_resource(resource))
         return results
 
+    @with_failover(default=False)
     def delete_pod_by_name(self, pod):
         """Delete pod by its name."""
         try:
@@ -786,10 +1136,13 @@ class K8sController():
                 _request_timeout=self.request_timeout,
             )
         except Exception as exc:
+            if _is_failover_error(exc):
+                raise
             current_app.logger.warning(f"Failed to delete pod {pod['name']} {exc}")
             return False
         return True
 
+    @with_failover(default=False)
     def delete_deployment_by_name(self, deployment):
         """Delete deployment by its name."""
         try:
@@ -798,10 +1151,13 @@ class K8sController():
                 _request_timeout=self.request_timeout,
             )
         except Exception as exc:
+            if _is_failover_error(exc):
+                raise
             current_app.logger.warning(f"Failed to delete deployment {deployment['name']} {exc}")
             return False
         return True
 
+    @with_failover(default=False)
     def delete_service_by_name(self, service):
         """Delete service by its name."""
         try:
@@ -810,10 +1166,13 @@ class K8sController():
                 _request_timeout=self.request_timeout,
             )
         except Exception as exc:
+            if _is_failover_error(exc):
+                raise
             current_app.logger.warning(f"Failed to delete service {service['name']} {exc}")
             return False
         return True
 
+    @with_failover(default=False)
     def delete_config_map_by_name(self, config_map):
         """Delete config_map by its name."""
         try:
@@ -822,10 +1181,13 @@ class K8sController():
                 _request_timeout=self.request_timeout,
             )
         except Exception as exc:
+            if _is_failover_error(exc):
+                raise
             current_app.logger.warning(f"Failed to delete configmap {config_map['name']} {exc}")
             return False
         return True
 
+    @with_failover(default=False)
     def delete_secret_by_name(self, secret):
         """Delete secret by its name."""
         name = secret["name"] if isinstance(secret, dict) else secret
@@ -835,6 +1197,8 @@ class K8sController():
                 _request_timeout=self.request_timeout,
             )
         except Exception as exc:
+            if _is_failover_error(exc):
+                raise
             current_app.logger.warning(f"Failed to delete secret {name}: {exc}")
             return False
         return True
@@ -946,14 +1310,20 @@ class K8sController():
             pods_capacity = int(node.status.capacity.get("pods", 0))
             total_pods += pods_capacity
 
-        return {
+        stats = {
             "total_cpu_capacity": total_cpu_capacity,
             "total_memory_capacity": self.humanbytes(total_memory_capacity),
             "total_storage_capacity": self.humanbytes(total_storage_capacity),
             "total_pods": total_pods,
             "total_nodes": total_nodes,
         }
+        # only present when more than one kubeconfig is configured
+        failover = self.get_failover_stats()
+        if failover:
+            stats["kubeconfig"] = failover
+        return stats
 
+    @with_failover
     def get_pod_exec_stream(self, pod, container, start_script=None):
         if start_script is None:
             start_script = 'if [ -x /bin/bash ]; then exec /bin/bash; else exec /bin/sh; fi'

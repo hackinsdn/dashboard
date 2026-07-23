@@ -76,10 +76,11 @@ def ctrl(monkeypatch):
     monkeypatch.setattr(k8s_module.app_config, "K8S_NAMESPACE", "test-ns")
     monkeypatch.setattr(k8s_module.app_config, "K8S_REQUEST_TIMEOUT", TEST_TIMEOUT)
     monkeypatch.setattr(k8s_module.config, "load_kube_config", lambda **k: None)
-    monkeypatch.setattr(k8s_module.client, "CoreV1Api", lambda: MagicMock())
-    monkeypatch.setattr(k8s_module.client, "AppsV1Api", lambda: MagicMock())
-    monkeypatch.setattr(k8s_module.client, "DiscoveryV1Api", lambda: MagicMock())
-    monkeypatch.setattr(k8s_module.client, "ApiClient", lambda: MagicMock())
+    monkeypatch.setattr(k8s_module.client, "Configuration", lambda *a, **k: MagicMock())
+    monkeypatch.setattr(k8s_module.client, "CoreV1Api", lambda *a, **k: MagicMock())
+    monkeypatch.setattr(k8s_module.client, "AppsV1Api", lambda *a, **k: MagicMock())
+    monkeypatch.setattr(k8s_module.client, "DiscoveryV1Api", lambda *a, **k: MagicMock())
+    monkeypatch.setattr(k8s_module.client, "ApiClient", lambda *a, **k: MagicMock())
     controller = K8sController()
     return controller
 

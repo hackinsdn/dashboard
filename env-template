@@ -6,6 +6,16 @@ export OAUTH_DOMAIN=cilogon.org
 #export OAUTH_DOMAIN=orcid.org
 
 export K8S_NAMESPACE=xxx
+# KUBECONFIG may list several kubeconfig files separated by COMMAS. They are
+# treated as redundant (HA) access paths to the SAME cluster: one is used at a
+# time and, on a connectivity/auth failure (timeout, connection refused, 5xx,
+# 401/403), the controller fails over to the next one and stays there until it
+# also fails. A single path behaves exactly as before. (Use commas, not colons:
+# a colon-separated KUBECONFIG is interpreted as files to *merge*.)
+#export KUBECONFIG=~/.kube/config-a,~/.kube/config-b
+# Number of failovers within a 5-minute window that flags the set as "flapping"
+# (surfaced in the dashboard statistics and logged once as an ERROR).
+#export K8S_FLAP_THRESHOLD=3
 export SECRET_KEY=xxx
 # change to DEBUG=False when running in production
 export DEBUG=True
