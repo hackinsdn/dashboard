@@ -7,7 +7,11 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+<<<<<<< HEAD
 "POT-Creation-Date: 2026-07-23 06:03-0300\n"
+=======
+"POT-Creation-Date: 2026-07-23 05:31-0300\n"
+>>>>>>> main
 "PO-Revision-Date: 2026-07-12 19:36-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt_BR\n"
@@ -838,7 +842,7 @@ msgid "This conversation has been finished."
 msgstr "Esta conversa foi encerrada."
 
 #: apps/templates/includes/navigation.html:10
-#: apps/templates/pages/clabs_upsert.html:84
+#: apps/templates/pages/clabs_upsert.html:84 apps/templates/pages/contact.html:33
 #: apps/templates/pages/edit_user.html:47 apps/templates/pages/error.html:32
 #: apps/templates/pages/feedback_view.html:3
 #: apps/templates/pages/feedback_view.html:35
@@ -868,7 +872,8 @@ msgstr "Esta conversa foi encerrada."
 msgid "Home"
 msgstr "Início"
 
-#: apps/templates/includes/navigation.html:13
+#: apps/templates/includes/navigation.html:13 apps/templates/pages/contact.html:3
+#: apps/templates/pages/contact.html:29 apps/templates/pages/contact.html:34
 msgid "Contact"
 msgstr "Contato"
 
@@ -1423,6 +1428,82 @@ msgstr "Sair"
 #: apps/templates/pages/reset_password.html:58
 msgid "Submit"
 msgstr "Enviar"
+
+#: apps/templates/pages/contact.html:48
+msgid "How to reach us"
+msgstr "Como falar conosco"
+
+#: apps/templates/pages/contact.html:52
+msgid ""
+"We are glad to assist you. Please use the channel that best matches the "
+"nature of your request, so that your message reaches the appropriate team "
+"and is answered as quickly as possible."
+msgstr ""
+"Teremos prazer em ajudá-lo. Utilize o canal que melhor corresponda à "
+"natureza da sua solicitação, para que a sua mensagem chegue à equipe "
+"adequada e seja respondida com a maior brevidade possível."
+
+#: apps/templates/pages/contact.html:55
+msgid "Questions and support"
+msgstr "Dúvidas e suporte"
+
+#: apps/templates/pages/contact.html:57
+msgid ""
+"For questions about the platform, guidance on the available Labs, or any "
+"request for assistance, please use the support chat available in the lower "
+"right corner of every page. Your conversation is registered as a support "
+"case and our team will reply to you as soon as possible."
+msgstr ""
+"Para dúvidas sobre a plataforma, orientações sobre os Labs disponíveis ou "
+"qualquer pedido de auxílio, utilize o chat de suporte disponível no canto "
+"inferior direito de todas as páginas. A sua conversa é registrada como um "
+"caso de suporte e nossa equipe responderá o mais breve possível."
+
+#: apps/templates/pages/contact.html:61
+msgid "Open the support chat"
+msgstr "Abrir o chat de suporte"
+
+#: apps/templates/pages/contact.html:66
+msgid "Bug reports"
+msgstr "Relato de erros"
+
+#: apps/templates/pages/contact.html:68
+msgid ""
+"If you have identified a defect or any unexpected behaviour, we kindly ask "
+"you to report it by opening an issue in our issue tracker. Please describe "
+"the steps required to reproduce the problem, the result you expected and the"
+" result you obtained."
+msgstr ""
+"Caso tenha identificado um defeito ou qualquer comportamento inesperado, "
+"solicitamos que o relate abrindo uma issue em nosso rastreador de problemas."
+" Descreva os passos necessários para reproduzir o problema, o resultado "
+"esperado e o resultado obtido."
+
+#: apps/templates/pages/contact.html:72
+msgid "Open an issue"
+msgstr "Abrir uma issue"
+
+#: apps/templates/pages/contact.html:77
+msgid "Other subjects"
+msgstr "Outros assuntos"
+
+#: apps/templates/pages/contact.html:80
+msgid ""
+"For any other subject, such as institutional enquiries, partnership "
+"proposals or media requests, please write to us at the following address:"
+msgstr ""
+"Para os demais assuntos, tais como consultas institucionais, propostas de "
+"parceria ou solicitações de imprensa, escreva-nos para o seguinte endereço:"
+
+#: apps/templates/pages/contact.html:85
+msgid ""
+"For any other subject, such as institutional enquiries, partnership "
+"proposals or media requests, please contact the platform administrators "
+"through the support chat."
+msgstr ""
+"Para os demais assuntos, tais como consultas institucionais, propostas de "
+"parceria ou solicitações de imprensa, entre em contato com os "
+"administradores da plataforma por meio do chat de suporte."
 
 #: apps/templates/pages/edit_user.html:3
 msgid "Profile"
@@ -3792,4 +3873,27 @@ msgstr "Salvar nota"
 #~ "um <code>volume</code> apontando para esse "
 #~ "ConfigMap e um <code>volumeMount</code> "
 #~ "correspondente, por exemplo:"
+<<<<<<< HEAD
+=======
+
+#~ msgid ""
+#~ "If you have identified a defect or"
+#~ " any unexpected behaviour, we kindly ask"
+#~ " you to report it by opening an"
+#~ " issue in our GitHub repository. Please"
+#~ " describe the steps required to "
+#~ "reproduce the problem, the result you "
+#~ "expected and the result you obtained."
+#~ msgstr ""
+#~ "Caso tenha identificado um defeito ou "
+#~ "qualquer comportamento inesperado, solicitamos "
+#~ "que o relate abrindo uma issue em "
+#~ "nosso repositório no GitHub. Descreva os"
+#~ " passos necessários para reproduzir o "
+#~ "problema, o resultado esperado e o "
+#~ "resultado obtido."
+
+#~ msgid "Open an issue on GitHub"
+#~ msgstr "Abrir uma issue no GitHub"
+>>>>>>> main
 

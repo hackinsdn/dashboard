@@ -32,6 +32,10 @@ export MAIL_USERNAME=xxxx
 export MAIL_SENDTO=xxxx
 export MAIL_PASSWORD=xxxx
 
+# Issue tracker advertised on the Contact page for bug reports. Leave it empty
+# to hide that section (defaults to the upstream GitHub repository).
+#export ISSUES_URL=https://github.com/hackinsdn/dashboard/issues
+
 export MAP_GEOJSON_JS=xxxx
 export MAP_CENTER_LAT=xxxx
 export MAP_CENTER_LNG=xxxx

@@ -8,7 +8,11 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+<<<<<<< HEAD
 "POT-Creation-Date: 2026-07-23 06:03-0300\n"
+=======
+"POT-Creation-Date: 2026-07-23 05:31-0300\n"
+>>>>>>> main
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -812,8 +816,8 @@ msgstr ""
 
 #: apps/templates/includes/navigation.html:10
 #: apps/templates/pages/clabs_upsert.html:84
-#: apps/templates/pages/edit_user.html:47 apps/templates/pages/error.html:32
-#: apps/templates/pages/feedback_view.html:3
+#: apps/templates/pages/contact.html:33 apps/templates/pages/edit_user.html:47
+#: apps/templates/pages/error.html:32 apps/templates/pages/feedback_view.html:3
 #: apps/templates/pages/feedback_view.html:35
 #: apps/templates/pages/finished_lab_infos.html:62
 #: apps/templates/pages/finished_labs.html:39
@@ -845,6 +849,8 @@ msgid "Home"
 msgstr ""
 
 #: apps/templates/includes/navigation.html:13
+#: apps/templates/pages/contact.html:3 apps/templates/pages/contact.html:29
+#: apps/templates/pages/contact.html:34
 msgid "Contact"
 msgstr ""
 
@@ -1393,6 +1399,66 @@ msgstr ""
 #: apps/templates/pages/index.html:362 apps/templates/pages/labs_edit.html:505
 #: apps/templates/pages/reset_password.html:58
 msgid "Submit"
+msgstr ""
+
+#: apps/templates/pages/contact.html:48
+msgid "How to reach us"
+msgstr ""
+
+#: apps/templates/pages/contact.html:52
+msgid ""
+"We are glad to assist you. Please use the channel that best matches the "
+"nature of your request, so that your message reaches the appropriate team"
+" and is answered as quickly as possible."
+msgstr ""
+
+#: apps/templates/pages/contact.html:55
+msgid "Questions and support"
+msgstr ""
+
+#: apps/templates/pages/contact.html:57
+msgid ""
+"For questions about the platform, guidance on the available Labs, or any "
+"request for assistance, please use the support chat available in the "
+"lower right corner of every page. Your conversation is registered as a "
+"support case and our team will reply to you as soon as possible."
+msgstr ""
+
+#: apps/templates/pages/contact.html:61
+msgid "Open the support chat"
+msgstr ""
+
+#: apps/templates/pages/contact.html:66
+msgid "Bug reports"
+msgstr ""
+
+#: apps/templates/pages/contact.html:68
+msgid ""
+"If you have identified a defect or any unexpected behaviour, we kindly "
+"ask you to report it by opening an issue in our issue tracker. Please "
+"describe the steps required to reproduce the problem, the result you "
+"expected and the result you obtained."
+msgstr ""
+
+#: apps/templates/pages/contact.html:72
+msgid "Open an issue"
+msgstr ""
+
+#: apps/templates/pages/contact.html:77
+msgid "Other subjects"
+msgstr ""
+
+#: apps/templates/pages/contact.html:80
+msgid ""
+"For any other subject, such as institutional enquiries, partnership "
+"proposals or media requests, please write to us at the following address:"
+msgstr ""
+
+#: apps/templates/pages/contact.html:85
+msgid ""
+"For any other subject, such as institutional enquiries, partnership "
+"proposals or media requests, please contact the platform administrators "
+"through the support chat."
 msgstr ""
 
 #: apps/templates/pages/edit_user.html:3

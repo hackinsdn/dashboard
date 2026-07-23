@@ -1,9 +1,9 @@
 {% extends "layouts/base.html" %}
 
-{% block title %} Contacts {% endblock title %}
+{% block title %} {{ _('Contact') }} {% endblock title %}
 
 <!-- Element injected in the BODY element -->
-{% block body_class %} sidebar-mini {% endblock body_class %}
+{% block body_class %} sidebar-mini layout-navbar-fixed {% endblock body_class %}
 
 <!-- Specific Page CSS goes HERE  -->
 {% block stylesheets %}
@@ -26,332 +26,73 @@
       <div class="container-fluid">
         <div class="row mb-2">
           <div class="col-sm-6">
-            <h1>Contacts</h1>
+            <h1>{{ _('Contact') }}</h1>
           </div>
           <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
-              <li class="breadcrumb-item"><a href="#">Home</a></li>
-              <li class="breadcrumb-item active">Contacts</li>
+              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.index') }}">{{ _('Home') }}</a></li>
+              <li class="breadcrumb-item active">{{ _('Contact') }}</li>
             </ol>
           </div>
         </div>
-      </div><!-- /.container-fluid -->
+      </div>
     </section>
 
     <!-- Main content -->
     <section class="content">
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-lg-9 col-md-11">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">{{ _('How to reach us') }}</h3>
+              </div>
+              <div class="card-body">
+                <p>
+                  {{ _('We are glad to assist you. Please use the channel that best matches the nature of your request, so that your message reaches the appropriate team and is answered as quickly as possible.') }}
+                </p>
 
-      <!-- Default box -->
-      <div class="card card-solid">
-        <div class="card-body pb-0">
-          <div class="row d-flex align-items-stretch">
-            <div class="col-12 col-sm-6 col-md-4 d-flex align-items-stretch">
-              <div class="card bg-light">
-                <div class="card-header text-muted border-bottom-0">
-                  Digital Strategist
-                </div>
-                <div class="card-body pt-0">
-                  <div class="row">
-                    <div class="col-7">
-                      <h2 class="lead"><b>Nicole Pearson</b></h2>
-                      <p class="text-muted text-sm"><b>About: </b> Web Designer / UX / Graphic Artist / Coffee Lover </p>
-                      <ul class="ml-4 mb-0 fa-ul text-muted">
-                        <li class="small"><span class="fa-li"><i class="fas fa-lg fa-building"></i></span> Address: Demo Street 123, Demo City 04312, NJ</li>
-                        <li class="small"><span class="fa-li"><i class="fas fa-lg fa-phone"></i></span> Phone #: + 800 - 12 12 23 52</li>
-                      </ul>
-                    </div>
-                    <div class="col-5 text-center">
-                      <img src="{{ url_for('static', filename='assets/img/user-avatar-1.png') }}" alt="user-avatar" class="img-circle img-fluid">
-                    </div>
-                  </div>
-                </div>
-                <div class="card-footer">
-                  <div class="text-right">
-                    <a href="#" class="btn btn-sm bg-teal">
-                      <i class="fas fa-comments"></i>
-                    </a>
-                    <a href="#" class="btn btn-sm btn-primary">
-                      <i class="fas fa-user"></i> View Profile
-                    </a>
-                  </div>
-                </div>
+                <h5 class="mt-4"><i class="fas fa-comments text-primary mr-2"></i>{{ _('Questions and support') }}</h5>
+                <p>
+                  {{ _('For questions about the platform, guidance on the available Labs, or any request for assistance, please use the support chat available in the lower right corner of every page. Your conversation is registered as a support case and our team will reply to you as soon as possible.') }}
+                </p>
+                <p>
+                  <button type="button" class="btn btn-primary btn-sm" id="openSupportChat">
+                    <i class="fas fa-comments mr-1"></i>{{ _('Open the support chat') }}
+                  </button>
+                </p>
+
+                {% if config.ISSUES_URL %}
+                <h5 class="mt-4"><i class="fas fa-bug text-danger mr-2"></i>{{ _('Bug reports') }}</h5>
+                <p>
+                  {{ _('If you have identified a defect or any unexpected behaviour, we kindly ask you to report it by opening an issue in our issue tracker. Please describe the steps required to reproduce the problem, the result you expected and the result you obtained.') }}
+                </p>
+                <p>
+                  <a href="{{ config.ISSUES_URL }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-bug mr-1"></i>{{ _('Open an issue') }}
+                  </a>
+                </p>
+                {% endif %}
+
+                <h5 class="mt-4"><i class="fas fa-envelope text-secondary mr-2"></i>{{ _('Other subjects') }}</h5>
+                {% if config.MAIL_SENDTO %}
+                <p>
+                  {{ _('For any other subject, such as institutional enquiries, partnership proposals or media requests, please write to us at the following address:') }}
+                  <a href="mailto:{{ config.MAIL_SENDTO }}">{{ config.MAIL_SENDTO }}</a>
+                </p>
+                {% else %}
+                <p>
+                  {{ _('For any other subject, such as institutional enquiries, partnership proposals or media requests, please contact the platform administrators through the support chat.') }}
+                </p>
+                {% endif %}
               </div>
+              <!-- /.card-body -->
             </div>
-            <div class="col-12 col-sm-6 col-md-4 d-flex align-items-stretch">
-              <div class="card bg-light">
-                <div class="card-header text-muted border-bottom-0">
-                  Digital Strategist
-                </div>
-                <div class="card-body pt-0">
-                  <div class="row">
-                    <div class="col-7">
-                      <h2 class="lead"><b>Nicole Pearson</b></h2>
-                      <p class="text-muted text-sm"><b>About: </b> Web Designer / UX / Graphic Artist / Coffee Lover </p>
-                      <ul class="ml-4 mb-0 fa-ul text-muted">
-                        <li class="small"><span class="fa-li"><i class="fas fa-lg fa-building"></i></span> Address: Demo Street 123, Demo City 04312, NJ</li>
-                        <li class="small"><span class="fa-li"><i class="fas fa-lg fa-phone"></i></span> Phone #: + 800 - 12 12 23 52</li>
-                      </ul>
-                    </div>
-                    <div class="col-5 text-center">
-                      <img src="{{ url_for('static', filename='assets/img/user-avatar-2.png') }}" alt="user-avatar" class="img-circle img-fluid">
-                    </div>
-                  </div>
-                </div>
-                <div class="card-footer">
-                  <div class="text-right">
-                    <a href="#" class="btn btn-sm bg-teal">
-                      <i class="fas fa-comments"></i>
-                    </a>
-                    <a href="#" class="btn btn-sm btn-primary">
-                      <i class="fas fa-user"></i> View Profile
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="col-12 col-sm-6 col-md-4 d-flex align-items-stretch">
-              <div class="card bg-light">
-                <div class="card-header text-muted border-bottom-0">
-                  Digital Strategist
-                </div>
-                <div class="card-body pt-0">
-                  <div class="row">
-                    <div class="col-7">
-                      <h2 class="lead"><b>Nicole Pearson</b></h2>
-                      <p class="text-muted text-sm"><b>About: </b> Web Designer / UX / Graphic Artist / Coffee Lover </p>
-                      <ul class="ml-4 mb-0 fa-ul text-muted">
-                        <li class="small"><span class="fa-li"><i class="fas fa-lg fa-building"></i></span> Address: Demo Street 123, Demo City 04312, NJ</li>
-                        <li class="small"><span class="fa-li"><i class="fas fa-lg fa-phone"></i></span> Phone #: + 800 - 12 12 23 52</li>
-                      </ul>
-                    </div>
-                    <div class="col-5 text-center">
-                      <img src="{{ url_for('static', filename='assets/img/user-avatar-3.png') }}" alt="user-avatar" class="img-circle img-fluid">
-                    </div>
-                  </div>
-                </div>
-                <div class="card-footer">
-                  <div class="text-right">
-                    <a href="#" class="btn btn-sm bg-teal">
-                      <i class="fas fa-comments"></i>
-                    </a>
-                    <a href="#" class="btn btn-sm btn-primary">
-                      <i class="fas fa-user"></i> View Profile
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="col-12 col-sm-6 col-md-4 d-flex align-items-stretch">
-              <div class="card bg-light">
-                <div class="card-header text-muted border-bottom-0">
-                  Digital Strategist
-                </div>
-                <div class="card-body pt-0">
-                  <div class="row">
-                    <div class="col-7">
-                      <h2 class="lead"><b>Nicole Pearson</b></h2>
-                      <p class="text-muted text-sm"><b>About: </b> Web Designer / UX / Graphic Artist / Coffee Lover </p>
-                      <ul class="ml-4 mb-0 fa-ul text-muted">
-                        <li class="small"><span class="fa-li"><i class="fas fa-lg fa-building"></i></span> Address: Demo Street 123, Demo City 04312, NJ</li>
-                        <li class="small"><span class="fa-li"><i class="fas fa-lg fa-phone"></i></span> Phone #: + 800 - 12 12 23 52</li>
-                      </ul>
-                    </div>
-                    <div class="col-5 text-center">
-                      <img src="{{ url_for('static', filename='assets/img/user-avatar-4.png') }}" alt="user-avatar" class="img-circle img-fluid">
-                    </div>
-                  </div>
-                </div>
-                <div class="card-footer">
-                  <div class="text-right">
-                    <a href="#" class="btn btn-sm bg-teal">
-                      <i class="fas fa-comments"></i>
-                    </a>
-                    <a href="#" class="btn btn-sm btn-primary">
-                      <i class="fas fa-user"></i> View Profile
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="col-12 col-sm-6 col-md-4 d-flex align-items-stretch">
-              <div class="card bg-light">
-                <div class="card-header text-muted border-bottom-0">
-                  Digital Strategist
-                </div>
-                <div class="card-body pt-0">
-                  <div class="row">
-                    <div class="col-7">
-                      <h2 class="lead"><b>Nicole Pearson</b></h2>
-                      <p class="text-muted text-sm"><b>About: </b> Web Designer / UX / Graphic Artist / Coffee Lover </p>
-                      <ul class="ml-4 mb-0 fa-ul text-muted">
-                        <li class="small"><span class="fa-li"><i class="fas fa-lg fa-phone"></i></span> Phone #: + 800 - 12 12 23 52</li>
-                      </ul>
-                    </div>
-                    <div class="col-5 text-center">
-                      <img src="{{ url_for('static', filename='assets/img/user-avatar-1.png') }}" alt="user-avatar" class="img-circle img-fluid">
-                    </div>
-                  </div>
-                </div>
-                <div class="card-footer">
-                  <div class="text-right">
-                    <a href="#" class="btn btn-sm bg-teal">
-                      <i class="fas fa-comments"></i>
-                    </a>
-                    <a href="#" class="btn btn-sm btn-primary">
-                      <i class="fas fa-user"></i> View Profile
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="col-12 col-sm-6 col-md-4 d-flex align-items-stretch">
-              <div class="card bg-light">
-                <div class="card-header text-muted border-bottom-0">
-                  Digital Strategist
-                </div>
-                <div class="card-body pt-0">
-                  <div class="row">
-                    <div class="col-7">
-                      <h2 class="lead"><b>Nicole Pearson</b></h2>
-                      <p class="text-muted text-sm"><b>About: </b> Web Designer / UX / Graphic Artist / Coffee Lover </p>
-                      <ul class="ml-4 mb-0 fa-ul text-muted">
-                        <li class="small"><span class="fa-li"><i class="fas fa-lg fa-building"></i></span> Address: Demo Street 123, Demo City 04312, NJ</li>
-                        <li class="small"><span class="fa-li"><i class="fas fa-lg fa-phone"></i></span> Phone #: + 800 - 12 12 23 52</li>
-                      </ul>
-                    </div>
-                    <div class="col-5 text-center">
-                      <img src="{{ url_for('static', filename='assets/img/user-avatar-2.png') }}" alt="user-avatar" class="img-circle img-fluid">
-                    </div>
-                  </div>
-                </div>
-                <div class="card-footer">
-                  <div class="text-right">
-                    <a href="#" class="btn btn-sm bg-teal">
-                      <i class="fas fa-comments"></i>
-                    </a>
-                    <a href="#" class="btn btn-sm btn-primary">
-                      <i class="fas fa-user"></i> View Profile
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="col-12 col-sm-6 col-md-4 d-flex align-items-stretch">
-              <div class="card bg-light">
-                <div class="card-header text-muted border-bottom-0">
-                  Digital Strategist
-                </div>
-                <div class="card-body pt-0">
-                  <div class="row">
-                    <div class="col-7">
-                      <h2 class="lead"><b>Nicole Pearson</b></h2>
-                      <p class="text-muted text-sm"><b>About: </b> Web Designer / UX / Graphic Artist / Coffee Lover </p>
-                      <ul class="ml-4 mb-0 fa-ul text-muted">
-                        <li class="small"><span class="fa-li"><i class="fas fa-lg fa-building"></i></span> Address: Demo Street 123, Demo City 04312, NJ</li>
-                      </ul>
-                    </div>
-                    <div class="col-5 text-center">
-                      <img src="{{ url_for('static', filename='assets/img/user-avatar-3.png') }}" alt="user-avatar" class="img-circle img-fluid">
-                    </div>
-                  </div>
-                </div>
-                <div class="card-footer">
-                  <div class="text-right">
-                    <a href="#" class="btn btn-sm bg-teal">
-                      <i class="fas fa-comments"></i>
-                    </a>
-                    <a href="#" class="btn btn-sm btn-primary">
-                      <i class="fas fa-user"></i> View Profile
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="col-12 col-sm-6 col-md-4 d-flex align-items-stretch">
-              <div class="card bg-light">
-                <div class="card-header text-muted border-bottom-0">
-                  Digital Strategist
-                </div>
-                <div class="card-body pt-0">
-                  <div class="row">
-                    <div class="col-7">
-                      <h2 class="lead"><b>Nicole Pearson</b></h2>
-                      <p class="text-muted text-sm"><b>About: </b> Web Designer / UX / Graphic Artist / Coffee Lover </p>
-                      <ul class="ml-4 mb-0 fa-ul text-muted">
-                        <li class="small"><span class="fa-li"><i class="fas fa-lg fa-building"></i></span> Address: Demo Street 123, Demo City 04312, NJ</li>
-                        <li class="small"><span class="fa-li"><i class="fas fa-lg fa-phone"></i></span> Phone #: + 800 - 12 12 23 52</li>
-                      </ul>
-                    </div>
-                    <div class="col-5 text-center">
-                      <img src="{{ url_for('static', filename='assets/img/user-avatar-4.png') }}" alt="user-avatar" class="img-circle img-fluid">
-                    </div>
-                  </div>
-                </div>
-                <div class="card-footer">
-                  <div class="text-right">
-                    <a href="#" class="btn btn-sm bg-teal">
-                      <i class="fas fa-comments"></i>
-                    </a>
-                    <a href="#" class="btn btn-sm btn-primary">
-                      <i class="fas fa-user"></i> View Profile
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="col-12 col-sm-6 col-md-4 d-flex align-items-stretch">
-              <div class="card bg-light">
-                <div class="card-header text-muted border-bottom-0">
-                  Digital Strategist
-                </div>
-                <div class="card-body pt-0">
-                  <div class="row">
-                    <div class="col-7">
-                      <h2 class="lead"><b>Nicole Pearson</b></h2>
-                      <p class="text-muted text-sm"><b>About: </b> Web Designer / UX / Graphic Artist / Coffee Lover </p>
-                      <ul class="ml-4 mb-0 fa-ul text-muted">
-                        <li class="small"><span class="fa-li"><i class="fas fa-lg fa-building"></i></span> Address: Demo Street 123, Demo City 04312, NJ</li>
-                        <li class="small"><span class="fa-li"><i class="fas fa-lg fa-phone"></i></span> Phone #: + 800 - 12 12 23 52</li>
-                      </ul>
-                    </div>
-                    <div class="col-5 text-center">
-                      <img src="{{ url_for('static', filename='assets/img/user-avatar-1.png') }}" alt="user-avatar" class="img-circle img-fluid">
-                    </div>
-                  </div>
-                </div>
-                <div class="card-footer">
-                  <div class="text-right">
-                    <a href="#" class="btn btn-sm bg-teal">
-                      <i class="fas fa-comments"></i>
-                    </a>
-                    <a href="#" class="btn btn-sm btn-primary">
-                      <i class="fas fa-user"></i> View Profile
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <!-- /.card -->
           </div>
         </div>
-        <!-- /.card-body -->
-        <div class="card-footer">
-          <nav aria-label="Contacts Page Navigation">
-            <ul class="pagination justify-content-center m-0">
-              <li class="page-item active"><a class="page-link" href="#">1</a></li>
-              <li class="page-item"><a class="page-link" href="#">2</a></li>
-              <li class="page-item"><a class="page-link" href="#">3</a></li>
-              <li class="page-item"><a class="page-link" href="#">4</a></li>
-              <li class="page-item"><a class="page-link" href="#">5</a></li>
-              <li class="page-item"><a class="page-link" href="#">6</a></li>
-              <li class="page-item"><a class="page-link" href="#">7</a></li>
-              <li class="page-item"><a class="page-link" href="#">8</a></li>
-            </ul>
-          </nav>
-        </div>
-        <!-- /.card-footer -->
       </div>
-      <!-- /.card -->
-
+      <!-- /.container-fluid -->
     </section>
     <!-- /.content -->
   </div>
@@ -362,13 +103,15 @@
 <!-- Specific Page JS goes HERE  -->
 {% block javascripts %}
 
-  <!-- jQuery -->
   <script src="{{ url_for('static', filename='assets/plugins/jquery/jquery.min.js') }}"></script>
-  <!-- Bootstrap 4 -->
   <script src="{{ url_for('static', filename='assets/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
-  <!-- AdminLTE App -->
   <script src="{{ url_for('static', filename='assets/js/adminlte.min.js') }}"></script>
-  <!-- AdminLTE for demo purposes -->
-  <script src="{{ url_for('static', filename='assets/js/demo.js') }}"></script>
+  <script>
+    // Reuse the floating support chat widget included on every page
+    document.getElementById('openSupportChat').addEventListener('click', function () {
+      var fab = document.getElementById('hisdn-chat-fab');
+      if (fab) { fab.click(); }
+    });
+  </script>
 
 {% endblock javascripts %}
