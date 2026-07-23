@@ -256,13 +256,13 @@
       //Enable check and uncheck all functionality
       $('#delete-labs').click(function () {
         var rows = $('#tableLabs tr').filter(':has(:checkbox:checked)');
-        $("#delete-labs").html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> {{ _("Deleting") }} ' + table.rows(rows).data().length + ' {{ _("row(s)...") }}');
-        $("#delete-labs").prop('disabled', true);
         var items = [];
-        table.rows(rows).each( function ( index ) {
-          var row = table.row( index );
+        table.rows(rows).every(function(rowIdx, tableLoop, rowLoop) {
+          var row = table.row( rowIdx );
           items.push(row.id());
         });
+        $("#delete-labs").html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> {{ _("Deleting") }} ' + items.length + ' {{ _("row(s)...") }}');
+        $("#delete-labs").prop('disabled', true);
         var delete_url = '/api/labs';
         if (items.length === 1) {
           delete_url = '/api/lab/' + items[0];
