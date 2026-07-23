@@ -216,6 +216,16 @@ def parse_lab_expiration(expiration):
     return int(exp_date.timestamp())
 
 
+def parse_group_expiration(expiration):
+    """Convert the group expiration date submitted by the form (ISO date,
+    YYYY-MM-DD) into a datetime, since Groups.expiration is a DateTime column
+    and the raw string would be rejected by the database driver. Empty values
+    mean "never expires"; anything else raises ValueError."""
+    if not expiration or not expiration.strip():
+        return None
+    return datetime.datetime.strptime(expiration.strip(), "%Y-%m-%d")
+
+
 def datetime_from_ts(timestamp):
     try:
         dt = datetime.datetime.fromtimestamp(timestamp, tz=datetime.timezone.utc)

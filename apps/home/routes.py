@@ -23,7 +23,7 @@ from flask_login import login_required, current_user
 from jinja2 import TemplateNotFound
 from apps.audit_mixin import get_remote_addr, check_user_category
 from apps.authentication.forms import GroupForm
-from apps.utils import update_running_labs_stats, parse_lab_expiration, datetime_from_ts, epoch_from_datetime, update_category_stats, update_stats_lab_instances_answers, utcnow, compute_lab_score, secure_filename
+from apps.utils import update_running_labs_stats, parse_lab_expiration, parse_group_expiration, datetime_from_ts, epoch_from_datetime, update_category_stats, update_stats_lab_instances_answers, utcnow, compute_lab_score, secure_filename
 from sqlalchemy import desc
 
 
@@ -1018,7 +1018,22 @@ def edit_group(group_id):
 
     has_changes = False
     for field in ["groupname", "description", "organization", "expiration", "accesstoken"]:
-        new_value = request.form[field] if request.form[field] else None  
+        new_value = request.form[field] if request.form[field] else None
+        if field == "expiration":
+            try:
+                new_value = parse_group_expiration(new_value)
+            except ValueError:
+                current_app.logger.error(
+                    f"Failed to update group due to invalid expiration: {new_value!r}"
+                )
+                return render_template(
+                    "pages/groups_edit.html",
+                    msg_fail=_("Invalid expiration date, please use the format YYYY-MM-DD."),
+                    group=group,
+                    action_name=action_name,
+                    users=users_info,
+                    return_path="home_blueprint.view_groups"
+                )
         if getattr(group, field) != new_value:
             setattr(group, field, new_value)
             has_changes = True

@@ -1,6 +1,6 @@
 """Pytest suite for apps/utils.py.
 
-Covers the pure helpers (utcnow, parse_lab_expiration, datetime_from_ts,
+Covers the pure helpers (utcnow, parse_lab_expiration, parse_group_expiration, datetime_from_ts,
 secure_filename, format_duration, list_files, remove_empty_folders) and the
 DB-backed helpers (check_pre_approved, update_running_labs_stats,
 update_category_stats, update_stats_lab_instances_answers).
@@ -85,6 +85,18 @@ class TestPureHelpers:
         ts = utils.parse_lab_expiration("4")
         expected = utils.utcnow() + datetime.timedelta(hours=4)
         assert abs(ts - int(expected.timestamp())) < 5
+
+    def test_parse_group_expiration_empty(self):
+        assert utils.parse_group_expiration("") is None
+        assert utils.parse_group_expiration(None) is None
+        assert utils.parse_group_expiration("  ") is None
+
+    def test_parse_group_expiration_iso_date(self):
+        assert utils.parse_group_expiration("2026-07-31") == datetime.datetime(2026, 7, 31)
+
+    def test_parse_group_expiration_invalid(self):
+        with pytest.raises(ValueError):
+            utils.parse_group_expiration("07/31/2026")
 
     def test_datetime_from_ts_valid(self):
         result = utils.datetime_from_ts(0)

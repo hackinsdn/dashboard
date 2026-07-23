@@ -843,6 +843,7 @@ TRANSLATIONS = {
     "You don't have permission to edit this group.": "Você não tem permissão para editar este grupo.",
     "Only admins can create/change System groups.": "Somente administradores podem criar/alterar grupos de Sistema.",
     "No changes were made to the group.": "Nenhuma alteração foi feita no grupo.",
+    "Invalid expiration date, please use the format YYYY-MM-DD.": "Data de expiração inválida, use o formato AAAA-MM-DD.",
     "Failed to update group.": "Falha ao atualizar o grupo.",
     "Group updated successfully": "Grupo atualizado com sucesso",
     "Invalid Lab provided for filtering.": "Lab inválido fornecido para filtragem.",

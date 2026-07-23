@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-07-22 09:22-0300\n"
+"POT-Creation-Date: 2026-07-23 06:03-0300\n"
 "PO-Revision-Date: 2026-07-12 19:36-0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -127,7 +127,7 @@ msgid "Users deleted successfully"
 msgstr ""
 
 #: apps/api/routes.py:413 apps/api/routes.py:538 apps/home/routes.py:143
-#: apps/home/routes.py:995 apps/home/routes.py:1316
+#: apps/home/routes.py:995 apps/home/routes.py:1331
 msgid "Group not found"
 msgstr ""
 
@@ -167,8 +167,8 @@ msgstr ""
 #: apps/api/routes.py:473 apps/api/routes.py:508 apps/api/routes.py:906
 #: apps/home/routes.py:221 apps/home/routes.py:295 apps/home/routes.py:308
 #: apps/home/routes.py:387 apps/home/routes.py:472 apps/home/routes.py:501
-#: apps/home/routes.py:703 apps/home/routes.py:709 apps/home/routes.py:1529
-#: apps/home/routes.py:1542 apps/home/routes.py:1685
+#: apps/home/routes.py:703 apps/home/routes.py:709 apps/home/routes.py:1544
+#: apps/home/routes.py:1557 apps/home/routes.py:1700
 msgid "Lab not found"
 msgstr ""
 
@@ -219,7 +219,7 @@ msgstr ""
 msgid "Invalid or Unauthorized access to lab answer"
 msgstr ""
 
-#: apps/api/routes.py:585 apps/home/routes.py:1206
+#: apps/api/routes.py:585 apps/home/routes.py:1221
 msgid "No Lab Answer Sheet available. Please create the Answer Sheet first."
 msgstr ""
 
@@ -269,8 +269,8 @@ msgid "Thread not found"
 msgstr ""
 
 #: apps/api/routes.py:843 apps/api/routes.py:867 apps/api/routes.py:883
-#: apps/api/routes.py:903 apps/api/routes.py:908 apps/home/routes.py:1531
-#: apps/home/routes.py:1544 apps/home/routes.py:1650 apps/home/routes.py:1687
+#: apps/api/routes.py:903 apps/api/routes.py:908 apps/home/routes.py:1546
+#: apps/home/routes.py:1559 apps/home/routes.py:1665 apps/home/routes.py:1702
 #: apps/templates/pages/users.html:51
 msgid "Unauthorized"
 msgstr ""
@@ -563,7 +563,7 @@ msgid "Lab saved."
 msgstr ""
 
 #: apps/home/routes.py:810 apps/home/routes.py:833 apps/home/routes.py:871
-#: apps/home/routes.py:1673
+#: apps/home/routes.py:1688
 msgid "Not found"
 msgstr ""
 
@@ -609,94 +609,98 @@ msgstr ""
 msgid "Only admins can create/change System groups."
 msgstr ""
 
-#: apps/home/routes.py:1127
+#: apps/home/routes.py:1031
+msgid "Invalid expiration date, please use the format YYYY-MM-DD."
+msgstr ""
+
+#: apps/home/routes.py:1142
 msgid "No changes were made to the group."
 msgstr ""
 
-#: apps/home/routes.py:1143
+#: apps/home/routes.py:1158
 msgid "Failed to update group."
 msgstr ""
 
-#: apps/home/routes.py:1156
+#: apps/home/routes.py:1171
 msgid "Group updated successfully"
 msgstr ""
 
-#: apps/home/routes.py:1189
+#: apps/home/routes.py:1204
 msgid "Invalid Lab provided for filtering."
 msgstr ""
 
-#: apps/home/routes.py:1194
+#: apps/home/routes.py:1209
 msgid "Invalid Group provided for filtering."
 msgstr ""
 
-#: apps/home/routes.py:1201
+#: apps/home/routes.py:1216
 msgid "To check with the Answer Sheet you must provide a Lab (Filter by Lab)."
 msgstr ""
 
-#: apps/home/routes.py:1248
+#: apps/home/routes.py:1263
 msgid "Invalid Lab provided. Please choose the Lab."
 msgstr ""
 
-#: apps/home/routes.py:1276
+#: apps/home/routes.py:1291
 msgid "Failed to update lab answers sheet."
 msgstr ""
 
-#: apps/home/routes.py:1282
+#: apps/home/routes.py:1297
 msgid "Lab answer sheet saved!"
 msgstr ""
 
-#: apps/home/routes.py:1316
+#: apps/home/routes.py:1331
 msgid "Error getting finished labs"
 msgstr ""
 
-#: apps/home/routes.py:1445 apps/home/routes.py:1599
+#: apps/home/routes.py:1460 apps/home/routes.py:1614
 msgid "No file part in the request"
 msgstr ""
 
-#: apps/home/routes.py:1449 apps/home/routes.py:1602
+#: apps/home/routes.py:1464 apps/home/routes.py:1617
 msgid "No file selected"
 msgstr ""
 
-#: apps/home/routes.py:1464 apps/home/routes.py:1616
+#: apps/home/routes.py:1479 apps/home/routes.py:1631
 #, python-format
 msgid "File extension not allowed. Allowed: %(exts)s"
 msgstr ""
 
-#: apps/home/routes.py:1473
+#: apps/home/routes.py:1488
 #, python-format
 msgid "File exceeds maximum allowed size (%(size)sMB)"
 msgstr ""
 
-#: apps/home/routes.py:1487 apps/home/routes.py:1634
+#: apps/home/routes.py:1502 apps/home/routes.py:1649
 msgid "Failed to save file on server"
 msgstr ""
 
-#: apps/home/routes.py:1548
+#: apps/home/routes.py:1563
 msgid "No uploads found"
 msgstr ""
 
-#: apps/home/routes.py:1555
+#: apps/home/routes.py:1570
 msgid "File not found in uploads list"
 msgstr ""
 
-#: apps/home/routes.py:1583 apps/home/routes.py:1711
+#: apps/home/routes.py:1598 apps/home/routes.py:1726
 msgid "Failed to update metadata"
 msgstr ""
 
-#: apps/home/routes.py:1596
+#: apps/home/routes.py:1611
 msgid "Invalid or missing lab id"
 msgstr ""
 
-#: apps/home/routes.py:1621
+#: apps/home/routes.py:1636
 #, python-format
 msgid "File is too large to expose as a ConfigMap (max %(size)s KiB once encoded)"
 msgstr ""
 
-#: apps/home/routes.py:1682
+#: apps/home/routes.py:1697
 msgid "Invalid lab id"
 msgstr ""
 
-#: apps/home/routes.py:1693
+#: apps/home/routes.py:1708
 msgid "File not found in lab data list"
 msgstr ""
 
@@ -1590,7 +1594,7 @@ msgstr ""
 #: apps/templates/pages/k8s_dep_list.html:254
 #: apps/templates/pages/k8s_pod_list.html:260
 #: apps/templates/pages/k8s_srv_list.html:248
-#: apps/templates/pages/running.html:259 apps/templates/pages/users.html:266
+#: apps/templates/pages/running.html:264 apps/templates/pages/users.html:266
 msgid "Deleting"
 msgstr ""
 
@@ -1601,7 +1605,7 @@ msgstr ""
 #: apps/templates/pages/k8s_pod_list.html:289
 #: apps/templates/pages/k8s_srv_list.html:248
 #: apps/templates/pages/k8s_srv_list.html:277
-#: apps/templates/pages/running.html:259 apps/templates/pages/users.html:266
+#: apps/templates/pages/running.html:264 apps/templates/pages/users.html:266
 #: apps/templates/pages/users.html:295
 msgid "row(s)..."
 msgstr ""

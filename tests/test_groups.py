@@ -22,6 +22,7 @@ The seeded usernames are all prefixed "gr" so they never collide with the
 other test modules that share the same singleton app/database (apps/config.py
 reads DATA_DIR once at import time, so every module ends up on one DB).
 """
+import datetime
 import os
 import sys
 import tempfile
@@ -175,6 +176,30 @@ class TestCreate:
         group = Groups.query.filter_by(groupname="AdminCreated").first()
         assert group is not None
         assert group.organization == "ORG-NEW"
+        logout(client)
+
+    def test_admin_can_create_group_with_expiration(self, client, ids):
+        login(client, "gradmin", "admin123")
+        resp = client.post(
+            "/groups/edit/new",
+            data=group_form(groupname="ExpiringGroup", expiration="2026-07-31"),
+            follow_redirects=True,
+        )
+        assert resp.status_code == 200
+        assert b"Group updated successfully" in resp.data
+
+        group = Groups.query.filter_by(groupname="ExpiringGroup").first()
+        assert group.expiration == datetime.datetime(2026, 7, 31)
+        logout(client)
+
+    def test_invalid_expiration_is_rejected(self, client, ids):
+        login(client, "gradmin", "admin123")
+        resp = client.post(
+            "/groups/edit/new",
+            data=group_form(groupname="BadExpiration", expiration="07/31/2026"),
+        )
+        assert b"Invalid expiration date" in resp.data
+        assert Groups.query.filter_by(groupname="BadExpiration").first() is None
         logout(client)
 
     def test_student_cannot_create_group(self, client, ids):

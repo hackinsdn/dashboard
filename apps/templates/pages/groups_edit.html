@@ -103,7 +103,7 @@
                         <label>{{ _('Expiration Date') }}</label>
 		        <p>{{ _('The date after which this group and its resources will no longer be available. Can be used, for instance, to setup a due date for running a lab (for an exam, contest, CTF, etc). Default: never expires.') }}</p>
                         <div class="input-group date" id="expiredate" data-target-input="nearest">
-                            <input name="expiration" type="text" class="form-control datetimepicker-input" data-target="#reservationdate" value="{{ group.expiration|default("", true) }}" />
+                            <input name="expiration" type="text" class="form-control datetimepicker-input" data-target="#expiredate" placeholder="YYYY-MM-DD" value="{{ group.expiration.strftime('%Y-%m-%d') if group.expiration else "" }}" />
                             <div class="input-group-append" data-target="#expiredate" data-toggle="datetimepicker">
                                 <div class="input-group-text"><i class="fa fa-calendar"></i></div>
                             </div>
@@ -249,7 +249,7 @@ user2@ufxpto.edu.br"
       });
       //Date range picker
       $('#expiredate').datetimepicker({
-          format: 'L'
+          format: 'YYYY-MM-DD'
       });
     })
     // Function to generate a random Access Token
