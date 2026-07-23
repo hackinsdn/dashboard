@@ -109,6 +109,11 @@ class Config(object):
     K8S_NAMESPACE = os.getenv('K8S_NAMESPACE', "")
     K8S_CONFIG = os.path.expanduser(os.getenv("KUBECONFIG", "~/.kube/config"))
     K8S_AVOID_NODES = [n.strip() for n in os.getenv("K8S_AVOID_NODES", "").split(",") if n.strip()]
+    # Timeout (in seconds) applied to every Kubernetes API call, so the app does
+    # not hang indefinitely when the API server is unreachable/unavailable. It is
+    # passed as `_request_timeout` to the kubernetes client library and as
+    # `timeout` to the kubectl subprocess invocations.
+    K8S_REQUEST_TIMEOUT = float(os.getenv("K8S_REQUEST_TIMEOUT", "10"))
 
     # Base URL
     BASE_URL = os.getenv("BASE_URL", 'https://dashboard.hackinsdn.ufba.br')

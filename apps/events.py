@@ -127,7 +127,11 @@ def pty_connect(auth):
     if kind == "clab":
         kind = "pod"
         start_script = f"ssh {container}"
-    client_stream = k8s.get_pod_exec_stream(pod, container, start_script)
+    try:
+        client_stream = k8s.get_pod_exec_stream(pod, container, start_script)
+    except Exception as exc:
+        current_app.logger.error(f"Failed to open exec stream to {pod=} {container=}: {exc}")
+        return False
     xterm_clients[session_id] = client_stream
     socketio.start_background_task(read_and_forward_k8s_stream_output, session_id, client_stream)
     current_app.logger.info(f"client added to xterm_clients {session_id=}")
