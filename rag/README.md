@@ -83,6 +83,27 @@ DGX Spark (or any GPU host running vLLM/Ollama/TGI) allows.
 know" into the default rather than a hallucination. Tune it per embedding model
 by watching the refusal rate in the dashboard's admin panel.
 
+### A note on the two models
+
+The **embedding** model (`RAG_EMBED_MODEL_PATH`) and the **generation** model
+(`RAG_LLM_MODEL_PATH`) are different things in different formats:
+
+- Embeddings is a **sentence-transformers directory** (with `config.json`,
+  `modules.json`, `1_Pooling/`). Create it on a networked machine with
+  `SentenceTransformer('intfloat/multilingual-e5-small').save('models/embed')`
+  and mount the folder — a bare GGUF or a partial file download will fail with
+  *"Unrecognized model ... should have a model_type key"*.
+- Generation is a **quantized GGUF** (e.g. `qwen2.5-3b-instruct-q4_k_m.gguf`).
+
+Prefer a small **non-reasoning** instruct model on CPU (3B-class). If you do
+point it at a hybrid reasoning model (Qwen3, DeepSeek-R1, ...), its
+`<think>...</think>` scratchpad is stripped automatically before the answer is
+returned (`strip_reasoning` in `generate.py`), so it never reaches the chat and
+never derails the grounding check. Note that on CPU such a model may spend its
+whole `RAG_GEN_TIMEOUT_S` budget thinking and get cut off before answering,
+which then reads as a refusal — a reason to keep to a non-reasoning model unless
+you are on an accelerated backend.
+
 ## Privacy
 
 - The container needs **no egress**. Enforce it (a `NetworkPolicy` with no

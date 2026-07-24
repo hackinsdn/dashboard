@@ -12,9 +12,39 @@
 Switching profile is configuration, never code -- see doc/rag-assistant-design.md.
 """
 import json
+import re
 import time
 import urllib.error
 import urllib.request
+
+# Hybrid reasoning models (Qwen3, DeepSeek-R1, ...) emit a chain-of-thought
+# scratchpad wrapped in <think>...</think> before the actual answer. A couple of
+# variant tag names cover the field.
+_THINK_BLOCK_RE = re.compile(r"<(think|thinking|reasoning)>.*?</\1>", re.IGNORECASE | re.DOTALL)
+_THINK_OPEN_RE = re.compile(r"<(think|thinking|reasoning)>.*", re.IGNORECASE | re.DOTALL)
+
+
+def strip_reasoning(text):
+    """Remove reasoning-model scratchpad blocks from generated text.
+
+    That scratchpad must never reach the chat bubble, and it derails the
+    grounding post-check: it rarely carries the ``[1]`` citations the real answer
+    does, so an un-stripped answer looks "not grounded" and gets refused.
+
+    A non-reasoning model never produces these tags, so this is a no-op for the
+    3B-class default -- the service stays correct whichever model
+    ``RAG_LLM_MODEL_PATH`` (or an ``openai_compat`` backend) points at.
+
+    A generation cut short by the wall-clock deadline can leave an *unclosed*
+    ``<think>`` with no answer after it; that collapses to an empty string, which
+    the pipeline treats as a refusal -- the honest outcome when the model spent
+    its whole budget thinking and never answered.
+    """
+    if not text:
+        return text
+    text = _THINK_BLOCK_RE.sub("", text)  # drop every well-formed block
+    text = _THINK_OPEN_RE.sub("", text)   # ... then any dangling, unclosed one
+    return text.strip()
 
 
 class GenerationError(Exception):
@@ -88,7 +118,7 @@ class LlamaCppGenerator:
                     break
         except Exception as exc:  # llama_cpp raises a variety of runtime errors
             raise GenerationError(f"llamacpp generation failed: {exc}") from exc
-        return "".join(parts).strip(), {"completion_tokens": tokens, "truncated": truncated}
+        return strip_reasoning("".join(parts)), {"completion_tokens": tokens, "truncated": truncated}
 
 
 class OpenAICompatGenerator:
@@ -133,7 +163,9 @@ class OpenAICompatGenerator:
         except (KeyError, IndexError, TypeError) as exc:
             raise GenerationError(f"unexpected response shape: {exc}") from exc
         usage = data.get("usage") or {}
-        return (text or "").strip(), {
+        # Some servers put reasoning in a separate field and keep ``content``
+        # clean; others inline the <think> block. Stripping is safe either way.
+        return strip_reasoning(text or ""), {
             "completion_tokens": usage.get("completion_tokens"),
             "prompt_tokens": usage.get("prompt_tokens"),
             "truncated": False,

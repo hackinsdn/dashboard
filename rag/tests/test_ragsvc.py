@@ -21,7 +21,7 @@ from ragsvc.chunking import chunk_document, normalize_markdown, split_sections  
 from ragsvc.concurrency import GenerationGate, QueueFull  # noqa: E402
 from ragsvc.config import Settings  # noqa: E402
 from ragsvc.embeddings import HashingEmbedder  # noqa: E402
-from ragsvc.generate import GenerationError, NullGenerator  # noqa: E402
+from ragsvc.generate import GenerationError, NullGenerator, strip_reasoning  # noqa: E402
 from ragsvc.pipeline import Engine  # noqa: E402
 from ragsvc.prompts import NO_ANSWER, build_messages, normalize_locale  # noqa: E402
 from ragsvc.store import Store  # noqa: E402
@@ -327,6 +327,38 @@ class TestAnswerPipeline:
         assert stats["corpus"]["documents"] == 1
         assert stats["answers"]["answered"] == 1
         assert stats["gate"]["max_concurrency"] == 1
+
+
+# --- reasoning-model guard --------------------------------------------------
+class TestStripReasoning:
+    def test_well_formed_block_is_removed(self):
+        assert strip_reasoning("<think>let me see...</think>Press Extend [1].") == "Press Extend [1]."
+
+    def test_tag_is_case_insensitive_and_spans_newlines(self):
+        text = "<Think>\nstep 1\nstep 2\n</Think>\n\nFinal answer [1]"
+        assert strip_reasoning(text) == "Final answer [1]"
+
+    def test_variant_tag_names(self):
+        assert strip_reasoning("<reasoning>hmm</reasoning>A [1]") == "A [1]"
+        assert strip_reasoning("<thinking>hmm</thinking>A [1]") == "A [1]"
+
+    def test_multiple_blocks_are_all_removed(self):
+        assert strip_reasoning("<think>a</think>X [1] <think>b</think>Y") == "X [1] Y"
+
+    def test_unclosed_block_from_a_timeout_collapses_to_empty(self):
+        # the generation was cut off mid-thought and never produced an answer;
+        # empty -> the pipeline refuses, which is the honest outcome
+        assert strip_reasoning("<think>still reasoning when the clock ran out") == ""
+
+    def test_a_plain_answer_is_untouched(self):
+        assert strip_reasoning("Press the Extend button [1].") == "Press the Extend button [1]."
+
+    def test_empty_and_none_are_passed_through(self):
+        assert strip_reasoning("") == ""
+        assert strip_reasoning(None) is None
+
+    def test_an_unclosed_block_after_an_answer_only_trims_the_tail(self):
+        assert strip_reasoning("Answer [1]. <think>oops kept thinking") == "Answer [1]."
 
 
 # --- prompts ----------------------------------------------------------------
