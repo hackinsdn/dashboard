@@ -1,0 +1,20 @@
+# Ranges rather than exact pins on purpose: this file has never been resolved
+# on a build host yet. Pin the exact versions from `pip freeze` after the first
+# successful image build, matching the style of the dashboard's requirements.txt.
+
+# HTTP surface
+fastapi>=0.115,<1.0
+uvicorn>=0.30,<1.0
+pydantic>=2.7,<3.0
+
+# retrieval -- optional: ragsvc.store falls back to pure Python without it, which
+# is a few ms slower at this corpus size. Worth installing anyway.
+numpy>=1.26,<3.0
+
+# embeddings: a small multilingual model on CPU. Weights are NOT downloaded at
+# runtime (the container runs offline); see the Dockerfile.
+sentence-transformers>=3.0,<6.0
+
+# generation: quantized GGUF on CPU. Not needed when RAG_LLM_BACKEND is
+# openai_compat (accelerated deployments) or none.
+llama-cpp-python>=0.3,<0.4

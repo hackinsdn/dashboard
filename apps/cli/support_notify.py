@@ -18,6 +18,7 @@ from sqlalchemy import func
 
 from apps import db
 from apps.audit_mixin import utcnow
+from apps.controllers.support import escalation_snapshot
 from apps.home.models import SupportThreads, SupportMessages
 from apps.authentication.models import Users
 
@@ -58,6 +59,12 @@ def flush_support_emails(app):
         thread = db.session.get(SupportThreads, thread_id)
         if thread is None:
             continue
+        if (thread.mode or "support") != "support":
+            # An assistant conversation is not staff work until the user
+            # escalates it (which flips mode to "support"). Leave its messages
+            # un-stamped: if it is escalated later, the whole conversation is
+            # still reported in one e-mail.
+            continue
         pending = [
             m for m in thread.messages
             if m.sender == "user" and m.emailed_at is None
@@ -89,14 +96,26 @@ def flush_support_emails(app):
                 continue
 
         user = thread.user or db.session.get(Users, thread.user_id)
+        # A case handed over from the assistant carries the telemetry captured at
+        # the hand-over plus the assistant's last reply, so staff can triage it
+        # from the inbox without opening the dashboard.
+        escalation = escalation_snapshot(thread)
+        last_answer = next(
+            (m for m in reversed(thread.messages) if m.sender == "assistant"), None
+        ) if escalation else None
         try:
             msg = Message(
                 subject=f"HackInSDN - New support messages from {user.username if user else thread.user_id}",
                 sender=sender,
                 recipients=[recipient],
-                body=_plaintext(thread, user, pending),
+                body=_plaintext(thread, user, pending, escalation, last_answer),
                 html=render_template(
-                    "mail/support_message.html", user=user, thread=thread, messages=pending
+                    "mail/support_message.html",
+                    user=user,
+                    thread=thread,
+                    messages=pending,
+                    escalation=escalation,
+                    last_answer=last_answer,
                 ),
             )
             mail.send(msg)
@@ -117,7 +136,7 @@ def flush_support_emails(app):
     return sent
 
 
-def _plaintext(thread, user, messages):
+def _plaintext(thread, user, messages, escalation=None, last_answer=None):
     lines = []
     if user:
         lines.append(f"User: {user.name} ({user.username}, {user.email})")
@@ -128,6 +147,24 @@ def _plaintext(thread, user, messages):
         lines.append(f"IP: {thread.ip_address}")
     if thread.user_agent:
         lines.append(f"Browser: {thread.user_agent}")
+    if escalation:
+        lines.append("")
+        lines.append("-- Handed over from the assistant --")
+        if escalation.get("page"):
+            lines.append(f"Escalated from: {escalation['page']}")
+        if escalation.get("ip_address"):
+            lines.append(f"IP at escalation: {escalation['ip_address']}")
+        if escalation.get("user_agent"):
+            lines.append(f"Browser at escalation: {escalation['user_agent']}")
+        if escalation.get("locale"):
+            lines.append(f"Language: {escalation['locale']}")
+        lines.append(
+            f"Assistant: {escalation.get('questions_asked', 0)} question(s),"
+            f" {escalation.get('refusals', 0)} refusal(s),"
+            f" {escalation.get('negative_feedback', 0)} negative vote(s)"
+        )
+        if last_answer is not None:
+            lines.append(f"Last assistant reply: {last_answer.body}")
     lines.append("")
     for m in messages:
         stamp = m.created_at.isoformat() if m.created_at else ""

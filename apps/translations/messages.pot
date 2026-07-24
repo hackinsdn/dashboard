@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-07-23 06:11-0300\n"
+"POT-Creation-Date: 2026-07-23 08:59-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,273 +17,313 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-#: apps/api/routes.py:30
+#: apps/api/routes.py:31
 msgid "invalid auth token"
 msgstr ""
 
-#: apps/api/routes.py:33
+#: apps/api/routes.py:34
 msgid "Token not authorized"
 msgstr ""
 
-#: apps/api/routes.py:45 apps/api/routes.py:72 apps/api/routes.py:228
-#: apps/api/routes.py:252 apps/api/routes.py:706
+#: apps/api/routes.py:46 apps/api/routes.py:73 apps/api/routes.py:229
+#: apps/api/routes.py:253 apps/api/routes.py:707
 msgid "Lab instance not found"
 msgstr ""
 
-#: apps/api/routes.py:48 apps/api/routes.py:75 apps/api/routes.py:231
-#: apps/api/routes.py:255 apps/api/routes.py:477 apps/api/routes.py:709
+#: apps/api/routes.py:49 apps/api/routes.py:76 apps/api/routes.py:232
+#: apps/api/routes.py:256 apps/api/routes.py:478 apps/api/routes.py:710
 msgid "Unauthorized access to this lab"
 msgstr ""
 
-#: apps/api/routes.py:54 apps/api/routes.py:172
+#: apps/api/routes.py:55 apps/api/routes.py:173
 msgid "Failed to obtain resource statuses"
 msgstr ""
 
-#: apps/api/routes.py:81 apps/api/routes.py:155
+#: apps/api/routes.py:82 apps/api/routes.py:156
 msgid "Failed to delete resources"
 msgstr ""
 
-#: apps/api/routes.py:92 apps/api/routes.py:160
+#: apps/api/routes.py:93 apps/api/routes.py:161
 msgid "Resources removed successfully!"
 msgstr ""
 
-#: apps/api/routes.py:108 apps/api/routes.py:192 apps/api/routes.py:248
-#: apps/api/routes.py:307 apps/api/routes.py:373 apps/api/routes.py:534
+#: apps/api/routes.py:109 apps/api/routes.py:193 apps/api/routes.py:249
+#: apps/api/routes.py:308 apps/api/routes.py:374 apps/api/routes.py:535
 msgid "invalid content"
 msgstr ""
 
-#: apps/api/routes.py:123
+#: apps/api/routes.py:124
 msgid "Invalid labs to delete:"
 msgstr ""
 
-#: apps/api/routes.py:148 apps/api/routes.py:216
+#: apps/api/routes.py:149 apps/api/routes.py:217
 msgid "Failed to save updated data"
 msgstr ""
 
-#: apps/api/routes.py:207
+#: apps/api/routes.py:208
 msgid "Invalid users to approve:"
 msgstr ""
 
-#: apps/api/routes.py:218
+#: apps/api/routes.py:219
 msgid "all users approved"
 msgstr ""
 
-#: apps/api/routes.py:280 apps/api/routes.py:320
+#: apps/api/routes.py:281 apps/api/routes.py:321
 msgid "Answers saved successfully"
 msgstr ""
 
-#: apps/api/routes.py:286
+#: apps/api/routes.py:287
 msgid "User not authorized"
 msgstr ""
 
-#: apps/api/routes.py:290
+#: apps/api/routes.py:291
 msgid "Lab answers not found"
 msgstr ""
 
-#: apps/api/routes.py:303
+#: apps/api/routes.py:304
 msgid "Not authorized to save answers"
 msgstr ""
 
-#: apps/api/routes.py:313
+#: apps/api/routes.py:314
 #, python-format
 msgid "Invalid grade for question %(q)s"
 msgstr ""
 
-#: apps/api/routes.py:326 apps/api/routes.py:369 apps/api/routes.py:409
-#: apps/api/routes.py:446 apps/api/routes.py:469 apps/api/routes.py:504
-#: apps/api/routes.py:566 apps/api/routes.py:616 apps/clabs/routes.py:34
-#: apps/home/routes.py:330 apps/home/routes.py:505 apps/home/routes.py:875
-#: apps/home/routes.py:988 apps/home/routes.py:999 apps/home/routes.py:1006
+#: apps/api/routes.py:327 apps/api/routes.py:370 apps/api/routes.py:410
+#: apps/api/routes.py:447 apps/api/routes.py:470 apps/api/routes.py:505
+#: apps/api/routes.py:567 apps/api/routes.py:617 apps/clabs/routes.py:34
+#: apps/home/routes.py:331 apps/home/routes.py:506 apps/home/routes.py:902
+#: apps/home/routes.py:1015 apps/home/routes.py:1026 apps/home/routes.py:1033
 msgid "Unauthorized access"
 msgstr ""
 
-#: apps/api/routes.py:330
+#: apps/api/routes.py:331
 msgid "User not found"
 msgstr ""
 
-#: apps/api/routes.py:334
+#: apps/api/routes.py:335
 msgid "Failed to delete user: user has labs running"
 msgstr ""
 
-#: apps/api/routes.py:342
+#: apps/api/routes.py:343
 msgid "Failed to delete user"
 msgstr ""
 
-#: apps/api/routes.py:344
+#: apps/api/routes.py:345
 msgid "User deleted successfully"
 msgstr ""
 
-#: apps/api/routes.py:391
+#: apps/api/routes.py:392
 msgid "Invalid users to delete:"
 msgstr ""
 
-#: apps/api/routes.py:400
+#: apps/api/routes.py:401
 msgid "Failed to delete users"
 msgstr ""
 
-#: apps/api/routes.py:402
+#: apps/api/routes.py:403
 msgid "Users deleted successfully"
 msgstr ""
 
-#: apps/api/routes.py:413 apps/api/routes.py:538 apps/home/routes.py:143
-#: apps/home/routes.py:995 apps/home/routes.py:1331
+#: apps/api/routes.py:414 apps/api/routes.py:539 apps/home/routes.py:144
+#: apps/home/routes.py:1022 apps/home/routes.py:1358
 msgid "Group not found"
 msgstr ""
 
-#: apps/api/routes.py:416 apps/api/routes.py:541
+#: apps/api/routes.py:417 apps/api/routes.py:542
 msgid "Only admins can change System groups"
 msgstr ""
 
-#: apps/api/routes.py:419
+#: apps/api/routes.py:420
 msgid "Unauthorized access to this group"
 msgstr ""
 
-#: apps/api/routes.py:437
+#: apps/api/routes.py:438
 msgid "Failed to delete group"
 msgstr ""
 
-#: apps/api/routes.py:439
+#: apps/api/routes.py:440
 msgid "Group deleted successfully"
 msgstr ""
 
-#: apps/api/routes.py:450 apps/home/routes.py:871
+#: apps/api/routes.py:451 apps/home/routes.py:898
 msgid "Lab Category not found"
 msgstr ""
 
-#: apps/api/routes.py:453
+#: apps/api/routes.py:454
 #, python-format
 msgid "Cannot delete: Lab Category is still in use by %(n)s lab(s)"
 msgstr ""
 
-#: apps/api/routes.py:460
+#: apps/api/routes.py:461
 msgid "Failed to delete lab category"
 msgstr ""
 
-#: apps/api/routes.py:462
+#: apps/api/routes.py:463
 msgid "Lab Category deleted successfully"
 msgstr ""
 
-#: apps/api/routes.py:473 apps/api/routes.py:508 apps/api/routes.py:906
-#: apps/home/routes.py:221 apps/home/routes.py:295 apps/home/routes.py:308
-#: apps/home/routes.py:387 apps/home/routes.py:472 apps/home/routes.py:501
-#: apps/home/routes.py:703 apps/home/routes.py:709 apps/home/routes.py:1544
-#: apps/home/routes.py:1557 apps/home/routes.py:1700
+#: apps/api/routes.py:474 apps/api/routes.py:509 apps/api/routes.py:1109
+#: apps/home/routes.py:222 apps/home/routes.py:296 apps/home/routes.py:309
+#: apps/home/routes.py:388 apps/home/routes.py:473 apps/home/routes.py:502
+#: apps/home/routes.py:704 apps/home/routes.py:710 apps/home/routes.py:1571
+#: apps/home/routes.py:1584 apps/home/routes.py:1727
 msgid "Lab not found"
 msgstr ""
 
-#: apps/api/routes.py:481
+#: apps/api/routes.py:482
 #, python-format
 msgid "Cannot delete: Lab has %(n)s running instance(s)"
 msgstr ""
 
-#: apps/api/routes.py:488
+#: apps/api/routes.py:489
 msgid "Failed to delete lab"
 msgstr ""
 
-#: apps/api/routes.py:497
+#: apps/api/routes.py:498
 msgid "Lab deleted successfully"
 msgstr ""
 
-#: apps/api/routes.py:515
+#: apps/api/routes.py:516
 msgid "Failed to restore lab"
 msgstr ""
 
-#: apps/api/routes.py:526
+#: apps/api/routes.py:527
 msgid "Lab restored successfully"
 msgstr ""
 
-#: apps/api/routes.py:544
+#: apps/api/routes.py:545
 msgid "Invalid group access token"
 msgstr ""
 
-#: apps/api/routes.py:547
+#: apps/api/routes.py:548
 msgid "Already member of group"
 msgstr ""
 
-#: apps/api/routes.py:555
+#: apps/api/routes.py:556
 msgid "Failed to join group"
 msgstr ""
 
-#: apps/api/routes.py:560
+#: apps/api/routes.py:561
 msgid ""
 "Joint group successfully! Click on 'Reload profile' to update your "
 "authorization."
 msgstr ""
 
-#: apps/api/routes.py:570 apps/api/routes.py:577
+#: apps/api/routes.py:571 apps/api/routes.py:578
 msgid "Invalid or Unauthorized access to lab"
 msgstr ""
 
-#: apps/api/routes.py:581
+#: apps/api/routes.py:582
 msgid "Invalid or Unauthorized access to lab answer"
 msgstr ""
 
-#: apps/api/routes.py:585 apps/home/routes.py:1221
+#: apps/api/routes.py:586 apps/home/routes.py:1248
 msgid "No Lab Answer Sheet available. Please create the Answer Sheet first."
 msgstr ""
 
-#: apps/api/routes.py:632
+#: apps/api/routes.py:633
 msgid "Stars/Rating mandatory"
 msgstr ""
 
-#: apps/api/routes.py:647
+#: apps/api/routes.py:648
 msgid "Failed to save user feedback"
 msgstr ""
 
-#: apps/api/routes.py:663
+#: apps/api/routes.py:664
 msgid "Feedback given successfully"
 msgstr ""
 
-#: apps/api/routes.py:681
+#: apps/api/routes.py:682
 msgid "Failed to add user like"
 msgstr ""
 
-#: apps/api/routes.py:694
+#: apps/api/routes.py:695
 msgid "Failed to delete user like"
 msgstr ""
 
-#: apps/api/routes.py:713
+#: apps/api/routes.py:714
 msgid "Invalid content"
 msgstr ""
 
-#: apps/api/routes.py:717
+#: apps/api/routes.py:718
 msgid "Invalid extend hours"
 msgstr ""
 
-#: apps/api/routes.py:730
+#: apps/api/routes.py:731
 msgid "Failed updating lab duration, please contact the administrator."
 msgstr ""
 
-#: apps/api/routes.py:758
+#: apps/api/routes.py:759
 msgid "Failed to list templates"
 msgstr ""
 
-#: apps/api/routes.py:795 apps/api/routes.py:892
+#: apps/api/routes.py:796 apps/api/routes.py:897 apps/api/routes.py:988
 msgid "message body is required"
 msgstr ""
 
-#: apps/api/routes.py:802 apps/api/routes.py:840 apps/api/routes.py:871
-#: apps/api/routes.py:887
+#: apps/api/routes.py:803 apps/api/routes.py:845 apps/api/routes.py:876
+#: apps/api/routes.py:892 apps/api/routes.py:975 apps/api/routes.py:979
+#: apps/api/routes.py:1043 apps/api/routes.py:1047
 msgid "Thread not found"
 msgstr ""
 
-#: apps/api/routes.py:843 apps/api/routes.py:867 apps/api/routes.py:883
-#: apps/api/routes.py:903 apps/api/routes.py:908 apps/home/routes.py:1546
-#: apps/home/routes.py:1559 apps/home/routes.py:1665 apps/home/routes.py:1702
-#: apps/templates/pages/users.html:51
+#: apps/api/routes.py:848 apps/api/routes.py:872 apps/api/routes.py:888
+#: apps/api/routes.py:1095 apps/api/routes.py:1106 apps/api/routes.py:1111
+#: apps/home/routes.py:1573 apps/home/routes.py:1586 apps/home/routes.py:1692
+#: apps/home/routes.py:1729 apps/templates/pages/users.html:51
 msgid "Unauthorized"
 msgstr ""
 
-#: apps/api/routes.py:920 apps/api/routes.py:941 apps/api/routes.py:960
+#: apps/api/routes.py:942
+msgid "invalid mode"
+msgstr ""
+
+#: apps/api/routes.py:944 apps/templates/includes/chatbot.html:203
+msgid "The assistant is unavailable right now."
+msgstr ""
+
+#: apps/api/routes.py:950 apps/api/routes.py:982 apps/api/routes.py:1050
+#: apps/templates/includes/chatbot.html:401
+msgid "This conversation has been finished."
+msgstr ""
+
+#: apps/api/routes.py:968
+msgid "The assistant is not enabled."
+msgstr ""
+
+#: apps/api/routes.py:984
+msgid "This conversation is handled by the support team."
+msgstr ""
+
+#: apps/api/routes.py:993
+msgid ""
+"You have reached the limit of assistant questions. Please wait a few "
+"minutes, or open a support case."
+msgstr ""
+
+#: apps/api/routes.py:1073 apps/api/routes.py:1076
+msgid "Message not found"
+msgstr ""
+
+#: apps/api/routes.py:1078
+msgid "Only assistant answers can be rated."
+msgstr ""
+
+#: apps/api/routes.py:1083
+msgid "invalid vote"
+msgstr ""
+
+#: apps/api/routes.py:1123 apps/api/routes.py:1144 apps/api/routes.py:1163
 #, python-format
 msgid "Unknown field, tracked fields: %(fields)s"
 msgstr ""
 
-#: apps/api/routes.py:945 apps/api/routes.py:963
+#: apps/api/routes.py:1148 apps/api/routes.py:1166
 msgid "Version not found"
 msgstr ""
 
-#: apps/api/routes.py:965
+#: apps/api/routes.py:1168
 #, python-format
 msgid "Version v%(v)s deleted"
 msgstr ""
@@ -447,11 +487,11 @@ msgstr ""
 msgid "ContainerLab not found"
 msgstr ""
 
-#: apps/clabs/routes.py:35 apps/home/routes.py:506
+#: apps/clabs/routes.py:35 apps/home/routes.py:507
 msgid "You don't have permission to edit this Lab."
 msgstr ""
 
-#: apps/clabs/routes.py:42 apps/home/routes.py:513 apps/home/routes.py:713
+#: apps/clabs/routes.py:42 apps/home/routes.py:514 apps/home/routes.py:714
 msgid "No Lab Categories found. Please create a Lab Category first."
 msgstr ""
 
@@ -468,238 +508,263 @@ msgstr ""
 msgid "Too many files: %(n)s (max %(max)s)"
 msgstr ""
 
-#: apps/home/routes.py:143
+#: apps/controllers/support.py:227
+msgid ""
+"I could not find an answer to that in the HackInSDN documentation. I only"
+" answer from the documentation, so I would rather say nothing than guess."
+" Would you like to talk to a human?"
+msgstr ""
+
+#: apps/controllers/support.py:236
+msgid ""
+"I am answering someone else right now. Please try again in a moment, or "
+"open a support case and our team will help you."
+msgstr ""
+
+#: apps/controllers/support.py:241
+msgid ""
+"That took me too long to answer. Please try again, or open a support case"
+" and our team will help you."
+msgstr ""
+
+#: apps/controllers/support.py:245
+msgid ""
+"The assistant is unavailable right now. Please open a support case and "
+"our team will help you."
+msgstr ""
+
+#: apps/home/routes.py:144
 msgid "Error getting running labs"
 msgstr ""
 
-#: apps/home/routes.py:221 apps/home/routes.py:285
+#: apps/home/routes.py:222 apps/home/routes.py:286
 msgid "Error Running Labs"
 msgstr ""
 
-#: apps/home/routes.py:243
+#: apps/home/routes.py:244
 msgid "Invalid lab duration/expiration, please choose one of the values provided."
 msgstr ""
 
-#: apps/home/routes.py:295 apps/home/routes.py:298 apps/home/routes.py:308
-#: apps/home/routes.py:310
+#: apps/home/routes.py:296 apps/home/routes.py:299 apps/home/routes.py:309
+#: apps/home/routes.py:311
 msgid "Error checking lab status"
 msgstr ""
 
-#: apps/home/routes.py:298 apps/home/routes.py:310
+#: apps/home/routes.py:299 apps/home/routes.py:311
 msgid "You are not authorized to run this lab"
 msgstr ""
 
-#: apps/home/routes.py:330
+#: apps/home/routes.py:331
 msgid "You dont have access for this page"
 msgstr ""
 
-#: apps/home/routes.py:334
+#: apps/home/routes.py:335
 msgid "Invalid user"
 msgstr ""
 
-#: apps/home/routes.py:334
+#: apps/home/routes.py:335
 msgid "User not found or deactivated on the database"
 msgstr ""
 
-#: apps/home/routes.py:340
+#: apps/home/routes.py:341
 msgid ""
 "Invalid username. Max size: 30. Allowed characters: a-z, A-Z, 0-9, _, . "
 "or -"
 msgstr ""
 
-#: apps/home/routes.py:358
+#: apps/home/routes.py:359
 msgid "No changes applied."
 msgstr ""
 
-#: apps/home/routes.py:387 apps/home/routes.py:389 apps/home/routes.py:393
-#: apps/home/routes.py:401 apps/home/routes.py:472 apps/home/routes.py:475
+#: apps/home/routes.py:388 apps/home/routes.py:390 apps/home/routes.py:394
+#: apps/home/routes.py:402 apps/home/routes.py:473 apps/home/routes.py:476
 msgid "Error accessing Lab Instance"
 msgstr ""
 
-#: apps/home/routes.py:389
+#: apps/home/routes.py:390
 msgid "Lab finished"
 msgstr ""
 
-#: apps/home/routes.py:393
+#: apps/home/routes.py:394
 msgid "Lab instance belongs to an unknown Lab."
 msgstr ""
 
-#: apps/home/routes.py:401 apps/home/routes.py:475
+#: apps/home/routes.py:402 apps/home/routes.py:476
 msgid "Not authorized to access this Lab"
 msgstr ""
 
-#: apps/home/routes.py:419
+#: apps/home/routes.py:420
 msgid "Failed to get Lab Resources"
 msgstr ""
 
-#: apps/home/routes.py:420
+#: apps/home/routes.py:421
 msgid ""
 "No resource found for Lab Instance. Try again later and if the error "
 "persists, please contact the administrator."
 msgstr ""
 
-#: apps/home/routes.py:482
+#: apps/home/routes.py:483
 msgid "Error removing Lab Instance"
 msgstr ""
 
-#: apps/home/routes.py:482
+#: apps/home/routes.py:483
 msgid "Error removing Lab instance, please contact the administrator"
 msgstr ""
 
-#: apps/home/routes.py:582
+#: apps/home/routes.py:583
 msgid "Invalid display order: must be an integer number."
 msgstr ""
 
-#: apps/home/routes.py:681
+#: apps/home/routes.py:682
 #, python-format
 msgid ""
 "Lab data files were saved on disk, but their Kubernetes ConfigMaps could "
 "not be synced (%(detail)s). They will be retried on the next save."
 msgstr ""
 
-#: apps/home/routes.py:692
+#: apps/home/routes.py:693
 msgid "Lab saved."
 msgstr ""
 
-#: apps/home/routes.py:810 apps/home/routes.py:833 apps/home/routes.py:871
-#: apps/home/routes.py:1688
+#: apps/home/routes.py:811 apps/home/routes.py:860 apps/home/routes.py:898
+#: apps/home/routes.py:1715
 msgid "Not found"
 msgstr ""
 
-#: apps/home/routes.py:810 apps/home/routes.py:833
+#: apps/home/routes.py:811 apps/home/routes.py:860
 msgid "Support thread not found"
 msgstr ""
 
-#: apps/home/routes.py:876
+#: apps/home/routes.py:903
 msgid ""
 "You don't have permission to edit this Lab Category (only its creator or "
 "an admin can)."
 msgstr ""
 
-#: apps/home/routes.py:885
+#: apps/home/routes.py:912
 msgid "Category name is required."
 msgstr ""
 
-#: apps/home/routes.py:887
+#: apps/home/routes.py:914
 msgid "Invalid color selected."
 msgstr ""
 
-#: apps/home/routes.py:898
+#: apps/home/routes.py:925
 msgid "Failed to save Lab Category."
 msgstr ""
 
-#: apps/home/routes.py:903
+#: apps/home/routes.py:930
 msgid "Lab Category updated successfully"
 msgstr ""
 
-#: apps/home/routes.py:914
+#: apps/home/routes.py:941
 msgid "No Lab Categories"
 msgstr ""
 
-#: apps/home/routes.py:914
+#: apps/home/routes.py:941
 msgid "No lab categories found. Please create a Lab Category first."
 msgstr ""
 
-#: apps/home/routes.py:989 apps/home/routes.py:1000
+#: apps/home/routes.py:1016 apps/home/routes.py:1027
 msgid "You don't have permission to edit this group."
 msgstr ""
 
-#: apps/home/routes.py:1007
+#: apps/home/routes.py:1034
 msgid "Only admins can create/change System groups."
 msgstr ""
 
-#: apps/home/routes.py:1031
+#: apps/home/routes.py:1058
 msgid "Invalid expiration date, please use the format YYYY-MM-DD."
 msgstr ""
 
-#: apps/home/routes.py:1142
+#: apps/home/routes.py:1169
 msgid "No changes were made to the group."
 msgstr ""
 
-#: apps/home/routes.py:1158
+#: apps/home/routes.py:1185
 msgid "Failed to update group."
 msgstr ""
 
-#: apps/home/routes.py:1171
+#: apps/home/routes.py:1198
 msgid "Group updated successfully"
 msgstr ""
 
-#: apps/home/routes.py:1204
+#: apps/home/routes.py:1231
 msgid "Invalid Lab provided for filtering."
 msgstr ""
 
-#: apps/home/routes.py:1209
+#: apps/home/routes.py:1236
 msgid "Invalid Group provided for filtering."
 msgstr ""
 
-#: apps/home/routes.py:1216
+#: apps/home/routes.py:1243
 msgid "To check with the Answer Sheet you must provide a Lab (Filter by Lab)."
 msgstr ""
 
-#: apps/home/routes.py:1263
+#: apps/home/routes.py:1290
 msgid "Invalid Lab provided. Please choose the Lab."
 msgstr ""
 
-#: apps/home/routes.py:1291
+#: apps/home/routes.py:1318
 msgid "Failed to update lab answers sheet."
 msgstr ""
 
-#: apps/home/routes.py:1297
+#: apps/home/routes.py:1324
 msgid "Lab answer sheet saved!"
 msgstr ""
 
-#: apps/home/routes.py:1331
+#: apps/home/routes.py:1358
 msgid "Error getting finished labs"
 msgstr ""
 
-#: apps/home/routes.py:1460 apps/home/routes.py:1614
+#: apps/home/routes.py:1487 apps/home/routes.py:1641
 msgid "No file part in the request"
 msgstr ""
 
-#: apps/home/routes.py:1464 apps/home/routes.py:1617
+#: apps/home/routes.py:1491 apps/home/routes.py:1644
 msgid "No file selected"
 msgstr ""
 
-#: apps/home/routes.py:1479 apps/home/routes.py:1631
+#: apps/home/routes.py:1506 apps/home/routes.py:1658
 #, python-format
 msgid "File extension not allowed. Allowed: %(exts)s"
 msgstr ""
 
-#: apps/home/routes.py:1488
+#: apps/home/routes.py:1515
 #, python-format
 msgid "File exceeds maximum allowed size (%(size)sMB)"
 msgstr ""
 
-#: apps/home/routes.py:1502 apps/home/routes.py:1649
+#: apps/home/routes.py:1529 apps/home/routes.py:1676
 msgid "Failed to save file on server"
 msgstr ""
 
-#: apps/home/routes.py:1563
+#: apps/home/routes.py:1590
 msgid "No uploads found"
 msgstr ""
 
-#: apps/home/routes.py:1570
+#: apps/home/routes.py:1597
 msgid "File not found in uploads list"
 msgstr ""
 
-#: apps/home/routes.py:1598 apps/home/routes.py:1726
+#: apps/home/routes.py:1625 apps/home/routes.py:1753
 msgid "Failed to update metadata"
 msgstr ""
 
-#: apps/home/routes.py:1611
+#: apps/home/routes.py:1638
 msgid "Invalid or missing lab id"
 msgstr ""
 
-#: apps/home/routes.py:1636
+#: apps/home/routes.py:1663
 #, python-format
 msgid "File is too large to expose as a ConfigMap (max %(size)s KiB once encoded)"
 msgstr ""
 
-#: apps/home/routes.py:1697
+#: apps/home/routes.py:1724
 msgid "Invalid lab id"
 msgstr ""
 
-#: apps/home/routes.py:1708
+#: apps/home/routes.py:1735
 msgid "File not found in lab data list"
 msgstr ""
 
@@ -735,82 +800,167 @@ msgstr ""
 msgid "Removed %(n)s retired key file(s)"
 msgstr ""
 
-#: apps/templates/includes/chatbot.html:77
-#: apps/templates/includes/chatbot.html:81
+#: apps/templates/includes/assistant_message_meta.html:10
+#: apps/templates/includes/chatbot.html:242
+msgid "Sources:"
+msgstr ""
+
+#: apps/templates/includes/assistant_message_meta.html:25
+msgid "Helpful"
+msgstr ""
+
+#: apps/templates/includes/assistant_message_meta.html:28
+msgid "Not helpful"
+msgstr ""
+
+#: apps/templates/includes/assistant_message_meta.html:32
+msgid "Refused"
+msgstr ""
+
+#: apps/templates/includes/assistant_message_meta.html:34
+msgid "Assistant unavailable"
+msgstr ""
+
+#: apps/templates/includes/chatbot.html:126
+#: apps/templates/includes/chatbot.html:130
 msgid "Support chat"
 msgstr ""
 
-#: apps/templates/includes/chatbot.html:77
+#: apps/templates/includes/chatbot.html:126
 msgid "Open support chat"
 msgstr ""
 
-#: apps/templates/includes/chatbot.html:83
+#: apps/templates/includes/chatbot.html:132
+#: apps/templates/includes/chatbot.html:202
 #: apps/templates/includes/sidebar.html:134
-#: apps/templates/pages/my_support_thread_view.html:68
-#: apps/templates/pages/my_support_thread_view.html:130
+#: apps/templates/pages/my_support_thread_view.html:71
+#: apps/templates/pages/my_support_thread_view.html:136
 #: apps/templates/pages/support_thread_view.html:30
-#: apps/templates/pages/support_thread_view.html:86
-#: apps/templates/pages/support_thread_view.html:156
+#: apps/templates/pages/support_thread_view.html:113
+#: apps/templates/pages/support_thread_view.html:186
 #: apps/templates/pages/support_threads.html:3
 #: apps/templates/pages/support_threads.html:30
 msgid "Support"
 msgstr ""
 
-#: apps/templates/includes/chatbot.html:84
+#: apps/templates/includes/chatbot.html:133
 msgid "Minimize"
 msgstr ""
 
-#: apps/templates/includes/chatbot.html:84
+#: apps/templates/includes/chatbot.html:133
 msgid "Minimize chat"
 msgstr ""
 
-#: apps/templates/includes/chatbot.html:89
+#: apps/templates/includes/chatbot.html:139
+msgid "How can we help?"
+msgstr ""
+
+#: apps/templates/includes/chatbot.html:141
+msgid "Open a support case"
+msgstr ""
+
+#: apps/templates/includes/chatbot.html:142
+msgid "Our team answers you here."
+msgstr ""
+
+#: apps/templates/includes/chatbot.html:145
+msgid "Ask a question"
+msgstr ""
+
+#: apps/templates/includes/chatbot.html:146
+msgid "Answered from the documentation, right away."
+msgstr ""
+
+#: apps/templates/includes/chatbot.html:149
 msgid "Send a message and our team will get back to you."
 msgstr ""
 
-#: apps/templates/includes/chatbot.html:93
+#: apps/templates/includes/chatbot.html:153
+msgid "Talk to a human"
+msgstr ""
+
+#: apps/templates/includes/chatbot.html:156
 msgid "See all your support cases"
 msgstr ""
 
-#: apps/templates/includes/chatbot.html:94
+#: apps/templates/includes/chatbot.html:157
 msgid "See all cases"
 msgstr ""
 
-#: apps/templates/includes/chatbot.html:96
+#: apps/templates/includes/chatbot.html:159
 msgid "Finish this conversation"
 msgstr ""
 
-#: apps/templates/includes/chatbot.html:97
-#: apps/templates/pages/support_thread_view.html:54
+#: apps/templates/includes/chatbot.html:160
+#: apps/templates/pages/support_thread_view.html:60
 msgid "Finish conversation"
 msgstr ""
 
-#: apps/templates/includes/chatbot.html:99
+#: apps/templates/includes/chatbot.html:162
 msgid "Start a new conversation"
 msgstr ""
 
-#: apps/templates/includes/chatbot.html:100
+#: apps/templates/includes/chatbot.html:163
 msgid "Start new conversation"
 msgstr ""
 
-#: apps/templates/includes/chatbot.html:104
+#: apps/templates/includes/chatbot.html:167
 msgid "Type your message ... (Shift+Enter for a new line)"
 msgstr ""
 
-#: apps/templates/includes/chatbot.html:104
+#: apps/templates/includes/chatbot.html:167
 msgid "Message"
 msgstr ""
 
-#: apps/templates/includes/chatbot.html:105
-#: apps/templates/pages/support_thread_view.html:100
+#: apps/templates/includes/chatbot.html:168
+#: apps/templates/pages/support_thread_view.html:130
 msgid "Send"
 msgstr ""
 
-#: apps/templates/includes/chatbot.html:183
-msgid "This conversation has been finished."
+#: apps/templates/includes/chatbot.html:202
+#: apps/templates/includes/sidebar.html:145
+#: apps/templates/pages/assistant_panel.html:3
+#: apps/templates/pages/assistant_panel.html:18
+#: apps/templates/pages/assistant_panel.html:22
+#: apps/templates/pages/my_support_thread_view.html:49
+#: apps/templates/pages/my_support_thread_view.html:71
+#: apps/templates/pages/my_support_thread_view.html:136
+#: apps/templates/pages/support_thread_view.html:51
+#: apps/templates/pages/support_thread_view.html:113
+#: apps/templates/pages/support_thread_view.html:186
+msgid "Assistant"
+msgstr ""
+
+#: apps/templates/includes/chatbot.html:205
+msgid "Wrong answer"
+msgstr ""
+
+#: apps/templates/includes/chatbot.html:206
+msgid "Not what I asked"
+msgstr ""
+
+#: apps/templates/includes/chatbot.html:207
+msgid "Incomplete"
+msgstr ""
+
+#: apps/templates/includes/chatbot.html:208
+msgid "Hard to understand"
+msgstr ""
+
+#: apps/templates/includes/chatbot.html:302
+msgid "This was helpful"
+msgstr ""
+
+#: apps/templates/includes/chatbot.html:303
+msgid "This was not helpful"
+msgstr ""
+
+#: apps/templates/includes/chatbot.html:368
+msgid "Looking it up"
 msgstr ""
 
 #: apps/templates/includes/navigation.html:10
+#: apps/templates/pages/assistant_panel.html:21
 #: apps/templates/pages/clabs_upsert.html:84
 #: apps/templates/pages/contact.html:33 apps/templates/pages/edit_user.html:47
 #: apps/templates/pages/error.html:32 apps/templates/pages/feedback_view.html:3
@@ -860,6 +1010,7 @@ msgid "Support cases"
 msgstr ""
 
 #: apps/templates/includes/navigation.html:49
+#: apps/templates/pages/assistant_panel.html:149
 #: apps/templates/pages/my_support_thread_view.html:29
 #: apps/templates/pages/my_support_threads.html:44
 msgid "Case"
@@ -975,7 +1126,7 @@ msgstr ""
 msgid "Users"
 msgstr ""
 
-#: apps/templates/includes/sidebar.html:146
+#: apps/templates/includes/sidebar.html:154
 #: apps/templates/pages/lab_categories_edit.html:48
 #: apps/templates/pages/lab_categories_list.html:3
 #: apps/templates/pages/lab_categories_list.html:29
@@ -984,35 +1135,35 @@ msgstr ""
 msgid "Lab Categories"
 msgstr ""
 
-#: apps/templates/includes/sidebar.html:166
+#: apps/templates/includes/sidebar.html:174
 msgid "New"
 msgstr ""
 
-#: apps/templates/includes/sidebar.html:173 apps/templates/pages/index.html:175
+#: apps/templates/includes/sidebar.html:181 apps/templates/pages/index.html:175
 #: apps/templates/pages/k8s_pod_list.html:39
 msgid "Pods"
 msgstr ""
 
-#: apps/templates/includes/sidebar.html:179
+#: apps/templates/includes/sidebar.html:187
 #: apps/templates/pages/k8s_dep_list.html:39
 msgid "Deployments"
 msgstr ""
 
-#: apps/templates/includes/sidebar.html:185
+#: apps/templates/includes/sidebar.html:193
 #: apps/templates/pages/k8s_srv_list.html:39
 #: apps/templates/pages/lab_instance_view.html:129
 msgid "Services"
 msgstr ""
 
-#: apps/templates/includes/sidebar.html:191
+#: apps/templates/includes/sidebar.html:199
 msgid "MORE INFO"
 msgstr ""
 
-#: apps/templates/includes/sidebar.html:196
+#: apps/templates/includes/sidebar.html:204
 msgid "Documentation"
 msgstr ""
 
-#: apps/templates/includes/sidebar.html:204
+#: apps/templates/includes/sidebar.html:212
 msgid "Extra tools"
 msgstr ""
 
@@ -1048,6 +1199,120 @@ msgstr ""
 #: apps/templates/pages/lti_management.html:332
 #: apps/templates/pages/running.html:251 apps/templates/pages/users.html:258
 msgid "Failure"
+msgstr ""
+
+#: apps/templates/pages/assistant_panel.html:35
+msgid "The assistant is disabled (RAG_ENABLED is off)."
+msgstr ""
+
+#: apps/templates/pages/assistant_panel.html:37
+msgid "The assistant service is unreachable."
+msgstr ""
+
+#: apps/templates/pages/assistant_panel.html:45
+#, python-format
+msgid ""
+"The circuit breaker is open after %(n)s consecutive failures: the widget "
+"is not offering the assistant right now."
+msgstr ""
+
+#: apps/templates/pages/assistant_panel.html:57
+msgid "Refusal rate"
+msgstr ""
+
+#: apps/templates/pages/assistant_panel.html:61
+#, python-format
+msgid "%(refused)s of %(total)s answers, last %(days)s days"
+msgstr ""
+
+#: apps/templates/pages/assistant_panel.html:70
+msgid "Negative feedback"
+msgstr ""
+
+#: apps/templates/pages/assistant_panel.html:74
+#, python-format
+msgid "%(down)s down / %(up)s up"
+msgstr ""
+
+#: apps/templates/pages/assistant_panel.html:82
+msgid "Indexed chunks"
+msgstr ""
+
+#: apps/templates/pages/assistant_panel.html:86
+#, python-format
+msgid "%(docs)s document(s), index v%(v)s"
+msgstr ""
+
+#: apps/templates/pages/assistant_panel.html:96
+msgid "Answer latency (p95)"
+msgstr ""
+
+#: apps/templates/pages/assistant_panel.html:101
+#, python-format
+msgid "cache hit ratio %(r)s"
+msgstr ""
+
+#: apps/templates/pages/assistant_panel.html:111
+msgid "Service"
+msgstr ""
+
+#: apps/templates/pages/assistant_panel.html:116
+msgid "Generation backend"
+msgstr ""
+
+#: apps/templates/pages/assistant_panel.html:117
+msgid "Embeddings"
+msgstr ""
+
+#: apps/templates/pages/assistant_panel.html:120
+msgid "Concurrency"
+msgstr ""
+
+#: apps/templates/pages/assistant_panel.html:120
+msgid "slot(s)"
+msgstr ""
+
+#: apps/templates/pages/assistant_panel.html:120
+msgid "queued"
+msgstr ""
+
+#: apps/templates/pages/assistant_panel.html:121
+msgid "Rejected (queue full)"
+msgstr ""
+
+#: apps/templates/pages/assistant_panel.html:124
+msgid "Answered / refused / unavailable"
+msgstr ""
+
+#: apps/templates/pages/assistant_panel.html:128
+msgid "top_k / min_score"
+msgstr ""
+
+#: apps/templates/pages/assistant_panel.html:130
+msgid "Query logging"
+msgstr ""
+
+#: apps/templates/pages/assistant_panel.html:140
+msgid "Recent negative feedback"
+msgstr ""
+
+#: apps/templates/pages/assistant_panel.html:147
+#: apps/templates/pages/lab_answers_sheet.html:97
+msgid "Question"
+msgstr ""
+
+#: apps/templates/pages/assistant_panel.html:148
+msgid "Reason"
+msgstr ""
+
+#: apps/templates/pages/assistant_panel.html:166
+msgid "No negative feedback in this window."
+msgstr ""
+
+#: apps/templates/pages/assistant_panel.html:170
+msgid ""
+"These questions are the seed of a regression set: replay them after "
+"changing the model, the prompt or the chunking."
 msgstr ""
 
 #: apps/templates/pages/clabs_upsert.html:66
@@ -1477,9 +1742,9 @@ msgstr ""
 #: apps/templates/pages/finished_labs.html:89
 #: apps/templates/pages/lab_answers_list.html:112
 #: apps/templates/pages/running.html:96
-#: apps/templates/pages/support_thread_view.html:69
-#: apps/templates/pages/support_thread_view.html:78
-#: apps/templates/pages/support_thread_view.html:124
+#: apps/templates/pages/support_thread_view.html:96
+#: apps/templates/pages/support_thread_view.html:105
+#: apps/templates/pages/support_thread_view.html:154
 #: apps/templates/pages/support_threads.html:59
 msgid "User"
 msgstr ""
@@ -2377,10 +2642,6 @@ msgstr ""
 msgid "Choose the Lab:"
 msgstr ""
 
-#: apps/templates/pages/lab_answers_sheet.html:97
-msgid "Question"
-msgstr ""
-
 #: apps/templates/pages/lab_answers_sheet.html:98
 msgid "Expected Answer (regex)"
 msgstr ""
@@ -3260,7 +3521,7 @@ msgstr ""
 #: apps/templates/pages/my_support_threads.html:61
 #: apps/templates/pages/support_thread_view.html:46
 #: apps/templates/pages/support_threads.html:72
-#: apps/templates/pages/support_threads.html:87
+#: apps/templates/pages/support_threads.html:90
 msgid "Open"
 msgstr ""
 
@@ -3271,25 +3532,18 @@ msgstr ""
 msgid "Finished"
 msgstr ""
 
-#: apps/templates/pages/my_support_thread_view.html:60
-#: apps/templates/pages/my_support_thread_view.html:130
+#: apps/templates/pages/my_support_thread_view.html:63
+#: apps/templates/pages/my_support_thread_view.html:136
 msgid "You"
 msgstr ""
 
-#: apps/templates/pages/my_support_thread_view.html:68
-#: apps/templates/pages/my_support_thread_view.html:130
-#: apps/templates/pages/support_thread_view.html:86
-#: apps/templates/pages/support_thread_view.html:156
-msgid "Assistant"
-msgstr ""
-
-#: apps/templates/pages/my_support_thread_view.html:79
+#: apps/templates/pages/my_support_thread_view.html:85
 msgid ""
 "Use the chat button at the bottom-right of any page to continue this "
 "conversation."
 msgstr ""
 
-#: apps/templates/pages/my_support_thread_view.html:81
+#: apps/templates/pages/my_support_thread_view.html:87
 msgid ""
 "This conversation is finished. Start a new one from the chat button at "
 "the bottom-right."
@@ -3556,27 +3810,52 @@ msgstr ""
 msgid "Thread"
 msgstr ""
 
-#: apps/templates/pages/support_thread_view.html:61
+#: apps/templates/pages/support_thread_view.html:53
+msgid "Escalated"
+msgstr ""
+
+#: apps/templates/pages/support_thread_view.html:67
 msgid "Started from:"
 msgstr ""
 
-#: apps/templates/pages/support_thread_view.html:62
+#: apps/templates/pages/support_thread_view.html:68
+#: apps/templates/pages/support_thread_view.html:80
 msgid "IP:"
 msgstr ""
 
-#: apps/templates/pages/support_thread_view.html:63
+#: apps/templates/pages/support_thread_view.html:69
+#: apps/templates/pages/support_thread_view.html:81
 msgid "Browser:"
 msgstr ""
 
-#: apps/templates/pages/support_thread_view.html:98
+#: apps/templates/pages/support_thread_view.html:78
+msgid "Handed over from the assistant"
+msgstr ""
+
+#: apps/templates/pages/support_thread_view.html:79
+msgid "Escalated from:"
+msgstr ""
+
+#: apps/templates/pages/support_thread_view.html:83
+#, python-format
+msgid ""
+"%(questions)s question(s), %(refusals)s refusal(s), %(negative)s negative"
+" vote(s)"
+msgstr ""
+
+#: apps/templates/pages/support_thread_view.html:88
+msgid "the assistant was unavailable"
+msgstr ""
+
+#: apps/templates/pages/support_thread_view.html:128
 msgid "Type your reply ..."
 msgstr ""
 
-#: apps/templates/pages/support_thread_view.html:174
+#: apps/templates/pages/support_thread_view.html:204
 msgid "Finish this conversation?"
 msgstr ""
 
-#: apps/templates/pages/support_thread_view.html:196
+#: apps/templates/pages/support_thread_view.html:226
 msgid "Failed to send reply"
 msgstr ""
 
@@ -3604,7 +3883,7 @@ msgstr ""
 msgid "Unread"
 msgstr ""
 
-#: apps/templates/pages/support_threads.html:116
+#: apps/templates/pages/support_threads.html:119
 msgid "No open conversations or unread messages"
 msgstr ""
 

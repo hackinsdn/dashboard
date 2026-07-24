@@ -47,6 +47,13 @@ jobs:
             --cov-report=term-missing \
             --cov-report=xml
 
+      - name: Run hisdn-rag service tests
+        # The assistant service lives in rag/ with its own (optional) heavy
+        # dependencies; its retrieval/grounding logic is dependency-free on
+        # purpose, so it runs here with nothing but pytest. The HTTP-layer
+        # tests skip themselves when FastAPI is not installed.
+        run: python -m pytest rag/tests -q
+
       - name: Coverage summary
         if: ${{ always() }}
         run: |

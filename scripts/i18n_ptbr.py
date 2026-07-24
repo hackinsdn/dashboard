@@ -572,6 +572,96 @@ TRANSLATIONS = {
     "Type your message ... (Shift+Enter for a new line)": "Digite sua mensagem ... (Shift+Enter para nova linha)",
     "Message": "Mensagem",
     "This conversation has been finished.": "Esta conversa foi encerrada.",
+    # --- RAG assistant: chooser, answers, feedback, escalation ---
+    "How can we help?": "Como podemos ajudar?",
+    "Open a support case": "Abrir um caso de suporte",
+    "Our team answers you here.": "Nossa equipe responde por aqui.",
+    "Ask a question": "Tirar uma dúvida",
+    "Answered from the documentation, right away.": "Respondida na hora, a partir da documentação.",
+    "Talk to a human": "Falar com uma pessoa",
+    "Looking it up": "Consultando a documentação",
+    "Sources:": "Fontes:",
+    "This was helpful": "Isto ajudou",
+    "This was not helpful": "Isto não ajudou",
+    "Wrong answer": "Resposta errada",
+    "Not what I asked": "Não é o que perguntei",
+    "Incomplete": "Incompleta",
+    "Hard to understand": "Difícil de entender",
+    "Helpful": "Útil",
+    "Not helpful": "Não útil",
+    "Refused": "Recusada",
+    "Assistant unavailable": "Assistente indisponível",
+    "Escalated": "Encaminhada",
+    "Handed over from the assistant": "Encaminhada pelo assistente",
+    "Escalated from:": "Encaminhada a partir de:",
+    "%(questions)s question(s), %(refusals)s refusal(s), %(negative)s negative vote(s)":
+        "%(questions)s pergunta(s), %(refusals)s recusa(s), %(negative)s voto(s) negativo(s)",
+    "the assistant was unavailable": "o assistente estava indisponível",
+    "I could not find an answer to that in the HackInSDN documentation. "
+    "I only answer from the documentation, so I would rather say nothing than guess. "
+    "Would you like to talk to a human?":
+        "Não encontrei essa resposta na documentação do HackInSDN. Eu respondo apenas com "
+        "base na documentação, então prefiro não responder a arriscar um palpite. "
+        "Quer falar com uma pessoa?",
+    "I am answering someone else right now. Please try again in a moment, "
+    "or open a support case and our team will help you.":
+        "Estou respondendo outra pessoa neste momento. Tente novamente em instantes ou "
+        "abra um caso de suporte para que nossa equipe possa ajudar.",
+    "That took me too long to answer. Please try again, or open a support case "
+    "and our team will help you.":
+        "Demorei demais para responder. Tente novamente ou abra um caso de suporte para "
+        "que nossa equipe possa ajudar.",
+    "The assistant is unavailable right now. Please open a support case and "
+    "our team will help you.":
+        "O assistente está indisponível no momento. Abra um caso de suporte para que "
+        "nossa equipe possa ajudar.",
+    "The assistant is unavailable right now.": "O assistente está indisponível no momento.",
+    "The assistant is not enabled.": "O assistente não está habilitado.",
+    "This conversation is handled by the support team.":
+        "Esta conversa está sendo atendida pela equipe de suporte.",
+    "You have reached the limit of assistant questions. Please wait a few minutes, "
+    "or open a support case.":
+        "Você atingiu o limite de perguntas ao assistente. Aguarde alguns minutos ou "
+        "abra um caso de suporte.",
+    "Only assistant answers can be rated.":
+        "Somente respostas do assistente podem ser avaliadas.",
+    "Message not found": "Mensagem não encontrada",
+    "invalid mode": "modo inválido",
+    "invalid vote": "voto inválido",
+    # --- admin assistant panel ---
+    "The assistant is disabled (RAG_ENABLED is off).":
+        "O assistente está desabilitado (RAG_ENABLED está desligado).",
+    "The assistant service is unreachable.": "O serviço do assistente está inacessível.",
+    "The circuit breaker is open after %(n)s consecutive failures: the widget is not "
+    "offering the assistant right now.":
+        "O disjuntor abriu após %(n)s falhas consecutivas: o chat não está oferecendo o "
+        "assistente no momento.",
+    "Refusal rate": "Taxa de recusa",
+    "%(refused)s of %(total)s answers, last %(days)s days":
+        "%(refused)s de %(total)s respostas, últimos %(days)s dias",
+    "Negative feedback": "Avaliações negativas",
+    "%(down)s down / %(up)s up": "%(down)s negativas / %(up)s positivas",
+    "Indexed chunks": "Trechos indexados",
+    "%(docs)s document(s), index v%(v)s": "%(docs)s documento(s), índice v%(v)s",
+    "Answer latency (p95)": "Latência de resposta (p95)",
+    "cache hit ratio %(r)s": "taxa de acerto do cache %(r)s",
+    "Service": "Serviço",
+    "Generation backend": "Backend de geração",
+    "Embeddings": "Embeddings",
+    "Concurrency": "Concorrência",
+    "slot(s)": "vaga(s)",
+    "queued": "na fila",
+    "Rejected (queue full)": "Rejeitadas (fila cheia)",
+    "Answered / refused / unavailable": "Respondidas / recusadas / indisponíveis",
+    "top_k / min_score": "top_k / min_score",
+    "Query logging": "Registro de consultas",
+    "Recent negative feedback": "Avaliações negativas recentes",
+    "Reason": "Motivo",
+    "No negative feedback in this window.": "Nenhuma avaliação negativa neste período.",
+    "These questions are the seed of a regression set: replay them after changing the "
+    "model, the prompt or the chunking.":
+        "Estas perguntas são a semente de um conjunto de regressão: repita-as após mudar "
+        "o modelo, o prompt ou a divisão em trechos.",
     # --- labs_edit ---
     "Create/Update Lab": "Criar/Atualizar Lab",
     "Lab created/updated successfully!": "Lab criado/atualizado com sucesso!",

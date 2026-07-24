@@ -47,6 +47,12 @@
                 {% else %}
                   <span class="badge badge-secondary ml-2" id="threadStatusBadge">{{ _('Finished') }}</span>
                 {% endif %}
+                {% if thread.mode == "assistant" %}
+                  <span class="badge badge-info ml-1"><i class="fas fa-robot mr-1"></i>{{ _('Assistant') }}</span>
+                {% elif escalation %}
+                  <span class="badge badge-warning ml-1"><i class="fas fa-user-friends mr-1"></i>{{ _('Escalated') }}</span>
+                {% endif %}
+                {% if thread.locale %}<span class="badge badge-light ml-1">{{ thread.locale }}</span>{% endif %}
               </h3>
               <div class="card-tools">
                 <button type="button" id="finishBtn" class="btn btn-sm btn-outline-danger"
@@ -61,6 +67,27 @@
                 {% if thread.origin_page %}<div><i class="fas fa-location-arrow mr-1"></i> {{ _('Started from:') }} {{ thread.origin_page }}</div>{% endif %}
                 {% if thread.ip_address %}<div><i class="fas fa-network-wired mr-1"></i> {{ _('IP:') }} {{ thread.ip_address }}</div>{% endif %}
                 {% if thread.user_agent %}<div><i class="fas fa-desktop mr-1"></i> {{ _('Browser:') }} {{ thread.user_agent }}</div>{% endif %}
+              </small>
+            </div>
+            {% endif %}
+            {% if escalation %}
+            {# Captured when the user pressed "Talk to a human": the page they
+               were stuck on may be far from where the conversation started. #}
+            <div class="card-body py-2 border-bottom" style="background-color:#fff8e1;">
+              <small class="text-muted">
+                <div><strong><i class="fas fa-user-friends mr-1"></i> {{ _('Handed over from the assistant') }}</strong></div>
+                {% if escalation.page %}<div><i class="fas fa-location-arrow mr-1"></i> {{ _('Escalated from:') }} {{ escalation.page }}</div>{% endif %}
+                {% if escalation.ip_address %}<div><i class="fas fa-network-wired mr-1"></i> {{ _('IP:') }} {{ escalation.ip_address }}</div>{% endif %}
+                {% if escalation.user_agent %}<div><i class="fas fa-desktop mr-1"></i> {{ _('Browser:') }} {{ escalation.user_agent }}</div>{% endif %}
+                <div><i class="fas fa-robot mr-1"></i>
+                  {{ _('%(questions)s question(s), %(refusals)s refusal(s), %(negative)s negative vote(s)',
+                       questions=escalation.questions_asked or 0,
+                       refusals=escalation.refusals or 0,
+                       negative=escalation.negative_feedback or 0) }}
+                  {% if not escalation.assistant_available %}
+                    &mdash; <span class="text-danger">{{ _('the assistant was unavailable') }}</span>
+                  {% endif %}
+                </div>
               </small>
             </div>
             {% endif %}
@@ -87,6 +114,9 @@
                       <span class="direct-chat-timestamp float-left" data-ts="{{ message.created_at.isoformat() if message.created_at else '' }}"></span>
                     </div>
                     <div class="direct-chat-text">{{ message.body }}</div>
+                    {% if message.sender == "assistant" %}
+                      {% include "includes/assistant_message_meta.html" %}
+                    {% endif %}
                   </div>
                   {% endif %}
                 {% endfor %}

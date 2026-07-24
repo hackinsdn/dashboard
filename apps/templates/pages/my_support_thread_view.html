@@ -45,6 +45,9 @@
                 {% else %}
                   <span class="badge badge-secondary ml-2">{{ _('Finished') }}</span>
                 {% endif %}
+                {% if thread.mode == "assistant" %}
+                  <span class="badge badge-info ml-1"><i class="fas fa-robot mr-1"></i>{{ _('Assistant') }}</span>
+                {% endif %}
               </h3>
             </div>
             <div class="card-body">
@@ -69,6 +72,9 @@
                       <span class="direct-chat-timestamp float-right" data-ts="{{ message.created_at.isoformat() if message.created_at else '' }}"></span>
                     </div>
                     <div class="direct-chat-text">{{ message.body }}</div>
+                    {% if message.sender == "assistant" %}
+                      {% include "includes/assistant_message_meta.html" %}
+                    {% endif %}
                   </div>
                   {% endif %}
                 {% endfor %}

@@ -53,6 +53,7 @@
   .hisdn-chat-msg--support { justify-content: flex-start; }
   .hisdn-chat-msg--support .hisdn-chat-bubblewrap { align-items: flex-start; }
   .hisdn-chat-msg--support .bubble { background-color: #e9ecef; color: #1f1f1f; border-bottom-left-radius: 2px; }
+  .hisdn-chat-msg--assistant .bubble { background-color: #eef4ff; color: #1f1f1f; }
   .hisdn-chat-footer { border-top: 1px solid #e3e6ea; background: #fff; }
   .hisdn-chat-inputrow { display: flex; align-items: flex-end; padding: 8px; }
   .hisdn-chat-inputrow textarea {
@@ -72,6 +73,54 @@
   }
   .hisdn-chat-actions a:hover { color: #007bff; text-decoration: underline; }
   .hisdn-chat-actions button:hover { color: #dc3545; text-decoration: underline; }
+
+  /* --- mode chooser: the first thing a new conversation shows --- */
+  .hisdn-chat-chooser { padding: 4px 2px; }
+  .hisdn-chat-chooser p { font-size: .85em; color: #495057; margin: 4px 2px 10px; }
+  .hisdn-chat-choice {
+    display: block; width: 100%; text-align: left; margin-bottom: 8px;
+    border: 1px solid #ced4da; background: #fff; border-radius: 6px;
+    padding: 10px 12px; cursor: pointer; font-size: .85em; color: #1f1f1f;
+  }
+  .hisdn-chat-choice:hover { border-color: #007bff; background: #f8fbff; }
+  .hisdn-chat-choice .lead { display: block; font-weight: 600; margin-bottom: 2px; }
+  .hisdn-chat-choice .hint { display: block; color: #6c757d; font-size: .92em; }
+
+  /* --- assistant extras: citations, feedback, typing, escalation --- */
+  .hisdn-chat-sources { margin-top: 4px; font-size: .72rem; color: #6c757d; }
+  .hisdn-chat-sources .lbl { display: block; margin-bottom: 1px; }
+  .hisdn-chat-sources a, .hisdn-chat-sources span.src { display: block; color: #4a6fa5; text-decoration: none; }
+  .hisdn-chat-sources a:hover { text-decoration: underline; }
+  .hisdn-chat-fb { margin-top: 3px; display: flex; gap: 6px; align-items: center; }
+  .hisdn-chat-fb button {
+    background: transparent; border: none; cursor: pointer; color: #adb5bd;
+    font-size: .8rem; padding: 0 2px;
+  }
+  .hisdn-chat-fb button:hover { color: #6c757d; }
+  .hisdn-chat-fb button.on { color: #007bff; }
+  .hisdn-chat-fb button.down.on { color: #dc3545; }
+  .hisdn-chat-reasons { margin-top: 4px; display: flex; flex-wrap: wrap; gap: 4px; }
+  .hisdn-chat-reasons button {
+    border: 1px solid #ced4da; background: #fff; border-radius: 10px;
+    font-size: .68rem; padding: 1px 7px; color: #495057; cursor: pointer;
+  }
+  .hisdn-chat-reasons button:hover { border-color: #dc3545; color: #dc3545; }
+  .hisdn-chat-typing { display: flex; margin-bottom: 10px; }
+  .hisdn-chat-typing .bubble {
+    background-color: #eef4ff; border-radius: 12px; border-bottom-left-radius: 2px;
+    padding: 8px 12px; font-size: .8em; color: #6c757d;
+  }
+  .hisdn-chat-typing .dot { animation: hisdnBlink 1.2s infinite; }
+  .hisdn-chat-typing .dot:nth-child(2) { animation-delay: .2s; }
+  .hisdn-chat-typing .dot:nth-child(3) { animation-delay: .4s; }
+  @keyframes hisdnBlink { 0%, 60%, 100% { opacity: .25; } 30% { opacity: 1; } }
+  #hisdn-chat-human {
+    display: none; margin: 6px 10px 4px; width: calc(100% - 20px);
+    border: 1px solid #ced4da; background: #fff; color: #495057;
+    border-radius: 4px; padding: 5px 8px; font-size: .78em; cursor: pointer;
+  }
+  #hisdn-chat-human:hover { border-color: #007bff; color: #007bff; }
+  #hisdn-chat-human.urge { border-color: #007bff; background: #007bff; color: #fff; font-weight: 600; }
 </style>
 
 <button id="hisdn-chat-fab" type="button" title="{{ _('Support chat') }}" aria-label="{{ _('Open support chat') }}">
@@ -80,15 +129,29 @@
 
 <div id="hisdn-chat-panel" role="dialog" aria-label="{{ _('Support chat') }}">
   <div class="hisdn-chat-header">
-    <span class="title"><i class="fas fa-comments mr-1"></i> {{ _('Support') }}</span>
+    <span class="title"><i class="fas fa-comments mr-1"></i> <span id="hisdn-chat-title">{{ _('Support') }}</span></span>
     <button id="hisdn-chat-min" type="button" title="{{ _('Minimize') }}" aria-label="{{ _('Minimize chat') }}">
       <i class="fas fa-minus"></i>
     </button>
   </div>
   <div class="hisdn-chat-body" id="hisdn-chat-body">
+    <div class="hisdn-chat-chooser" id="hisdn-chat-chooser" style="display:none;">
+      <p>{{ _('How can we help?') }}</p>
+      <button type="button" class="hisdn-chat-choice" data-mode="support">
+        <span class="lead"><i class="fas fa-life-ring mr-1"></i> {{ _('Open a support case') }}</span>
+        <span class="hint">{{ _('Our team answers you here.') }}</span>
+      </button>
+      <button type="button" class="hisdn-chat-choice" data-mode="assistant">
+        <span class="lead"><i class="fas fa-robot mr-1"></i> {{ _('Ask a question') }}</span>
+        <span class="hint">{{ _('Answered from the documentation, right away.') }}</span>
+      </button>
+    </div>
     <div class="hisdn-chat-empty" id="hisdn-chat-empty">{{ _('Send a message and our team will get back to you.') }}</div>
   </div>
   <div class="hisdn-chat-footer">
+    <button id="hisdn-chat-human" type="button">
+      <i class="fas fa-user-friends mr-1"></i> {{ _('Talk to a human') }}
+    </button>
     <div class="hisdn-chat-actions">
       <a href="{{ url_for('home_blueprint.list_my_support_threads') }}" title="{{ _('See all your support cases') }}">
         <i class="fas fa-list-ul"></i> {{ _('See all cases') }}
@@ -114,17 +177,36 @@
   var minBtn = document.getElementById('hisdn-chat-min');
   var body = document.getElementById('hisdn-chat-body');
   var emptyState = document.getElementById('hisdn-chat-empty');
+  var chooser = document.getElementById('hisdn-chat-chooser');
   var form = document.getElementById('hisdn-chat-form');
   var input = document.getElementById('hisdn-chat-input');
   var sendBtn = document.getElementById('hisdn-chat-send');
   var finishBtn = document.getElementById('hisdn-chat-finish');
   var newConvBtn = document.getElementById('hisdn-chat-newconv');
+  var humanBtn = document.getElementById('hisdn-chat-human');
+  var titleEl = document.getElementById('hisdn-chat-title');
 
   var pollTimer = null;
   var lastMessageId = 0;
   var currentThreadId = null;
   var locked = false;
   var DEFAULT_PLACEHOLDER = input.getAttribute('placeholder');
+
+  // Assistant state. `mode` stays null until the user picks one (or an existing
+  // conversation tells us which it is).
+  var mode = null;
+  var assistantAvailable = false;
+  var feedbackEnabled = true;
+  var awaitingAnswer = false;
+
+  var TITLES = { support: '{{ _("Support") }}', assistant: '{{ _("Assistant") }}' };
+  var UNAVAILABLE_TEXT = '{{ _("The assistant is unavailable right now.") }}';
+  var DOWN_REASONS = [
+    { code: 'wrong', label: '{{ _("Wrong answer") }}' },
+    { code: 'unrelated', label: '{{ _("Not what I asked") }}' },
+    { code: 'incomplete', label: '{{ _("Incomplete") }}' },
+    { code: 'unclear', label: '{{ _("Hard to understand") }}' }
+  ];
 
   function scrollBottom() { body.scrollTop = body.scrollHeight; }
 
@@ -139,20 +221,116 @@
     return sameDay ? time : (pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear() + ' ' + time);
   }
 
+  function currentPage() {
+    return window.location.pathname + (document.title ? (' — ' + document.title) : '');
+  }
+
+  // Citations come from our own corpus, but a link is a link: only same-origin
+  // paths and http(s) URLs are ever turned into anchors.
+  function safeHref(url) {
+    if (!url) { return null; }
+    if (url.charAt(0) === '/') { return url; }
+    return /^https?:\/\//i.test(url) ? url : null;
+  }
+
+  function renderSources(wrap, sources) {
+    if (!sources || !sources.length) { return; }
+    var box = document.createElement('div');
+    box.className = 'hisdn-chat-sources';
+    var label = document.createElement('span');
+    label.className = 'lbl';
+    label.textContent = '{{ _("Sources:") }}';
+    box.appendChild(label);
+    sources.forEach(function (src) {
+      var text = '[' + (src.index || '') + '] ' + (src.title || src.doc_id || '');
+      var href = safeHref(src.url);
+      var node;
+      if (href) {
+        node = document.createElement('a');
+        node.setAttribute('href', href);
+        node.setAttribute('target', '_blank');
+        node.setAttribute('rel', 'noopener noreferrer');
+      } else {
+        node = document.createElement('span');
+        node.className = 'src';
+      }
+      node.textContent = text;
+      box.appendChild(node);
+    });
+    wrap.appendChild(box);
+  }
+
+  function sendFeedback(messageId, vote, reason, done) {
+    fetch('/api/support/messages/' + messageId + '/feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ vote: vote, reason: reason || '' })
+    }).then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) { if (done) { done(data ? data.feedback : null); } })
+      .catch(function () { /* a lost vote is not worth an error dialog */ });
+  }
+
+  function renderFeedback(wrap, msg) {
+    // No stored message (RAG_STORE_TRANSCRIPTS=False) means there is nothing to
+    // attach a vote to, so we do not offer one.
+    if (!feedbackEnabled || !msg.id) { return; }
+    var box = document.createElement('div');
+    box.className = 'hisdn-chat-fb';
+    var reasons = document.createElement('div');
+    reasons.className = 'hisdn-chat-reasons';
+    reasons.style.display = 'none';
+
+    function makeBtn(vote, icon, title) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.title = title;
+      btn.className = (vote === 'down' ? 'down' : '') + (msg.feedback === vote ? ' on' : '');
+      btn.innerHTML = '<i class="' + icon + '"></i>';
+      btn.addEventListener('click', function () {
+        sendFeedback(msg.id, vote, null, function (stored) {
+          box.querySelectorAll('button').forEach(function (b) { b.classList.remove('on'); });
+          if (stored) { btn.classList.add('on'); }
+          reasons.style.display = (stored === 'down') ? 'flex' : 'none';
+          // A bad answer and a refusal are the same problem for the user.
+          if (stored === 'down') { urgeHuman(); }
+        });
+      });
+      return btn;
+    }
+
+    box.appendChild(makeBtn('up', 'far fa-thumbs-up', '{{ _("This was helpful") }}'));
+    box.appendChild(makeBtn('down', 'far fa-thumbs-down', '{{ _("This was not helpful") }}'));
+    wrap.appendChild(box);
+
+    DOWN_REASONS.forEach(function (reason) {
+      var chip = document.createElement('button');
+      chip.type = 'button';
+      chip.textContent = reason.label;
+      chip.addEventListener('click', function () {
+        sendFeedback(msg.id, 'down', reason.code, function () { reasons.style.display = 'none'; });
+      });
+      reasons.appendChild(chip);
+    });
+    wrap.appendChild(reasons);
+  }
+
   function renderMessage(msg) {
     if (msg.sender === 'system') {
       var sys = document.createElement('div');
       sys.className = 'hisdn-chat-system';
-      sys.setAttribute('data-id', msg.id);
+      if (msg.id) { sys.setAttribute('data-id', msg.id); }
       sys.textContent = msg.body;
       body.appendChild(sys);
       if (msg.id && msg.id > lastMessageId) { lastMessageId = msg.id; }
       return;
     }
     var isUser = msg.sender === 'user';
+    var isAssistant = msg.sender === 'assistant';
     var row = document.createElement('div');
-    row.className = 'hisdn-chat-msg ' + (isUser ? 'hisdn-chat-msg--user' : 'hisdn-chat-msg--support');
-    row.setAttribute('data-id', msg.id);
+    row.className = 'hisdn-chat-msg ' + (isUser ? 'hisdn-chat-msg--user' : 'hisdn-chat-msg--support')
+      + (isAssistant ? ' hisdn-chat-msg--assistant' : '');
+    if (msg.id) { row.setAttribute('data-id', msg.id); }
     var wrap = document.createElement('div');
     wrap.className = 'hisdn-chat-bubblewrap';
     var bubble = document.createElement('div');
@@ -163,6 +341,10 @@
     time.className = 'hisdn-chat-time';
     time.textContent = formatTime(msg.created_at);
     wrap.appendChild(time);
+    if (isAssistant) {
+      renderSources(wrap, msg.sources);
+      renderFeedback(wrap, msg);
+    }
     row.appendChild(wrap);
     body.appendChild(row);
     if (msg.id && msg.id > lastMessageId) { lastMessageId = msg.id; }
@@ -176,12 +358,49 @@
 
   function showEmpty(show) { emptyState.style.display = show ? 'block' : 'none'; }
 
+  function showTyping(show) {
+    var existing = document.getElementById('hisdn-chat-typing');
+    if (existing) { existing.remove(); }
+    if (!show) { return; }
+    var node = document.createElement('div');
+    node.className = 'hisdn-chat-typing';
+    node.id = 'hisdn-chat-typing';
+    node.innerHTML = '<div class="bubble">{{ _("Looking it up") }} '
+      + '<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span></div>';
+    body.appendChild(node);
+    scrollBottom();
+  }
+
+  function urgeHuman() {
+    humanBtn.style.display = 'block';
+    humanBtn.classList.add('urge');
+  }
+
+  function applyMode(next) {
+    mode = next;
+    titleEl.textContent = TITLES[next] || TITLES.support;
+    form.style.display = '';
+    chooser.style.display = 'none';
+    humanBtn.style.display = (next === 'assistant') ? 'block' : 'none';
+    humanBtn.classList.remove('urge');
+  }
+
+  function offerChoice() {
+    mode = null;
+    chooser.style.display = 'block';
+    // Choosing is the first step; the input appears once a mode is picked.
+    form.style.display = 'none';
+    humanBtn.style.display = 'none';
+    showEmpty(false);
+  }
+
   function lockWidget() {
     locked = true;
     input.disabled = true;
     sendBtn.disabled = true;
     input.placeholder = '{{ _("This conversation has been finished.") }}';
     finishBtn.style.display = 'none';
+    humanBtn.style.display = 'none';
     newConvBtn.style.display = '';
   }
   function unlockWidget() {
@@ -194,15 +413,23 @@
   }
   function startNewConversation() {
     currentThreadId = null;
+    awaitingAnswer = false;
+    showTyping(false);
     clearMessages();
     unlockWidget();
-    showEmpty(true);
-    input.focus();
+    if (assistantAvailable) {
+      offerChoice();
+    } else {
+      applyMode('support');
+      showEmpty(true);
+      input.focus();
+    }
   }
 
   // Render any messages from a thread object that are not already shown.
   function renderThread(thread) {
     if (!thread) { return; }
+    if (thread.mode && thread.mode !== mode) { applyMode(thread.mode); }
     var existing = {};
     body.querySelectorAll('[data-id]').forEach(function (n) {
       existing[n.getAttribute('data-id')] = true;
@@ -226,7 +453,10 @@
             currentThreadId = data.thread.id;
             renderThread(data.thread);
           } else if (!body.querySelector('[data-id]')) {
-            showEmpty(true);
+            if (mode === null) {
+              if (assistantAvailable) { offerChoice(); } else { applyMode('support'); }
+            }
+            showEmpty(mode !== null);
           }
         })
         .catch(function () { /* ignore transient errors */ });
@@ -239,12 +469,29 @@
       .catch(function () { /* ignore transient errors */ });
   }
 
+  // Poll fast while an answer is pending, slowly the rest of the time.
   function startPolling() {
     stopPolling();
-    pollTimer = setInterval(syncThread, 30000);
+    pollTimer = setInterval(syncThread, awaitingAnswer ? 3000 : 30000);
   }
   function stopPolling() {
     if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+  }
+  function setAwaiting(value) {
+    if (awaitingAnswer === value) { return; }
+    awaitingAnswer = value;
+    if (pollTimer) { startPolling(); }
+  }
+
+  function loadAssistantStatus() {
+    return fetch('/api/support/assistant/status', { credentials: 'same-origin' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        if (!data) { return; }
+        assistantAvailable = !!(data.enabled && data.available);
+        feedbackEnabled = data.feedback !== false;
+      })
+      .catch(function () { assistantAvailable = false; });
   }
 
   // Persist the open/minimized state so the widget survives page navigation.
@@ -277,9 +524,12 @@
     fab.style.display = 'none';
     placeWidget();
     saveOpen(true);
-    syncThread();
-    startPolling();
-    if (!locked) { input.focus(); }
+    // The chooser depends on whether the assistant is up, so ask first.
+    loadAssistantStatus().then(function () {
+      syncThread();
+      startPolling();
+      if (!locked && mode !== null) { input.focus(); }
+    });
   }
   function minimizePanel() {
     panel.classList.remove('open');
@@ -297,6 +547,26 @@
 
   fab.addEventListener('click', openPanel);
   minBtn.addEventListener('click', minimizePanel);
+
+  chooser.querySelectorAll('.hisdn-chat-choice').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var picked = btn.getAttribute('data-mode');
+      applyMode(picked);
+      showEmpty(!body.querySelector('[data-id]'));
+      input.focus();
+      // An existing conversation is switched server-side; one that does not
+      // exist yet carries the mode on its first message, so picking a mode
+      // never creates an empty support case.
+      if (currentThreadId != null) {
+        fetch('/api/support/thread/mode', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ mode: picked })
+        }).catch(function () { /* the first message carries the mode anyway */ });
+      }
+    });
+  });
 
   // Auto-grow the textarea up to its CSS max-height.
   function autoGrow() {
@@ -321,19 +591,58 @@
     }
   });
 
+  // Ask the assistant to answer the message we just stored. A separate request
+  // on purpose: generation takes seconds on a CPU-only host, and the user's
+  // message must survive a failure here.
+  function requestAnswer() {
+    setAwaiting(true);
+    showTyping(true);
+    sendBtn.disabled = true;
+    fetch('/api/support/assistant/answer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ thread_id: currentThreadId })
+    }).then(function (r) {
+      return r.json().then(function (data) { return { status: r.status, data: data }; });
+    }).then(function (res) {
+      showTyping(false);
+      if (res.status === 201) {
+        (res.data.messages || []).forEach(renderMessage);
+        // A refusal or an outage is the moment to offer a person.
+        if (res.data.status && res.data.status !== 'answered') { urgeHuman(); }
+      } else if (res.status === 409 && res.data && res.data.finished) {
+        syncThread();
+        lockWidget();
+      } else {
+        // Rate limited, disabled, or the request failed: say so, offer a human.
+        renderMessage({ sender: 'system', body: (res.data && res.data.error) || UNAVAILABLE_TEXT });
+        urgeHuman();
+      }
+      scrollBottom();
+    }).catch(function () {
+      showTyping(false);
+      renderMessage({ sender: 'system', body: UNAVAILABLE_TEXT });
+      urgeHuman();
+    }).finally(function () {
+      setAwaiting(false);
+      if (!locked) { sendBtn.disabled = false; input.focus(); }
+    });
+  }
+
   form.addEventListener('submit', function (event) {
     event.preventDefault();
-    if (locked) { return; }
+    if (locked || mode === null) { return; }
     var text = input.value.trim();
     if (!text) { return; }
     sendBtn.disabled = true;
     showEmpty(false);
-    var page = window.location.pathname + (document.title ? (' — ' + document.title) : '');
+    humanBtn.classList.remove('urge');
     fetch('/api/support/thread/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'same-origin',
-      body: JSON.stringify({ body: text, page: page, thread_id: currentThreadId })
+      body: JSON.stringify({ body: text, page: currentPage(), thread_id: currentThreadId, mode: mode })
     }).then(function (r) {
       return r.json().then(function (data) { return { status: r.status, data: data }; });
     }).then(function (res) {
@@ -342,6 +651,7 @@
         (res.data.messages || []).forEach(renderMessage);
         scrollBottom();
         resetInput();
+        if (mode === 'assistant') { requestAnswer(); }
       } else if (res.status === 409 && res.data && res.data.finished) {
         // The conversation was finished (e.g. by an admin) — lock the widget
         // and pull the closing message so the user sees why.
@@ -354,8 +664,24 @@
     }).catch(function () {
       input.value = text;
     }).finally(function () {
-      if (!locked) { sendBtn.disabled = false; input.focus(); }
+      if (!locked && !awaitingAnswer) { sendBtn.disabled = false; input.focus(); }
     });
+  });
+
+  humanBtn.addEventListener('click', function () {
+    fetch('/api/support/thread/escalate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ thread_id: currentThreadId, page: currentPage() })
+    }).then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        if (!data) { return; }
+        applyMode('support');
+        (data.messages || []).forEach(renderMessage);
+        scrollBottom();
+      })
+      .catch(function () { /* ignore */ });
   });
 
   finishBtn.addEventListener('click', function () {

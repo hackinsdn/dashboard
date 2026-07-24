@@ -322,6 +322,12 @@ class SupportThreads(db.Model, AuditMixin):
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     status = db.Column(db.String(16), nullable=False, default="open")  # open | finished
     finished_at = db.Column(db.DateTime, nullable=True)
+    # Who answers this conversation: "support" (human staff, the default and the
+    # only value before the RAG assistant) or "assistant" (local LLM + RAG).
+    # An assistant thread becomes "support" when the user escalates it.
+    mode = db.Column(db.String(16), nullable=False, default="support", server_default="support")
+    # Locale the conversation runs in; tells staff which language to answer in
+    locale = db.Column(db.String(8), nullable=True)
     # Telemetry captured when the conversation starts
     origin_page = db.Column(db.String, nullable=True)
     user_agent = db.Column(db.String, nullable=True)
@@ -361,6 +367,8 @@ class SupportThreads(db.Model, AuditMixin):
             "user_id": self.user_id,
             "user": self.user.name if self.user else None,
             "status": self.status,
+            "mode": self.mode or "support",
+            "locale": self.locale,
             "unread_count": self.unread_count,
             "origin_page": self.origin_page,
             "user_agent": self.user_agent,
@@ -386,6 +394,33 @@ class SupportMessages(db.Model, AuditMixin):
     # null = not yet included in a batch e-mail; also stamped without sending when
     # the thread was finished after staff already saw the message in-app
     emailed_at = db.Column(db.DateTime, nullable=True)
+    # JSON blob, read back whole with the message: assistant citations and
+    # diagnostics, or the telemetry snapshot on a "system" escalation message.
+    meta = db.Column(db.Text, nullable=True)
+    # Feedback on an assistant answer. Dedicated columns rather than keys in
+    # ``meta`` because this is the one part that gets aggregated in SQL.
+    feedback = db.Column(db.String(8), nullable=True)  # up | down
+    feedback_reason = db.Column(db.String(255), nullable=True)
+    feedback_at = db.Column(db.DateTime, nullable=True)
+
+    @property
+    def meta_dict(self):
+        """``meta`` decoded; {} when unset or corrupt (never raises to a view)."""
+        if not self.meta:
+            return {}
+        try:
+            data = json.loads(self.meta)
+        except (ValueError, TypeError):
+            return {}
+        return data if isinstance(data, dict) else {}
+
+    def set_meta(self, data):
+        self.meta = json.dumps(data) if data else None
+
+    @property
+    def sources(self):
+        """Citations attached to an assistant answer."""
+        return self.meta_dict.get("sources") or []
 
     def as_dict(self):
         return {
@@ -393,6 +428,8 @@ class SupportMessages(db.Model, AuditMixin):
             "thread_id": self.thread_id,
             "sender": self.sender,
             "body": self.body,
+            "sources": self.sources,
+            "feedback": self.feedback,
             "created_at": f"{self.created_at.isoformat()}Z" if self.created_at else None,
         }
 

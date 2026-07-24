@@ -73,6 +73,9 @@
                     {% else %}
                       <span class="badge badge-secondary">{{ _('Finished') }}</span>
                     {% endif %}
+                    {% if thread.mode == "assistant" %}
+                      <span class="badge badge-info"><i class="fas fa-robot"></i></span>
+                    {% endif %}
                   </td>
                   <td>
                     {% if thread.unread_count %}
