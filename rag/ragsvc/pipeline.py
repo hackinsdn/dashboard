@@ -40,7 +40,9 @@ class Engine:
         self.embedder = embedder or build_embedder(settings)
         self.generator = generator or build_generator(settings)
         self.gate = gate or GenerationGate(
-            max_concurrency=settings.max_concurrency, queue_max=settings.queue_max
+            max_concurrency=settings.max_concurrency,
+            queue_max=settings.queue_max,
+            wait_timeout_s=settings.queue_wait_s,
         )
         self.answer_cache = TTLCache(
             max_entries=settings.cache_max_entries, ttl_s=settings.cache_ttl_s

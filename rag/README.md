@@ -70,6 +70,7 @@ DGX Spark (or any GPU host running vLLM/Ollama/TGI) allows.
 | `RAG_LLM_BASE_URL` | — | `http://dgx:8000` | OpenAI-compatible endpoint |
 | `RAG_MAX_CONCURRENCY` | `1` | `8`–`32` | generation slots |
 | `RAG_QUEUE_MAX` | `4` | `64` | admitted-but-waiting requests; overflow → `503` |
+| `RAG_QUEUE_WAIT_S` | `30` | `30` | how long a queued request waits for the slot before giving up; keep **below** the dashboard's `RAG_TIMEOUT_S` |
 | `RAG_TOP_K` | `4` | `8`–`12` | chunks retrieved |
 | `RAG_MIN_SCORE` | `0.35` | same | below this the service refuses without generating |
 | `RAG_SAME_LANG_BONUS` | `0.05` | same | nudge toward chunks in the user's language |
@@ -82,6 +83,18 @@ DGX Spark (or any GPU host running vLLM/Ollama/TGI) allows.
 `RAG_MIN_SCORE` is the single most important knob: it is what turns "I don't
 know" into the default rather than a hallucination. Tune it per embedding model
 by watching the refusal rate in the dashboard's admin panel.
+
+### Queueing on a slow box
+
+The queue only helps when a generation is **short** relative to the dashboard's
+client timeout (`RAG_TIMEOUT_S`, default 45s) — the accelerated case. On a CPU
+host where one generation already approaches or exceeds that timeout, a queued
+request is served only after the client has given up, so the work is wasted. On
+such a box, set **`RAG_QUEUE_MAX=0`**: the single slot then serves one request
+at a time and rejects any concurrent one immediately with a clean "busy"
+fallback, instead of queueing work nobody is still waiting for. `RAG_QUEUE_WAIT_S`
+bounds the wait regardless, so the queue can never pin itself full — but with a
+slow model, no queue is the honest setting.
 
 ### A note on the two models
 

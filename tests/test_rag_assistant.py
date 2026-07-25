@@ -600,9 +600,14 @@ class TestRagClient:
 
     def test_conversation_hash_is_pseudonymous_and_stable(self, app):
         first = rag_client.conversation_hash(42)
-        assert first == rag_client.conversation_hash(42)
-        assert first != rag_client.conversation_hash(43)
-        assert "42" not in first  # the service never learns the thread id
+        assert first == rag_client.conversation_hash(42)  # stable per thread
+        assert first != rag_client.conversation_hash(43)  # distinct per thread
+        # a one-way digest, not a reversible encoding of the id: fixed-width hex
+        # under a "sha256:" prefix (a bare-id check would be flaky, since a hex
+        # digest can contain the id's digits by chance)
+        assert first.startswith("sha256:")
+        body = first.split(":", 1)[1]
+        assert len(body) == 32 and all(c in "0123456789abcdef" for c in body)
 
     def test_ingest_raises_so_the_cli_can_report_it(self, app, monkeypatch):
         import requests

@@ -159,6 +159,41 @@ class TestGate:
         gate = GenerationGate(max_concurrency=2, queue_max=3)
         assert gate.capacity == 5
 
+    def test_a_queued_request_gives_up_and_frees_its_slot(self):
+        # Regression: with an unbounded wait, a queued request whose client has
+        # already timed out parks forever and pins the queue full for good. A
+        # bounded wait must let it evict itself so the queue self-heals.
+        import threading
+
+        gate = GenerationGate(max_concurrency=1, queue_max=2, wait_timeout_s=0.05)
+        holding, release = threading.Event(), threading.Event()
+
+        def hold():
+            with gate.slot():
+                holding.set()
+                release.wait(2)
+
+        worker = threading.Thread(target=hold)
+        worker.start()
+        assert holding.wait(1)
+
+        # the slot is busy; a second request is admitted to the queue but cannot
+        # acquire the slot within the wait window -> it gives up (would hang
+        # forever before the fix) rather than holding its place indefinitely
+        with pytest.raises(QueueFull):
+            with gate.slot():
+                pass
+        assert gate.stats()["inflight"] == 1  # only the holder remains
+
+        release.set()
+        worker.join(2)
+        assert gate.stats()["inflight"] == 0
+
+    def test_none_wait_is_coerced_to_a_finite_bound(self):
+        # None (wait forever) is the one value that must never reach the semaphore.
+        gate = GenerationGate(wait_timeout_s=None)
+        assert gate.wait_timeout_s is not None
+
 
 # --- store / retrieval ------------------------------------------------------
 class TestStore:

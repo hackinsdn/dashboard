@@ -56,6 +56,12 @@ class Settings:
     # --- concurrency ---
     max_concurrency: int = field(default_factory=lambda: _int("RAG_MAX_CONCURRENCY", 1))
     queue_max: int = field(default_factory=lambda: _int("RAG_QUEUE_MAX", 4))
+    # How long a queued request waits for the slot before it gives up and frees
+    # its place. MUST be bounded: an unbounded wait lets requests whose client
+    # already timed out pile up and pin the queue full forever. Keep it below the
+    # dashboard's RAG_TIMEOUT_S so a queued request that will not be served in
+    # time evicts itself rather than being abandoned while still holding a slot.
+    queue_wait_s: float = field(default_factory=lambda: _float("RAG_QUEUE_WAIT_S", 30))
 
     # --- cache ---
     cache_ttl_s: int = field(default_factory=lambda: _int("RAG_CACHE_TTL_S", 86400))
