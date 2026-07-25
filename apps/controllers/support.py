@@ -288,19 +288,28 @@ def answer_with_assistant(thread, question, locale="en"):
 
 
 def record_feedback(message, vote, reason=None):
-    """Record 👍/👎 on an assistant answer. Re-voting the same way clears it.
+    """Record 👍/👎 on an assistant answer.
+
+    Clicking the same thumb again clears the vote (a toggle). A 👎 *reason*
+    arrives as a **second** call -- the widget only reveals the reason chips
+    after the thumb is pressed -- so a repeat "down" that carries a reason
+    annotates the existing vote instead of toggling it off. Without this, picking
+    a reason would silently erase the very down-vote it was meant to explain, and
+    nothing would reach the admin panel.
 
     Returns the stored vote (None when cleared). Commit by the caller.
     """
     if vote not in ("up", "down"):
         raise ValueError(f"invalid vote: {vote!r}")
-    if message.feedback == vote:
+    reason = (reason or "").strip() or None
+    # Toggle off only on a bare re-click of the same thumb (no reason attached).
+    if message.feedback == vote and reason is None:
         message.feedback = None
         message.feedback_reason = None
         message.feedback_at = None
         return None
     message.feedback = vote
-    message.feedback_reason = (reason or None) if vote == "down" else None
+    message.feedback_reason = reason if vote == "down" else None
     message.feedback_at = utcnow()
     return message.feedback
 

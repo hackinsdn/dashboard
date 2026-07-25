@@ -425,6 +425,32 @@ class TestFeedback:
         message = db.session.get(SupportMessages, message_id)
         assert message.feedback is None and message.feedback_at is None
 
+    def test_a_reason_after_a_down_vote_annotates_it_rather_than_clearing(self, client, ids, monkeypatch):
+        # Regression: the widget reveals the reason chips only after 👎 is
+        # pressed, so the reason is a SECOND call. It must annotate the vote, not
+        # toggle it off -- otherwise picking a reason erases the down-vote and the
+        # admin panel shows nothing.
+        thread_id, message_id = self._answered_message(client, monkeypatch)
+        post_json(client, f"/api/support/messages/{message_id}/feedback", {"vote": "down"})
+        resp = post_json(
+            client,
+            f"/api/support/messages/{message_id}/feedback",
+            {"vote": "down", "reason": "wrong"},
+        )
+        assert resp.get_json()["feedback"] == "down"
+        message = db.session.get(SupportMessages, message_id)
+        assert message.feedback == "down" and message.feedback_reason == "wrong"
+        # ... and it now reaches the admin summary
+        summary = support.feedback_summary()
+        assert any(n["message_id"] == message_id for n in summary["recent_negative"])
+
+    def test_a_bare_down_thumb_re_click_still_clears(self, client, ids, monkeypatch):
+        thread_id, message_id = self._answered_message(client, monkeypatch)
+        post_json(client, f"/api/support/messages/{message_id}/feedback", {"vote": "down"})
+        resp = post_json(client, f"/api/support/messages/{message_id}/feedback", {"vote": "down"})
+        assert resp.get_json()["feedback"] is None
+        assert db.session.get(SupportMessages, message_id).feedback is None
+
     def test_a_reason_is_only_kept_with_a_down_vote(self, client, ids, monkeypatch):
         thread_id, message_id = self._answered_message(client, monkeypatch)
         post_json(
