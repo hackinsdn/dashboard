@@ -18,7 +18,7 @@ import subprocess
 import sys
 import tempfile
 import types
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -131,15 +131,28 @@ class TestPureLogic:
 
     def test_substitute_identifiers_ok(self, ctrl):
         status, data = ctrl.substitute_identifiers(
-            "id=${pod_hash}", pod_hash="abc", dry_run=True
+            "id=${pod_hash} $TEST2", pod_hash="abc", dry_run=True
         )
         assert status is True
-        assert data == "id=abc"
+        assert data == "id=abc $TEST2"
 
-    def test_substitute_identifiers_invalid_placeholder(self, ctrl):
-        status, data = ctrl.substitute_identifiers("x=${bogus}", dry_run=True)
+    def test_substitute_identifiers_exceptions(self, ctrl):
+        with patch("string.Template") as mock_template:
+            mock_template.side_effect = ValueError("err")
+            status, data = ctrl.substitute_identifiers("a=x")
+            assert status is False
+            assert data == "Failed to read manifest content: err"
+
+        ctrl.identifiers["test"] = MagicMock(side_effect=ValueError("err"))
+        status, data = ctrl.substitute_identifiers("a=${test}")
         assert status is False
-        assert "Invalid placeholder bogus" in data
+        assert data == "Error while processing template: err"
+
+        with patch("string.Template.safe_substitute") as mock_func:
+            mock_func.side_effect = ValueError("err")
+            status, data = ctrl.substitute_identifiers("a=x")
+            assert status is False
+            assert data == "Failed to apply placeholders: err"
 
 
 # --- registry secret ----------------------------------------------------

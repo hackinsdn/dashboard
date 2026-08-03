@@ -853,7 +853,7 @@ class K8sController():
         for identf in tmpl.get_identifiers():
             identf_func = self.get_identifier_func(identf)
             if not identf_func:
-                return False, f"Invalid placeholder {identf}"
+                continue
             try:
                 mapping[identf] = identf_func(
                     dry_run=dry_run,
