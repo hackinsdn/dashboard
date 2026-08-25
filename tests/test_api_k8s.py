@@ -313,28 +313,46 @@ class TestGetNodes:
         logout(client)
 
 
-# --- list_kubernetes_templates (public) ---------------------------------
+# --- list_kubernetes_templates (staff only) -----------------------------
 class TestListTemplates:
+    def test_anonymous_is_redirected_to_login(self, client, ids):
+        logout(client)
+        resp = client.get("/api/templates/list")
+        assert resp.status_code == 302
+        assert "/login/" in resp.headers["Location"]
+
+    def test_non_staff_is_rejected(self, client, ids):
+        login(client, "akstudent", "stud123")
+        resp = client.get("/api/templates/list")
+        assert b"Unauthorized request" in resp.data
+        logout(client)
+
     def test_not_defined_when_no_git_url(self, client, ids, monkeypatch):
         monkeypatch.setitem(flask_app.config, "LAB_TEMPLATES_GIT_URL", "")
+        login(client, "akadmin", "admin123")
         resp = client.get("/api/templates/list")
         assert resp.status_code == 200
         assert resp.get_json()["status"] == "not-defined"
+        logout(client)
 
     def test_lists_templates(self, client, ids, monkeypatch):
         monkeypatch.setattr("apps.api.routes.git.update_repo", lambda *a, **k: None)
         monkeypatch.setattr("apps.api.routes.git.list_files", lambda *a, **k: ["a.yaml", "sub/b.yaml"])
+        login(client, "akadmin", "admin123")
         resp = client.get("/api/templates/list")
         assert resp.status_code == 200
         assert resp.get_json()["result"] == ["a", "sub/b"]
+        logout(client)
 
     def test_failure_is_reported(self, client, ids, monkeypatch):
         monkeypatch.setattr("apps.api.routes.git.update_repo", lambda *a, **k: None)
         def boom(*a, **k):
             raise RuntimeError("git blew up")
         monkeypatch.setattr("apps.api.routes.git.list_files", boom)
+        login(client, "akadmin", "admin123")
         resp = client.get("/api/templates/list")
         assert resp.status_code == 400
+        logout(client)
 
 
 # --- get_kubernetes_template --------------------------------------------

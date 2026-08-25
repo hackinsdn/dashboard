@@ -738,6 +738,8 @@ def extend_lab(lab_id):
 
 
 @blueprint.route('/templates/list')
+@login_required
+@check_user_category(["admin", "teacher"])
 def list_kubernetes_templates():
     git_url = current_app.config.get('LAB_TEMPLATES_GIT_URL')
     git_dir = current_app.config.get('LAB_TEMPLATES_DIR')
