@@ -270,6 +270,8 @@ def run_lab(lab_id):
         lab_inst.expiration_ts = expiration_ts
         db.session.add(lab_inst)
 
+        current_app.logger.info(f"LabInstance added user={current_user.username} ipaddr={get_remote_addr()} lab_id={lab.id} lab_instance_id={pod_hash}")
+
         create_lab_log = HomeLogging(ipaddr=get_remote_addr(), action="create_lab", success=True, lab_id=lab.id, user_id=current_user.id)
         db.session.add(create_lab_log)
         db.session.commit()
@@ -592,6 +594,8 @@ def edit_lab(lab_id):
         db.session.commit()
         status = True
         msg = "Lab saved with success"
+        action = "added" if lab_id == "new" else "updated"
+        current_app.logger.info(f"Lab {action} user={current_user.username} ipaddr={get_remote_addr()} lab_id={lab.id} title={lab.title!r}")
     except Exception as exc:
         status = False
         msg = "Failed to save Lab information"
@@ -1494,12 +1498,15 @@ def upload_lab_file():
     # Generate unique filename using uuid
     new_filename = f"{uuid.uuid4().hex}{ext.lower()}"
 
+    saved_path = os.path.join(upload_dir, new_filename)
     try:
-        file.save(os.path.join(upload_dir, new_filename))
+        file.save(saved_path)
         file_url = url_for('home_blueprint.serve_upload', filename=new_filename)
     except Exception as exc:
         current_app.logger.error(f"Failed to save uploaded file: {exc}")
         return jsonify({"status": "fail", "result": _("Failed to save file on server")}), 500
+
+    current_app.logger.info(f"Lab file uploaded user={current_user.username} ipaddr={get_remote_addr()} original_name={file.filename!r} saved_path={saved_path}")
 
     # If a lab_id was provided, persist the file reference to LabMetadata
     uploads = []
@@ -1641,12 +1648,15 @@ def upload_labdata_file():
     cm_uuid = uuid.uuid4().hex
     disk_name = f"{cm_uuid}{ext.lower()}"
     original_name = secure_filename(file.filename) or disk_name
+    saved_path = os.path.join(files_dir, disk_name)
     try:
-        with open(os.path.join(files_dir, disk_name), "wb") as fh:
+        with open(saved_path, "wb") as fh:
             fh.write(raw)
     except Exception as exc:
         current_app.logger.error(f"Failed to save lab-data file: {exc}")
         return jsonify({"status": "fail", "result": _("Failed to save file on server")}), 500
+
+    current_app.logger.info(f"Lab-data file uploaded user={current_user.username} ipaddr={get_remote_addr()} lab_id={lab_id} original_name={file.filename!r} saved_path={saved_path}")
 
     entry = {
         "cm_uuid": cm_uuid,
