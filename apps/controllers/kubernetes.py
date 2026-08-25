@@ -563,18 +563,30 @@ class K8sController():
             })
 
         service_to_pods = defaultdict(list)
-        endpoint_slices = self.discovery_api.list_namespaced_endpoint_slice(
-            namespace=self.namespace, _request_timeout=self.api_request_timeout
+        # NOTE: parse the raw response instead of letting the client deserialize
+        # into V1EndpointSlice models. The client marks `endpoints` as required,
+        # but the API server omits/nulls it for slices with no ready endpoints
+        # (e.g. an orphan service). A single such slice makes the whole list call
+        # raise "Invalid value for `endpoints`, must not be `None`", breaking the
+        # page for every lab in the namespace.
+        raw = self.discovery_api.list_namespaced_endpoint_slice(
+            namespace=self.namespace, _request_timeout=self.api_request_timeout,
+            _preload_content=False,
         )
-        for slice_item in endpoint_slices.items:
+        endpoint_slices = json.loads(raw.data)
+        for slice_item in endpoint_slices.get("items", []):
             slice_pods = []
-            for ep in slice_item.endpoints or []:
+            # endpoints is optional (absent/null for slices with no endpoints)
+            for ep in slice_item.get("endpoints") or []:
                 # targetRef is optional (e.g. endpoints backing external IPs)
-                if ep.target_ref and ep.target_ref.uid in pods_by_uid:
-                    slice_pods.append(pods_by_uid[ep.target_ref.uid])
+                target_ref = ep.get("targetRef") or {}
+                if target_ref.get("uid") in pods_by_uid:
+                    slice_pods.append(pods_by_uid[target_ref["uid"]])
             # ownerReferences is optional (manually managed slices)
-            for own_ref in slice_item.metadata.owner_references or []:
-                service_to_pods[own_ref.uid].extend(slice_pods)
+            metadata = slice_item.get("metadata") or {}
+            for own_ref in metadata.get("ownerReferences") or []:
+                if own_ref.get("uid"):
+                    service_to_pods[own_ref["uid"]].extend(slice_pods)
 
         services = self.v1_api.list_namespaced_service(
             namespace=self.namespace, _request_timeout=self.api_request_timeout,
