@@ -966,6 +966,8 @@ class K8sController():
         except subprocess.CalledProcessError as exc:
             if _kubectl_stderr_is_failover(exc.stderr):
                 raise _FailoverError(_reason_for(exc), f"Failed to delete k8s resource: {exc} -- {exc.stderr}")
+            if exc.stderr and "notfound" in exc.stderr.replace(" ", "").lower():
+                return True  # already gone: deletion goal achieved
             current_app.logger.error(f"Failed to delete k8s resource: {exc} -- {exc.stderr}")
             return False
         except Exception as exc:
@@ -1281,6 +1283,8 @@ class K8sController():
         except Exception as exc:
             if _is_failover_error(exc):
                 raise
+            if isinstance(exc, ApiException) and exc.status == 404:
+                return True  # already gone: deletion goal achieved
             current_app.logger.warning(f"Failed to delete pod {pod['name']} {exc}")
             return False
         return True
@@ -1296,6 +1300,8 @@ class K8sController():
         except Exception as exc:
             if _is_failover_error(exc):
                 raise
+            if isinstance(exc, ApiException) and exc.status == 404:
+                return True  # already gone: deletion goal achieved
             current_app.logger.warning(f"Failed to delete deployment {deployment['name']} {exc}")
             return False
         return True
@@ -1311,6 +1317,8 @@ class K8sController():
         except Exception as exc:
             if _is_failover_error(exc):
                 raise
+            if isinstance(exc, ApiException) and exc.status == 404:
+                return True  # already gone: deletion goal achieved
             current_app.logger.warning(f"Failed to delete service {service['name']} {exc}")
             return False
         return True
@@ -1326,6 +1334,8 @@ class K8sController():
         except Exception as exc:
             if _is_failover_error(exc):
                 raise
+            if isinstance(exc, ApiException) and exc.status == 404:
+                return True  # already gone: deletion goal achieved
             current_app.logger.warning(f"Failed to delete configmap {config_map['name']} {exc}")
             return False
         return True
@@ -1342,12 +1352,20 @@ class K8sController():
         except Exception as exc:
             if _is_failover_error(exc):
                 raise
+            if isinstance(exc, ApiException) and exc.status == 404:
+                return True  # already gone: deletion goal achieved
             current_app.logger.warning(f"Failed to delete secret {name}: {exc}")
             return False
         return True
 
     def delete_resources_by_name(self, resources):
-        """Delete resources by their name and kind."""
+        """Delete resources by their name and kind.
+
+        Resources are deleted in reverse of the order they were created (so
+        dependents go before owners), but the returned list is aligned with the
+        input ``resources`` order, so callers can match ``results[i]`` back to
+        ``resources[i]``.
+        """
         results = []
         for resource in reversed(resources):
             if resource["kind"] == "Pod":
@@ -1362,6 +1380,7 @@ class K8sController():
                 results.append(self.delete_secret_by_name(resource))
             else:
                 results.append(self.delete_k8s_resource(resource))
+        results.reverse()
         return results
 
     def _wait_gone(self, resources, timeout=10):

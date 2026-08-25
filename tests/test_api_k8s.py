@@ -211,6 +211,23 @@ class TestDeleteLab:
         assert inst.is_deleted is True
         logout(client)
 
+    def test_partial_resource_removal_keeps_instance(self, client, ids, monkeypatch):
+        # a resource left behind must NOT mark the instance deleted, so it can
+        # be retried instead of being orphaned with no DB record.
+        inst = LabInstances(user_id=ids["student_id"], lab_id=ids["lab_id"], is_deleted=False)
+        inst.k8s_resources = [{"kind": "Deployment", "name": "d1"}, {"kind": "Service", "name": "s1"}]
+        db.session.add(inst)
+        db.session.commit()
+        inst_id = inst.id
+        monkeypatch.setattr("apps.api.routes.k8s.delete_resources_by_name", lambda res: [True, False])
+        login(client, "akstudent", "stud123")
+        resp = client.delete(f"/api/lab/{inst_id}")
+        assert resp.status_code == 400
+        assert resp.get_json()["status"] == "fail"
+        assert "Service/s1=fail" in resp.get_json()["result"]
+        assert db.session.get(LabInstances, inst_id).is_deleted is False
+        logout(client)
+
 
 # --- delete_labs (bulk) -------------------------------------------------
 class TestDeleteLabsBulk:
@@ -280,7 +297,9 @@ class TestDeleteLabsBulk:
             assert db.session.get(LabInstances, inst_id).is_deleted is False
         logout(client)
 
-    def test_partial_resource_removal_is_reported(self, client, bulk_ids, monkeypatch):
+    def test_partial_resource_removal_keeps_instance(self, client, bulk_ids, monkeypatch):
+        # a resource left behind must NOT mark the instance deleted, so it can
+        # be retried instead of being orphaned with no DB record.
         inst_id = bulk_ids["mine"][0]
         inst = db.session.get(LabInstances, inst_id)
         inst.k8s_resources = [{"kind": "pod", "name": "p1"}, {"kind": "pod", "name": "p2"}]
@@ -288,9 +307,10 @@ class TestDeleteLabsBulk:
         monkeypatch.setattr("apps.api.routes.k8s.delete_resources_by_name", lambda res: [True, False])
         login(client, "akstudent", "stud123")
         resp = client.delete("/api/labs", json=[inst_id])
-        assert resp.status_code == 200
+        assert resp.status_code == 400
+        assert resp.get_json()["status"] == "fail"
         assert "pod/p2" in resp.get_json()["result"]
-        assert db.session.get(LabInstances, inst_id).is_deleted is True
+        assert db.session.get(LabInstances, inst_id).is_deleted is False
         logout(client)
 
 

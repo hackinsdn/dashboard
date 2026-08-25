@@ -80,6 +80,16 @@ def delete_lab(lab_id):
         current_app.logger.error(f"Failed to delete resources: {exc}")
         return {"status": "fail", "result": _("Failed to delete resources")}, 400
 
+    if sum(results) != len(lab.k8s_resources):
+        # some resources are still present: keep the instance (do NOT mark it
+        # deleted) so it can be retried, instead of orphaning them in the
+        # cluster with no DB record to track them.
+        msg = "Some resources failed to be removed: "
+        for idx, resource in enumerate(lab.k8s_resources):
+            status = "ok" if results[idx] else "fail"
+            msg += f"{resource['kind']}/{resource['name']}={status}; "
+        return {"status": "fail", "result": msg}, 400
+
     who = "owner" if lab.user_id == current_user.id else "admin"
     lab.is_deleted = True
     lab.finish_reason = "Finished by the " + who
@@ -88,14 +98,7 @@ def delete_lab(lab_id):
     running_labs = LabInstances.query.filter_by(is_deleted=False, user_id=current_user.id).count()
     cache.set(f"running_labs-{current_user.id}", running_labs)
 
-    if sum(results) == len(lab.k8s_resources):
-        return {"status": "ok", "result": _("Resources removed successfully!")}, 200
-
-    msg = "Some resources failed to be removed: "
-    for idx, resource in enumerate(lab.k8s_resources):
-        status = "ok" if results[idx] else "fail"
-        msg += f"{resource['kind']}/{resource['name']}={status}; "
-    return {"status": "ok", "result": msg}, 200
+    return {"status": "ok", "result": _("Resources removed successfully!")}, 200
 
 @blueprint.route('/labs', methods=["DELETE"])
 @login_required
@@ -124,6 +127,7 @@ def delete_labs():
 
     failed = []
     partial = []
+    deleted = []
     for lab in labs:
         try:
             results = k8s.delete_resources_by_name(lab.k8s_resources)
@@ -132,14 +136,19 @@ def delete_labs():
             failed.append(lab.id)
             continue
 
-        who = "owner" if lab.user_id == current_user.id else "admin"
-        lab.is_deleted = True
-        lab.finish_reason = "Finished by the " + who
-
         if sum(results) != len(lab.k8s_resources):
+            # some resources are still present: keep the instance (do NOT mark
+            # it deleted) so it can be retried, instead of orphaning them in
+            # the cluster with no DB record to track them.
             for idx, resource in enumerate(lab.k8s_resources):
                 if not results[idx]:
                     partial.append(f"{lab.id}: {resource['kind']}/{resource['name']}")
+            continue
+
+        who = "owner" if lab.user_id == current_user.id else "admin"
+        lab.is_deleted = True
+        lab.finish_reason = "Finished by the " + who
+        deleted.append(lab)
 
     try:
         db.session.commit()
@@ -147,15 +156,17 @@ def delete_labs():
         current_app.logger.error(f"Failed to delete labs: {exc}")
         return {"status": "fail", "result": _("Failed to save updated data")}, 400
 
-    for user_id in {lab.user_id for lab in labs}:
+    for user_id in {lab.user_id for lab in deleted}:
         running_labs = LabInstances.query.filter_by(is_deleted=False, user_id=user_id).count()
         cache.set(f"running_labs-{user_id}", running_labs)
 
-    if failed:
-        return {"status": "fail", "result": _("Failed to delete resources") + ": " + "; ".join(failed)}, 400
-
-    if partial:
-        return {"status": "ok", "result": "Some resources failed to be removed: " + "; ".join(partial)}, 200
+    if failed or partial:
+        problems = []
+        if failed:
+            problems.append(_("Failed to delete resources") + ": " + "; ".join(failed))
+        if partial:
+            problems.append("Some resources failed to be removed: " + "; ".join(partial))
+        return {"status": "fail", "result": "<br/>".join(problems)}, 400
 
     return {"status": "ok", "result": _("Resources removed successfully!")}, 200
 

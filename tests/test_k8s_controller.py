@@ -222,6 +222,25 @@ class TestDeleteByName:
         assert ctrl.delete_secret_by_name({"name": "sec"}) is True
         assert ctrl.delete_secret_by_name("sec2") is True
 
+    def test_delete_pod_already_gone_is_success(self, ctrl):
+        # a 404 means the resource is already gone -> deletion goal achieved
+        ctrl.v1_api.delete_namespaced_pod = MagicMock(
+            side_effect=k8s_module.ApiException(status=404)
+        )
+        assert ctrl.delete_pod_by_name({"name": "p1"}) is True
+
+    def test_delete_service_already_gone_is_success(self, ctrl):
+        ctrl.v1_api.delete_namespaced_service = MagicMock(
+            side_effect=k8s_module.ApiException(status=404)
+        )
+        assert ctrl.delete_service_by_name({"name": "s1"}) is True
+
+    def test_delete_service_other_api_error_is_failure(self, ctrl):
+        ctrl.v1_api.delete_namespaced_service = MagicMock(
+            side_effect=k8s_module.ApiException(status=409)
+        )
+        assert ctrl.delete_service_by_name({"name": "s1"}) is False
+
     def test_delete_resources_by_name_dispatch(self, ctrl):
         ctrl.delete_pod_by_name = MagicMock(return_value=True)
         ctrl.delete_service_by_name = MagicMock(return_value=True)
@@ -234,6 +253,19 @@ class TestDeleteByName:
             ]
         )
         assert results == [True, True, True]
+
+    def test_delete_resources_by_name_results_aligned_with_input(self, ctrl):
+        # resources are deleted in reverse (dependents first), but results must
+        # come back aligned with the input order so callers can match them up
+        ctrl.delete_pod_by_name = MagicMock(return_value=True)
+        ctrl.delete_service_by_name = MagicMock(return_value=False)
+        results = ctrl.delete_resources_by_name(
+            [
+                {"kind": "Pod", "name": "p"},
+                {"kind": "Service", "name": "s"},
+            ]
+        )
+        assert results == [True, False]  # Pod=True (index 0), Service=False (index 1)
 
 
 # --- nodes --------------------------------------------------------------
