@@ -19,6 +19,7 @@ Usage:
 
 import copy
 import importlib
+import json
 import os
 import sys
 import tempfile
@@ -269,19 +270,29 @@ class TestGetLabResources:
     FOREIGN_POD_UID = "a11da0d1-6b78-4f38-878f-1b9ab5bd908a"  # mnsec-proxy pod (not owned)
     NODEPORT_LINK = ["http-helloworld-webserver", "http://198.51.100.10:30996"]
 
+    _NO_REF = object()  # sentinel: endpoint without a targetRef (e.g. external IP)
+
+    @classmethod
+    def _endpoint(cls, uid=_NO_REF):
+        """A raw EndpointSlice endpoint dict. Call with no uid for an endpoint
+        that has no targetRef."""
+        return {} if uid is cls._NO_REF else {"targetRef": {"uid": uid}}
+
     @staticmethod
     def _endpoint_slice(endpoints, owner_uids):
-        """Minimal EndpointSlice stand-in: the controller only reads
-        .endpoints[].target_ref.uid and .metadata.owner_references[].uid."""
-        return SimpleNamespace(
-            endpoints=endpoints,
-            metadata=SimpleNamespace(
-                owner_references=(
-                    [SimpleNamespace(uid=uid) for uid in owner_uids]
-                    if owner_uids is not None else None
-                )
-            ),
-        )
+        """Minimal raw EndpointSlice stand-in, in the camelCase JSON shape the
+        API server actually returns (the controller parses the raw response to
+        tolerate slices whose `endpoints` field is null/absent). Only
+        endpoints[].targetRef.uid and metadata.ownerReferences[].uid are read."""
+        slice_item = {"metadata": {}}
+        # a real slice with no endpoints has the field absent/null
+        if endpoints is not None:
+            slice_item["endpoints"] = endpoints
+        if owner_uids is not None:
+            slice_item["metadata"]["ownerReferences"] = [
+                {"uid": uid} for uid in owner_uids
+            ]
+        return slice_item
 
     def _get_lab_resources(self, ctrl, service_list=None, endpoint_slices=None):
         """Drive get_lab_resources() with the taped objects, allowing the
@@ -306,7 +317,9 @@ class TestGetLabResources:
         ), patch.object(
             ctrl.discovery_api,
             "list_namespaced_endpoint_slice",
-            return_value=SimpleNamespace(items=endpoint_slices or []),
+            return_value=SimpleNamespace(
+                data=json.dumps({"items": endpoint_slices or []})
+            ),
         ):
             return ctrl.get_lab_resources(self.RESOURCES)
 
@@ -342,7 +355,7 @@ class TestGetLabResources:
         owned by the service, endpoints targeting the pod by uid)."""
         slices = [
             self._endpoint_slice(
-                endpoints=[SimpleNamespace(target_ref=SimpleNamespace(uid=self.POD_UID))],
+                endpoints=[self._endpoint(self.POD_UID)],
                 owner_uids=[self.SVC_UID],
             ),
         ]
@@ -358,7 +371,7 @@ class TestGetLabResources:
         foreign mnsec pod must be ignored)."""
         slices = [
             self._endpoint_slice(
-                endpoints=[SimpleNamespace(target_ref=SimpleNamespace(uid=self.FOREIGN_POD_UID))],
+                endpoints=[self._endpoint(self.FOREIGN_POD_UID)],
                 owner_uids=[self.SVC_UID],
             ),
         ]
@@ -373,24 +386,25 @@ class TestGetLabResources:
         mapping pods that do not belong to the lab must neither crash nor
         attach wrong service links."""
         slices = [
-            # endpoints list missing entirely
+            # endpoints list missing entirely (the orphan-service case that
+            # made the raw kubernetes client raise on deserialization)
             self._endpoint_slice(endpoints=None, owner_uids=[self.SVC_UID]),
             # endpoint without targetRef + endpoint targeting an unknown pod
             self._endpoint_slice(
                 endpoints=[
-                    SimpleNamespace(target_ref=None),
-                    SimpleNamespace(target_ref=SimpleNamespace(uid="unknown-uid")),
+                    self._endpoint(),
+                    self._endpoint("unknown-uid"),
                 ],
                 owner_uids=[self.SVC_UID],
             ),
             # slice not owned by any service
             self._endpoint_slice(
-                endpoints=[SimpleNamespace(target_ref=SimpleNamespace(uid=self.POD_UID))],
+                endpoints=[self._endpoint(self.POD_UID)],
                 owner_uids=None,
             ),
             # slice mapping a pod that is not part of the requested lab
             self._endpoint_slice(
-                endpoints=[SimpleNamespace(target_ref=SimpleNamespace(uid=self.FOREIGN_POD_UID))],
+                endpoints=[self._endpoint(self.FOREIGN_POD_UID)],
                 owner_uids=[self.SVC_UID],
             ),
         ]
