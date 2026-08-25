@@ -135,11 +135,21 @@ def user_loader(id):
     return Users.query.filter_by(id=id).first()
 
 
-@login_manager.request_loader
-def request_loader(request):
-    username = request.form.get('username')
-    user = Users.query.filter_by(username=username).first()
-    return user if user else None
+# NOTE: no request_loader is registered on purpose.
+#
+# A request_loader authenticates a request that carries NO session cookie, and
+# Flask-Login runs it on every such request. A previous implementation loaded
+# the user straight from the `username` form field with no password, token or
+# signature check, which let any unauthenticated caller impersonate any user
+# (including admins) by simply POSTing `username=<target>` -- a full
+# authentication bypass / privilege escalation.
+#
+# All legitimate authentication goes through session cookies established by the
+# local login and OAuth callback flows (see apps/authentication/routes.py). If
+# non-interactive/API access is ever needed, add a request_loader that verifies
+# a per-user secret sent in the Authorization header, compared in constant time
+# (hmac.compare_digest) -- never a bare username.
+
 
 class Groups(db.Model):
     __tablename__ = 'groups'

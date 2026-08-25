@@ -171,3 +171,28 @@ class TestUnauthorizedHandler:
         assert resp.status_code == 302
         assert "/login" in resp.headers["Location"]
         assert get_session_value(client, "next_url") == "/index"
+
+
+# --- request_loader auth-bypass regression ------------------------------
+class TestNoRequestLoaderBypass:
+    """A session-less request that merely names a user in the `username` form
+    field must NOT be authenticated as that user. Regression guard against the
+    passwordless request_loader that allowed full account takeover
+    (POST username=<admin> -> impersonation)."""
+
+    def test_username_form_field_does_not_authenticate(self, client, ids):
+        logout(client)
+        # cookie-less client (no prior login) replaying the incident request:
+        # POST /labs/edit/new naming a user in the `username` form field. With
+        # the loader gone this must bounce to /login, never reach the handler.
+        resp = client.post(
+            "/labs/edit/new",
+            data={"username": "asuser", "lab_title": "x"},
+        )
+        assert resp.status_code == 302
+        assert "/login" in resp.headers["Location"]
+
+    def test_no_request_loader_is_registered(self, app):
+        # Flask-Login stores the request_loader callback here; it must be unset
+        # so cookie-less requests can never be authenticated from the request.
+        assert app.login_manager._request_callback is None
