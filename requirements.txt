@@ -23,7 +23,7 @@ markdown2==2.5.4
 flask_mail==0.10.0
 Flask-Caching==2.3.1
 PyYAML>=6.0.1,<7
-gitpython==3.1.54
+gitpython==3.1.58
 PyLTI1p3==2.0.0
 # redis: required when CACHE_TYPE=RedisCache (mandatory for the "lti"
 # optional module with multiple gunicorn workers)
