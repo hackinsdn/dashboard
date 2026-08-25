@@ -203,3 +203,23 @@ class TestRunDeleteExpiredLabs:
 
         db.session.refresh(inst)
         assert inst.is_deleted is False
+
+    def test_partial_teardown_keeps_instance(self, app, ids, monkeypatch):
+        # one resource fails to delete (returns False, not raising): the
+        # instance must stay so the next run retries the still-present resource
+        # instead of orphaning it with no DB record.
+        monkeypatch.setattr(
+            lab_schedule, "k8s",
+            types.SimpleNamespace(delete_resources_by_name=lambda resources: [True, False]),
+        )
+        inst = make_instance(ids, expiration_ts=now_ts() - TOL - 3600)
+        inst.k8s_resources = [
+            {"kind": "Deployment", "name": "mininet-sec-abc"},
+            {"kind": "Service", "name": "mininet-sec-abc"},
+        ]
+        db.session.commit()
+
+        lab_schedule.run_delete_expired_labs(flask_app)
+
+        db.session.refresh(inst)
+        assert inst.is_deleted is False

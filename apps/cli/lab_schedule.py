@@ -63,7 +63,22 @@ def run_delete_expired_labs(app):
     for lab_instance in lab_instances:
         app.logger.info(f"ALERT Lab expired {lab_instance.user_id=} {lab_instance.id=}: removing...")
         try:
-            k8s.delete_resources_by_name(lab_instance.k8s_resources)
+            resources = lab_instance.k8s_resources
+            results = k8s.delete_resources_by_name(resources)
+            # Only mark the instance deleted once every resource is actually
+            # gone. Otherwise leave it as-is so the next run retries the
+            # still-present resources (deletes are idempotent), instead of
+            # orphaning them in the cluster with no DB record to track them.
+            if sum(results) != len(resources):
+                failed = [
+                    f"{r['kind']}/{r['name']}"
+                    for r, ok in zip(resources, results) if not ok
+                ]
+                app.logger.error(
+                    f"Incomplete teardown for expired lab {lab_instance.id}, "
+                    f"will retry next run. Pending resources: {failed}"
+                )
+                continue
             lab_instance.is_deleted = True
             lab_instance.finish_reason = "Lab Expired"
             db.session.commit()
