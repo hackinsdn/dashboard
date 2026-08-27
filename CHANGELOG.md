@@ -4,6 +4,8 @@ All notable changes to this project are documented here, grouped by tagged versi
 
 ## [UNRELEASED] - Under development
 
+## [2.0.15] - 2026-08-27
+
 ### Fixed
 - Make Lab teardown idempotent so it never orphans Kubernetes resources (#305).
 - Fetch Kubernetes endpoints as raw JSON and parse them to avoid strict model
@@ -22,7 +24,7 @@ All notable changes to this project are documented here, grouped by tagged versi
 ## [2.0.14-3] - 2026-08-10
 
 ### Fixed
-- Handle null timestamps on the finished_labs page (#300).
+- Handle null timestamps on the `finished_labs` page (#300).
 
 ## [2.0.14-2] - 2026-08-03
 
@@ -46,7 +48,7 @@ All notable changes to this project are documented here, grouped by tagged versi
 ## [2.0.14] - 2026-07-20
 
 ### Added
-- Flask-Babel internationalization with English and pt_BR translations,
+- Flask-Babel internationalization with English and `pt_BR` translations,
   externalizing user-facing strings across dashboard, users, groups, support,
   labs, feedback and other pages, plus a `window.i18n` catalog for static JS
   (#286).
@@ -62,7 +64,7 @@ All notable changes to this project are documented here, grouped by tagged versi
   (#291).
 - Stop the xterm client from crashing on disconnect and forward the Kubernetes
   exit code (#289).
-- Bump flask_socketio to 5.6.1 for Flask 3.1.3 compatibility (#288).
+- Bump `flask_socketio` to 5.6.1 for Flask 3.1.3 compatibility (#288).
 - Make Lab Instance answer loading more robust and add safe guards around
   saveAnswers to avoid losing unsaved answers (#278, #285).
 - Correct the card filter to avoid layout gaps (#275).
@@ -160,7 +162,7 @@ All notable changes to this project are documented here, grouped by tagged versi
 - Dashboard statistics with dynamic resource-usage metrics and Kubernetes
   cluster stats (#112).
 - List pods, deployments and services for a running Lab (#123).
-- Finished-lab info page including lab_id, and a local issuer shown on the user
+- Finished-lab info page including `lab_id`, and a local issuer shown on the user
   profile (#118, #119).
 - Real-time feedback application on the answer-sheet view (#113).
 
@@ -197,7 +199,7 @@ All notable changes to this project are documented here, grouped by tagged versi
 ### Fixed
 - Fix authorization issues for SYSTEM groups and for students running/viewing
   labs (#81).
-- Fix node IP assignment to match the actual pod, and list pods with node_ip
+- Fix node IP assignment to match the actual pod, and list pods with `node_ip`
   (#42, #75).
 - Various responsive-design fixes for images, tables and textareas (#56).
 - Fix filters for showing running labs (#57).
