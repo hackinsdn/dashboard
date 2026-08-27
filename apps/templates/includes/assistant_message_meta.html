@@ -1,0 +1,37 @@
+{# Citations and the user's vote for one assistant answer.
+
+   Shared by the admin and the user thread views (both render a `message`), so
+   staff reviewing an escalated case sees exactly what the assistant claimed,
+   on what basis, and whether the user rejected it. Read-only in both. #}
+{% set sources = message.sources %}
+{% set meta = message.meta_dict %}
+{% if sources %}
+  <div class="mt-1" style="font-size:.72rem;">
+    <span class="text-muted">{{ _('Sources:') }}</span>
+    {% for src in sources %}
+      <div>
+        {% if src.url and (src.url.startswith('/') or src.url.startswith('http://') or src.url.startswith('https://')) %}
+          <a href="{{ src.url }}" target="_blank" rel="noopener noreferrer">[{{ src.index }}] {{ src.title }}</a>
+        {% else %}
+          <span class="text-muted">[{{ src.index }}] {{ src.title }}</span>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+{% if message.feedback or meta.status in ('refused', 'unavailable') %}
+  <div class="mt-1" style="font-size:.72rem;">
+    {% if message.feedback == 'up' %}
+      <span class="badge badge-success"><i class="far fa-thumbs-up mr-1"></i>{{ _('Helpful') }}</span>
+    {% elif message.feedback == 'down' %}
+      <span class="badge badge-danger">
+        <i class="far fa-thumbs-down mr-1"></i>{{ _('Not helpful') }}{% if message.feedback_reason %} &mdash; {{ message.feedback_reason }}{% endif %}
+      </span>
+    {% endif %}
+    {% if meta.status == 'refused' %}
+      <span class="badge badge-secondary">{{ _('Refused') }}{% if meta.reason %} ({{ meta.reason }}){% endif %}</span>
+    {% elif meta.status == 'unavailable' %}
+      <span class="badge badge-warning">{{ _('Assistant unavailable') }}{% if meta.reason %} ({{ meta.reason }}){% endif %}</span>
+    {% endif %}
+  </div>
+{% endif %}

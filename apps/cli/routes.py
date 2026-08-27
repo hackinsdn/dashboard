@@ -7,6 +7,7 @@ from apps import db
 from apps.cli import blueprint
 from apps.cli.lab_schedule import alert_expiring_labs, run_delete_expired_labs
 from apps.cli.support_notify import flush_support_emails
+from apps.cli.rag_ingest import COLLECTORS, run_health, run_ingest
 from apps.authentication.models import Users
 from apps.utils import find_pre_approved_groups
 
@@ -31,6 +32,47 @@ def remove_expired_labs():
 def flush_support_emails_cmd():
     """Send batched support-chat e-mails for users who have gone quiet"""
     flush_support_emails(current_app)
+
+
+@blueprint.cli.command('rag-ingest')
+@click.option(
+    "--source",
+    "sources",
+    multiple=True,
+    type=click.Choice(sorted(COLLECTORS)),
+    help="Only ingest these corpora (default: RAG_INGEST_SOURCES)",
+)
+@click.option(
+    "--dry-run",
+    is_flag=True,
+    default=False,
+    help="Print what would be sent without contacting the assistant service",
+)
+@click.option(
+    "--full",
+    is_flag=True,
+    default=False,
+    help="Re-embed every document, ignoring content hashes (needed after an embedding-model change)",
+)
+def rag_ingest_cmd(sources, dry_run, full):
+    """Build/refresh the RAG assistant's document corpus"""
+    totals = run_ingest(
+        current_app, sources=list(sources) or None, dry_run=dry_run, full=full
+    )
+    if totals is None:
+        return
+    prefix = "[dry-run] " if dry_run else ""
+    click.echo(
+        f"{prefix}{totals['documents']} document(s) collected, {totals['indexed']} indexed,"
+        f" {totals['skipped']} unchanged, {totals['chunks']} chunk(s), {totals['pruned']} pruned"
+    )
+
+
+@blueprint.cli.command('rag-health')
+def rag_health_cmd():
+    """Check the RAG assistant service: connectivity, corpus and backends"""
+    result = run_health(current_app)
+    click.echo(result)
 
 
 @blueprint.cli.command('sync-pre-approved-users')

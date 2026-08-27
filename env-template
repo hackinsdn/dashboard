@@ -70,3 +70,27 @@ ENABLE_CLABS=true
 # you can paste custom certs into /usr/local/share/ca-certificates/xxxx.crt
 # and then run `update-ca-certificates`
 export REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+
+# --- RAG assistant (doc/rag-assistant-design.md) ---
+# Off by default: the chat widget then behaves exactly as it did before the
+# assistant existed (human support only, no mode chooser).
+#export RAG_ENABLED=True
+#export RAG_SERVICE_URL=http://hisdn-rag:8080
+#export RAG_SERVICE_TOKEN=change-me
+# Client-side wall clock for one answer (a CPU-only host takes 10-20s):
+#export RAG_TIMEOUT_S=45
+# Circuit breaker: consecutive failures that stop us trying, and for how long:
+#export RAG_BREAKER_FAILURES=3
+#export RAG_BREAKER_RESET_S=60
+# Per-user question budget (the single generation slot is a shared resource):
+#export RAG_USER_RATE_LIMIT=10
+#export RAG_USER_RATE_WINDOW_MIN=10
+# Conversation turns sent with a question:
+#export RAG_HISTORY_TURNS=2
+# Persist assistant Q&A. Turning this OFF also disables answer feedback --
+# there is no stored message to attach a vote to:
+#export RAG_STORE_TRANSCRIPTS=True
+# Corpora sent by 'flask cli rag-ingest' (repo-docs,faq,lab-descriptions,lab-guides):
+#export RAG_INGEST_SOURCES=repo-docs,faq,lab-descriptions
+# Base URL used to build citation links for ingested repository docs:
+#export RAG_DOCS_BASE_URL=https://github.com/hackinsdn/dashboard/blob/main

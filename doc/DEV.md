@@ -153,6 +153,8 @@ used to run the server:
 | `flask --app run.py cli remove-expired-labs` | Delete lab instances past their expiration tolerance | every 10 min |
 | `flask --app run.py cli flush-support-emails` | Send **batched** support-chat notifications to the support inbox | every 2–5 min |
 | `flask --app run.py cli sync-pre-approved-users` | Backfill group memberships from the groups' pre-approved e-mail lists | on demand / daily |
+| `flask --app run.py cli rag-ingest` | Build/refresh the RAG assistant's document corpus | hourly (when `RAG_ENABLED`) |
+| `flask --app run.py cli rag-health` | Check the assistant service: connectivity, corpus, backends | on demand |
 
 ### `sync-pre-approved-users`
 
@@ -170,6 +172,23 @@ touching SYSTEM groups or soft-deleted users). Options:
 
 Run it once after upgrading to this feature, then on demand (or daily) for
 deployments that edit pre-approved lists frequently.
+
+### `rag-ingest`
+
+Collects the corpora listed in `RAG_INGEST_SOURCES` (repository docs, the
+curated FAQ under `doc/faq/`, lab descriptions, and — opt-in — lab guides) and
+pushes them to the `hisdn-rag` service. Documents carry a content hash, so an
+unchanged document is skipped rather than re-embedded, and each source ends with
+a prune manifest so deleted documents leave the index. Options:
+
+- `--source repo-docs` — restrict to one corpus (repeatable);
+- `--dry-run` — print what would be sent without contacting the service. This is
+  also how you audit what the assistant knows;
+- `--full` — re-embed everything, ignoring content hashes. Needed after changing
+  the embedding model (the service detects that on its own too).
+
+It is a no-op when `RAG_ENABLED` is off. See
+[rag-assistant-design.md](./rag-assistant-design.md) and [../rag/README.md](../rag/README.md).
 
 ### `flush-support-emails`
 

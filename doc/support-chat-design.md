@@ -267,5 +267,8 @@ rejection on a finished thread, and ownership 404s), and the batch-flush timing 
 ## Future work
 
 - Wire `generate_support_reply` to an AI assistant to provide instant answers; the UI,
-  endpoints, and storage already support an `assistant` sender.
+  endpoints, and storage already support an `assistant` sender. Designed in
+  [rag-assistant-design.md](./rag-assistant-design.md) (local LLM + RAG in a separate
+  container, with an explicit "support case vs. question" chooser at the start of a
+  conversation).
 - Optional: notify the **user** by e-mail when staff reply (currently in-app only).

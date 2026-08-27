@@ -138,6 +138,14 @@
               </p>
             </a>
           </li>
+          {% if config.RAG_ENABLED %}
+          <li class="nav-item">
+            <a href="{{ url_for('home_blueprint.assistant_panel') }}" class="nav-link {% if request.url_rule.endpoint == 'home_blueprint.assistant_panel' %} active {% endif %}">
+              <i class="nav-icon fas fa-robot"></i>
+              <p>{{ _('Assistant') }}</p>
+            </a>
+          </li>
+          {% endif %}
           {% endif %}
           <li class="nav-item">
             <a href="{{ url_for('home_blueprint.list_lab_categories') }}" class="nav-link {% if request.url_rule.endpoint == 'home_blueprint.list_lab_categories' or request.url_rule.endpoint == 'home_blueprint.edit_lab_category' %} active {% endif %}">

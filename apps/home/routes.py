@@ -14,6 +14,7 @@ from apps import db, cache
 from apps.home import blueprint
 from apps.controllers import k8s, c9s
 from apps.controllers import support
+from apps.controllers import rag_client
 from apps.controllers import lab_versions
 from apps.home.models import Labs, LabInstances, LabCategories, LabAnswers, LabAnswerSheet, HomeLogging, UserLikes, UserFeedbacks, LabMetadata, SupportThreads, SupportMessages, generate_uuid
 from apps.authentication.models import Users, Groups
@@ -815,7 +816,33 @@ def view_support_thread(thread_id):
     # Opening a thread marks its user messages as read.
     if support.mark_thread_read(thread):
         db.session.commit()
-    return render_template("pages/support_thread_view.html", segment="/support/threads", thread=thread)
+    return render_template(
+        "pages/support_thread_view.html",
+        segment="/support/threads",
+        thread=thread,
+        # telemetry captured when the user handed the conversation over to
+        # staff -- the page they gave up on, not the one it started from
+        escalation=support.escalation_snapshot(thread),
+    )
+
+
+@blueprint.route('/support/assistant')
+@login_required
+@check_user_category(["admin"])
+def assistant_panel():
+    """Operational view of the RAG assistant.
+
+    Refusal rate and thumbs-down rate are the two numbers that decide what to
+    fix: a thin corpus is answered with documentation, bad answers with tuning
+    or a bigger model.
+    """
+    return render_template(
+        "pages/assistant_panel.html",
+        segment="/support/assistant",
+        service=rag_client.stats(),
+        breaker=rag_client.get_breaker().state() if rag_client.is_configured() else {},
+        feedback=support.feedback_summary(),
+    )
 
 
 @blueprint.route('/support/my')

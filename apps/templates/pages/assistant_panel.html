@@ -1,0 +1,185 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} {{ _('Assistant') }} {% endblock title %}
+
+{% block body_class %} sidebar-mini layout-navbar-fixed {% endblock body_class %}
+
+{% block stylesheets %}
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/plugins/fontawesome-free/css/all.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/adminlte.min.css') }}">
+{% endblock stylesheets %}
+
+{% block content %}
+  <div class="content-wrapper">
+    <section class="content-header">
+      <div class="container-fluid">
+        <div class="row mb-2">
+          <div class="col-sm-6"><h1>{{ _('Assistant') }}</h1></div>
+          <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+              <li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.index') }}">{{ _('Home') }}</a></li>
+              <li class="breadcrumb-item active">{{ _('Assistant') }}</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="content">
+      <div class="container-fluid">
+
+        {% if service.status in ('disabled', 'unreachable') %}
+        <div class="alert {{ 'alert-secondary' if service.status == 'disabled' else 'alert-danger' }}">
+          {% if service.status == 'disabled' %}
+            {{ _('The assistant is disabled (RAG_ENABLED is off).') }}
+          {% else %}
+            {{ _('The assistant service is unreachable.') }} <code>{{ service.error }}</code>
+          {% endif %}
+        </div>
+        {% endif %}
+
+        {% if breaker and breaker.open %}
+        <div class="alert alert-warning">
+          <i class="fas fa-exclamation-triangle mr-1"></i>
+          {{ _('The circuit breaker is open after %(n)s consecutive failures: the widget is not offering the assistant right now.', n=breaker.failures) }}
+        </div>
+        {% endif %}
+
+        {# The two numbers that decide what to fix. A high refusal rate means
+           the corpus is thin (write documentation); a high thumbs-down rate on
+           answered questions means retrieval or the model is the problem. #}
+        <div class="row">
+          <div class="col-lg-3 col-6">
+            <div class="small-box bg-info">
+              <div class="inner">
+                <h3>{{ (feedback.refusal_rate * 100) | round(1) }}<sup style="font-size: 20px">%</sup></h3>
+                <p>{{ _('Refusal rate') }}</p>
+              </div>
+              <div class="icon"><i class="fas fa-question-circle"></i></div>
+              <span class="small-box-footer">
+                {{ _('%(refused)s of %(total)s answers, last %(days)s days',
+                     refused=feedback.refused, total=feedback.total, days=feedback.window_days) }}
+              </span>
+            </div>
+          </div>
+          <div class="col-lg-3 col-6">
+            <div class="small-box {{ 'bg-danger' if feedback.down_rate > 0.3 else 'bg-warning' }}">
+              <div class="inner">
+                <h3>{{ (feedback.down_rate * 100) | round(1) }}<sup style="font-size: 20px">%</sup></h3>
+                <p>{{ _('Negative feedback') }}</p>
+              </div>
+              <div class="icon"><i class="far fa-thumbs-down"></i></div>
+              <span class="small-box-footer">
+                {{ _('%(down)s down / %(up)s up', down=feedback.down, up=feedback.up) }}
+              </span>
+            </div>
+          </div>
+          <div class="col-lg-3 col-6">
+            <div class="small-box bg-success">
+              <div class="inner">
+                <h3>{{ service.corpus.chunks if service.corpus else '-' }}</h3>
+                <p>{{ _('Indexed chunks') }}</p>
+              </div>
+              <div class="icon"><i class="fas fa-book"></i></div>
+              <span class="small-box-footer">
+                {{ _('%(docs)s document(s), index v%(v)s',
+                     docs=service.corpus.documents if service.corpus else 0,
+                     v=service.corpus.index_version if service.corpus else 0) }}
+              </span>
+            </div>
+          </div>
+          <div class="col-lg-3 col-6">
+            <div class="small-box bg-secondary">
+              <div class="inner">
+                <h3>{{ service.answers.latency_p95_ms if service.answers and service.answers.latency_p95_ms else '-' }}<sup style="font-size: 20px">ms</sup></h3>
+                <p>{{ _('Answer latency (p95)') }}</p>
+              </div>
+              <div class="icon"><i class="fas fa-stopwatch"></i></div>
+              <span class="small-box-footer">
+                {% if service.answer_cache %}
+                  {{ _('cache hit ratio %(r)s', r=(service.answer_cache.hit_ratio * 100) | round(1)) }}%
+                {% else %}&nbsp;{% endif %}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-5">
+            <div class="card">
+              <div class="card-header"><h3 class="card-title">{{ _('Service') }}</h3></div>
+              <div class="card-body p-0">
+                <table class="table table-sm">
+                  <tbody>
+                    {% if service.backends %}
+                    <tr><td>{{ _('Generation backend') }}</td><td>{{ service.backends.llm_backend }} &mdash; {{ service.backends.generation }}</td></tr>
+                    <tr><td>{{ _('Embeddings') }}</td><td>{{ service.backends.embeddings }}</td></tr>
+                    {% endif %}
+                    {% if service.gate %}
+                    <tr><td>{{ _('Concurrency') }}</td><td>{{ service.gate.max_concurrency }} {{ _('slot(s)') }} + {{ service.gate.queue_max }} {{ _('queued') }}</td></tr>
+                    <tr><td>{{ _('Rejected (queue full)') }}</td><td>{{ service.gate.rejected }}</td></tr>
+                    {% endif %}
+                    {% if service.answers %}
+                    <tr><td>{{ _('Answered / refused / unavailable') }}</td>
+                        <td>{{ service.answers.answered }} / {{ service.answers.refused }} / {{ service.answers.unavailable }}</td></tr>
+                    {% endif %}
+                    {% if service.limits %}
+                    <tr><td>{{ _('top_k / min_score') }}</td><td>{{ service.limits.top_k }} / {{ service.limits.min_score }}</td></tr>
+                    {% endif %}
+                    <tr><td>{{ _('Query logging') }}</td><td>{{ service.log_queries or '-' }}</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-7">
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">{{ _('Recent negative feedback') }}</h3>
+              </div>
+              <div class="card-body p-0">
+                {% if feedback.recent_negative %}
+                <table class="table table-sm table-striped">
+                  <thead>
+                    <tr>
+                      <th>{{ _('Question') }}</th>
+                      <th>{{ _('Reason') }}</th>
+                      <th>{{ _('Case') }}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for item in feedback.recent_negative %}
+                    <tr>
+                      <td style="max-width: 380px;">
+                        <div>{{ item.question or '-' }}</div>
+                        <small class="text-muted">{{ item.answer[:160] }}{% if item.answer|length > 160 %}…{% endif %}</small>
+                      </td>
+                      <td><small>{{ item.reason or '-' }}</small></td>
+                      <td><a href="{{ url_for('home_blueprint.view_support_thread', thread_id=item.thread_id) }}">#{{ item.thread_id }}</a></td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+                {% else %}
+                <div class="p-3 text-muted">{{ _('No negative feedback in this window.') }}</div>
+                {% endif %}
+              </div>
+              <div class="card-footer text-muted" style="font-size:.8rem;">
+                {{ _('These questions are the seed of a regression set: replay them after changing the model, the prompt or the chunking.') }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </div>
+{% endblock content %}
+
+{% block javascripts %}
+  <script src="{{ url_for('static', filename='assets/plugins/jquery/jquery.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='assets/js/adminlte.js') }}"></script>
+{% endblock javascripts %}

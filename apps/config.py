@@ -154,6 +154,42 @@ class Config(object):
     # been quiet for at least this many minutes (sent by the flush-support-emails CLI job)
     SUPPORT_EMAIL_BATCH_MINUTES = int(os.getenv("SUPPORT_EMAIL_BATCH_MINUTES", 10))
 
+    # -------- RAG assistant (doc/rag-assistant-design.md) --------
+    # Master switch. Off = the chat widget behaves exactly as it did before the
+    # assistant existed (human support only, no mode chooser).
+    RAG_ENABLED = os.getenv("RAG_ENABLED", "False") == "True"
+    # Base URL of the hisdn-rag container, e.g. http://hisdn-rag:8080
+    RAG_SERVICE_URL = os.getenv("RAG_SERVICE_URL", "")
+    RAG_SERVICE_TOKEN = os.getenv("RAG_SERVICE_TOKEN", "")
+    # Client-side wall clock for one answer. Generous on purpose: a CPU-only
+    # host takes 10-20 s, and the alternative to waiting is a human support case.
+    RAG_TIMEOUT_S = float(os.getenv("RAG_TIMEOUT_S", "45"))
+    RAG_INGEST_TIMEOUT_S = float(os.getenv("RAG_INGEST_TIMEOUT_S", "300"))
+    # Circuit breaker: consecutive failures that stop us from trying, and for how long
+    RAG_BREAKER_FAILURES = int(os.getenv("RAG_BREAKER_FAILURES", 3))
+    RAG_BREAKER_RESET_S = int(os.getenv("RAG_BREAKER_RESET_S", 60))
+    # Per-user question budget: the single generation slot is a shared resource
+    RAG_USER_RATE_LIMIT = int(os.getenv("RAG_USER_RATE_LIMIT", 10))
+    RAG_USER_RATE_WINDOW_MIN = int(os.getenv("RAG_USER_RATE_WINDOW_MIN", 10))
+    # Conversation turns sent along with a question (cheap, and worth it for
+    # follow-ups like "and how do I undo that?")
+    RAG_HISTORY_TURNS = int(os.getenv("RAG_HISTORY_TURNS", 2))
+    # Persist assistant Q&A in support_messages. Turning this off also disables
+    # answer feedback -- there is no stored message to attach a vote to -- and
+    # an escalated case then carries only the user's own messages.
+    RAG_STORE_TRANSCRIPTS = os.getenv("RAG_STORE_TRANSCRIPTS", "True") == "True"
+    # Corpora the rag-ingest CLI sends (CSV -> list); see doc/rag-assistant-design.md
+    RAG_INGEST_SOURCES = [
+        s.strip() for s in os.getenv("RAG_INGEST_SOURCES", "repo-docs,faq,lab-descriptions").split(",")
+        if s.strip()
+    ]
+    # How many documents rag-ingest posts per /v1/ingest request
+    RAG_INGEST_BATCH = int(os.getenv("RAG_INGEST_BATCH", 32))
+    # Public base URL used to build citation links for ingested repo docs
+    RAG_DOCS_BASE_URL = os.getenv(
+        "RAG_DOCS_BASE_URL", "https://github.com/hackinsdn/dashboard/blob/main"
+    )
+
     # Lab field version control: how many versions to keep per lab per field
     # (manifest, lab_guide, extended_desc); the oldest are pruned beyond this cap
     LAB_FIELD_VERSIONS_MAX = int(os.getenv("LAB_FIELD_VERSIONS_MAX", 50))

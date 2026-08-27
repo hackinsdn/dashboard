@@ -7,12 +7,13 @@ from apps import db, cache
 from apps.api import blueprint
 from apps.controllers import k8s, git
 from apps.controllers import support
+from apps.controllers import rag_client
 from apps.controllers import lab_versions
 from apps.home.models import Labs, LabInstances, LabAnswers, LabAnswerSheet, UserLikes, UserFeedbacks, lab_groups, LabCategories, SupportThreads, SupportMessages
 from apps.authentication.models import Users, Groups, DeletedGroupUsers, group_members, group_owners
 from apps.audit_mixin import check_user_category, get_remote_addr
 from flask import request, current_app
-from flask_babel import gettext as _
+from flask_babel import gettext as _, get_locale
 from flask_login import login_required, current_user
 from datetime import timedelta, datetime
 from apps.utils import datetime_from_ts, parse_lab_expiration, check_pre_approved, secure_filename
@@ -822,7 +823,11 @@ def post_support_message():
         is_new = False
     else:
         is_new = support.get_active_thread(current_user) is None
-        thread = support.get_or_create_active_thread(current_user)
+        # ``mode`` applies to a thread being created (the widget's chooser);
+        # an ongoing conversation keeps the mode it started with.
+        thread = support.get_or_create_active_thread(
+            current_user, mode=data.get("mode"), locale=_current_locale()
+        )
 
     message = support.add_message(thread, "user", body, is_read=False)
     if is_new:
@@ -908,6 +913,204 @@ def post_support_reply(thread_id):
     support.mark_thread_read(thread)
     db.session.commit()
     return {"thread_id": thread.id, "messages": [message.as_dict()]}, 201
+
+
+# --- RAG assistant (doc/rag-assistant-design.md) ----------------------------
+def _current_locale():
+    """The locale the UI is currently rendered in ("en", "pt_BR", ...)."""
+    try:
+        return str(get_locale() or current_app.config.get("BABEL_DEFAULT_LOCALE", "en"))
+    except Exception:
+        return current_app.config.get("BABEL_DEFAULT_LOCALE", "en")
+
+
+@blueprint.route('/support/assistant/status', methods=["GET"])
+@login_required
+def get_assistant_status():
+    """Whether the widget should offer the assistant at all.
+
+    Drives the mode chooser: when the assistant is disabled or the circuit
+    breaker is open, the widget hides it and behaves exactly as it did before.
+    """
+    return {
+        "enabled": bool(current_app.config.get("RAG_ENABLED")),
+        "available": support.assistant_available(),
+        "feedback": bool(current_app.config.get("RAG_STORE_TRANSCRIPTS", True)),
+        "locale": _current_locale(),
+    }, 200
+
+
+@blueprint.route('/support/thread/mode', methods=["POST"])
+@login_required
+def set_support_thread_mode():
+    """Set who answers the active conversation (support | assistant).
+
+    With no active thread there is nothing to set: the widget remembers the
+    choice and sends it with the first message, so picking a mode never creates
+    an empty support case.
+    """
+    data = request.get_json(silent=True) or {}
+    mode = data.get("mode")
+    if mode not in (support.MODE_SUPPORT, support.MODE_ASSISTANT):
+        return {"error": _("invalid mode")}, 400
+    if mode == support.MODE_ASSISTANT and not support.assistant_available():
+        return {"error": _("The assistant is unavailable right now."), "available": False}, 409
+
+    thread = support.get_active_thread(current_user)
+    if thread is None:
+        return {"status": "ok", "thread": None, "mode": mode}, 200
+    if thread.status == "finished":
+        return {"error": _("This conversation has been finished."), "finished": True}, 409
+
+    support.set_thread_mode(thread, mode, locale=_current_locale())
+    db.session.commit()
+    return {"status": "ok", "thread_id": thread.id, "mode": thread.mode}, 200
+
+
+@blueprint.route('/support/assistant/answer', methods=["POST"])
+@login_required
+def post_assistant_answer():
+    """Answer the conversation's latest user message with the RAG assistant.
+
+    Deliberately a *second* request rather than part of the message POST: CPU
+    generation takes seconds, and this way the user's message is already
+    persisted and can never be lost by a generation failure. Blocks up to
+    RAG_TIMEOUT_S; gunicorn's gevent worker yields while waiting.
+    """
+    if not current_app.config.get("RAG_ENABLED"):
+        return {"error": _("The assistant is not enabled.")}, 404
+
+    data = request.get_json(silent=True) or {}
+    thread_id = data.get("thread_id")
+    if thread_id is not None:
+        thread = db.session.get(SupportThreads, thread_id)
+        if thread is None or thread.user_id != current_user.id:
+            return {"status": "fail", "result": _("Thread not found")}, 404
+    else:
+        thread = support.get_active_thread(current_user)
+        if thread is None:
+            return {"status": "fail", "result": _("Thread not found")}, 404
+
+    if thread.status == "finished":
+        return {"error": _("This conversation has been finished."), "finished": True}, 409
+    if thread.mode != support.MODE_ASSISTANT:
+        return {"error": _("This conversation is handled by the support team.")}, 409
+
+    question = next((m.body for m in reversed(thread.messages) if m.sender == "user"), None)
+    if not question:
+        return {"error": _("message body is required")}, 400
+
+    if support.rate_limit_exceeded(current_user):
+        return {
+            "error": _(
+                "You have reached the limit of assistant questions. Please wait a "
+                "few minutes, or open a support case."
+            ),
+            "rate_limited": True,
+        }, 429
+
+    message, body, meta = support.answer_with_assistant(
+        thread, question, locale=thread.locale or _current_locale()
+    )
+    db.session.commit()
+
+    if message is None:
+        # RAG_STORE_TRANSCRIPTS=False: shown, not stored (and not votable).
+        return {
+            "thread_id": thread.id,
+            "stored": False,
+            "messages": [
+                {
+                    "id": None,
+                    "thread_id": thread.id,
+                    "sender": "assistant",
+                    "body": body,
+                    "sources": meta.get("sources") or [],
+                    "feedback": None,
+                    "created_at": None,
+                }
+            ],
+        }, 201
+
+    return {
+        "thread_id": thread.id,
+        "stored": True,
+        "status": meta.get("status"),
+        "messages": [message.as_dict()],
+    }, 201
+
+
+@blueprint.route('/support/thread/escalate', methods=["POST"])
+@login_required
+def escalate_support_thread():
+    """Hand the assistant conversation over to human support.
+
+    Captures telemetry at the moment of the hand-over -- the page the user gave
+    up on, not the one the conversation started from.
+    """
+    data = request.get_json(silent=True) or {}
+    thread_id = data.get("thread_id")
+    if thread_id is not None:
+        thread = db.session.get(SupportThreads, thread_id)
+        if thread is None or thread.user_id != current_user.id:
+            return {"status": "fail", "result": _("Thread not found")}, 404
+    else:
+        thread = support.get_active_thread(current_user)
+        if thread is None:
+            return {"status": "fail", "result": _("Thread not found")}, 404
+
+    if thread.status == "finished":
+        return {"error": _("This conversation has been finished."), "finished": True}, 409
+
+    message = support.escalate_thread(
+        thread,
+        page=(data.get("page") or "").strip() or None,
+        user_agent=request.headers.get("User-Agent"),
+        ip=get_remote_addr(),
+    )
+    db.session.commit()
+    return {
+        "status": "ok",
+        "thread_id": thread.id,
+        "mode": thread.mode,
+        "messages": [message.as_dict()] if message is not None else [],
+    }, 200
+
+
+@blueprint.route('/support/messages/<int:message_id>/feedback', methods=["POST"])
+@login_required
+def post_message_feedback(message_id):
+    """Record 👍/👎 on an assistant answer (thread owner only)."""
+    message = db.session.get(SupportMessages, message_id)
+    if message is None:
+        return {"status": "fail", "result": _("Message not found")}, 404
+    thread = db.session.get(SupportThreads, message.thread_id)
+    if thread is None or thread.user_id != current_user.id:
+        return {"status": "fail", "result": _("Message not found")}, 404
+    if message.sender != "assistant":
+        return {"error": _("Only assistant answers can be rated.")}, 400
+
+    data = request.get_json(silent=True) or {}
+    vote = data.get("vote")
+    if vote not in ("up", "down"):
+        return {"error": _("invalid vote")}, 400
+
+    stored = support.record_feedback(message, vote, reason=(data.get("reason") or "").strip())
+    db.session.commit()
+    return {"status": "ok", "message_id": message.id, "feedback": stored}, 200
+
+
+@blueprint.route('/support/assistant/stats', methods=["GET"])
+@login_required
+def get_assistant_stats():
+    """Service counters + locally computed feedback, for the admin panel."""
+    if current_user.category != "admin":
+        return {"status": "fail", "result": _("Unauthorized")}, 403
+    return {
+        "service": rag_client.stats(),
+        "breaker": rag_client.get_breaker().state() if rag_client.is_configured() else {},
+        "feedback": support.feedback_summary(),
+    }, 200
 
 
 def _get_lab_for_versions(lab_id):
