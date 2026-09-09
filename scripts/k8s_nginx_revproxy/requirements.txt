@@ -1,0 +1,5 @@
+# Python dependencies for k8s_nginx_revproxy.py
+kubernetes>=34.1.0
+# PySocks is only needed when using a SOCKS5 proxy (--proxy socks5h://...).
+# Installed via the urllib3[socks] extra so it matches the client's urllib3.
+urllib3[socks]>=2.0
