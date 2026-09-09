@@ -181,6 +181,9 @@ This requires PySocks (`pip install 'urllib3[socks]'`). The tunnel covers only
 the Kubernetes API traffic; nginx still reaches `hostIP:nodePort` over the normal
 network.
 
+Please check the `ssh-socks-tunnel.service` for an example on how to setup the SSH
+tunnel managed by systemd.
+
 ## Installing as a systemd service
 
 The unit file `k8s-nginx-revproxy.service` is included. It runs the daemon on a
