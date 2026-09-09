@@ -441,6 +441,10 @@ def view_lab_instance(lab_id):
         "created": "--",
         "expires_at": datetime_from_ts(lab_instance.expiration_ts),
     }
+    # reverse-proxy vhost domain (optional); when set, each web service link
+    # gets a candidate "{scheme}://{port}-{svc-name}.{PROXY_DOMAIN}" URL that the
+    # page probes client-side and swaps in if the vhost responds
+    proxy_domain = current_app.config.get("PROXY_DOMAIN", "")
     created = None
     #for pod in running_labs[(lab_instance.lab_id, owner.uid)]:
     for pod in lab_resources:
@@ -448,6 +452,14 @@ def view_lab_instance(lab_id):
         #    continue
         if not created or created > pod['created']:
             created = pod["created"]
+        # build the per-service proxy URL, index-aligned with "services"; only
+        # http(s) services get one (ssh/vnc are left pointing at the NodePort)
+        services_proxy = []
+        for prefix in pod.get("services_proxy", []):
+            if proxy_domain and (prefix.startswith("http://") or prefix.startswith("https://")):
+                services_proxy.append(f"{prefix}.{proxy_domain}")
+            else:
+                services_proxy.append("")
         lab_dict["resources"].append({
             "kind": "pod",
             "name": pod["name"],
@@ -455,6 +467,7 @@ def view_lab_instance(lab_id):
             "ready": pod["phase"],
             "links": pod["containers"],
             "services": pod["services"],
+            "services_proxy": services_proxy,
             "age": pod['age'],
             "node_name": pod.get("node_name", "--"),
             "pod_ip": pod.get("pod_ip", "--"),

@@ -160,7 +160,8 @@ word-break: break-all;
                     <td>
                       <div class="d-flex flex-nowrap">
                         {% for service in resource['services'] %}
-                        <a class="btn btn-outline-dark mr-1 btn-service" href="{{ service[1] }}" target="_blank" role="button"><i class="fas fa-globe"></i> {{ service[0] }}</a>
+                        {% set proxy_url = resource['services_proxy'][loop.index0] if resource['services_proxy']|length > loop.index0 else '' %}
+                        <a class="btn btn-outline-dark mr-1 btn-service" href="{{ service[1] }}"{% if proxy_url %} data-proxy-url="{{ proxy_url }}"{% endif %} target="_blank" role="button"><i class="fas fa-globe"></i> {{ service[0] }}</a>
                         {% endfor %}
                       </div>
                     </td>
@@ -521,6 +522,40 @@ word-break: break-all;
       // here; run immediately instead of waiting for window "load" (which can
       // be delayed by images or may have already fired)
       loadAnswers();
+      // ---- reverse-proxy vhost links ----
+      // Each web service link may carry a candidate reverse-proxy URL
+      // ("{scheme}://{port}-{svc-name}.{PROXY_DOMAIN}"). Probe it and, if the
+      // vhost responds with success/redirect, use it as the actual link.
+      // On any failure the original NodePort link is left untouched.
+      function probeProxyLink(anchor) {
+        var proxyUrl = anchor.getAttribute('data-proxy-url');
+        if (!proxyUrl || typeof fetch !== 'function') {
+          return;
+        }
+        var controller = (typeof AbortController === 'function') ? new AbortController() : null;
+        var timer = controller ? setTimeout(function () { controller.abort(); }, 5000) : null;
+        fetch(proxyUrl, {
+          method: 'GET',
+          redirect: 'manual',
+          signal: controller ? controller.signal : undefined
+        }).then(function (resp) {
+          if (timer) { clearTimeout(timer); }
+          // With redirect:'manual' a 3xx surfaces as an opaqueredirect
+          // (status 0); a CORS-readable response exposes the real status.
+          // Treat 2xx/3xx as "the vhost exists" and swap the link.
+          var isRedirect = resp.type === 'opaqueredirect';
+          var isSuccess = resp.ok || (resp.status >= 200 && resp.status < 400);
+          if (isRedirect || isSuccess) {
+            anchor.setAttribute('href', proxyUrl);
+          }
+        }).catch(function () {
+          if (timer) { clearTimeout(timer); }
+          // unreachable / CORS-blocked / timed out: keep the original link
+        });
+      }
+      $('.btn-service[data-proxy-url]').each(function () {
+        probeProxyLink(this);
+      });
     })
     // Extends lab expiration
     function extendLabExpiration(hours) {

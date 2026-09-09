@@ -4,6 +4,11 @@ All notable changes to this project are documented here, grouped by tagged versi
 
 ## [UNRELEASED] - Under development
 
+### Added
+- Rewrite Lab Instance service links to a reverse-proxy vhost
+  (`{port}-{service-name}.{PROXY_DOMAIN}`) when the vhost responds, controlled
+  by the new `PROXY_DOMAIN` setting.
+
 ## [2.0.15] - 2026-08-27
 
 ### Fixed
