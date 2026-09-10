@@ -1,0 +1,50 @@
+[Unit]
+Description=Kubernetes NodePort -> nginx reverse proxy
+Documentation=https://github.com/hackinsdn/dashboard/tree/main/scripts/k8s_nginx_revproxy
+After=network-online.target nginx.service
+Wants=network-online.target
+# If the API is reached through a SOCKS5 SSH tunnel, uncomment and provide a
+# tunnel unit (see README) so the proxy starts only once the tunnel is up:
+# After=socks-tunnel.service
+# Wants=socks-tunnel.service
+
+[Service]
+Type=simple
+
+# --- Configuration (edit to match your environment) --------------------------
+# Domain that the wildcard cert/DNS record cover. Vhosts are published as
+# <port>-<service>.<PROXY_DOMAIN>.
+Environment=PROXY_DOMAIN=k8s-ingress.example.com
+# Namespace(s) to watch (comma or space separated).
+Environment=NAMESPACES=hackinsdn
+# Uncomment to route the Kubernetes API through a local SOCKS5 SSH tunnel:
+# Environment=PROXY=socks5h://127.0.0.1:1080
+
+ExecStart=/opt/k8s-nginx-revproxy/bin/python3 /opt/k8s-nginx-revproxy/k8s_nginx_revproxy.py \
+    --kubeconfig /etc/k8s-nginx-revproxy/kubeconfig-node1.yaml \
+    --kubeconfig /etc/k8s-nginx-revproxy/kubeconfig-node2.yaml \
+    --kubeconfig /etc/k8s-nginx-revproxy/kubeconfig-node3.yaml \
+    --ssl-certificate /etc/letsencrypt/live/k8s-ingress.example.com/fullchain.pem \
+    --ssl-certificate-key /etc/letsencrypt/live/k8s-ingress.example.com/privkey.pem \
+    --output-dir /etc/nginx/k8s-revproxy \
+    --reload-cmd 'systemctl reload nginx'
+
+Restart=on-failure
+RestartSec=5
+
+# --- Sandboxing --------------------------------------------------------------
+# The proxy only needs to read /etc/nginx and write its own vhost directory.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+# Paths the process must be able to write. '-' makes missing paths non-fatal.
+ReadWritePaths=/etc/nginx/k8s-revproxy -/var/log/nginx -/var/lib/nginx -/var/cache/nginx -/run
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=true
+
+[Install]
+WantedBy=multi-user.target

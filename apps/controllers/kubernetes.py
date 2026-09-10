@@ -513,6 +513,7 @@ class K8sController():
         owners.update(rs_uid_to_dep.keys())
 
         pod_services = {}
+        pod_services_proxy = {}
         pod_names = {}
         app_pod_map = defaultdict(list)
         pods_by_uid = {}
@@ -534,6 +535,7 @@ class K8sController():
             if pod.metadata.uid not in owners and not is_child:
                 continue
             pod_services[pod.metadata.uid] = []
+            pod_services_proxy[pod.metadata.uid] = []
             statuses = [
                 status.ready for status in pod.status.container_statuses
             ]
@@ -557,6 +559,10 @@ class K8sController():
                 "pod_ip": pod.status.pod_ip,
                 "containers": containers,
                 "services": pod_services[pod.metadata.uid],
+                # reverse-proxy vhost prefix ("{scheme}://{port}-{svc-name}") for
+                # each entry in "services", index-aligned; the view appends the
+                # configured PROXY_DOMAIN and probes it client-side
+                "services_proxy": pod_services_proxy[pod.metadata.uid],
                 "phase": pod.status.phase,
                 "labels": pod_labels,
                 "more": str(pod),
@@ -625,6 +631,9 @@ class K8sController():
                     ]
                     if port.node_port:
                         pod_services[pod.metadata.uid].append(service_link)
+                        pod_services_proxy[pod.metadata.uid].append(
+                            f"{self.try_get_app(port_name)}{port.port}-{srv.metadata.name}"
+                        )
 
         return labs
 

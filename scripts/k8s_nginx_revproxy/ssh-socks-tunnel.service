@@ -1,0 +1,16 @@
+[Unit]
+Description=SSH SOCKS5 Proxy Tunnel
+After=network.target
+
+[Service]
+Type=simple
+# Ensure you replace username and your-bastion-host.com with your actual details
+ExecStart=/usr/bin/ssh -D 1080 -q -N -o ServerAliveInterval=60 -o ExitOnForwardFailure=yes yourusername@yourjumphost
+
+# Automatically restart the tunnel on failure
+Restart=always
+# Wait 10 seconds before attempting a restart
+RestartSec=10
+
+[Install]
+WantedBy=default.target

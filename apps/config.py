@@ -178,6 +178,11 @@ class Config(object):
     LAB_EXPIRATION_WARN_SEC = 48*60*60
     LAB_EXPIRATION_TOLERANACE_SEC = 48*60*60
 
+    # Reverse-proxy vhost domain. When set, service links in the Lab Instance
+    # view are probed against "{port}-{service-name}.{PROXY_DOMAIN}" and swapped
+    # to that URL when the vhost responds. Empty disables the behavior.
+    PROXY_DOMAIN = os.getenv("PROXY_DOMAIN", "")
+
     #Testbed infos
     TESTBED_TITLE = os.getenv("TESTBED_TITLE", "HackInSDN Testbed")
     TESTBED_NODES_GEOTAG = {
