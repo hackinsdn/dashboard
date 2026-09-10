@@ -524,9 +524,19 @@ word-break: break-all;
       loadAnswers();
       // ---- reverse-proxy vhost links ----
       // Each web service link may carry a candidate reverse-proxy URL
-      // ("{scheme}://{port}-{svc-name}.{PROXY_DOMAIN}"). Probe it and, if the
-      // vhost responds with success/redirect, use it as the actual link.
-      // On any failure the original NodePort link is left untouched.
+      // ("https://{port}-{svc-name}.{PROXY_DOMAIN}"). Probe it and, if the
+      // vhost is reachable, use it as the actual link; on any failure the
+      // original NodePort link is left untouched.
+      //
+      // The probe uses mode:'no-cors' on purpose. The proxied lab services are
+      // a different origin than the dashboard and don't emit CORS headers, and
+      // many require auth (GET / returns 401) -- a CORS-mode probe can't read
+      // any of those responses and just throws. An opaque no-cors response
+      // can't expose the status, but that's fine: a reachable vhost (200/302/
+      // 401/...) resolves the promise, while a hostname with no configured
+      // vhost is rejected by the reverse proxy's default server ("return 444",
+      // see scripts/k8s_nginx_revproxy/NGINX_SETUP.md) and makes fetch reject.
+      // So "promise resolved" == "vhost exists" -> swap.
       function probeProxyLink(anchor) {
         var proxyUrl = anchor.getAttribute('data-proxy-url');
         if (!proxyUrl || typeof fetch !== 'function') {
@@ -536,21 +546,15 @@ word-break: break-all;
         var timer = controller ? setTimeout(function () { controller.abort(); }, 5000) : null;
         fetch(proxyUrl, {
           method: 'GET',
-          redirect: 'manual',
+          mode: 'no-cors',
           signal: controller ? controller.signal : undefined
-        }).then(function (resp) {
+        }).then(function () {
           if (timer) { clearTimeout(timer); }
-          // With redirect:'manual' a 3xx surfaces as an opaqueredirect
-          // (status 0); a CORS-readable response exposes the real status.
-          // Treat 2xx/3xx as "the vhost exists" and swap the link.
-          var isRedirect = resp.type === 'opaqueredirect';
-          var isSuccess = resp.ok || (resp.status >= 200 && resp.status < 400);
-          if (isRedirect || isSuccess) {
-            anchor.setAttribute('href', proxyUrl);
-          }
+          anchor.setAttribute('href', proxyUrl);
         }).catch(function () {
           if (timer) { clearTimeout(timer); }
-          // unreachable / CORS-blocked / timed out: keep the original link
+          // unreachable / rejected by the default server / timed out: keep the
+          // original NodePort link
         });
       }
       $('.btn-service[data-proxy-url]').each(function () {
