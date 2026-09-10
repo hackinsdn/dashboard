@@ -442,7 +442,7 @@ def view_lab_instance(lab_id):
         "expires_at": datetime_from_ts(lab_instance.expiration_ts),
     }
     # reverse-proxy vhost domain (optional); when set, each web service link
-    # gets a candidate "{scheme}://{port}-{svc-name}.{PROXY_DOMAIN}" URL that the
+    # gets a candidate "https://{port}-{svc-name}.{PROXY_DOMAIN}" URL that the
     # page probes client-side and swaps in if the vhost responds
     proxy_domain = current_app.config.get("PROXY_DOMAIN", "")
     created = None
@@ -453,11 +453,16 @@ def view_lab_instance(lab_id):
         if not created or created > pod['created']:
             created = pod["created"]
         # build the per-service proxy URL, index-aligned with "services"; only
-        # http(s) services get one (ssh/vnc are left pointing at the NodePort)
+        # http(s) services get one (ssh/vnc are left pointing at the NodePort).
+        # The proxy URL is always https:// regardless of the backend scheme: the
+        # nginx reverse proxy terminates TLS and translates https->http to the
+        # NodePort, and an http:// link would be blocked as mixed content on the
+        # https dashboard page.
         services_proxy = []
         for prefix in pod.get("services_proxy", []):
             if proxy_domain and (prefix.startswith("http://") or prefix.startswith("https://")):
-                services_proxy.append(f"{prefix}.{proxy_domain}")
+                host = prefix.split("://", 1)[1]
+                services_proxy.append(f"https://{host}.{proxy_domain}")
             else:
                 services_proxy.append("")
         lab_dict["resources"].append({
