@@ -20,7 +20,70 @@ from apps.controllers import k8s
 xterm_clients = {}
 
 
-def check_authorization(username, pod, container):
+def check_authorization(user, lab_id, kind, pod, container):
+    """Verify ``user`` may open a shell into ``pod`` of lab instance ``lab_id``.
+
+    The /pty websocket is a separate connection from the xterm HTTP page, so it
+    must re-authorize on its own rather than trust that the page was served.
+    Access is denied when the lab instance is unknown/finished, the user is not
+    its owner (nor an admin or a privileged member of one of the lab's groups),
+    the pod no longer exists, or the pod does not belong to this instance. The
+    existence check stops the handler from dialing a pod that is gone -- e.g. a
+    stale browser tab left open on a lab that has since been torn down, whose
+    reconnect attempts would otherwise hit a 404 on every exec.
+    """
+    # imported lazily to avoid a circular import at module load (apps -> events)
+    from apps import db
+    from apps.home.models import LabInstances, Labs
+
+    if not lab_id:
+        return False
+    lab_instance = db.session.get(LabInstances, lab_id)
+    if not lab_instance or lab_instance.is_deleted:
+        current_app.logger.info(
+            f"xterm authz denied: lab instance not found/finished {lab_id=} user={user.username}"
+        )
+        return False
+
+    # owner, admin, or a privileged (owner/assistant) member of one of the lab's
+    # allowed groups -- mirrors view_lab_instance in apps/home/routes.py
+    authorized = lab_instance.user_id == user.id or user.category == "admin"
+    if not authorized:
+        lab = db.session.get(Labs, lab_instance.lab_id)
+        if lab:
+            privileged_group_ids = user.privileged_group_ids
+            authorized = any(g.id in privileged_group_ids for g in lab.allowed_groups)
+    if not authorized:
+        current_app.logger.info(
+            f"xterm authz denied: user not authorized {lab_id=} user={user.username}"
+        )
+        return False
+
+    # the pod must still exist (a stale tab on a torn-down lab is rejected here,
+    # before any exec is attempted -- a 404 read is not a failover trigger, so it
+    # no longer cycles the kubeconfigs). read_namespaced_pod raises on NotFound.
+    try:
+        pod_obj = k8s.get_pod_by_name({"name": pod})
+    except Exception as exc:
+        current_app.logger.info(
+            f"xterm authz denied: {pod=} not found for {lab_id=} user={user.username}: {exc}"
+        )
+        return False
+
+    # and it must belong to THIS lab instance, so an authorized user of one lab
+    # cannot exec into another lab's pod by naming it. Pods do not carry the
+    # user_uid/lab_id labels (those live on the owning Deployment/Topology), but
+    # the pod's "app"/"clabernetes/name" label matches a resource name recorded
+    # for the instance (the Deployment name for regular labs, the Topology name
+    # for clab), so bind on that without any extra API call.
+    labels = (pod_obj.get("metadata") or {}).get("labels") or {}
+    pod_keys = {labels.get("app"), labels.get("clabernetes/name")}
+    resource_names = {res.get("name") for res in lab_instance.k8s_resources}
+    if not (pod_keys & resource_names):
+        current_app.logger.info(
+            f"xterm authz denied: {pod=} does not belong to {lab_id=} user={user.username}"
+        )
+        return False
     return True
 
 
@@ -110,14 +173,15 @@ def pty_connect(auth):
     global xterm_clients
     """new client connected."""
     host = request.args.get("host")
+    lab_id = request.args.get("lab_id")
     try:
         kind, pod, container = host.split("/")
     except:
         current_app.logger.error(f"Invalid host trying to open xterm {host=} user={current_user.username}")
         return False
     session_id = request.sid
-    if not check_authorization(current_user.username, pod, container):
-        current_app.logger.info(f"socketio connnect request for unknown {request.args=}")
+    if not check_authorization(current_user, lab_id, kind, pod, container):
+        current_app.logger.info(f"xterm connect rejected {request.args=} user={current_user.username}")
         return False
     if session_id in xterm_clients:
         current_app.logger.info(f"session already connected")

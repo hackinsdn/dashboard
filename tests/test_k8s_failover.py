@@ -157,6 +157,57 @@ class TestRotation:
         assert ctrl._failover_stats["total_failovers"] == 0
         ctrl._endpoints[1].v1_api.read_namespaced_pod.assert_not_called()
 
+    def test_ws_handshake_404_does_not_fail_over(self, make_ctrl, monkeypatch):
+        # exec/attach go over a websocket; a gone pod surfaces as
+        # ApiException(status=0) with the real 404 only in the reason text. It
+        # is a definitive answer and must NOT rotate the kubeconfig.
+        # stream() wraps the api method (needs .__self__), so drive the mocked
+        # method directly instead.
+        monkeypatch.setattr(k8s_module, "stream", lambda method, *a, **k: method(*a, **k))
+        ctrl = make_ctrl(["/a", "/b"])
+        exc = ApiException(status=0, reason=(
+            "Handshake status 404 Not Found -+-+- {'content-type': 'application/json'}"
+            " -+-+- b'{\"reason\":\"NotFound\",\"code\":404}'"
+        ))
+        for ep in ctrl._endpoints:
+            ep.v1_api.connect_get_namespaced_pod_exec.side_effect = exc
+
+        with pytest.raises(ApiException):
+            ctrl.get_pod_exec_stream("mininet-sec-dead", "mininet-sec")
+
+        assert ctrl._active_idx == 0  # unchanged
+        assert ctrl._failover_stats["total_failovers"] == 0
+        ctrl._endpoints[1].v1_api.connect_get_namespaced_pod_exec.assert_not_called()
+
+    def test_ws_handshake_401_fails_over(self, make_ctrl, monkeypatch):
+        # an auth failure on the streaming path (status 0 + "Handshake status
+        # 401") should still rotate to the next kubeconfig.
+        monkeypatch.setattr(k8s_module, "stream", lambda method, *a, **k: method(*a, **k))
+        ctrl = make_ctrl(["/a", "/b"])
+        ctrl._endpoints[0].v1_api.connect_get_namespaced_pod_exec.side_effect = ApiException(
+            status=0, reason="Handshake status 401 Unauthorized")
+        ctrl._endpoints[1].v1_api.connect_get_namespaced_pod_exec.return_value = "stream-ok"
+
+        result = ctrl.get_pod_exec_stream("p1", "c1")
+
+        assert result == "stream-ok"
+        assert ctrl._active_idx == 1
+        assert ctrl._failover_stats["recent"][-1]["reason"] == "auth_401"
+
+    def test_ws_transport_error_status0_fails_over(self, make_ctrl, monkeypatch):
+        # a genuine transport failure (no HTTP handshake response) is status 0
+        # with no "Handshake status" text -> still a failover trigger.
+        monkeypatch.setattr(k8s_module, "stream", lambda method, *a, **k: method(*a, **k))
+        ctrl = make_ctrl(["/a", "/b"])
+        ctrl._endpoints[0].v1_api.connect_get_namespaced_pod_exec.side_effect = ApiException(
+            status=0, reason="Connection to remote host was lost")
+        ctrl._endpoints[1].v1_api.connect_get_namespaced_pod_exec.return_value = "stream-ok"
+
+        result = ctrl.get_pod_exec_stream("p1", "c1")
+
+        assert result == "stream-ok"
+        assert ctrl._active_idx == 1
+
     def test_all_endpoints_down_reraises_after_len_attempts(self, make_ctrl):
         ctrl = make_ctrl(["/a", "/b", "/c"])
         for ep in ctrl._endpoints:
