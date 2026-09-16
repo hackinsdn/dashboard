@@ -86,9 +86,6 @@ def captured_emits(monkeypatch):
 
 # --- standalone helpers -------------------------------------------------
 class TestHelpers:
-    def test_check_authorization(self):
-        assert events.check_authorization("user", "pod", "container") is True
-
     def test_resize_terminal(self):
         stream = MagicMock()
         events.resize_terminal(stream, 24, 80)
@@ -169,6 +166,126 @@ class TestHelpers:
         assert captured_emits[-1][0][1] == {"returncode": 0}
 
 
+# --- check_authorization ------------------------------------------------
+class TestCheckAuthorization:
+    """Unit tests for the /pty authorization gate.
+
+    The lazy ``from apps import db`` / ``from apps.home.models import ...`` inside
+    check_authorization resolve to the real objects, so db.session.get and
+    k8s.get_pod_by_name are monkeypatched to fake the lookups. current_app is
+    only used for logging, hence the app context.
+
+    The instance's recorded resources include a Deployment named "d1"; a live pod
+    of that instance carries the label ``app: d1`` (as clabernetes/regular pods
+    do), which is how the pod is bound back to the instance.
+    """
+
+    def _user(self, uid=1, category="student", groups=()):
+        return types.SimpleNamespace(
+            id=uid, username="tester", category=category,
+            privileged_group_ids=set(groups),
+        )
+
+    def _instance(self, user_id=1, lab_id="lab1", is_deleted=False):
+        return types.SimpleNamespace(
+            user_id=user_id, lab_id=lab_id, is_deleted=is_deleted,
+            k8s_resources=[{"kind": "Deployment", "name": "d1", "uid": "u1"}],
+        )
+
+    def _patch_db(self, monkeypatch, lab_instance=None, lab=None):
+        from apps import db
+        from apps.home.models import LabInstances, Labs
+
+        def fake_get(model, ident):
+            if model is LabInstances:
+                return lab_instance
+            if model is Labs:
+                return lab
+            return None
+
+        monkeypatch.setattr(db.session, "get", fake_get)
+
+    def _patch_pod(self, monkeypatch, labels=None, missing=False):
+        if missing:
+            get_pod = MagicMock(side_effect=Exception("(404) NotFound"))
+        else:
+            get_pod = MagicMock(return_value={"metadata": {"labels": labels or {}}})
+        monkeypatch.setattr(events, "k8s", types.SimpleNamespace(get_pod_by_name=get_pod))
+        return get_pod
+
+    def test_denied_without_lab_id(self):
+        with flask_app.app_context():
+            assert events.check_authorization(self._user(), None, "pod", "p", "c") is False
+
+    def test_denied_when_instance_missing(self, monkeypatch):
+        self._patch_db(monkeypatch, lab_instance=None)
+        with flask_app.app_context():
+            assert events.check_authorization(self._user(), "lab1", "pod", "p", "c") is False
+
+    def test_denied_when_instance_finished(self, monkeypatch):
+        self._patch_db(monkeypatch, lab_instance=self._instance(is_deleted=True))
+        with flask_app.app_context():
+            assert events.check_authorization(self._user(), "lab1", "pod", "p", "c") is False
+
+    def test_owner_with_existing_pod_is_authorized(self, monkeypatch):
+        self._patch_db(monkeypatch, lab_instance=self._instance(user_id=7))
+        self._patch_pod(monkeypatch, labels={"app": "d1"})
+        with flask_app.app_context():
+            assert events.check_authorization(self._user(uid=7), "lab1", "pod", "p", "c") is True
+
+    def test_owner_clab_pod_bound_by_clabernetes_name(self, monkeypatch):
+        # clab node pods carry clabernetes/name (the Topology name) instead of app
+        inst = self._instance(user_id=7)
+        inst.k8s_resources = [{"kind": "Topology", "name": "clab-abc", "uid": "u1"}]
+        self._patch_db(monkeypatch, lab_instance=inst)
+        self._patch_pod(monkeypatch, labels={"clabernetes/name": "clab-abc"})
+        with flask_app.app_context():
+            assert events.check_authorization(self._user(uid=7), "lab1", "clab", "p", "c") is True
+
+    def test_owner_but_pod_missing_is_rejected(self, monkeypatch):
+        # read_namespaced_pod raises NotFound -> stale tab on a torn-down lab
+        self._patch_db(monkeypatch, lab_instance=self._instance(user_id=7))
+        self._patch_pod(monkeypatch, missing=True)
+        with flask_app.app_context():
+            assert events.check_authorization(self._user(uid=7), "lab1", "pod", "gone", "c") is False
+
+    def test_owner_pod_of_other_lab_is_rejected(self, monkeypatch):
+        # the pod exists but its label matches no resource of THIS instance
+        self._patch_db(monkeypatch, lab_instance=self._instance(user_id=7))
+        self._patch_pod(monkeypatch, labels={"app": "someone-elses-deploy"})
+        with flask_app.app_context():
+            assert events.check_authorization(self._user(uid=7), "lab1", "pod", "victim", "c") is False
+
+    def test_non_owner_without_group_is_denied(self, monkeypatch):
+        self._patch_db(
+            monkeypatch,
+            lab_instance=self._instance(user_id=7),
+            lab=types.SimpleNamespace(allowed_groups=[types.SimpleNamespace(id=9)]),
+        )
+        self._patch_pod(monkeypatch, labels={"app": "d1"})
+        with flask_app.app_context():
+            # user 3 owns nothing, is not admin, not privileged in group 9
+            assert events.check_authorization(self._user(uid=3), "lab1", "pod", "p", "c") is False
+
+    def test_privileged_group_member_is_authorized(self, monkeypatch):
+        self._patch_db(
+            monkeypatch,
+            lab_instance=self._instance(user_id=7),
+            lab=types.SimpleNamespace(allowed_groups=[types.SimpleNamespace(id=9)]),
+        )
+        self._patch_pod(monkeypatch, labels={"app": "d1"})
+        with flask_app.app_context():
+            assert events.check_authorization(
+                self._user(uid=3, groups={9}), "lab1", "pod", "p", "c") is True
+
+    def test_admin_is_authorized_for_any_owner(self, monkeypatch):
+        self._patch_db(monkeypatch, lab_instance=self._instance(user_id=7))
+        self._patch_pod(monkeypatch, labels={"app": "d1"})
+        with flask_app.app_context():
+            assert events.check_authorization(
+                self._user(uid=99, category="admin"), "lab1", "pod", "p", "c") is True
+
+
 # --- pty_connect --------------------------------------------------------
 class TestPtyConnect:
     def test_invalid_host_is_rejected(self, logged_in):
@@ -177,14 +294,25 @@ class TestPtyConnect:
             assert events.pty_connect(None) is False
         assert events.xterm_clients == {}
 
+    def test_unauthorized_connect_is_rejected(self, logged_in, monkeypatch):
+        monkeypatch.setattr(events, "check_authorization", MagicMock(return_value=False))
+        monkeypatch.setattr(events, "k8s", types.SimpleNamespace(get_pod_exec_stream=MagicMock()))
+
+        with flask_app.test_request_context("/?host=pod/mypod/mycont&lab_id=lab1"):
+            request.sid = "sid1"
+            assert events.pty_connect(None) is False
+
+        assert events.xterm_clients == {}
+
     def test_happy_path_registers_session(self, logged_in, monkeypatch):
+        monkeypatch.setattr(events, "check_authorization", MagicMock(return_value=True))
         fake_stream = MagicMock()
         get_stream = MagicMock(return_value=fake_stream)
         monkeypatch.setattr(events, "k8s", types.SimpleNamespace(get_pod_exec_stream=get_stream))
         bg = MagicMock()
         monkeypatch.setattr(events.socketio, "start_background_task", bg)
 
-        with flask_app.test_request_context("/?host=pod/mypod/mycont"):
+        with flask_app.test_request_context("/?host=pod/mypod/mycont&lab_id=lab1"):
             request.sid = "sid1"
             events.pty_connect(None)
 
@@ -193,22 +321,24 @@ class TestPtyConnect:
         bg.assert_called_once()
 
     def test_clab_kind_uses_ssh_start_script(self, logged_in, monkeypatch):
+        monkeypatch.setattr(events, "check_authorization", MagicMock(return_value=True))
         get_stream = MagicMock(return_value=MagicMock())
         monkeypatch.setattr(events, "k8s", types.SimpleNamespace(get_pod_exec_stream=get_stream))
         monkeypatch.setattr(events.socketio, "start_background_task", MagicMock())
 
-        with flask_app.test_request_context("/?host=clab/mypod/mycont"):
+        with flask_app.test_request_context("/?host=clab/mypod/mycont&lab_id=lab1"):
             request.sid = "sid1"
             events.pty_connect(None)
 
         get_stream.assert_called_once_with("mypod", "mycont", "ssh mycont")
 
     def test_already_connected_is_rejected(self, logged_in, monkeypatch):
+        monkeypatch.setattr(events, "check_authorization", MagicMock(return_value=True))
         sentinel = object()
         events.xterm_clients["sid1"] = sentinel
         monkeypatch.setattr(events, "k8s", types.SimpleNamespace(get_pod_exec_stream=MagicMock()))
 
-        with flask_app.test_request_context("/?host=pod/mypod/mycont"):
+        with flask_app.test_request_context("/?host=pod/mypod/mycont&lab_id=lab1"):
             request.sid = "sid1"
             assert events.pty_connect(None) is False
 
@@ -232,13 +362,14 @@ class TestSocketIOConnectDispatch:
     """
 
     def test_pty_connect_through_real_dispatch(self, logged_in, monkeypatch):
+        monkeypatch.setattr(events, "check_authorization", MagicMock(return_value=True))
         fake_stream = MagicMock()
         monkeypatch.setattr(events, "k8s", types.SimpleNamespace(
             get_pod_exec_stream=MagicMock(return_value=fake_stream)))
         monkeypatch.setattr(events.socketio, "start_background_task", MagicMock())
 
         client = events.socketio.test_client(
-            flask_app, namespace="/pty", query_string="host=pod/mypod/mycont")
+            flask_app, namespace="/pty", query_string="host=pod/mypod/mycont&lab_id=lab1")
         try:
             # Before the fix, constructing/connecting the client raised
             # AttributeError inside _handle_event; a successful connect proves

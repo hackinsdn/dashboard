@@ -311,7 +311,7 @@ def xterm(lab_id, kind, pod, container):
     if (current_user.category in ["student", "labcreator"] and (lab.user_id != current_user.id)):
         return render_template("pages/error.html", title=_("Error checking lab status"), msg=_("You are not authorized to run this lab"))
 
-    return render_template('pages/xterm.html', host=f"{kind}/{pod}/{container}", container=container), 200
+    return render_template('pages/xterm.html', host=f"{kind}/{pod}/{container}", container=container, lab_id=lab_id), 200
 
 
 @blueprint.route('/users/<int:user_id>', methods=["GET", "POST"])

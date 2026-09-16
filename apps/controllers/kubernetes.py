@@ -55,6 +55,26 @@ _KUBECTL_FAILOVER_STRINGS = (
 # response conditions.
 _AUTH_STATUSES = (401, 403)
 
+# Streaming calls (exec/attach/portforward) go over a websocket, and the k8s
+# client reports *every* failure of theirs as ApiException(status=0), leaving
+# the real HTTP status only in the reason text, e.g. "Handshake status 404 Not
+# Found -+-+- ...". This extracts that status so a definitive server answer
+# (404 pod gone, 400 bad request) is not mistaken for a connectivity failure.
+_WS_HANDSHAKE_STATUS_RE = re.compile(r"Handshake status (\d{3})")
+
+
+def _ws_handshake_status(exc):
+    """HTTP status embedded in a websocket-wrapped ApiException, or None.
+
+    Returns None when the exception is not a status-0 ApiException or when the
+    handshake never got an HTTP response (a genuine transport error).
+    """
+    if not isinstance(exc, ApiException) or (exc.status or 0) != 0:
+        return None
+    text = str(getattr(exc, "reason", "") or "") + " " + str(exc)
+    m = _WS_HANDSHAKE_STATUS_RE.search(text)
+    return int(m.group(1)) if m else None
+
 
 class _FailoverError(Exception):
     """A connectivity/auth failure a wrapper raises to trigger failover while
@@ -86,7 +106,16 @@ def _is_failover_error(exc):
         return True
     if isinstance(exc, ApiException):
         status = exc.status or 0
-        return status == 0 or status in _AUTH_STATUSES or status >= 500
+        if status == 0:
+            # websocket streaming call: the real HTTP status (if any) is only in
+            # the reason text. A 4xx there is a definitive answer (e.g. 404 pod
+            # gone) and must NOT rotate the kubeconfig; only auth/5xx do, and a
+            # status 0 with no HTTP response is a genuine transport failure.
+            ws_status = _ws_handshake_status(exc)
+            if ws_status is not None:
+                return ws_status in _AUTH_STATUSES or ws_status >= 500
+            return True
+        return status in _AUTH_STATUSES or status >= 500
     if isinstance(exc, subprocess.TimeoutExpired):
         return True
     if isinstance(exc, subprocess.CalledProcessError):
@@ -111,6 +140,9 @@ def _reason_for(exc):
         return exc.reason
     if isinstance(exc, ApiException):
         status = exc.status or 0
+        if status == 0:
+            # surface the websocket handshake's real status when it carried one
+            status = _ws_handshake_status(exc) or 0
         if status == 401:
             return "auth_401"
         if status == 403:

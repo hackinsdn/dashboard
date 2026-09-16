@@ -173,7 +173,7 @@ body {
         }
       });
 
-      const socket = io.connect("/pty?host={{ host }}");
+      const socket = io.connect("/pty?host={{ host }}&lab_id={{ lab_id }}");
       const status = document.getElementById("status");
 
       socket.on("pty-output", function (data) {
