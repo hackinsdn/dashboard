@@ -182,6 +182,13 @@ class Config(object):
     # view are probed against "{port}-{service-name}.{PROXY_DOMAIN}" and swapped
     # to that URL when the vhost responds. Empty disables the behavior.
     PROXY_DOMAIN = os.getenv("PROXY_DOMAIN", "")
+    # How long (seconds) the lab-status endpoint keeps waiting for a
+    # reverse-proxy vhost to become reachable, measured from the backing
+    # Service's creation timestamp. While within this window an unreachable
+    # vhost is reported "not-ok" (the client keeps polling); past it we stop
+    # gating so a vhost that never comes up can't block forever. Only used when
+    # PROXY_DOMAIN is set; 0 disables the probe.
+    PROXY_PROBE_MAX_WAIT = int(os.getenv("PROXY_PROBE_MAX_WAIT", "30"))
 
     #Testbed infos
     TESTBED_TITLE = os.getenv("TESTBED_TITLE", "HackInSDN Testbed")
