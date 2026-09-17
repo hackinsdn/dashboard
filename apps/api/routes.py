@@ -3,6 +3,8 @@
 
 import json
 import re
+import requests
+import urllib3
 from apps import db, cache
 from apps.api import blueprint
 from apps.controllers import k8s, git
@@ -14,7 +16,7 @@ from apps.audit_mixin import check_user_category, get_remote_addr
 from flask import request, current_app
 from flask_babel import gettext as _
 from flask_login import login_required, current_user
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, timezone
 from apps.utils import datetime_from_ts, parse_lab_expiration, check_pre_approved, secure_filename
 
 
@@ -34,6 +36,68 @@ def get_pods(lab_id):
 
     return k8s.get_pods_by_lab_id(lab_id), 200
 
+# per-probe HTTP timeout (seconds); mirrors the client-side probe's 5s abort in
+# lab_instance_view.html. This bounds a single hanging probe and is unrelated to
+# PROXY_PROBE_MAX_WAIT, which bounds how long we keep waiting for a vhost since
+# its Service was created.
+_PROXY_PROBE_TIMEOUT = 5
+
+
+def _build_proxy_urls(resources, proxy_domain):
+    """Map each candidate reverse-proxy vhost URL to its Service creation time.
+
+    Mirrors the per-service URL the Lab Instance view builds
+    ("https://{port}-{service-name}.{PROXY_DOMAIN}"). Only http(s) service
+    ports that expose a NodePort get a vhost, matching the client-side logic in
+    lab_instance_view.html / home.routes.view_lab_instance. The value is the
+    Service's ``creation_timestamp`` (tz-aware datetime, or None), used to bound
+    how long the vhost is waited on.
+    """
+    urls = {}
+    for resource in resources:
+        if resource.get("kind") != "Service":
+            continue
+        metadata = resource.get("metadata") or {}
+        name = metadata.get("name")
+        created = metadata.get("creation_timestamp")
+        spec = resource.get("spec") or {}
+        for port in spec.get("ports") or []:
+            if not port.get("node_port"):
+                continue
+            scheme = k8s.try_get_app(port.get("name"))
+            if scheme not in ("http://", "https://"):
+                continue
+            # the reverse proxy always terminates TLS (https), regardless of the
+            # backend scheme -- see view_lab_instance
+            url = f"https://{port['port']}-{name}.{proxy_domain}"
+            # dedupe; keep the earliest creation time if the same URL repeats
+            if url not in urls or (created and urls[url] and created < urls[url]):
+                urls[url] = created
+    return urls
+
+
+def _probe_proxy_vhost(url, timeout):
+    """Return True if the reverse-proxy vhost for ``url`` is reachable.
+
+    Server-side analogue of probeProxyLink() in lab_instance_view.html: a
+    configured vhost answers with some HTTP status (200/302/401/502/...), while
+    an unknown hostname is closed by the reverse proxy's default server
+    ("return 444", see scripts/k8s_nginx_revproxy/NGINX_SETUP.md), which makes
+    the request raise. So "we got any HTTP response" == "the vhost exists".
+
+    ``verify=False``: this is a reachability check, not a security check, and lab
+    vhosts may serve self-signed/not-yet-trusted certs -- a served-but-untrusted
+    cert still means the vhost is up, so we must not treat it as unreachable.
+    """
+    try:
+        requests.get(
+            url, timeout=timeout, allow_redirects=False, verify=False,
+        )
+        return True
+    except requests.exceptions.RequestException:
+        return False
+
+
 @blueprint.route('/lab/status/<lab_id>', methods=["GET"])
 @login_required
 def get_lab_status(lab_id):
@@ -43,7 +107,7 @@ def get_lab_status(lab_id):
     lab = db.session.get(LabInstances, lab_id)
     if not lab:
         return {"status": "fail", "result": _("Lab instance not found")}, 404
-    
+
     if lab.user_id != current_user.id:
         return {"status": "fail", "result": _("Unauthorized access to this lab")}, 401
 
@@ -54,11 +118,42 @@ def get_lab_status(lab_id):
         return {"status": "fail", "result": _("Failed to obtain resource statuses")}, 400
 
     statuses = []
+    all_ok = True
     for resource in resources:
+        is_ok = bool(resource.get("is_ok"))
+        all_ok = all_ok and is_ok
         statuses.append({
             "name": f"{resource['kind']}__{resource['metadata']['name']}",
-            "status": "ok" if resource.get("is_ok") else "not-ok",
+            "status": "ok" if is_ok else "not-ok",
         })
+
+    # Once the k8s resources are all ready, additionally probe the reverse-proxy
+    # vhosts when PROXY_DOMAIN is configured and report their reachability. Each
+    # request probes once (the client keeps polling /api/lab/status), and we keep
+    # reporting an unreachable vhost as "not-ok" only until PROXY_PROBE_MAX_WAIT
+    # seconds have elapsed since its Service was created; past that deadline we
+    # stop gating on it (report "ok") so a vhost that never comes up doesn't
+    # block the caller forever. Mirrors the client-side probe on the Lab view.
+    proxy_domain = current_app.config.get("PROXY_DOMAIN", "")
+    max_wait = current_app.config.get("PROXY_PROBE_MAX_WAIT", 30)
+    if all_ok and proxy_domain and max_wait > 0:
+        proxy_urls = _build_proxy_urls(resources, proxy_domain)
+        if proxy_urls:
+            # requests(verify=False) emits an InsecureRequestWarning per call;
+            # silence it for these intentional reachability probes
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+            now = datetime.now(timezone.utc)
+            for url, created in proxy_urls.items():
+                if _probe_proxy_vhost(url, _PROXY_PROBE_TIMEOUT):
+                    status = "ok"
+                elif created and (now - created).total_seconds() >= max_wait:
+                    # waited long enough since Service creation: stop gating
+                    status = "ok"
+                else:
+                    status = "not-ok"
+                host = url.split("://", 1)[1]
+                statuses.append({"name": f"Proxy__{host}", "status": status})
+
     return {"status": "ok", "result": statuses}, 200
 
 @blueprint.route('/lab/<lab_id>', methods=["DELETE"])

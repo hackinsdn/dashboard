@@ -123,6 +123,24 @@ def logout(client):
     client.get("/logout")
 
 
+def _service_resource(name="web", port=8080, name_str="http", node_port=30080,
+                      is_ok=True, created="now"):
+    """A Service resource dict shaped like k8s.get_resources_by_name() output.
+
+    ``created`` defaults to "now" (a fresh, tz-aware creation_timestamp); pass a
+    datetime to control the proxy-wait deadline, or None to omit it.
+    """
+    from datetime import datetime, timezone
+    if created == "now":
+        created = datetime.now(timezone.utc)
+    return {
+        "kind": "Service",
+        "metadata": {"name": name, "creation_timestamp": created},
+        "spec": {"ports": [{"name": name_str, "port": port, "node_port": node_port}]},
+        "is_ok": is_ok,
+    }
+
+
 # --- get_pods -----------------------------------------------------------
 class TestGetPods:
     def test_unapproved_user_is_rejected(self, client, ids):
@@ -179,6 +197,122 @@ class TestGetLabStatus:
         resp = client.get(f"/api/lab/status/{ids['inst_id']}")
         assert resp.status_code == 200
         logout(client)
+
+    def test_no_proxy_probe_when_domain_unset(self, client, ids, monkeypatch):
+        # Service present, but PROXY_DOMAIN empty -> no proxy entries, no probe
+        monkeypatch.setitem(flask_app.config, "PROXY_DOMAIN", "")
+        monkeypatch.setattr(
+            "apps.api.routes.k8s.get_resources_by_name",
+            lambda res: [_service_resource(is_ok=True)],
+        )
+        called = []
+        monkeypatch.setattr(
+            "apps.api.routes._probe_proxy_vhost",
+            lambda url, timeout: called.append(url) or True,
+        )
+        login(client, "akstudent", "stud123")
+        resp = client.get(f"/api/lab/status/{ids['inst_id']}")
+        assert resp.status_code == 200
+        names = [r["name"] for r in resp.get_json()["result"]]
+        assert not any(n.startswith("Proxy__") for n in names)
+        assert called == []
+        logout(client)
+
+    def test_proxy_probe_reports_reachable_vhost(self, client, ids, monkeypatch):
+        monkeypatch.setitem(flask_app.config, "PROXY_DOMAIN", "labs.example.com")
+        monkeypatch.setitem(flask_app.config, "PROXY_PROBE_MAX_WAIT", 30)
+        monkeypatch.setattr(
+            "apps.api.routes.k8s.get_resources_by_name",
+            lambda res: [_service_resource(is_ok=True)],
+        )
+        monkeypatch.setattr(
+            "apps.api.routes._probe_proxy_vhost", lambda url, timeout: True
+        )
+        login(client, "akstudent", "stud123")
+        resp = client.get(f"/api/lab/status/{ids['inst_id']}")
+        assert resp.status_code == 200
+        result = {r["name"]: r["status"] for r in resp.get_json()["result"]}
+        assert result["Proxy__8080-web.labs.example.com"] == "ok"
+        logout(client)
+
+    def test_proxy_probe_reports_unreachable_vhost(self, client, ids, monkeypatch):
+        monkeypatch.setitem(flask_app.config, "PROXY_DOMAIN", "labs.example.com")
+        # keep the wait tiny so the test does not block for the full budget
+        monkeypatch.setitem(flask_app.config, "PROXY_PROBE_MAX_WAIT", 1)
+        monkeypatch.setattr(
+            "apps.api.routes.k8s.get_resources_by_name",
+            lambda res: [_service_resource(is_ok=True)],
+        )
+        monkeypatch.setattr(
+            "apps.api.routes._probe_proxy_vhost", lambda url, timeout: False
+        )
+        login(client, "akstudent", "stud123")
+        resp = client.get(f"/api/lab/status/{ids['inst_id']}")
+        assert resp.status_code == 200
+        result = {r["name"]: r["status"] for r in resp.get_json()["result"]}
+        assert result["Proxy__8080-web.labs.example.com"] == "not-ok"
+        logout(client)
+
+    def test_proxy_probe_gives_up_after_deadline(self, client, ids, monkeypatch):
+        # unreachable vhost, but its Service was created long before the wait
+        # window -> stop gating and report ok
+        from datetime import datetime, timezone, timedelta
+        old = datetime.now(timezone.utc) - timedelta(seconds=120)
+        monkeypatch.setitem(flask_app.config, "PROXY_DOMAIN", "labs.example.com")
+        monkeypatch.setitem(flask_app.config, "PROXY_PROBE_MAX_WAIT", 30)
+        monkeypatch.setattr(
+            "apps.api.routes.k8s.get_resources_by_name",
+            lambda res: [_service_resource(is_ok=True, created=old)],
+        )
+        monkeypatch.setattr(
+            "apps.api.routes._probe_proxy_vhost", lambda url, timeout: False
+        )
+        login(client, "akstudent", "stud123")
+        resp = client.get(f"/api/lab/status/{ids['inst_id']}")
+        assert resp.status_code == 200
+        result = {r["name"]: r["status"] for r in resp.get_json()["result"]}
+        assert result["Proxy__8080-web.labs.example.com"] == "ok"
+        logout(client)
+
+    def test_proxy_probe_skipped_while_resources_not_ready(self, client, ids, monkeypatch):
+        monkeypatch.setitem(flask_app.config, "PROXY_DOMAIN", "labs.example.com")
+        monkeypatch.setattr(
+            "apps.api.routes.k8s.get_resources_by_name",
+            lambda res: [_service_resource(is_ok=False)],
+        )
+        called = []
+        monkeypatch.setattr(
+            "apps.api.routes._probe_proxy_vhost",
+            lambda url, timeout: called.append(url) or True,
+        )
+        login(client, "akstudent", "stud123")
+        resp = client.get(f"/api/lab/status/{ids['inst_id']}")
+        assert resp.status_code == 200
+        assert called == []  # no probe until every resource is ready
+        logout(client)
+
+
+# --- _build_proxy_urls --------------------------------------------------
+class TestBuildProxyUrls:
+    def test_only_httpish_nodeport_services_get_a_vhost(self):
+        from datetime import datetime, timezone
+        from apps.api.routes import _build_proxy_urls
+
+        created = datetime(2026, 1, 1, tzinfo=timezone.utc)
+        resources = [
+            # http service with NodePort -> included, mapped to its creation time
+            _service_resource(name="web", port=8080, name_str="http",
+                              node_port=30080, created=created),
+            # ssh service -> excluded (not http/https)
+            _service_resource(name="jump", port=22, name_str="ssh", node_port=30022),
+            # http service without a NodePort -> excluded
+            {"kind": "Service", "metadata": {"name": "clusterip"},
+             "spec": {"ports": [{"name": "http", "port": 80, "node_port": None}]}},
+            # non-Service resource -> excluded
+            {"kind": "Pod", "metadata": {"name": "p1"}, "spec": {}},
+        ]
+        urls = _build_proxy_urls(resources, "labs.example.com")
+        assert urls == {"https://8080-web.labs.example.com": created}
 
 
 # --- delete_lab ---------------------------------------------------------
