@@ -170,23 +170,23 @@ class TestRotation:
             " -+-+- b'{\"reason\":\"NotFound\",\"code\":404}'"
         ))
         for ep in ctrl._endpoints:
-            ep.v1_api.connect_get_namespaced_pod_exec.side_effect = exc
+            ep.exec_v1_api.connect_get_namespaced_pod_exec.side_effect = exc
 
         with pytest.raises(ApiException):
             ctrl.get_pod_exec_stream("mininet-sec-dead", "mininet-sec")
 
         assert ctrl._active_idx == 0  # unchanged
         assert ctrl._failover_stats["total_failovers"] == 0
-        ctrl._endpoints[1].v1_api.connect_get_namespaced_pod_exec.assert_not_called()
+        ctrl._endpoints[1].exec_v1_api.connect_get_namespaced_pod_exec.assert_not_called()
 
     def test_ws_handshake_401_fails_over(self, make_ctrl, monkeypatch):
         # an auth failure on the streaming path (status 0 + "Handshake status
         # 401") should still rotate to the next kubeconfig.
         monkeypatch.setattr(k8s_module, "stream", lambda method, *a, **k: method(*a, **k))
         ctrl = make_ctrl(["/a", "/b"])
-        ctrl._endpoints[0].v1_api.connect_get_namespaced_pod_exec.side_effect = ApiException(
+        ctrl._endpoints[0].exec_v1_api.connect_get_namespaced_pod_exec.side_effect = ApiException(
             status=0, reason="Handshake status 401 Unauthorized")
-        ctrl._endpoints[1].v1_api.connect_get_namespaced_pod_exec.return_value = "stream-ok"
+        ctrl._endpoints[1].exec_v1_api.connect_get_namespaced_pod_exec.return_value = "stream-ok"
 
         result = ctrl.get_pod_exec_stream("p1", "c1")
 
@@ -199,14 +199,34 @@ class TestRotation:
         # with no "Handshake status" text -> still a failover trigger.
         monkeypatch.setattr(k8s_module, "stream", lambda method, *a, **k: method(*a, **k))
         ctrl = make_ctrl(["/a", "/b"])
-        ctrl._endpoints[0].v1_api.connect_get_namespaced_pod_exec.side_effect = ApiException(
+        ctrl._endpoints[0].exec_v1_api.connect_get_namespaced_pod_exec.side_effect = ApiException(
             status=0, reason="Connection to remote host was lost")
-        ctrl._endpoints[1].v1_api.connect_get_namespaced_pod_exec.return_value = "stream-ok"
+        ctrl._endpoints[1].exec_v1_api.connect_get_namespaced_pod_exec.return_value = "stream-ok"
 
         result = ctrl.get_pod_exec_stream("p1", "c1")
 
         assert result == "stream-ok"
         assert ctrl._active_idx == 1
+
+    def test_ws_handshake_2xx_does_not_fail_over(self, make_ctrl, monkeypatch):
+        # a "Handshake status 200 OK" means the request reached the API server
+        # (a REST call leaked onto the websocket path) -- a client-side mishap,
+        # never a reason to rotate the kubeconfig. It must propagate unchanged.
+        monkeypatch.setattr(k8s_module, "stream", lambda method, *a, **k: method(*a, **k))
+        ctrl = make_ctrl(["/a", "/b"])
+        exc = ApiException(status=0, reason=(
+            "Handshake status 200 OK -+-+- {'content-type': 'application/json'}"
+            " -+-+- None"
+        ))
+        for ep in ctrl._endpoints:
+            ep.exec_v1_api.connect_get_namespaced_pod_exec.side_effect = exc
+
+        with pytest.raises(ApiException):
+            ctrl.get_pod_exec_stream("p1", "c1")
+
+        assert ctrl._active_idx == 0  # unchanged
+        assert ctrl._failover_stats["total_failovers"] == 0
+        ctrl._endpoints[1].exec_v1_api.connect_get_namespaced_pod_exec.assert_not_called()
 
     def test_all_endpoints_down_reraises_after_len_attempts(self, make_ctrl):
         ctrl = make_ctrl(["/a", "/b", "/c"])

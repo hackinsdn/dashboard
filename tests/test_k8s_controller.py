@@ -17,6 +17,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import threading
 import types
 from unittest.mock import MagicMock, patch
 
@@ -663,3 +664,89 @@ class TestLabdataConfigMaps:
         assert ok is True
         kwargs = ctrl.v1_api.delete_collection_namespaced_config_map.call_args.kwargs
         assert kwargs["label_selector"] == "lab_id=lab-9,hackinsdn.io/labdata=true"
+
+
+# --- exec/stream ApiClient isolation ------------------------------------
+# kubernetes.stream.stream() monkey-patches ApiClient.request to the websocket
+# implementation for the duration of a pod-exec call. If the exec API shared its
+# ApiClient with the REST APIs, a concurrent REST call on another worker thread
+# would observe the patched request and be sent out as a WebSocket handshake,
+# failing with "Handshake status 200 OK". These tests pin the isolation.
+class _FakeApiClient:
+    def __init__(self, configuration=None):
+        self.configuration = configuration
+        self.request = self._rest_request  # a stable, identifiable sentinel
+
+    def _rest_request(self, *a, **k):
+        return "REST"
+
+
+class _FakeCoreV1Api:
+    """Minimal stand-in whose exec method records the live request callables."""
+
+    def __init__(self, api_client):
+        self.api_client = api_client
+        self.rest_peer = None
+        self.during = {}
+
+    def connect_get_namespaced_pod_exec(self, *a, **k):
+        # captured while stream() has *this* client's request monkey-patched
+        self.during["exec_request"] = self.api_client.request
+        if self.rest_peer is not None:
+            self.during["rest_request"] = self.rest_peer.request
+        return "WS"
+
+
+class TestExecStreamIsolation:
+    def _build_endpoint(self, monkeypatch):
+        monkeypatch.setattr(k8s_module.config, "load_kube_config", lambda **k: None)
+        monkeypatch.setattr(k8s_module.client, "Configuration", lambda *a, **k: types.SimpleNamespace())
+        monkeypatch.setattr(k8s_module.client, "ApiClient", _FakeApiClient)
+        monkeypatch.setattr(k8s_module.client, "CoreV1Api", _FakeCoreV1Api)
+        monkeypatch.setattr(k8s_module.client, "AppsV1Api", _FakeCoreV1Api)
+        monkeypatch.setattr(k8s_module.client, "DiscoveryV1Api", _FakeCoreV1Api)
+        ep = k8s_module._KubeEndpoint("/a")
+        ep.ensure_built(threading.Lock())
+        return ep
+
+    def test_exec_client_is_a_distinct_apiclient(self, monkeypatch):
+        ep = self._build_endpoint(monkeypatch)
+        # the REST APIs share one ApiClient; exec must not be that one
+        assert ep.v1_api.api_client is ep.k8s_client
+        assert ep.apps_v1_api.api_client is ep.k8s_client
+        assert ep.exec_v1_api.api_client is not ep.k8s_client
+
+    def test_stream_patch_does_not_leak_to_rest_client(self, monkeypatch):
+        ep = self._build_endpoint(monkeypatch)
+        rest_client = ep.k8s_client
+        exec_client = ep.exec_v1_api.api_client
+        ep.exec_v1_api.rest_peer = rest_client
+
+        original_exec_request = exec_client.request
+        original_rest_request = rest_client.request
+
+        # real stream() -- exactly what get_pod_exec_stream calls
+        out = k8s_module.stream(
+            ep.exec_v1_api.connect_get_namespaced_pod_exec,
+            "pod", "test-ns", command=["sh"], _preload_content=False,
+        )
+
+        assert out == "WS"
+        during = ep.exec_v1_api.during
+        # during the exec call the exec client's request WAS swapped...
+        assert during["exec_request"] is not original_exec_request
+        # ...but the REST client's request was left completely untouched
+        assert during["rest_request"] is original_rest_request
+        # and afterwards the exec client's request is restored
+        assert exec_client.request is original_exec_request
+
+    def test_get_pod_exec_stream_targets_the_exec_client(self, ctrl, monkeypatch):
+        captured = {}
+        monkeypatch.setattr(
+            k8s_module, "stream",
+            lambda method, *a, **k: captured.setdefault("method", method),
+        )
+        ctrl.get_pod_exec_stream("pod", "c1")
+        # streams off the dedicated exec client, never the shared REST one
+        assert captured["method"] is ctrl.exec_v1_api.connect_get_namespaced_pod_exec
+        assert captured["method"] is not ctrl.v1_api.connect_get_namespaced_pod_exec

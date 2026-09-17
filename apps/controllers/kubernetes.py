@@ -108,9 +108,13 @@ def _is_failover_error(exc):
         status = exc.status or 0
         if status == 0:
             # websocket streaming call: the real HTTP status (if any) is only in
-            # the reason text. A 4xx there is a definitive answer (e.g. 404 pod
-            # gone) and must NOT rotate the kubeconfig; only auth/5xx do, and a
-            # status 0 with no HTTP response is a genuine transport failure.
+            # the reason text. A 2xx/4xx there means the request reached the API
+            # server and it answered definitively -- a 2xx is a client-side
+            # mishap (e.g. a REST call sent over a websocket by a leaked stream()
+            # monkey-patch, seen as "Handshake status 200 OK") and a 4xx is a
+            # real answer (e.g. 404 pod gone); neither must rotate the kubeconfig.
+            # Only auth/5xx do, and a status 0 with no HTTP response at all is a
+            # genuine transport failure.
             ws_status = _ws_handshake_status(exc)
             if ws_status is not None:
                 return ws_status in _AUTH_STATUSES or ws_status >= 500
@@ -224,6 +228,7 @@ class _KubeEndpoint:
         self.apps_v1_api = None
         self.discovery_api = None
         self.k8s_client = None
+        self.exec_v1_api = None
 
     def ensure_built(self, lock):
         if self.built:
@@ -243,6 +248,15 @@ class _KubeEndpoint:
             self.apps_v1_api = client.AppsV1Api(api)
             self.discovery_api = client.DiscoveryV1Api(api)
             self.k8s_client = api
+            # Dedicated ApiClient for websocket streaming (pod exec/attach).
+            # kubernetes.stream.stream() monkey-patches ApiClient.request to the
+            # websocket implementation for the duration of the exec call. If the
+            # streaming API shared the ApiClient above, a concurrent REST call on
+            # another worker thread could observe the patched request and get sent
+            # out as a WebSocket handshake, failing with "Handshake status 200 OK".
+            # Isolating exec on its own ApiClient makes the patch invisible to REST.
+            exec_api = client.ApiClient(configuration=cfg)
+            self.exec_v1_api = client.CoreV1Api(exec_api)
             self.built = True
 
 
@@ -313,6 +327,10 @@ class K8sController():
     @property
     def v1_api(self):
         return self._client("v1_api")
+
+    @property
+    def exec_v1_api(self):
+        return self._client("exec_v1_api")
 
     @property
     def apps_v1_api(self):
@@ -1531,7 +1549,7 @@ class K8sController():
         if start_script is None:
             start_script = 'if [ -x /bin/bash ]; then exec /bin/bash; else exec /bin/sh; fi'
         return stream(
-            self.v1_api.connect_get_namespaced_pod_exec,
+            self.exec_v1_api.connect_get_namespaced_pod_exec,
             pod,
             self.namespace,
             command=['sh', '-c', start_script],
