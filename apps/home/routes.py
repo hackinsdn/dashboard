@@ -183,8 +183,10 @@ def running_labs():
         if current_user.category == "admin" or li.user_id == current_user.id:
             is_allowed = True
         else:
+            # lab may have been deleted while instances still reference it
+            lab_allowed_groups = allowed_groups_by_lab.get(li.lab_id, {})
             for group_id in current_user_priv_groups:
-                if group_id in allowed_groups_by_lab[li.lab_id]:
+                if group_id in lab_allowed_groups:
                     is_allowed = True
                     break
         if not is_allowed:
@@ -1375,8 +1377,10 @@ def view_finished_labs():
         if current_user.category == "admin" or li.user_id == current_user.id:
             is_allowed = True
         else:
+            # lab may have been deleted while instances still reference it
+            lab_allowed_groups = allowed_groups_by_lab.get(li.lab_id, {})
             for group_id in current_user_priv_groups:
-                if group_id in allowed_groups_by_lab[li.lab_id]:
+                if group_id in lab_allowed_groups:
                     is_allowed = True
                     break
         if not is_allowed:
