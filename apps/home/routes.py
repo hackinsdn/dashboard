@@ -585,8 +585,6 @@ def edit_lab(lab_id):
             return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, msg_fail=_("Invalid display order: must be an integer number."), segment="/labs/edit", groups=groups, allowed_groups=lab.allowed_groups, lab_uploads=lab_uploads, lab_labdata=lab_labdata, labdata_lab_id=labdata_lab_id)
 
     try:
-        # syntax-only check (no object construction): catch broken manifests at
-        # save time instead of when a user starts the lab
         list(yaml.compose_all(lab.manifest))
     except yaml.YAMLError as exc:
         mark = getattr(exc, "problem_mark", None)
