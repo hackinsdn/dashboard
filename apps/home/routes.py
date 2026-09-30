@@ -7,6 +7,7 @@ import uuid
 import os
 import re
 import json
+import yaml
 from collections import OrderedDict
 from types import SimpleNamespace
 
@@ -582,6 +583,17 @@ def edit_lab(lab_id):
             lab.display_order = int(display_order_raw) if display_order_raw else 1000
         except ValueError:
             return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, msg_fail=_("Invalid display order: must be an integer number."), segment="/labs/edit", groups=groups, allowed_groups=lab.allowed_groups, lab_uploads=lab_uploads, lab_labdata=lab_labdata, labdata_lab_id=labdata_lab_id)
+
+    try:
+        # syntax-only check (no object construction): catch broken manifests at
+        # save time instead of when a user starts the lab
+        list(yaml.compose_all(lab.manifest))
+    except yaml.YAMLError as exc:
+        mark = getattr(exc, "problem_mark", None)
+        where = f" (line {mark.line + 1}, column {mark.column + 1})" if mark else ""
+        problem = getattr(exc, "problem", None) or str(exc)
+        current_app.logger.warning(f"Invalid lab manifest user={current_user.username} ipaddr={get_remote_addr()} lab_id={lab.id} {exc}")
+        return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, msg_fail=_("Invalid YAML in manifest%(where)s: %(problem)s", where=where, problem=problem), segment="/labs/edit", groups=groups, allowed_groups=lab.allowed_groups, lab_uploads=lab_uploads, lab_labdata=lab_labdata, labdata_lab_id=labdata_lab_id)
 
     if not lab.categories or invalid_lab_category:
         return render_template("pages/labs_edit.html", lab=lab, lab_categories=lab_categories, msg_fail=invalid_lab_category+"Please select at least one category", segment="/labs/edit", groups=groups, allowed_groups=lab.allowed_groups, lab_uploads=lab_uploads, lab_labdata=lab_labdata, labdata_lab_id=labdata_lab_id)

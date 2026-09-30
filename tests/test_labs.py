@@ -208,6 +208,20 @@ class TestAdminCrudWorkflow:
         )
         assert b"Invalid Lab Category" in resp.data
 
+    def test_create_rejects_invalid_yaml_manifest(self, client, ids):
+        resp = client.post(
+            "/labs/edit/new",
+            data=lab_form(
+                lab_title="Bad YAML Lab",
+                lab_description="x",
+                lab_categories=str(ids["category_id"]),
+                lab_manifest="apiVersion: v1\nkind: Pod\n  metadata:\n    name: x\n",
+            ),
+        )
+        assert b"Invalid YAML in manifest (line 3" in resp.data
+        db.session.rollback()
+        assert Labs.query.filter_by(title="Bad YAML Lab").first() is None
+
     def test_admin_can_edit_lab(self, client, ids):
         lab = Labs.query.filter_by(title="Admin Networking Lab").first()
         resp = client.post(

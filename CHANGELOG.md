@@ -4,6 +4,10 @@ All notable changes to this project are documented here, grouped by tagged versi
 
 ## [UNRELEASED] - Under development
 
+### Fixed
+- Validate the Lab manifest YAML syntax on save and include the Lab and user
+  in manifest load error logs (#324).
+
 ## [2.0.15] - 2026-08-27
 
 ### Fixed
