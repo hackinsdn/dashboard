@@ -1013,7 +1013,7 @@ class K8sController():
         except Exception as exc:
             msg = f"Failed to load manifest yaml: {exc}"
             err = traceback.format_exc().replace("\n", ", ")
-            current_app.logger.error(msg + " -- " + err)
+            current_app.logger.error(f"{msg} {lab_id=} {user_uid=} {dry_run=} -- {err}")
             return False, msg
 
         if dry_run:
@@ -1029,7 +1029,7 @@ class K8sController():
             except Exception as exc:
                 err = traceback.format_exc().replace("\n", ", ")
                 msg_fail = f"Failed to create resources on Kubernentes: {exc}"
-                current_app.logger.error(f"{msg_fail} {err=} {doc=}")
+                current_app.logger.error(f"{msg_fail} {lab_id=} {user_uid=} {err=} {doc=}")
                 break
             results.append({
                 "kind": result["kind"],
