@@ -104,6 +104,9 @@ class Config(object):
     CLIENT_ID     = os.getenv('OAUTH_CLIENT_ID', "")
     CLIENT_SECRET = os.getenv('OAUTH_CLIENT_SECRET', "")
     DOMAIN        = os.getenv('OAUTH_DOMAIN', "")
+    # Space-separated scopes; must be allowed by the client registration on the
+    # provider. Add "profile" to get the user's given/family name.
+    OAUTH_SCOPE   = os.getenv('OAUTH_SCOPE', "openid email")
 
     # Kubernetes
     K8S_NAMESPACE = os.getenv('K8S_NAMESPACE', "")

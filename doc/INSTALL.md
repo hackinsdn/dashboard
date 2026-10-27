@@ -94,6 +94,8 @@ Here are some options you can use to configure Dashboard HackInSDN:
 
 - `OAUTH_CLIENT_SECRET`: Oauth2 client secret
 
+- `OAUTH_SCOPE`: space-separated Oauth2 scopes requested at login (default: `openid email`). Only request scopes allowed by your client registration, otherwise the provider rejects the login with `invalid_scope`. Add `profile` (e.g. `openid email profile`) to fill in the user's given and family name
+
 - MAP Settings: see [MAP SETTINGS][./MAP_CONFIGURATION.md]
 
 ## Installation step-by-step
