@@ -4,6 +4,11 @@ All notable changes to this project are documented here, grouped by tagged versi
 
 ## [UNRELEASED] - Under development
 
+### Fixed
+- Make the OAuth scopes configurable via `OAUTH_SCOPE` (default `openid email`)
+  so logins don't fail with `invalid_scope` when the provider enforces the
+  client's registered scopes (#328).
+
 ## [2.0.15] - 2026-08-27
 
 ### Fixed

@@ -96,7 +96,7 @@ def configure_oauth(app):
         client_id=app.config["CLIENT_ID"],
         client_secret=app.config["CLIENT_SECRET"],
         client_kwargs={
-            "scope": "openid profile email",
+            "scope": app.config["OAUTH_SCOPE"],
         },
         server_metadata_url=f"https://{app.config['DOMAIN']}/.well-known/openid-configuration"
     )

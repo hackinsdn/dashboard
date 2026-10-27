@@ -1,6 +1,7 @@
 export OAUTH_CLIENT_ID=xxx
 export OAUTH_CLIENT_SECRET=xxx
 export OAUTH_DOMAIN=cilogon.org
+#export OAUTH_SCOPE="openid email profile"
 #export OAUTH_CLIENT_ID=xxx
 #export OAUTH_CLIENT_SECRET=xxx
 #export OAUTH_DOMAIN=orcid.org
