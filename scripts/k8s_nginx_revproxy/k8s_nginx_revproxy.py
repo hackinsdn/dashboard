@@ -465,6 +465,9 @@ class Reconciler:
         #   _np_cleanup_done -> the one-shot cleanup run when the feature is off
         self._np_disabled = False
         self._np_cleanup_done = False
+        # Services (ns, name) already warned about a non-Local
+        # externalTrafficPolicy, so we complain once rather than every cycle.
+        self._etp_warned: set = set()
 
     # ---- fetch ---------------------------------------------------------- #
     def _list_with_rotation(self, fn, *, what: str, **kwargs):
@@ -605,6 +608,7 @@ class Reconciler:
         # backing pods to the configured CIDRs. Only when the feature is on.
         npspec = None
         if out and s.allow_cidrs:
+            self._warn_if_not_local_etp(svc, ns, name)
             npspec = NetworkPolicySpec(
                 namespace=ns,
                 name=name,
@@ -612,6 +616,33 @@ class Reconciler:
                 selector=dict(selector),
             )
         return out, npspec
+
+    def _warn_if_not_local_etp(self, svc, ns: str, name: str) -> None:
+        """Warn (once per service) when we are about to lock a NodePort service
+        down with a NetworkPolicy but its externalTrafficPolicy is not Local.
+
+        A NetworkPolicy ipBlock matches the source IP as the pod sees it. With
+        the default externalTrafficPolicy: Cluster, NodePort traffic is SNAT'd
+        to the receiving node's IP, so the pod never sees the proxy's real
+        address: the allow-list cannot match proxy traffic, and it cannot tell
+        proxy traffic apart from a direct attacker hitting the NodePort (both
+        arrive as the node IP). externalTrafficPolicy: Local preserves the real
+        source IP and is effectively required for the lockdown to work.
+        """
+        etp = getattr(svc.spec, "external_traffic_policy", None)
+        if etp == "Local":
+            return
+        key = (ns, name)
+        if key in self._etp_warned:
+            return
+        self._etp_warned.add(key)
+        log.warning(
+            "Service %s/%s has externalTrafficPolicy=%s; the NetworkPolicy "
+            "allow-list will not match proxy traffic (NodePort SNATs the source "
+            "IP to the node). Set externalTrafficPolicy: Local on the Service to "
+            "preserve the client source IP, or the lockdown will drop/mis-match "
+            "traffic. See the README NetworkPolicy lockdown section.",
+            ns, name, etp or "Cluster")
 
     # ---- render --------------------------------------------------------- #
     def render(self, vhosts: List[VHost]) -> Dict[str, str]:

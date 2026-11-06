@@ -16,6 +16,7 @@ Usage:
 
 import importlib.util
 import io
+import logging
 import os
 import sys
 import types
@@ -78,11 +79,13 @@ CIDRS = ["10.0.0.1/32", "192.168.0.0/24"]
 
 
 # --- fakes ------------------------------------------------------------------
-def _svc(name, ns, uid, selector, ports, type="NodePort", annotations=None):
+def _svc(name, ns, uid, selector, ports, type="NodePort", annotations=None,
+         external_traffic_policy="Local"):
     return SimpleNamespace(
         metadata=SimpleNamespace(name=name, namespace=ns, uid=uid,
                                  annotations=annotations or {}),
-        spec=SimpleNamespace(type=type, selector=selector, ports=ports),
+        spec=SimpleNamespace(type=type, selector=selector, ports=ports,
+                             external_traffic_policy=external_traffic_policy),
     )
 
 
@@ -108,6 +111,7 @@ def _recon(settings):
     r.s = settings
     r._np_disabled = False
     r._np_cleanup_done = False
+    r._etp_warned = set()
     return r
 
 
@@ -231,6 +235,34 @@ def test_service_to_vhosts_skipped_service_has_no_policy():
     svc = _svc("other", "ns", "uid-1", {"app": "nomatch"}, [_port(80, 31001)])
     vhosts, np = r._service_to_vhosts(svc, pods)
     assert vhosts == [] and np is None
+
+
+def test_service_to_vhosts_warns_once_on_non_local_etp(caplog):
+    r = _recon(_settings(allow_cidrs=["10.0.0.1/32"]))
+    pods = {"ns": [_pod({"app": "webui"}, "10.0.0.5")]}
+    svc = _svc("webui", "ns", "uid-9", {"app": "webui"}, [_port(8080, 31000)],
+               external_traffic_policy="Cluster")
+    with caplog.at_level(logging.WARNING):
+        _, np1 = r._service_to_vhosts(svc, pods)
+        _, np2 = r._service_to_vhosts(svc, pods)  # second cycle: no repeat warning
+    # The policy is still built; the warning is advisory, not a hard skip.
+    assert np1 is not None and np2 is not None
+    etp_warnings = [rec for rec in caplog.records
+                    if "externalTrafficPolicy" in rec.getMessage()]
+    assert len(etp_warnings) == 1
+    assert ("ns", "webui") in r._etp_warned
+
+
+def test_service_to_vhosts_no_etp_warning_when_local(caplog):
+    r = _recon(_settings(allow_cidrs=["10.0.0.1/32"]))
+    pods = {"ns": [_pod({"app": "webui"}, "10.0.0.5")]}
+    svc = _svc("webui", "ns", "uid-9", {"app": "webui"}, [_port(8080, 31000)],
+               external_traffic_policy="Local")
+    with caplog.at_level(logging.WARNING):
+        _, np = r._service_to_vhosts(svc, pods)
+    assert np is not None
+    assert not any("externalTrafficPolicy" in rec.getMessage()
+                   for rec in caplog.records)
 
 
 # --- reconcile_network_policies ---------------------------------------------

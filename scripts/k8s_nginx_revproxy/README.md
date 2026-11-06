@@ -156,8 +156,10 @@ NodePort is still reachable directly on every node. Passing one or more
 `--allow-cidr` values turns on **NetworkPolicy lockdown**: after a service's
 vhost is live, the daemon creates a `NetworkPolicy` that restricts ingress to
 the backing pods to just those CIDRs — so the service is reachable only through
-this proxy (point the CIDRs at whatever source the pods see for proxied
-traffic — usually the proxy host and/or the cluster nodes).
+this proxy. The CIDRs must be the source the pods actually see for proxied
+traffic, which requires `externalTrafficPolicy: Local` on the Service; see
+[Preserving the client source IP](#preserving-the-client-source-ip-read-this-before-enabling)
+below before enabling.
 
 For a service named `webui` with selector `app=webui`, the rendered policy is:
 
@@ -212,6 +214,79 @@ How it behaves:
   [Prerequisites](#prerequisites)), and **a CNI that enforces NetworkPolicy**
   (Calico, Cilium, etc.) — on a cluster without one the policy is accepted but
   has no effect.
+
+### Preserving the client source IP (read this before enabling)
+
+A NetworkPolicy `ipBlock` matches the **source IP as the pod's CNI sees it on
+the inbound packet** — not the original client address. This has a decisive
+consequence for NodePort services:
+
+- With the default **`externalTrafficPolicy: Cluster`**, a packet arriving at
+  `nodeA:nodePort` is **SNAT'd to `nodeA`'s own IP** before it reaches the pod
+  (so the reply path stays symmetric). The pod never sees the proxy's real IP,
+  so an allow-list of proxy CIDRs **never matches** and all proxied traffic is
+  dropped. Allow-listing the node IPs instead does not help: a direct attacker
+  hitting the same NodePort is *also* SNAT'd to the node IP, so the policy can't
+  tell the proxy apart from the attacker. Under `Cluster` the lockdown cannot do
+  its job.
+- With **`externalTrafficPolicy: Local`**, kube-proxy routes the NodePort only
+  to pods **on the same node** and does **not** SNAT, so the pod sees the real
+  client (proxy) source IP and the allow-list works. Because this daemon already
+  points nginx at the node that hosts the pod (`hostIP:nodePort`), that node
+  always has a local pod, so `Local`'s usual "drop if no local pod" blackhole
+  does not apply to the proxy path.
+
+**So set `externalTrafficPolicy: Local` on every Service you lock down.** The
+daemon reads but does not own your Services, so you (or the service authors) must
+set this; when the daemon is about to create a policy for a service that is still
+`Cluster`, it logs a one-time warning per service. Example:
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: webui
+spec:
+  type: NodePort
+  externalTrafficPolicy: Local
+  selector:
+    app: webui
+  ports:
+    - port: 8080
+      nodePort: 31080
+```
+
+Further caveats to verify in your environment:
+
+- **Allow-list the source IP the *node* actually sees**, not the IP you assume
+  the proxy has. If anything between the proxy and the nodes does NAT (a router,
+  a gateway, a different egress interface than the API/SSH-tunnel path), the pod
+  sees that translated address instead. Confirm empirically (see below) rather
+  than assuming it is the nginx box's own IP.
+- **Watch for CNI re-masquerading.** Even with `Local`, some CNIs masquerade
+  traffic whose source is outside the cluster/pod CIDR (Calico `natOutgoing`,
+  Cilium masquerade, `ip-masq-agent` ranges). If enabled, the pod can still see a
+  rewritten source. Check your CNI's masquerade settings.
+- **Don't block health probes / legitimate in-cluster clients.** A policy that
+  allows only the proxy CIDR denies everything else. Kubelet probes usually come
+  from the node and most CNIs exempt them, but behavior varies — verify probes
+  and any intra-cluster callers still pass after locking down.
+- **Pod rescheduling.** The upstream node IPs are cached per reconcile cycle;
+  under `Local`, if a pod moves to another node between cycles the old node has
+  no local pod and briefly drops traffic until the next cycle re-renders nginx.
+  Keep the reconcile interval short if this matters.
+
+To verify what the pod actually sees, hit a service through the proxy and check:
+
+```bash
+# if the app logs client IPs:
+kubectl -n <ns> logs <pod>
+# or capture directly:
+kubectl -n <ns> exec <pod> -- sh -c 'timeout 10 tcpdump -ni any tcp and port <containerPort>'
+```
+
+Then confirm the lockdown actually locks: from a host **not** in the allow-list,
+`curl http://<nodeIP>:<nodePort>` should fail, while the proxy still works.
 
 Preview the policies without applying anything with `--dry-run`, which prints
 the rendered NetworkPolicy YAML after the nginx config.
