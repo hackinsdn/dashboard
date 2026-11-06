@@ -95,10 +95,15 @@ or which port is exposed with annotations (see [Annotations](#per-service-annota
     - apiGroups: [""]
       resources: ["services", "pods"]
       verbs: ["get", "list"]
+    # Only needed when --allow-cidr is set (NetworkPolicy lockdown, see below):
+    - apiGroups: ["networking.k8s.io"]
+      resources: ["networkpolicies"]
+      verbs: ["get", "list", "create", "update", "patch", "delete"]
   ```
 
   Bind it to the identity used by each kubeconfig. Provide one kubeconfig per
-  control-plane endpoint for failover.
+  control-plane endpoint for failover. The `networkpolicies` rule can be omitted
+  if you never use `--allow-cidr`.
 
 - **Python 3.9+** and the dependencies in `requirements.txt`
   (`kubernetes`; plus `urllib3[socks]` / PySocks only if you use a SOCKS proxy).
@@ -127,6 +132,7 @@ flag wins when both are set. Three options are **required**: `--kubeconfig`,
 | `--annotation-prefix` | `ANNOTATION_PREFIX` | `revproxy.hackinsdn.io` | Prefix for per-service annotation overrides. |
 | `--opt-in` | `OPT_IN` (`1`/`true`/`yes`) | `false` | Expose only services annotated `<prefix>/enable=true`. Otherwise every NodePort service is exposed unless it sets `<prefix>/enable=false`. |
 | `--no-require-ready` | `REQUIRE_READY` (`false` to disable) | ready required | Route to Running pods even if not Ready. |
+| `--allow-cidr` (repeatable) | `ALLOW_CIDRS` (comma/space) | *(none)* | CIDR (or bare IP, normalized to `/32` / `/128`) allowed to reach the exposed pods via a per-service NetworkPolicy, so the NodePort service is reachable only through this proxy. When unset, no NetworkPolicy is managed. See [NetworkPolicy lockdown](#networkpolicy-lockdown). |
 | `--log-level` | `LOG_LEVEL` | `INFO` | Python logging level. |
 | `--dry-run` | `DRY_RUN` (`1`/`true`/`yes`) | `false` | Print the config that would be written and exit; no disk writes, no `nginx -t`, no reload. Implies a single cycle. |
 | `--once` | — | `false` | Run a single reconcile and exit (for testing). |
@@ -142,6 +148,73 @@ Set on a Service to override defaults (prefix configurable via
 | `<prefix>/hostname` | Override the full published hostname. |
 | `<prefix>/scheme` | Force the upstream scheme (`http` or `https`). |
 | `<prefix>/port` | Expose only the given service port (name or number). |
+
+## NetworkPolicy lockdown
+
+By default the daemon only publishes a reverse-proxy vhost; the underlying
+NodePort is still reachable directly on every node. Passing one or more
+`--allow-cidr` values turns on **NetworkPolicy lockdown**: after a service's
+vhost is live, the daemon creates a `NetworkPolicy` that restricts ingress to
+the backing pods to just those CIDRs — so the service is reachable only through
+this proxy (point the CIDRs at whatever source the pods see for proxied
+traffic — usually the proxy host and/or the cluster nodes).
+
+For a service named `webui` with selector `app=webui`, the rendered policy is:
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: webui
+  labels:
+    app.kubernetes.io/managed-by: k8s-nginx-revproxy
+  annotations:
+    revproxy.hackinsdn.io/config-hash: <hash>
+  ownerReferences:
+    - apiVersion: v1
+      kind: Service
+      name: webui
+      uid: <service-uid>
+spec:
+  podSelector:
+    matchLabels:
+      app: webui
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - ipBlock: {cidr: 10.0.0.1/32}
+        - ipBlock: {cidr: 192.168.0.0/24}
+```
+
+How it behaves:
+
+- **One policy per proxied Service**, named after the service, with
+  `podSelector` = the service's `spec.selector` and one `ipBlock` per allowed
+  CIDR. Bare IPs are normalized (`/32` for IPv4, `/128` for IPv6).
+- **Created only after a successful nginx apply** — the daemon never locks a
+  service down behind a proxy that failed to come up.
+- **Reconciled idempotently**: policies carry a config-hash annotation, so a
+  cycle only rewrites one when its selector or the allowed CIDRs change. They're
+  tagged `app.kubernetes.io/managed-by: k8s-nginx-revproxy`, and only policies
+  with that label are ever touched — a same-named policy you created by hand is
+  left alone (logged as a warning).
+- **Cleaned up** when a service stops being proxied (its vhost is removed, so is
+  its policy). The `ownerReferences` entry also lets Kubernetes garbage-collect
+  the policy automatically if the Service itself is deleted. A delete that finds
+  the policy already gone is treated as success.
+- **Removing `--allow-cidr` tears the lockdown down.** On its next run with the
+  flag unset, the daemon does a one-time pass that deletes every policy it
+  manages (the `managed-by` label), so services become directly reachable
+  again. This still needs the `networkpolicies` RBAC verbs; if they've also been
+  revoked, the daemon logs a warning and leaves the policies for you (or the
+  `ownerReferences` GC) to remove.
+- Needs the `networking.k8s.io/networkpolicies` RBAC verbs (see
+  [Prerequisites](#prerequisites)), and **a CNI that enforces NetworkPolicy**
+  (Calico, Cilium, etc.) — on a cluster without one the policy is accepted but
+  has no effect.
+
+Preview the policies without applying anything with `--dry-run`, which prints
+the rendered NetworkPolicy YAML after the nginx config.
 
 ## Running it manually
 
@@ -222,4 +295,9 @@ the unit so the proxy starts only once the tunnel is up.
 | `requirements.txt` | Python dependencies. |
 | `k8s-nginx-revproxy.service` | systemd unit template. |
 | `NGINX_SETUP.md` | Tuned & hardened nginx install guide (Debian 12). |
+| `ssh-socks-tunnel.service` | systemd unit template for the optional SOCKS5 SSH tunnel. |
 | `README.md` | This document. |
+
+Tests live at `tests/test_k8s_nginx_revproxy.py` (run from the repo root with
+`pytest tests/test_k8s_nginx_revproxy.py`); they stub the Kubernetes client, so
+no cluster is needed.

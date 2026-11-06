@@ -17,6 +17,10 @@ Type=simple
 Environment=PROXY_DOMAIN=k8s-ingress.example.com
 # Namespace(s) to watch (comma or space separated).
 Environment=NAMESPACES=hackinsdn
+# Uncomment to lock each exposed service down with a NetworkPolicy so its pods
+# accept ingress only from these CIDRs (i.e. only through this proxy). Requires
+# the networkpolicies RBAC verbs and a NetworkPolicy-enforcing CNI. See README.
+# Environment=ALLOW_CIDRS=203.0.113.10/32,10.0.0.0/24
 # Uncomment to route the Kubernetes API through a local SOCKS5 SSH tunnel:
 # Environment=PROXY=socks5h://127.0.0.1:1080
 

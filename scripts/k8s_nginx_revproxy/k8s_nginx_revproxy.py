@@ -18,6 +18,11 @@ On every poll it:
      with server_name = <hostname-template> (covered by the wildcard cert/DNS).
   5. Atomically writes the vhosts, runs `nginx -t`, and reloads nginx only when
      the desired configuration actually changed (rolling back on a bad config).
+  6. (Optional) When --allow-cidr is set, creates/updates a Kubernetes
+     NetworkPolicy per exposed Service so its pods accept ingress only from the
+     given CIDRs -- i.e. only through this proxy. The policy is removed when the
+     vhost goes away, and is garbage-collected via ownerReferences if the
+     Service itself is deleted.
 
 Robustness:
   * Multiple kubeconfigs for the same cluster (different control-plane nodes)
@@ -34,6 +39,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import ipaddress
 import logging
 import os
 import re
@@ -42,7 +48,7 @@ import subprocess
 import sys
 import time
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 try:
     from kubernetes import client, config
@@ -63,12 +69,29 @@ except ImportError:  # pragma: no cover
 
 log = logging.getLogger("k8s-revproxy")
 
+# NetworkPolicies this tool creates carry this label so they can be listed and
+# cleaned up without touching policies managed by anyone else.
+MANAGED_BY_KEY = "app.kubernetes.io/managed-by"
+MANAGED_BY_VAL = "k8s-nginx-revproxy"
+
 
 # --------------------------------------------------------------------------- #
 # Configuration
 # --------------------------------------------------------------------------- #
 def _env(name: str, default: str) -> str:
     return os.environ.get(name, default)
+
+
+def _normalize_cidr(value: str) -> str:
+    """Accept a CIDR or a bare IP; return a canonical CIDR (bare IPs become
+    /32 for IPv4 or /128 for IPv6). Raises ValueError on malformed input."""
+    v = value.strip()
+    if "/" not in v:
+        v = v + ("/128" if ":" in v else "/32")
+    # Validate (and canonicalise the network address, e.g. 10.0.0.5/24 kept as
+    # given but checked); strict=False allows host bits to be set.
+    ipaddress.ip_network(v, strict=False)
+    return v
 
 
 @dataclass
@@ -132,6 +155,11 @@ class Settings:
     # Namespace(s) to watch. At least one must be provided.
     namespaces: List[str] = field(default_factory=list)
 
+    # CIDRs allowed to reach the exposed pods. When non-empty, a NetworkPolicy
+    # is created per exposed Service restricting ingress to these CIDRs (i.e.
+    # only through this proxy). Empty disables NetworkPolicy management entirely.
+    allow_cidrs: List[str] = field(default_factory=list)
+
     # Only print the nginx config that would be written; never touch disk,
     # nginx -t, or reload. Implies a single cycle.
     dry_run: bool = False
@@ -166,6 +194,11 @@ def parse_args(argv: Optional[List[str]] = None) -> Settings:
                    default=_env("REQUIRE_READY", "true").lower() in ("1", "true", "yes"))
     p.add_argument("--namespace", action="append", default=[],
                    help="Namespace to watch (repeatable). Also NAMESPACES=ns1,ns2 (or NAMESPACE=ns).")
+    p.add_argument("--allow-cidr", action="append", default=[],
+                   help="CIDR (or bare IP) allowed to reach the exposed pods via a "
+                        "NetworkPolicy, so the NodePort service is reachable only "
+                        "through this proxy. Repeatable. Also ALLOW_CIDRS=cidr1,cidr2. "
+                        "When unset, no NetworkPolicy is managed.")
     p.add_argument("--log-level", default=_env("LOG_LEVEL", "INFO"))
     p.add_argument("--once", action="store_true", help="Run a single reconcile and exit (for testing).")
     p.add_argument("--dry-run", action="store_true",
@@ -190,6 +223,16 @@ def parse_args(argv: Optional[List[str]] = None) -> Settings:
     if not a.proxy_domain:
         p.error("--proxy-domain (or PROXY_DOMAIN env) is required")
 
+    allow_cidrs_raw = list(a.allow_cidr)
+    if not allow_cidrs_raw and _env("ALLOW_CIDRS", ""):
+        allow_cidrs_raw = [x.strip() for x in re.split(r"[,\s]+", _env("ALLOW_CIDRS", "")) if x.strip()]
+    allow_cidrs: List[str] = []
+    for raw in allow_cidrs_raw:
+        try:
+            allow_cidrs.append(_normalize_cidr(raw))
+        except ValueError:
+            p.error(f"invalid --allow-cidr value: {raw!r}")
+
     s = Settings(
         kubeconfigs=kubeconfigs,
         poll_interval=a.poll_interval,
@@ -207,6 +250,7 @@ def parse_args(argv: Optional[List[str]] = None) -> Settings:
         opt_in=a.opt_in,
         require_ready=a.require_ready,
         namespaces=namespaces,
+        allow_cidrs=allow_cidrs,
         dry_run=a.dry_run,
     )
     logging.basicConfig(
@@ -221,8 +265,9 @@ def parse_args(argv: Optional[List[str]] = None) -> Settings:
 # Kubernetes client pool (round-robin over kubeconfigs on failure)
 # --------------------------------------------------------------------------- #
 class KubeClientPool:
-    """Builds a CoreV1Api from the current kubeconfig and rotates to the next
-    one whenever :meth:`rotate` is called (i.e. the current endpoint failed)."""
+    """Builds an ApiClient from the current kubeconfig (shared by the Core and
+    Networking API wrappers) and rotates to the next kubeconfig whenever
+    :meth:`rotate` is called (i.e. the current endpoint failed)."""
 
     def __init__(self, kubeconfigs: List[str], proxy: str = ""):
         if not kubeconfigs:
@@ -230,13 +275,13 @@ class KubeClientPool:
         self._kubeconfigs = kubeconfigs
         self._proxy = proxy
         self._idx = 0
-        self._api: Optional[client.CoreV1Api] = None
+        self._client: Optional["client.ApiClient"] = None
 
     @property
     def current_path(self) -> str:
         return self._kubeconfigs[self._idx]
 
-    def _build(self) -> client.CoreV1Api:
+    def _build(self) -> "client.ApiClient":
         cfg = client.Configuration()
         # Isolate each kubeconfig into its own Configuration/ApiClient so
         # rotating never leaks state (host, token, CA) between endpoints.
@@ -255,10 +300,9 @@ class KubeClientPool:
             # mirroring the TLS settings the client would have used.
             self._install_socks_pool_manager(api_client, cfg)
 
-        api = client.CoreV1Api(api_client)
         log.info("Using kubeconfig %s (host=%s)%s", self.current_path, cfg.host,
                  f" via proxy {self._proxy}" if self._proxy else "")
-        return api
+        return api_client
 
     def _install_socks_pool_manager(self, api_client, cfg) -> None:
         import ssl as _ssl
@@ -289,15 +333,21 @@ class KubeClientPool:
             pass
         rest.pool_manager = SOCKSProxyManager(self._proxy, **pool_args)
 
+    def _api_client(self) -> "client.ApiClient":
+        if self._client is None:
+            self._client = self._build()
+        return self._client
+
     def api(self) -> client.CoreV1Api:
-        if self._api is None:
-            self._api = self._build()
-        return self._api
+        return client.CoreV1Api(self._api_client())
+
+    def networking(self) -> client.NetworkingV1Api:
+        return client.NetworkingV1Api(self._api_client())
 
     def rotate(self) -> None:
         prev = self.current_path
         self._idx = (self._idx + 1) % len(self._kubeconfigs)
-        self._api = None  # rebuilt lazily on next api()
+        self._client = None  # rebuilt lazily on next api()/networking()
         if len(self._kubeconfigs) > 1:
             log.warning("Rotating kubeconfig %s -> %s", prev, self.current_path)
 
@@ -314,6 +364,62 @@ class VHost:
 
     def sort_key(self) -> str:
         return self.hostname
+
+
+@dataclass
+class NetworkPolicySpec:
+    """A NetworkPolicy to create for a proxied Service: lock its pods down so
+    they accept ingress only from the configured CIDRs."""
+    namespace: str
+    name: str            # == Service name (also the policy name)
+    uid: str             # Service uid, for the ownerReference
+    selector: Dict[str, str]  # == Service spec.selector
+
+    def config_hash(self, cidrs: List[str]) -> str:
+        """Stable short hash of everything that affects the rendered policy, so
+        reconcile only rewrites a policy when its selector or CIDRs change."""
+        h = hashlib.sha256()
+        for k in sorted(self.selector):
+            h.update(f"{k}={self.selector[k]}".encode())
+            h.update(b"\0")
+        h.update(b"|")
+        for c in sorted(cidrs):
+            h.update(c.encode())
+            h.update(b"\0")
+        return h.hexdigest()[:16]
+
+    def to_body(self, cidrs: List[str], hash_annotation: str) -> dict:
+        return {
+            "apiVersion": "networking.k8s.io/v1",
+            "kind": "NetworkPolicy",
+            "metadata": {
+                "name": self.name,
+                "namespace": self.namespace,
+                "labels": {MANAGED_BY_KEY: MANAGED_BY_VAL},
+                "annotations": {hash_annotation: self.config_hash(cidrs)},
+                "ownerReferences": [{
+                    "apiVersion": "v1",
+                    "kind": "Service",
+                    "name": self.name,
+                    "uid": self.uid,
+                }],
+            },
+            "spec": {
+                "podSelector": {"matchLabels": dict(self.selector)},
+                "policyTypes": ["Ingress"],
+                "ingress": [{
+                    "from": [{"ipBlock": {"cidr": c}} for c in cidrs],
+                }],
+            },
+        }
+
+
+@dataclass
+class Desired:
+    """The desired state computed from one fetch: nginx vhosts plus the
+    NetworkPolicies (keyed by (namespace, name)) to reconcile."""
+    vhosts: List[VHost] = field(default_factory=list)
+    netpols: Dict[Tuple[str, str], NetworkPolicySpec] = field(default_factory=dict)
 
 
 _SAFE = re.compile(r"[^a-zA-Z0-9]+")
@@ -354,6 +460,11 @@ class Reconciler:
         self.s = settings
         self.pool = KubeClientPool(settings.kubeconfigs, proxy=settings.proxy)
         self._last_written_hash: Optional[str] = None
+        # NetworkPolicy management state:
+        #   _np_disabled     -> set once if we lack RBAC to manage policies
+        #   _np_cleanup_done -> the one-shot cleanup run when the feature is off
+        self._np_disabled = False
+        self._np_cleanup_done = False
 
     # ---- fetch ---------------------------------------------------------- #
     def _list_with_rotation(self, fn, *, what: str, **kwargs):
@@ -367,7 +478,7 @@ class Reconciler:
             self.pool.rotate()
             raise
 
-    def fetch_vhosts(self) -> List[VHost]:
+    def fetch_desired(self) -> Desired:
         api = self.pool.api()
         services = []
         pods = []
@@ -390,9 +501,10 @@ class Reconciler:
                 continue
             pods_by_ns.setdefault(pod.metadata.namespace, []).append(pod)
 
+        desired = Desired()
         vhosts: Dict[str, VHost] = {}
         for svc in services:
-            vh = self._service_to_vhosts(svc, pods_by_ns)
+            vh, npspec = self._service_to_vhosts(svc, pods_by_ns)
             for v in vh:
                 if v.hostname in vhosts:
                     log.warning("Hostname collision for %s -- keeping first, "
@@ -400,34 +512,37 @@ class Reconciler:
                                 svc.metadata.namespace, svc.metadata.name)
                     continue
                 vhosts[v.hostname] = v
-        return sorted(vhosts.values(), key=VHost.sort_key)
+            if npspec is not None:
+                desired.netpols[(npspec.namespace, npspec.name)] = npspec
+        desired.vhosts = sorted(vhosts.values(), key=VHost.sort_key)
+        return desired
 
-    def _service_to_vhosts(self, svc, pods_by_ns) -> List[VHost]:
+    def _service_to_vhosts(self, svc, pods_by_ns) -> Tuple[List[VHost], Optional[NetworkPolicySpec]]:
         s = self.s
         ns = svc.metadata.namespace
         name = svc.metadata.name
 
         if not svc.spec or svc.spec.type != "NodePort":
-            return []
+            return [], None
 
         enable = _annotation(svc, s.ann("enable"))
         if s.opt_in:
             if (enable or "").lower() != "true":
-                return []
+                return [], None
         else:
             if (enable or "").lower() == "false":
                 log.debug("Service %s/%s opted out via annotation", ns, name)
-                return []
+                return [], None
 
         selector = svc.spec.selector or {}
         if not selector:
             log.debug("Service %s/%s has no selector; skipping", ns, name)
-            return []
+            return [], None
 
         # Ports that actually have a nodePort assigned.
         node_ports = [p for p in (svc.spec.ports or []) if p.node_port]
         if not node_ports:
-            return []
+            return [], None
 
         # Optional per-service port restriction.
         want_port = _annotation(svc, s.ann("port"))
@@ -440,14 +555,14 @@ class Reconciler:
             if not node_ports:
                 log.warning("Service %s/%s: annotated port %r has no nodePort",
                             ns, name, want_port)
-                return []
+                return [], None
 
         # Matching, ready pods -> the set of node IPs to route to.
         matched = [pod for pod in pods_by_ns.get(ns, [])
                    if _pod_matches_selector(pod, selector)]
         if not matched:
             log.debug("Service %s/%s has no ready backing pods; skipping", ns, name)
-            return []
+            return [], None
         host_ips = sorted({pod.status.host_ip for pod in matched})
 
         # Per-service scheme/hostname overrides (optional).
@@ -485,7 +600,18 @@ class Reconciler:
                 scheme=scheme,
                 endpoints=endpoints,
             ))
-        return out
+
+        # One NetworkPolicy per Service that got at least one vhost, locking the
+        # backing pods to the configured CIDRs. Only when the feature is on.
+        npspec = None
+        if out and s.allow_cidrs:
+            npspec = NetworkPolicySpec(
+                namespace=ns,
+                name=name,
+                uid=svc.metadata.uid or "",
+                selector=dict(selector),
+            )
+        return out, npspec
 
     # ---- render --------------------------------------------------------- #
     def render(self, vhosts: List[VHost]) -> Dict[str, str]:
@@ -610,18 +736,21 @@ server {{
             return False
         return True
 
-    def apply(self, files: Dict[str, str]) -> None:
+    def apply(self, files: Dict[str, str]) -> bool:
+        """Write/reload nginx. Returns True when the config is live and matches
+        `files` (including the no-change / already-up-to-date cases), False when
+        nginx rejected it (rolled back) or the reload failed."""
         desired_hash = self._hash(files)
         if desired_hash == self._last_written_hash:
             log.debug("No configuration change (%d vhosts).", len(files) - 1)
-            return
+            return True
 
         previous = self._read_current()
         if self._hash(previous) == desired_hash:
             # On-disk already matches (e.g. first run after restart).
             self._last_written_hash = desired_hash
             log.info("Configuration already up to date (%d vhosts).", len(files) - 1)
-            return
+            return True
 
         log.info("Applying configuration: %d vhost(s).", len(files) - 1)
         added = sorted(k for k in files if k not in previous and k != "00-maps.conf")
@@ -635,33 +764,187 @@ server {{
             log.error("Rolling back to previous configuration.")
             self._write_files(previous)  # restore exact previous state
             self._nginx_test()           # best-effort validation of rollback
-            return
+            return False
         if self._reload():
             self._last_written_hash = desired_hash
             log.info("nginx reloaded successfully.")
-        else:
-            log.error("Reload failed; leaving new files in place for inspection.")
+            return True
+        log.error("Reload failed; leaving new files in place for inspection.")
+        return False
 
-    def dry_run(self, files: Dict[str, str]) -> None:
-        """Print the nginx config that would be written, without touching disk,
-        nginx -t, or reload."""
+    # ---- network policies ---------------------------------------------- #
+    def reconcile_network_policies(
+        self, desired: Dict[Tuple[str, str], NetworkPolicySpec]
+    ) -> bool:
+        """Ensure exactly the desired set of managed NetworkPolicies exists:
+        create missing ones, update changed ones, delete ones no longer wanted.
+        Only the policies this tool owns (managed-by label) are ever touched.
+        An empty `desired` therefore removes every managed policy -- which is how
+        dropping --allow-cidr tears the lockdown back down.
+
+        Returns True when it successfully listed and reconciled, False when it
+        skipped (e.g. no RBAC) so the caller can retry later."""
+        networking = self.pool.networking()
+        cidrs = self.s.allow_cidrs
+        hash_ann = self.s.ann("config-hash")
+
+        existing = self._list_managed_netpols(networking)
+        if existing is None:
+            return False  # could not list (no RBAC / API error) -- skip quietly
+
+        # Create / update.
+        for key, spec in sorted(desired.items()):
+            ns, name = key
+            body = spec.to_body(cidrs, hash_ann)
+            cur = existing.get(key)
+            if cur is None:
+                self._np_create(networking, ns, name, body)
+            else:
+                cur_hash = (cur.metadata.annotations or {}).get(hash_ann)
+                if cur_hash != spec.config_hash(cidrs):
+                    body["metadata"]["resourceVersion"] = cur.metadata.resource_version
+                    self._np_replace(networking, ns, name, body)
+
+        # Delete managed policies no longer desired.
+        for key in sorted(existing):
+            if key not in desired:
+                self._np_delete(networking, key[0], key[1])
+        return True
+
+    def _list_managed_netpols(self, networking):
+        """Return {(ns, name): policy} for the policies this tool manages, or
+        None if they can't be listed (missing RBAC disables NP management for
+        the rest of the run; a connectivity error rotates + raises to retry)."""
+        label_sel = f"{MANAGED_BY_KEY}={MANAGED_BY_VAL}"
+        existing: Dict[Tuple[str, str], object] = {}
+        for ns in self.s.namespaces:
+            try:
+                resp = networking.list_namespaced_network_policy(
+                    namespace=ns, label_selector=label_sel,
+                    _request_timeout=self._np_timeout())
+            except ApiException as exc:
+                if getattr(exc, "status", None) in (401, 403):
+                    log.warning("No RBAC to list NetworkPolicies (status %s); "
+                                "NetworkPolicy management disabled for this run. "
+                                "Grant get/list/create/update/delete on "
+                                "networkpolicies to manage or clean them up.",
+                                exc.status)
+                    self._np_disabled = True
+                else:
+                    log.error("Listing NetworkPolicies in %s failed: %s", ns, exc)
+                return None
+            except (Urllib3HTTPError, OSError) as exc:
+                log.error("Listing NetworkPolicies in %s failed (connectivity): %s", ns, exc)
+                self.pool.rotate()
+                raise
+            for np in resp.items:
+                existing[(ns, np.metadata.name)] = np
+        return existing
+
+    def _np_timeout(self):
+        return (self.s.connect_timeout, self.s.read_timeout)
+
+    def _np_api_error(self, verb: str, ns: str, name: str, exc) -> None:
+        if getattr(exc, "status", None) in (401, 403):
+            log.error("NetworkPolicy %s %s/%s forbidden (status %s); check RBAC "
+                      "(needs get/list/create/update/delete on networkpolicies).",
+                      verb, ns, name, exc.status)
+        else:
+            log.error("NetworkPolicy %s %s/%s failed: %s", verb, ns, name, exc)
+
+    def _np_create(self, networking, ns: str, name: str, body: dict) -> None:
+        try:
+            networking.create_namespaced_network_policy(
+                namespace=ns, body=body, _request_timeout=self._np_timeout())
+            log.info("Created NetworkPolicy %s/%s", ns, name)
+        except ApiException as exc:
+            if exc.status == 409:
+                log.warning("NetworkPolicy %s/%s already exists and is not managed "
+                            "by this tool; leaving it untouched.", ns, name)
+            else:
+                self._np_api_error("create", ns, name, exc)
+        except (Urllib3HTTPError, OSError) as exc:
+            log.error("NetworkPolicy create %s/%s failed (connectivity): %s", ns, name, exc)
+            self.pool.rotate()
+            raise
+
+    def _np_replace(self, networking, ns: str, name: str, body: dict) -> None:
+        try:
+            networking.replace_namespaced_network_policy(
+                name=name, namespace=ns, body=body, _request_timeout=self._np_timeout())
+            log.info("Updated NetworkPolicy %s/%s", ns, name)
+        except ApiException as exc:
+            self._np_api_error("replace", ns, name, exc)
+        except (Urllib3HTTPError, OSError) as exc:
+            log.error("NetworkPolicy replace %s/%s failed (connectivity): %s", ns, name, exc)
+            self.pool.rotate()
+            raise
+
+    def _np_delete(self, networking, ns: str, name: str) -> None:
+        try:
+            networking.delete_namespaced_network_policy(
+                name=name, namespace=ns, _request_timeout=self._np_timeout())
+            log.info("Removed NetworkPolicy %s/%s", ns, name)
+        except ApiException as exc:
+            if exc.status == 404:
+                log.debug("NetworkPolicy %s/%s already gone.", ns, name)
+            else:
+                self._np_api_error("delete", ns, name, exc)
+        except (Urllib3HTTPError, OSError) as exc:
+            log.error("NetworkPolicy delete %s/%s failed (connectivity): %s", ns, name, exc)
+            self.pool.rotate()
+            raise
+
+    def dry_run(self, files: Dict[str, str],
+                netpols: Dict[Tuple[str, str], NetworkPolicySpec]) -> None:
+        """Print the nginx config (and any NetworkPolicies) that would be
+        written, without touching disk, nginx -t, reload, or the cluster."""
         sys.stdout.write(
-            f"# ===== dry-run: {len(files)} file(s) would be written to "
+            f"# ===== dry-run: {len(files)} nginx file(s) would be written to "
             f"{self.s.output_dir} =====\n"
         )
         for fn in sorted(files):
             sys.stdout.write(f"\n# ----- {os.path.join(self.s.output_dir, fn)} -----\n")
             sys.stdout.write(files[fn])
+
+        if netpols:
+            try:
+                import yaml  # pyyaml ships with the kubernetes client
+                def _dump(b):
+                    return yaml.safe_dump(b, default_flow_style=False, sort_keys=False)
+            except ImportError:
+                import json
+                def _dump(b):
+                    return json.dumps(b, indent=2) + "\n"
+            sys.stdout.write(f"\n# ===== dry-run: {len(netpols)} NetworkPolicy(ies) "
+                             f"would be applied =====\n")
+            hash_ann = self.s.ann("config-hash")
+            for key in sorted(netpols):
+                body = netpols[key].to_body(self.s.allow_cidrs, hash_ann)
+                sys.stdout.write("\n---\n")
+                sys.stdout.write(_dump(body))
         sys.stdout.flush()
 
     # ---- one cycle ------------------------------------------------------ #
     def reconcile_once(self) -> None:
-        vhosts = self.fetch_vhosts()  # raises on API failure (nginx untouched)
-        files = self.render(vhosts)
+        desired = self.fetch_desired()  # raises on API failure (nginx untouched)
+        files = self.render(desired.vhosts)
         if self.s.dry_run:
-            self.dry_run(files)
+            self.dry_run(files, desired.netpols)
             return
-        self.apply(files)
+        applied_ok = self.apply(files)
+        # Only touch NetworkPolicies when nginx is healthy -- never lock a
+        # service down behind a proxy that failed to come up.
+        if applied_ok and not self._np_disabled:
+            if self.s.allow_cidrs:
+                # Feature on: create/update desired, delete managed strays.
+                self.reconcile_network_policies(desired.netpols)
+            elif not self._np_cleanup_done:
+                # Feature off: run once to remove any policies we created on a
+                # previous run (i.e. --allow-cidr was dropped). `desired` is
+                # empty, so every managed policy is deleted.
+                if self.reconcile_network_policies({}):
+                    self._np_cleanup_done = True
 
 
 # --------------------------------------------------------------------------- #
@@ -688,6 +971,9 @@ def main(argv: Optional[List[str]] = None) -> int:
     log.info("Starting with %d kubeconfig(s), namespaces=%s, domain=%s, poll=%ss, output=%s",
              len(settings.kubeconfigs), ",".join(settings.namespaces),
              settings.proxy_domain, settings.poll_interval, settings.output_dir)
+    if settings.allow_cidrs:
+        log.info("NetworkPolicy lockdown enabled; allowed CIDRs: %s",
+                 ", ".join(settings.allow_cidrs))
 
     while not _stop:
         start = time.monotonic()
@@ -695,7 +981,7 @@ def main(argv: Optional[List[str]] = None) -> int:
             rec.reconcile_once()
             backoff = settings.poll_interval  # reset after a good cycle
         except (ApiException, Urllib3HTTPError, OSError) as exc:
-            # fetch_vhosts already logged + rotated the kubeconfig.
+            # fetch_desired already logged + rotated the kubeconfig.
             log.warning("Reconcile cycle failed (%s); nginx config unchanged.", type(exc).__name__)
         except Exception:  # noqa: BLE001  keep the daemon alive; systemd is the safety net
             log.exception("Unexpected error during reconcile; continuing.")
