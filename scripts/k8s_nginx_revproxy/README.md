@@ -95,10 +95,20 @@ or which port is exposed with annotations (see [Annotations](#per-service-annota
     - apiGroups: [""]
       resources: ["services", "pods"]
       verbs: ["get", "list"]
+    # Only needed when --allow-cidr is set (NetworkPolicy lockdown, see below):
+    - apiGroups: ["networking.k8s.io"]
+      resources: ["networkpolicies"]
+      verbs: ["get", "list", "create", "update", "patch", "delete"]
+    # Only needed when --patch-external-traffic-policy is used (see below):
+    - apiGroups: [""]
+      resources: ["services"]
+      verbs: ["patch"]
   ```
 
   Bind it to the identity used by each kubeconfig. Provide one kubeconfig per
-  control-plane endpoint for failover.
+  control-plane endpoint for failover. The `networkpolicies` rule can be omitted
+  if you never use `--allow-cidr`, and the `services`/`patch` rule if you never
+  use `--patch-external-traffic-policy`.
 
 - **Python 3.9+** and the dependencies in `requirements.txt`
   (`kubernetes`; plus `urllib3[socks]` / PySocks only if you use a SOCKS proxy).
@@ -127,6 +137,8 @@ flag wins when both are set. Three options are **required**: `--kubeconfig`,
 | `--annotation-prefix` | `ANNOTATION_PREFIX` | `revproxy.hackinsdn.io` | Prefix for per-service annotation overrides. |
 | `--opt-in` | `OPT_IN` (`1`/`true`/`yes`) | `false` | Expose only services annotated `<prefix>/enable=true`. Otherwise every NodePort service is exposed unless it sets `<prefix>/enable=false`. |
 | `--no-require-ready` | `REQUIRE_READY` (`false` to disable) | ready required | Route to Running pods even if not Ready. |
+| `--allow-cidr` (repeatable) | `ALLOW_CIDRS` (comma/space) | *(none)* | CIDR (or bare IP, normalized to `/32` / `/128`) allowed to reach the exposed pods via a per-service NetworkPolicy, so the NodePort service is reachable only through this proxy. When unset, no NetworkPolicy is managed. See [NetworkPolicy lockdown](#networkpolicy-lockdown). |
+| `--patch-external-traffic-policy` | `PATCH_EXTERNAL_TRAFFIC_POLICY` (`1`/`true`/`yes`) | `false` | While locking a service down, patch it to `externalTrafficPolicy: Local` so the allow-list can match proxy traffic. Only acts when `--allow-cidr` is set; **mutates your Services** and needs `services` `patch` RBAC. Meant to be run temporarily to migrate services, then removed. See [Preserving the client source IP](#preserving-the-client-source-ip-read-this-before-enabling). |
 | `--log-level` | `LOG_LEVEL` | `INFO` | Python logging level. |
 | `--dry-run` | `DRY_RUN` (`1`/`true`/`yes`) | `false` | Print the config that would be written and exit; no disk writes, no `nginx -t`, no reload. Implies a single cycle. |
 | `--once` | — | `false` | Run a single reconcile and exit (for testing). |
@@ -142,6 +154,184 @@ Set on a Service to override defaults (prefix configurable via
 | `<prefix>/hostname` | Override the full published hostname. |
 | `<prefix>/scheme` | Force the upstream scheme (`http` or `https`). |
 | `<prefix>/port` | Expose only the given service port (name or number). |
+
+There is also one **fixed** annotation that is *not* affected by
+`--annotation-prefix`:
+
+| Annotation | Effect |
+|------------|--------|
+| `hackinsdn.ufba.br/skip-revproxy` | `"true"` (or `1`/`yes`/`on`) to never proxy this service. |
+
+`hackinsdn.ufba.br/skip-revproxy` and `<prefix>/enable=false` both suppress a
+service. The difference: `skip-revproxy` is unconditional (it also excludes a
+service in `--opt-in` mode, where `enable=false` would be redundant), so it's the
+clearest way to mark a service as "never proxy this, whatever the global policy."
+
+## NetworkPolicy lockdown
+
+By default the daemon only publishes a reverse-proxy vhost; the underlying
+NodePort is still reachable directly on every node. Passing one or more
+`--allow-cidr` values turns on **NetworkPolicy lockdown**: after a service's
+vhost is live, the daemon creates a `NetworkPolicy` that restricts ingress to
+the backing pods to just those CIDRs — so the service is reachable only through
+this proxy. The CIDRs must be the source the pods actually see for proxied
+traffic, which requires `externalTrafficPolicy: Local` on the Service; see
+[Preserving the client source IP](#preserving-the-client-source-ip-read-this-before-enabling)
+below before enabling.
+
+For a service named `webui` with selector `app=webui`, the rendered policy is:
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: webui
+  labels:
+    app.kubernetes.io/managed-by: k8s-nginx-revproxy
+  annotations:
+    revproxy.hackinsdn.io/config-hash: <hash>
+  ownerReferences:
+    - apiVersion: v1
+      kind: Service
+      name: webui
+      uid: <service-uid>
+spec:
+  podSelector:
+    matchLabels:
+      app: webui
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - ipBlock: {cidr: 10.0.0.1/32}
+        - ipBlock: {cidr: 192.168.0.0/24}
+```
+
+How it behaves:
+
+- **One policy per proxied Service**, named after the service, with
+  `podSelector` = the service's `spec.selector` and one `ipBlock` per allowed
+  CIDR. Bare IPs are normalized (`/32` for IPv4, `/128` for IPv6).
+- **Created only after a successful nginx apply** — the daemon never locks a
+  service down behind a proxy that failed to come up.
+- **Reconciled idempotently**: policies carry a config-hash annotation, so a
+  cycle only rewrites one when its selector or the allowed CIDRs change. They're
+  tagged `app.kubernetes.io/managed-by: k8s-nginx-revproxy`, and only policies
+  with that label are ever touched — a same-named policy you created by hand is
+  left alone (logged as a warning).
+- **Cleaned up** when a service stops being proxied (its vhost is removed, so is
+  its policy). The `ownerReferences` entry also lets Kubernetes garbage-collect
+  the policy automatically if the Service itself is deleted. A delete that finds
+  the policy already gone is treated as success.
+- **Removing `--allow-cidr` tears the lockdown down.** On its next run with the
+  flag unset, the daemon does a one-time pass that deletes every policy it
+  manages (the `managed-by` label), so services become directly reachable
+  again. This still needs the `networkpolicies` RBAC verbs; if they've also been
+  revoked, the daemon logs a warning and leaves the policies for you (or the
+  `ownerReferences` GC) to remove.
+- Needs the `networking.k8s.io/networkpolicies` RBAC verbs (see
+  [Prerequisites](#prerequisites)), and **a CNI that enforces NetworkPolicy**
+  (Calico, Cilium, etc.) — on a cluster without one the policy is accepted but
+  has no effect.
+
+### Preserving the client source IP (read this before enabling)
+
+A NetworkPolicy `ipBlock` matches the **source IP as the pod's CNI sees it on
+the inbound packet** — not the original client address. This has a decisive
+consequence for NodePort services:
+
+- With the default **`externalTrafficPolicy: Cluster`**, a packet arriving at
+  `nodeA:nodePort` is **SNAT'd to `nodeA`'s own IP** before it reaches the pod
+  (so the reply path stays symmetric). The pod never sees the proxy's real IP,
+  so an allow-list of proxy CIDRs **never matches** and all proxied traffic is
+  dropped. Allow-listing the node IPs instead does not help: a direct attacker
+  hitting the same NodePort is *also* SNAT'd to the node IP, so the policy can't
+  tell the proxy apart from the attacker. Under `Cluster` the lockdown cannot do
+  its job.
+- With **`externalTrafficPolicy: Local`**, kube-proxy routes the NodePort only
+  to pods **on the same node** and does **not** SNAT, so the pod sees the real
+  client (proxy) source IP and the allow-list works. Because this daemon already
+  points nginx at the node that hosts the pod (`hostIP:nodePort`), that node
+  always has a local pod, so `Local`'s usual "drop if no local pod" blackhole
+  does not apply to the proxy path.
+
+**So set `externalTrafficPolicy: Local` on every Service you lock down.** The
+daemon reads but does not own your Services, so you (or the service authors) must
+set this; when the daemon is about to create a policy for a service that is still
+`Cluster`, it logs a one-time warning per service. Example:
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: webui
+spec:
+  type: NodePort
+  externalTrafficPolicy: Local
+  selector:
+    app: webui
+  ports:
+    - port: 8080
+      nodePort: 31080
+```
+
+#### Letting the daemon migrate services (`--patch-external-traffic-policy`)
+
+If you can't easily edit every Service by hand, run the daemon **temporarily**
+with `--patch-external-traffic-policy`. While lockdown is on, before it creates a
+policy for a service whose `externalTrafficPolicy` isn't `Local`, it patches the
+Service to `Local` (a JSON Patch on `/spec/externalTrafficPolicy`) and logs it.
+It's idempotent — once a service is `Local`, the next cycle sees that and stops
+patching — so the intended workflow is: enable the flag, watch the
+`Patched Service … -> Local` log lines, confirm everything still works, then
+**remove the flag**.
+
+Caveats:
+
+- It **mutates your Services** (a field you otherwise own) and needs the
+  `services` `patch` RBAC verb (see [Prerequisites](#prerequisites)). Without it
+  the daemon logs one error and disables patching for the run; the NetworkPolicy
+  is still reconciled.
+- Flipping `externalTrafficPolicy` reprograms kube-proxy and can briefly reset
+  in-flight connections to that service — expect a short blip per patched
+  service.
+- Without the flag, the daemon only **warns** (once per service) and leaves the
+  Service untouched; the policy is still created, but the allow-list won't match
+  until the service is `Local`.
+
+Further caveats to verify in your environment:
+
+- **Allow-list the source IP the *node* actually sees**, not the IP you assume
+  the proxy has. If anything between the proxy and the nodes does NAT (a router,
+  a gateway, a different egress interface than the API/SSH-tunnel path), the pod
+  sees that translated address instead. Confirm empirically (see below) rather
+  than assuming it is the nginx box's own IP.
+- **Watch for CNI re-masquerading.** Even with `Local`, some CNIs masquerade
+  traffic whose source is outside the cluster/pod CIDR (Calico `natOutgoing`,
+  Cilium masquerade, `ip-masq-agent` ranges). If enabled, the pod can still see a
+  rewritten source. Check your CNI's masquerade settings.
+- **Don't block health probes / legitimate in-cluster clients.** A policy that
+  allows only the proxy CIDR denies everything else. Kubelet probes usually come
+  from the node and most CNIs exempt them, but behavior varies — verify probes
+  and any intra-cluster callers still pass after locking down.
+- **Pod rescheduling.** The upstream node IPs are cached per reconcile cycle;
+  under `Local`, if a pod moves to another node between cycles the old node has
+  no local pod and briefly drops traffic until the next cycle re-renders nginx.
+  Keep the reconcile interval short if this matters.
+
+To verify what the pod actually sees, hit a service through the proxy and check:
+
+```bash
+# if the app logs client IPs:
+kubectl -n <ns> logs <pod>
+# or capture directly:
+kubectl -n <ns> exec <pod> -- sh -c 'timeout 10 tcpdump -ni any tcp and port <containerPort>'
+```
+
+Then confirm the lockdown actually locks: from a host **not** in the allow-list,
+`curl http://<nodeIP>:<nodePort>` should fail, while the proxy still works.
+
+Preview the policies without applying anything with `--dry-run`, which prints
+the rendered NetworkPolicy YAML after the nginx config.
 
 ## Running it manually
 
@@ -222,4 +412,9 @@ the unit so the proxy starts only once the tunnel is up.
 | `requirements.txt` | Python dependencies. |
 | `k8s-nginx-revproxy.service` | systemd unit template. |
 | `NGINX_SETUP.md` | Tuned & hardened nginx install guide (Debian 12). |
+| `ssh-socks-tunnel.service` | systemd unit template for the optional SOCKS5 SSH tunnel. |
 | `README.md` | This document. |
+
+Tests live at `tests/test_k8s_nginx_revproxy.py` (run from the repo root with
+`pytest tests/test_k8s_nginx_revproxy.py`); they stub the Kubernetes client, so
+no cluster is needed.
