@@ -258,7 +258,7 @@ def test_service_to_vhosts_skip_annotation_opt_out():
     r = _recon(_settings(allow_cidrs=["10.0.0.1/32"]))
     pods = {"ns": [_pod({"app": "webui"}, "10.0.0.5")]}
     svc = _svc("webui", "ns", "uid-9", {"app": "webui"}, [_port(8080, 31000)],
-               annotations={"revproxy.hackinsdn.io/skip": "true"})
+               annotations={"hackinsdn.ufba.br/skip-revproxy": "true"})
     vhosts, np = r._service_to_vhosts(svc, pods)
     assert vhosts == [] and np is None
 
@@ -269,7 +269,7 @@ def test_service_to_vhosts_skip_annotation_wins_in_opt_in():
     pods = {"ns": [_pod({"app": "webui"}, "10.0.0.5")]}
     svc = _svc("webui", "ns", "uid-9", {"app": "webui"}, [_port(8080, 31000)],
                annotations={"revproxy.hackinsdn.io/enable": "true",
-                            "revproxy.hackinsdn.io/skip": "yes"})
+                            "hackinsdn.ufba.br/skip-revproxy": "yes"})
     vhosts, np = r._service_to_vhosts(svc, pods)
     assert vhosts == [] and np is None
 
@@ -279,7 +279,7 @@ def test_service_to_vhosts_skip_annotation_falsey_is_proxied():
     r = _recon(_settings())
     pods = {"ns": [_pod({"app": "webui"}, "10.0.0.5")]}
     svc = _svc("webui", "ns", "uid-9", {"app": "webui"}, [_port(8080, 31000)],
-               annotations={"revproxy.hackinsdn.io/skip": "false"})
+               annotations={"hackinsdn.ufba.br/skip-revproxy": "false"})
     vhosts, _ = r._service_to_vhosts(svc, pods)
     assert [v.hostname for v in vhosts] == ["8080-webui.d.example"]
 

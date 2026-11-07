@@ -150,16 +150,22 @@ Set on a Service to override defaults (prefix configurable via
 
 | Annotation | Effect |
 |------------|--------|
-| `<prefix>/skip` | `"true"` (or `1`/`yes`/`on`) to never proxy this service. Wins in both opt-in and opt-out modes — use it for services you deliberately never want exposed. |
 | `<prefix>/enable` | `"true"` to expose (when `--opt-in`), or `"false"` to opt out. |
 | `<prefix>/hostname` | Override the full published hostname. |
 | `<prefix>/scheme` | Force the upstream scheme (`http` or `https`). |
 | `<prefix>/port` | Expose only the given service port (name or number). |
 
-`<prefix>/skip` and `<prefix>/enable=false` both suppress a service. The
-difference: `skip` is unconditional (it also excludes a service in `--opt-in`
-mode, where `enable=false` would be redundant), so it's the clearest way to mark
-a service as "never proxy this, whatever the global policy."
+There is also one **fixed** annotation that is *not* affected by
+`--annotation-prefix`:
+
+| Annotation | Effect |
+|------------|--------|
+| `hackinsdn.ufba.br/skip-revproxy` | `"true"` (or `1`/`yes`/`on`) to never proxy this service. |
+
+`hackinsdn.ufba.br/skip-revproxy` and `<prefix>/enable=false` both suppress a
+service. The difference: `skip-revproxy` is unconditional (it also excludes a
+service in `--opt-in` mode, where `enable=false` would be redundant), so it's the
+clearest way to mark a service as "never proxy this, whatever the global policy."
 
 ## NetworkPolicy lockdown
 

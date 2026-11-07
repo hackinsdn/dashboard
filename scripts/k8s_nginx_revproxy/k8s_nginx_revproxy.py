@@ -74,6 +74,10 @@ log = logging.getLogger("k8s-revproxy")
 MANAGED_BY_KEY = "app.kubernetes.io/managed-by"
 MANAGED_BY_VAL = "k8s-nginx-revproxy"
 
+# Fixed annotation (independent of --annotation-prefix) that marks a Service as
+# "never reverse-proxy this", in both opt-in and opt-out modes.
+SKIP_ANNOTATION = "hackinsdn.ufba.br/skip-revproxy"
+
 
 # --------------------------------------------------------------------------- #
 # Configuration
@@ -142,7 +146,8 @@ class Settings:
     #   revproxy.hackinsdn.io/scheme: https              (overrides port-name rule)
     #   revproxy.hackinsdn.io/port: "8443"   (service port name or number)
     #   revproxy.hackinsdn.io/enable: "false"
-    #   revproxy.hackinsdn.io/skip: "true"   (never proxy this service)
+    # A separate fixed annotation, hackinsdn.ufba.br/skip-revproxy: "true",
+    # marks a service as never-proxy (see SKIP_ANNOTATION).
     annotation_prefix: str = "revproxy.hackinsdn.io"
 
     # If set, only expose services carrying <annotation_prefix>/enable=true.
@@ -555,10 +560,11 @@ class Reconciler:
         if not svc.spec or svc.spec.type != "NodePort":
             return [], None
 
-        # Explicit opt-out: <prefix>/skip wins in both opt-in and opt-out modes,
-        # for services you never want proxied regardless of the global policy.
-        if _is_true(_annotation(svc, s.ann("skip"))):
-            log.debug("Service %s/%s skipped via %s annotation", ns, name, s.ann("skip"))
+        # Explicit opt-out: the fixed skip-revproxy annotation wins in both
+        # opt-in and opt-out modes, for services you never want proxied
+        # regardless of the global policy.
+        if _is_true(_annotation(svc, SKIP_ANNOTATION)):
+            log.debug("Service %s/%s skipped via %s annotation", ns, name, SKIP_ANNOTATION)
             return [], None
 
         enable = _annotation(svc, s.ann("enable"))
