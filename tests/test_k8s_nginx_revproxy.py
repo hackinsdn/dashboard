@@ -112,6 +112,7 @@ def _recon(settings):
     r._np_disabled = False
     r._np_cleanup_done = False
     r._etp_warned = set()
+    r._etp_patch_disabled = False
     return r
 
 
@@ -148,14 +149,29 @@ class FakeNet:
             raise self.raise_on["delete"]
 
 
+class FakeCore:
+    def __init__(self, raise_on=None):
+        self.raise_on = raise_on or {}      # verb -> exception
+        self.calls = []
+
+    def patch_namespaced_service(self, name, namespace, body, _request_timeout=None):
+        self.calls.append(("patch", namespace, name, body))
+        if "patch" in self.raise_on:
+            raise self.raise_on["patch"]
+
+
 class FakePool:
-    def __init__(self, net):
+    def __init__(self, net, core=None):
         self._net = net
+        self._core = core or FakeCore()
         self.current_path = "kc"
         self.rotated = 0
 
     def networking(self):
         return self._net
+
+    def api(self):
+        return self._core
 
     def rotate(self):
         self.rotated += 1
@@ -237,6 +253,37 @@ def test_service_to_vhosts_skipped_service_has_no_policy():
     assert vhosts == [] and np is None
 
 
+def test_service_to_vhosts_skip_annotation_opt_out():
+    # Default (opt-out) mode: the skip annotation suppresses the proxy.
+    r = _recon(_settings(allow_cidrs=["10.0.0.1/32"]))
+    pods = {"ns": [_pod({"app": "webui"}, "10.0.0.5")]}
+    svc = _svc("webui", "ns", "uid-9", {"app": "webui"}, [_port(8080, 31000)],
+               annotations={"revproxy.hackinsdn.io/skip": "true"})
+    vhosts, np = r._service_to_vhosts(svc, pods)
+    assert vhosts == [] and np is None
+
+
+def test_service_to_vhosts_skip_annotation_wins_in_opt_in():
+    # Even in opt-in mode with enable=true, skip still wins.
+    r = _recon(_settings(opt_in=True))
+    pods = {"ns": [_pod({"app": "webui"}, "10.0.0.5")]}
+    svc = _svc("webui", "ns", "uid-9", {"app": "webui"}, [_port(8080, 31000)],
+               annotations={"revproxy.hackinsdn.io/enable": "true",
+                            "revproxy.hackinsdn.io/skip": "yes"})
+    vhosts, np = r._service_to_vhosts(svc, pods)
+    assert vhosts == [] and np is None
+
+
+def test_service_to_vhosts_skip_annotation_falsey_is_proxied():
+    # A non-truthy skip value does not suppress the proxy.
+    r = _recon(_settings())
+    pods = {"ns": [_pod({"app": "webui"}, "10.0.0.5")]}
+    svc = _svc("webui", "ns", "uid-9", {"app": "webui"}, [_port(8080, 31000)],
+               annotations={"revproxy.hackinsdn.io/skip": "false"})
+    vhosts, _ = r._service_to_vhosts(svc, pods)
+    assert [v.hostname for v in vhosts] == ["8080-webui.d.example"]
+
+
 def test_service_to_vhosts_warns_once_on_non_local_etp(caplog):
     r = _recon(_settings(allow_cidrs=["10.0.0.1/32"]))
     pods = {"ns": [_pod({"app": "webui"}, "10.0.0.5")]}
@@ -263,6 +310,30 @@ def test_service_to_vhosts_no_etp_warning_when_local(caplog):
     assert np is not None
     assert not any("externalTrafficPolicy" in rec.getMessage()
                    for rec in caplog.records)
+
+
+def test_service_to_vhosts_patch_mode_flags_and_suppresses_warning(caplog):
+    r = _recon(_settings(allow_cidrs=["10.0.0.1/32"],
+                         patch_external_traffic_policy=True))
+    pods = {"ns": [_pod({"app": "webui"}, "10.0.0.5")]}
+    svc = _svc("webui", "ns", "uid-9", {"app": "webui"}, [_port(8080, 31000)],
+               external_traffic_policy="Cluster")
+    with caplog.at_level(logging.WARNING):
+        _, np = r._service_to_vhosts(svc, pods)
+    assert np is not None and np.needs_etp_patch is True
+    # Patch mode fixes it, so we don't also emit the advisory warning.
+    assert not any("externalTrafficPolicy" in rec.getMessage()
+                   for rec in caplog.records)
+
+
+def test_service_to_vhosts_patch_mode_noop_when_already_local():
+    r = _recon(_settings(allow_cidrs=["10.0.0.1/32"],
+                         patch_external_traffic_policy=True))
+    pods = {"ns": [_pod({"app": "webui"}, "10.0.0.5")]}
+    svc = _svc("webui", "ns", "uid-9", {"app": "webui"}, [_port(8080, 31000)],
+               external_traffic_policy="Local")
+    _, np = r._service_to_vhosts(svc, pods)
+    assert np is not None and np.needs_etp_patch is False
 
 
 # --- reconcile_network_policies ---------------------------------------------
@@ -321,6 +392,55 @@ def test_reconcile_skips_and_disables_on_403():
     assert r._np_disabled is True            # management turned off for the run
     assert r.pool.rotated == 0               # 403 is not a connectivity error
     assert not any(c[0] == "create" for c in net.calls)
+
+
+# --- externalTrafficPolicy patching -----------------------------------------
+def _spec_patch():
+    s = m.NetworkPolicySpec("ns", "webui", "uid-123", {"app": "webui"})
+    s.needs_etp_patch = True
+    return s
+
+
+def test_reconcile_patches_service_etp_local():
+    net = FakeNet()
+    core = FakeCore()
+    r = _recon(_settings(allow_cidrs=CIDRS,
+                         patch_external_traffic_policy=True))
+    r.pool = FakePool(net, core)
+    r.reconcile_network_policies({("ns", "webui"): _spec_patch()})
+    assert len(core.calls) == 1
+    verb, ns, name, body = core.calls[0]
+    assert (verb, ns, name) == ("patch", "ns", "webui")
+    # JSON Patch (list), so the client sends application/json-patch+json.
+    assert body == [{"op": "add", "path": "/spec/externalTrafficPolicy",
+                     "value": "Local"}]
+    # Still creates the policy afterwards.
+    assert ("create", "ns", "webui") in net.calls
+
+
+def test_reconcile_no_patch_when_not_requested():
+    net = FakeNet()
+    core = FakeCore()
+    r = _recon(_settings(allow_cidrs=CIDRS))  # patch flag off -> needs_etp_patch False
+    r.pool = FakePool(net, core)
+    r.reconcile_network_policies({("ns", "webui"): _spec()})
+    assert core.calls == []
+
+
+def test_reconcile_etp_patch_403_disables_further_patching():
+    net = FakeNet()
+    core = FakeCore(raise_on={"patch": m.ApiException(status=403)})
+    r = _recon(_settings(allow_cidrs=CIDRS,
+                         patch_external_traffic_policy=True))
+    r.pool = FakePool(net, core)
+    r.reconcile_network_policies({("ns", "webui"): _spec_patch()})
+    assert r._etp_patch_disabled is True
+    assert r.pool.rotated == 0          # 403 is not a connectivity error
+    # A later cycle makes no further patch attempt.
+    r.reconcile_network_policies({("ns", "webui"): _spec_patch()})
+    assert len(core.calls) == 1
+    # The NetworkPolicy is still reconciled regardless of the patch outcome.
+    assert any(c[0] == "create" for c in net.calls)
 
 
 # --- reconcile_once gating (feature on/off) ---------------------------------

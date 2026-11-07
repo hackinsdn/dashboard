@@ -99,11 +99,16 @@ or which port is exposed with annotations (see [Annotations](#per-service-annota
     - apiGroups: ["networking.k8s.io"]
       resources: ["networkpolicies"]
       verbs: ["get", "list", "create", "update", "patch", "delete"]
+    # Only needed when --patch-external-traffic-policy is used (see below):
+    - apiGroups: [""]
+      resources: ["services"]
+      verbs: ["patch"]
   ```
 
   Bind it to the identity used by each kubeconfig. Provide one kubeconfig per
   control-plane endpoint for failover. The `networkpolicies` rule can be omitted
-  if you never use `--allow-cidr`.
+  if you never use `--allow-cidr`, and the `services`/`patch` rule if you never
+  use `--patch-external-traffic-policy`.
 
 - **Python 3.9+** and the dependencies in `requirements.txt`
   (`kubernetes`; plus `urllib3[socks]` / PySocks only if you use a SOCKS proxy).
@@ -133,6 +138,7 @@ flag wins when both are set. Three options are **required**: `--kubeconfig`,
 | `--opt-in` | `OPT_IN` (`1`/`true`/`yes`) | `false` | Expose only services annotated `<prefix>/enable=true`. Otherwise every NodePort service is exposed unless it sets `<prefix>/enable=false`. |
 | `--no-require-ready` | `REQUIRE_READY` (`false` to disable) | ready required | Route to Running pods even if not Ready. |
 | `--allow-cidr` (repeatable) | `ALLOW_CIDRS` (comma/space) | *(none)* | CIDR (or bare IP, normalized to `/32` / `/128`) allowed to reach the exposed pods via a per-service NetworkPolicy, so the NodePort service is reachable only through this proxy. When unset, no NetworkPolicy is managed. See [NetworkPolicy lockdown](#networkpolicy-lockdown). |
+| `--patch-external-traffic-policy` | `PATCH_EXTERNAL_TRAFFIC_POLICY` (`1`/`true`/`yes`) | `false` | While locking a service down, patch it to `externalTrafficPolicy: Local` so the allow-list can match proxy traffic. Only acts when `--allow-cidr` is set; **mutates your Services** and needs `services` `patch` RBAC. Meant to be run temporarily to migrate services, then removed. See [Preserving the client source IP](#preserving-the-client-source-ip-read-this-before-enabling). |
 | `--log-level` | `LOG_LEVEL` | `INFO` | Python logging level. |
 | `--dry-run` | `DRY_RUN` (`1`/`true`/`yes`) | `false` | Print the config that would be written and exit; no disk writes, no `nginx -t`, no reload. Implies a single cycle. |
 | `--once` | — | `false` | Run a single reconcile and exit (for testing). |
@@ -144,10 +150,16 @@ Set on a Service to override defaults (prefix configurable via
 
 | Annotation | Effect |
 |------------|--------|
+| `<prefix>/skip` | `"true"` (or `1`/`yes`/`on`) to never proxy this service. Wins in both opt-in and opt-out modes — use it for services you deliberately never want exposed. |
 | `<prefix>/enable` | `"true"` to expose (when `--opt-in`), or `"false"` to opt out. |
 | `<prefix>/hostname` | Override the full published hostname. |
 | `<prefix>/scheme` | Force the upstream scheme (`http` or `https`). |
 | `<prefix>/port` | Expose only the given service port (name or number). |
+
+`<prefix>/skip` and `<prefix>/enable=false` both suppress a service. The
+difference: `skip` is unconditional (it also excludes a service in `--opt-in`
+mode, where `enable=false` would be redundant), so it's the clearest way to mark
+a service as "never proxy this, whatever the global policy."
 
 ## NetworkPolicy lockdown
 
@@ -255,6 +267,30 @@ spec:
     - port: 8080
       nodePort: 31080
 ```
+
+#### Letting the daemon migrate services (`--patch-external-traffic-policy`)
+
+If you can't easily edit every Service by hand, run the daemon **temporarily**
+with `--patch-external-traffic-policy`. While lockdown is on, before it creates a
+policy for a service whose `externalTrafficPolicy` isn't `Local`, it patches the
+Service to `Local` (a JSON Patch on `/spec/externalTrafficPolicy`) and logs it.
+It's idempotent — once a service is `Local`, the next cycle sees that and stops
+patching — so the intended workflow is: enable the flag, watch the
+`Patched Service … -> Local` log lines, confirm everything still works, then
+**remove the flag**.
+
+Caveats:
+
+- It **mutates your Services** (a field you otherwise own) and needs the
+  `services` `patch` RBAC verb (see [Prerequisites](#prerequisites)). Without it
+  the daemon logs one error and disables patching for the run; the NetworkPolicy
+  is still reconciled.
+- Flipping `externalTrafficPolicy` reprograms kube-proxy and can briefly reset
+  in-flight connections to that service — expect a short blip per patched
+  service.
+- Without the flag, the daemon only **warns** (once per service) and leaves the
+  Service untouched; the policy is still created, but the allow-list won't match
+  until the service is `Local`.
 
 Further caveats to verify in your environment:
 

@@ -142,6 +142,7 @@ class Settings:
     #   revproxy.hackinsdn.io/scheme: https              (overrides port-name rule)
     #   revproxy.hackinsdn.io/port: "8443"   (service port name or number)
     #   revproxy.hackinsdn.io/enable: "false"
+    #   revproxy.hackinsdn.io/skip: "true"   (never proxy this service)
     annotation_prefix: str = "revproxy.hackinsdn.io"
 
     # If set, only expose services carrying <annotation_prefix>/enable=true.
@@ -159,6 +160,12 @@ class Settings:
     # is created per exposed Service restricting ingress to these CIDRs (i.e.
     # only through this proxy). Empty disables NetworkPolicy management entirely.
     allow_cidrs: List[str] = field(default_factory=list)
+
+    # When True (and lockdown is on), patch each locked-down Service to
+    # externalTrafficPolicy: Local so the pods see the real client source IP and
+    # the NetworkPolicy allow-list can match. Meant to be enabled temporarily to
+    # migrate services; mutates user-owned Services and needs services/patch RBAC.
+    patch_external_traffic_policy: bool = False
 
     # Only print the nginx config that would be written; never touch disk,
     # nginx -t, or reload. Implies a single cycle.
@@ -199,6 +206,14 @@ def parse_args(argv: Optional[List[str]] = None) -> Settings:
                         "NetworkPolicy, so the NodePort service is reachable only "
                         "through this proxy. Repeatable. Also ALLOW_CIDRS=cidr1,cidr2. "
                         "When unset, no NetworkPolicy is managed.")
+    p.add_argument("--patch-external-traffic-policy", action="store_true",
+                   default=_env("PATCH_EXTERNAL_TRAFFIC_POLICY", "").lower() in ("1", "true", "yes"),
+                   help="Temporarily patch each locked-down Service to "
+                        "externalTrafficPolicy: Local (needed for the NetworkPolicy "
+                        "allow-list to match proxy traffic). Only acts when "
+                        "--allow-cidr is set; mutates Services and needs "
+                        "services/patch RBAC. Remove once services are migrated. "
+                        "Also PATCH_EXTERNAL_TRAFFIC_POLICY env.")
     p.add_argument("--log-level", default=_env("LOG_LEVEL", "INFO"))
     p.add_argument("--once", action="store_true", help="Run a single reconcile and exit (for testing).")
     p.add_argument("--dry-run", action="store_true",
@@ -251,6 +266,7 @@ def parse_args(argv: Optional[List[str]] = None) -> Settings:
         require_ready=a.require_ready,
         namespaces=namespaces,
         allow_cidrs=allow_cidrs,
+        patch_external_traffic_policy=a.patch_external_traffic_policy,
         dry_run=a.dry_run,
     )
     logging.basicConfig(
@@ -374,6 +390,10 @@ class NetworkPolicySpec:
     name: str            # == Service name (also the policy name)
     uid: str             # Service uid, for the ownerReference
     selector: Dict[str, str]  # == Service spec.selector
+    # Set when --patch-external-traffic-policy is on and the Service is not yet
+    # Local; drives a one-off patch before the policy is applied. Not part of the
+    # rendered policy, so it is excluded from config_hash / to_body.
+    needs_etp_patch: bool = False
 
     def config_hash(self, cidrs: List[str]) -> str:
         """Stable short hash of everything that affects the rendered policy, so
@@ -452,6 +472,10 @@ def _annotation(obj, key: str) -> Optional[str]:
     return anns.get(key)
 
 
+def _is_true(val: Optional[str]) -> bool:
+    return (val or "").strip().lower() in ("1", "true", "yes", "on")
+
+
 # --------------------------------------------------------------------------- #
 # Reconciler
 # --------------------------------------------------------------------------- #
@@ -468,6 +492,9 @@ class Reconciler:
         # Services (ns, name) already warned about a non-Local
         # externalTrafficPolicy, so we complain once rather than every cycle.
         self._etp_warned: set = set()
+        # Set once if we lack RBAC to patch Services, so --patch-external-
+        # traffic-policy doesn't retry (and log) on every cycle.
+        self._etp_patch_disabled = False
 
     # ---- fetch ---------------------------------------------------------- #
     def _list_with_rotation(self, fn, *, what: str, **kwargs):
@@ -526,6 +553,12 @@ class Reconciler:
         name = svc.metadata.name
 
         if not svc.spec or svc.spec.type != "NodePort":
+            return [], None
+
+        # Explicit opt-out: <prefix>/skip wins in both opt-in and opt-out modes,
+        # for services you never want proxied regardless of the global policy.
+        if _is_true(_annotation(svc, s.ann("skip"))):
+            log.debug("Service %s/%s skipped via %s annotation", ns, name, s.ann("skip"))
             return [], None
 
         enable = _annotation(svc, s.ann("enable"))
@@ -608,16 +641,22 @@ class Reconciler:
         # backing pods to the configured CIDRs. Only when the feature is on.
         npspec = None
         if out and s.allow_cidrs:
-            self._warn_if_not_local_etp(svc, ns, name)
+            etp = getattr(svc.spec, "external_traffic_policy", None)
+            not_local = etp != "Local"
+            # Flip the service to Local ourselves (patch mode), or just warn.
+            patch = bool(not_local and s.patch_external_traffic_policy)
+            if not_local and not s.patch_external_traffic_policy:
+                self._warn_if_not_local_etp(ns, name, etp)
             npspec = NetworkPolicySpec(
                 namespace=ns,
                 name=name,
                 uid=svc.metadata.uid or "",
                 selector=dict(selector),
+                needs_etp_patch=patch,
             )
         return out, npspec
 
-    def _warn_if_not_local_etp(self, svc, ns: str, name: str) -> None:
+    def _warn_if_not_local_etp(self, ns: str, name: str, etp) -> None:
         """Warn (once per service) when we are about to lock a NodePort service
         down with a NetworkPolicy but its externalTrafficPolicy is not Local.
 
@@ -629,9 +668,6 @@ class Reconciler:
         arrive as the node IP). externalTrafficPolicy: Local preserves the real
         source IP and is effectively required for the lockdown to work.
         """
-        etp = getattr(svc.spec, "external_traffic_policy", None)
-        if etp == "Local":
-            return
         key = (ns, name)
         if key in self._etp_warned:
             return
@@ -639,9 +675,10 @@ class Reconciler:
         log.warning(
             "Service %s/%s has externalTrafficPolicy=%s; the NetworkPolicy "
             "allow-list will not match proxy traffic (NodePort SNATs the source "
-            "IP to the node). Set externalTrafficPolicy: Local on the Service to "
-            "preserve the client source IP, or the lockdown will drop/mis-match "
-            "traffic. See the README NetworkPolicy lockdown section.",
+            "IP to the node). Set externalTrafficPolicy: Local on the Service "
+            "(or run with --patch-external-traffic-policy) to preserve the "
+            "client source IP, or the lockdown will drop/mis-match traffic. "
+            "See the README NetworkPolicy lockdown section.",
             ns, name, etp or "Cluster")
 
     # ---- render --------------------------------------------------------- #
@@ -826,6 +863,10 @@ server {{
         # Create / update.
         for key, spec in sorted(desired.items()):
             ns, name = key
+            # Patch mode: flip the Service to externalTrafficPolicy: Local before
+            # locking it down, so the allow-list can actually match proxy traffic.
+            if spec.needs_etp_patch:
+                self._patch_service_etp_local(ns, name)
             body = spec.to_body(cidrs, hash_ann)
             cur = existing.get(key)
             if cur is None:
@@ -926,6 +967,38 @@ server {{
             self.pool.rotate()
             raise
 
+    def _patch_service_etp_local(self, ns: str, name: str) -> None:
+        """Patch a Service to externalTrafficPolicy: Local (one-off migration
+        for --patch-external-traffic-policy). Idempotent: once patched, the next
+        fetch sees Local and stops requesting the patch. Uses a JSON Patch so the
+        client sends application/json-patch+json (a dict body would be mis-sent
+        as JSON Patch and rejected)."""
+        if self._etp_patch_disabled:
+            return
+        api = self.pool.api()
+        patch = [{"op": "add", "path": "/spec/externalTrafficPolicy", "value": "Local"}]
+        try:
+            api.patch_namespaced_service(
+                name=name, namespace=ns, body=patch,
+                _request_timeout=self._np_timeout())
+            log.warning("Patched Service %s/%s externalTrafficPolicy -> Local "
+                        "(--patch-external-traffic-policy); remove the flag once "
+                        "all target services are migrated.", ns, name)
+        except ApiException as exc:
+            if getattr(exc, "status", None) in (401, 403):
+                log.error("No RBAC to patch Service %s/%s externalTrafficPolicy "
+                          "(status %s); service patching disabled for this run. "
+                          "Grant patch on services to use "
+                          "--patch-external-traffic-policy.", ns, name, exc.status)
+                self._etp_patch_disabled = True
+            else:
+                log.error("Patching Service %s/%s externalTrafficPolicy failed: %s",
+                          ns, name, exc)
+        except (Urllib3HTTPError, OSError) as exc:
+            log.error("Patching Service %s/%s failed (connectivity): %s", ns, name, exc)
+            self.pool.rotate()
+            raise
+
     def dry_run(self, files: Dict[str, str],
                 netpols: Dict[Tuple[str, str], NetworkPolicySpec]) -> None:
         """Print the nginx config (and any NetworkPolicies) that would be
@@ -1005,6 +1078,10 @@ def main(argv: Optional[List[str]] = None) -> int:
     if settings.allow_cidrs:
         log.info("NetworkPolicy lockdown enabled; allowed CIDRs: %s",
                  ", ".join(settings.allow_cidrs))
+        if settings.patch_external_traffic_policy:
+            log.warning("Service patching enabled: locked-down services will be "
+                        "patched to externalTrafficPolicy: Local. Disable "
+                        "(--patch-external-traffic-policy off) once migrated.")
 
     while not _stop:
         start = time.monotonic()
